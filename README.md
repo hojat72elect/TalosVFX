@@ -50,4 +50,9 @@ Node based, open source VFX Editor with powerful interface and a ready to use li
   * Beam Position - Converts From and To position values into Rotation, Position & Size values that are used by Beam Renderer
   * Emitter Config - Wraps emitter configuration checkboxes into one UI. 
   * Script (Java) - Modules with 5 inputs and 5 outputs that can take a Java code as string to act open this values.
-  
+
+### Video tutorial
+
+These are some YouTube videos of teaching how to work with this particle Effect editor: 
+
+1 - https://www.youtube.com/@talosvfx3966
