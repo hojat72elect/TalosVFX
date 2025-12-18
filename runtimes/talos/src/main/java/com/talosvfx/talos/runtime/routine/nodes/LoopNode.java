@@ -17,7 +17,7 @@ public class LoopNode extends RoutineNode {
         Object signalPayload = routineInstanceRef.getSignalPayload();
 
         routineInstanceRef.beginDepth();
-        for(int i = from; from < to ? i < to : i > to; i += step) {
+        for (int i = from; from < to ? i < to : i > to; i += step) {
             index = i;
             routineInstanceRef.setSignalPayload(signalPayload);
             sendSignal("body");
@@ -31,7 +31,7 @@ public class LoopNode extends RoutineNode {
 
     @Override
     public Object queryValue(String targetPortName) {
-        if(targetPortName.equals("index")) {
+        if (targetPortName.equals("index")) {
             return index;
         }
 

@@ -3,11 +3,14 @@ package com.talosvfx.talos.editor.widgets.ui.timeline;
 import com.badlogic.gdx.scenes.scene2d.Event;
 import com.badlogic.gdx.scenes.scene2d.EventListener;
 
-/** Listener for {@link TimelineEvent}.
- * @author Avetis Zakharyan */
+/**
+ * Listener for {@link TimelineEvent}.
+ *
+ * @author Avetis Zakharyan
+ */
 public class TimelineListener implements EventListener {
 
-    public boolean handle (Event event) {
+    public boolean handle(Event event) {
         if (event instanceof TimelineEvent) {
             TimelineEvent timelineEvent = (TimelineEvent) event;
             switch (timelineEvent.getType()) {
@@ -56,6 +59,62 @@ public class TimelineListener implements EventListener {
         return false;
     }
 
+    protected void onItemSelect(Object identifier) {
+
+    }
+
+    protected void onItemVisibilityChange(Object identifier, boolean isVisible) {
+    }
+
+    protected void onSelectorUpdate() {
+    }
+
+    protected void onPlayClicked() {
+    }
+
+    protected void onRewindClicked() {
+    }
+
+    protected void onSkipToStartClicked() {
+    }
+
+    protected void onSkipToEndClicked() {
+    }
+
+    protected void onNewClicked() {
+    }
+
+    protected void onDeleteClicked() {
+    }
+
+    protected void onToggleLoop(boolean loopEnabled) {
+    }
+
+    protected void onDown() {
+    }
+
+    protected void onUp() {
+    }
+
+    protected void onItemRename(Object identifier, String newName) {
+    }
+
+    public enum Type {
+        itemSelected,
+        visibilityChanged,
+        selectorUpdated,
+        skipToStart,
+        skipToEnd,
+        play,
+        rewind,
+        newItem,
+        deleteSelection,
+        toggleLoop,
+        rename,
+        up,
+        down
+    }
+
     static public class TimelineEvent extends Event {
         private Type type;
 
@@ -84,46 +143,8 @@ public class TimelineListener implements EventListener {
             return this;
         }
 
-        public Object getTargetIdentifier () {
+        public Object getTargetIdentifier() {
             return target;
         }
-    }
-
-    protected void onItemSelect(Object identifier) {
-
-    }
-
-
-    protected void onItemVisibilityChange(Object identifier, boolean isVisible) {}
-
-
-    protected void onSelectorUpdate() {}
-
-    protected void onPlayClicked() {}
-    protected void onRewindClicked() {}
-    protected void onSkipToStartClicked() {}
-    protected void onSkipToEndClicked() {}
-    protected void onNewClicked() {}
-    protected void onDeleteClicked() {}
-    protected void onToggleLoop(boolean loopEnabled) {}
-    protected void onDown () {}
-    protected void onUp () {}
-
-    protected void onItemRename(Object identifier, String newName) {}
-
-    static public enum Type {
-        itemSelected,
-        visibilityChanged,
-        selectorUpdated,
-        skipToStart,
-        skipToEnd,
-        play,
-        rewind,
-        newItem,
-        deleteSelection,
-        toggleLoop,
-        rename,
-        up,
-        down
     }
 }

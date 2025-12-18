@@ -13,36 +13,44 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.kotcrab.vis.ui.util.ActorUtils;
 import com.kotcrab.vis.ui.widget.VisLabel;
 import com.kotcrab.vis.ui.widget.VisTextButton;
 import com.kotcrab.vis.ui.widget.VisTextField;
 import com.kotcrab.vis.ui.widget.VisWindow;
-import com.talosvfx.talos.TalosMain2;
 import com.talosvfx.talos.editor.addons.scene.SceneUtils;
 import com.talosvfx.talos.editor.addons.scene.assets.AssetRepository;
+import com.talosvfx.talos.editor.addons.scene.logic.IPropertyHolder;
 import com.talosvfx.talos.editor.addons.scene.logic.PropertyWrapperProviders;
 import com.talosvfx.talos.editor.addons.scene.logic.componentwrappers.GameObjectPropertyHolder;
-import com.talosvfx.talos.editor.utils.Toasts;
-import com.talosvfx.talos.runtime.RuntimeContext;
-import com.talosvfx.talos.runtime.assets.GameAsset;
-import com.talosvfx.talos.runtime.assets.GameAssetType;
-import com.talosvfx.talos.runtime.scene.GameObject;
-import com.talosvfx.talos.editor.addons.scene.logic.IPropertyHolder;
 import com.talosvfx.talos.editor.addons.scene.utils.importers.AssetImporter;
 import com.talosvfx.talos.editor.data.RoutineStageData;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.events.DirectoryChangedEvent;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.project2.TalosProjectData;
+import com.talosvfx.talos.editor.utils.Toasts;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.IPropertyProvider;
 import com.talosvfx.talos.editor.widgets.ui.FilteredTree;
 import com.talosvfx.talos.editor.widgets.ui.SearchFilteredTree;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
 import com.talosvfx.talos.editor.widgets.ui.common.SquareButton;
+import com.talosvfx.talos.runtime.RuntimeContext;
+import com.talosvfx.talos.runtime.assets.GameAsset;
+import com.talosvfx.talos.runtime.assets.GameAssetType;
+import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.SceneLayer;
-import com.talosvfx.talos.runtime.scene.components.*;
+import com.talosvfx.talos.runtime.scene.components.AComponent;
+import com.talosvfx.talos.runtime.scene.components.BoneComponent;
+import com.talosvfx.talos.runtime.scene.components.DataComponent;
+import com.talosvfx.talos.runtime.scene.components.PathRendererComponent;
+import com.talosvfx.talos.runtime.scene.components.RendererComponent;
+import com.talosvfx.talos.runtime.scene.components.RoutineRendererComponent;
+import com.talosvfx.talos.runtime.scene.components.ScriptComponent;
+import com.talosvfx.talos.runtime.scene.components.SpineRendererComponent;
+import com.talosvfx.talos.runtime.scene.components.SpriteRendererComponent;
+import com.talosvfx.talos.runtime.scene.components.TransformComponent;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +67,7 @@ public class SEPropertyPanel extends PropertyPanel {
     }
 
     @Override
-    public void showPanel (IPropertyHolder target, Iterable<IPropertyProvider> propertyProviders) {
+    public void showPanel(IPropertyHolder target, Iterable<IPropertyProvider> propertyProviders) {
         super.showPanel(target, propertyProviders);
 
         if (target instanceof GameObjectPropertyHolder) {
@@ -79,7 +87,7 @@ public class SEPropertyPanel extends PropertyPanel {
 
             button.addListener(new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
                     CreateComponentPopup createComponentPopup = new CreateComponentPopup();
                     createComponentPopup.show(button, gameObjectPropertyHolder.getGameObject());
                 }
@@ -93,13 +101,13 @@ public class SEPropertyPanel extends PropertyPanel {
 
     private class NameAndCreateTable extends Table {
 
-        private Consumer<String> nameConsumer;
         private final VisTextField textField;
         private final VisLabel label;
         private final VisLabel hint;
         private final Runnable back;
+        private Consumer<String> nameConsumer;
 
-        public NameAndCreateTable (Runnable back) {
+        public NameAndCreateTable(Runnable back) {
             this.back = back;
 
             bottom();
@@ -132,26 +140,22 @@ public class SEPropertyPanel extends PropertyPanel {
 
             textField.addListener(new ChangeListener() {
                 @Override
-                public void changed (ChangeEvent event, Actor actor) {
+                public void changed(ChangeEvent event, Actor actor) {
                     String text = textField.getText();
-                    if (text.length() < 3) {
-                        create.setDisabled(true);
-                    } else {
-                        create.setDisabled(false);
-                    }
+                    create.setDisabled(text.length() < 3);
                 }
             });
 
-            backButton.addListener(new ClickListener(){
+            backButton.addListener(new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
                     super.clicked(event, x, y);
                     back.run();
                 }
             });
-            create.addListener(new ClickListener(){
+            create.addListener(new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
                     super.clicked(event, x, y);
                     if (create.isDisabled()) return;
 
@@ -167,7 +171,7 @@ public class SEPropertyPanel extends PropertyPanel {
             add(buttonWrapper).growX();
         }
 
-        public void setProperties (String field, String rulesHint, String regexAllowed, Consumer<String> nameConsumer) {
+        public void setProperties(String field, String rulesHint, String regexAllowed, Consumer<String> nameConsumer) {
             this.nameConsumer = nameConsumer;
 
             Pattern pattern = Pattern.compile(regexAllowed);
@@ -175,14 +179,11 @@ public class SEPropertyPanel extends PropertyPanel {
             hint.setText(rulesHint);
             textField.setTextFieldFilter(new VisTextField.TextFieldFilter() {
                 @Override
-                public boolean acceptChar (VisTextField textField, char c) {
+                public boolean acceptChar(VisTextField textField, char c) {
                     String testString = textField.getText();
                     testString += c;
                     Matcher matcher = pattern.matcher(testString);
-                    if (matcher.matches()) {
-                        return true;
-                    }
-                    return false;
+                    return matcher.matches();
                 }
             });
         }
@@ -195,13 +196,13 @@ public class SEPropertyPanel extends PropertyPanel {
 
         private GameObject gameObject;
 
-        private SearchFilteredTree searchFilteredTree;
-        private NameAndCreateTable nameAndCreateTable;
+        private final SearchFilteredTree searchFilteredTree;
+        private final NameAndCreateTable nameAndCreateTable;
 
-        private Table container;
+        private final Table container;
 
 
-        public CreateComponentPopup () {
+        public CreateComponentPopup() {
             super("New Component", "module-list");
 
             setModal(false);
@@ -217,7 +218,7 @@ public class SEPropertyPanel extends PropertyPanel {
             container = new Table();
             nameAndCreateTable = new NameAndCreateTable(new Runnable() {
                 @Override
-                public void run () {
+                public void run() {
                     setToTree();
                 }
             });
@@ -282,12 +283,12 @@ public class SEPropertyPanel extends PropertyPanel {
             createListeners();
         }
 
-        private void setToTree () {
+        private void setToTree() {
             container.clearChildren();
             container.add(searchFilteredTree).grow();
         }
 
-        private void setToNameAndCreate (String field, String rulesHint, String regexAllowed, Consumer<String> createComponentNameConsumer) {
+        private void setToNameAndCreate(String field, String rulesHint, String regexAllowed, Consumer<String> createComponentNameConsumer) {
             nameAndCreateTable.setProperties(field, rulesHint, regexAllowed, createComponentNameConsumer);
             container.clearChildren();
             container.add(nameAndCreateTable).grow();
@@ -296,7 +297,7 @@ public class SEPropertyPanel extends PropertyPanel {
             nameAndCreateTable.textField.focusField();
         }
 
-        private void collectAssets (GameAssetType assetType, FileHandle handle, FilteredTree.Node<Object> scripts) {
+        private void collectAssets(GameAssetType assetType, FileHandle handle, FilteredTree.Node<Object> scripts) {
             if (handle.isDirectory()) {
                 FileHandle[] list = handle.list();
                 for (int i = 0; i < list.length; i++) {
@@ -327,12 +328,12 @@ public class SEPropertyPanel extends PropertyPanel {
             stage.addActor(this);
         }
 
-        public boolean contains (float x, float y) {
+        public boolean contains(float x, float y) {
             return getX() < x && getX() + getWidth() > x && getY() < y && getY() + getHeight() > y;
         }
 
         @Override
-        protected void setStage (Stage stage) {
+        protected void setStage(Stage stage) {
             super.setStage(stage);
             if (stage != null) stage.addListener(stageListener);
         }
@@ -340,7 +341,7 @@ public class SEPropertyPanel extends PropertyPanel {
         private void createListeners() {
             stageListener = new InputListener() {
                 @Override
-                public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                     if (!CreateComponentPopup.this.contains(x, y) && button == 0) {
                         remove();
                         return false;
@@ -351,18 +352,18 @@ public class SEPropertyPanel extends PropertyPanel {
 
             tree.addItemListener(new FilteredTree.ItemListener() {
                 @Override
-                public void selected (FilteredTree.Node node) {
+                public void selected(FilteredTree.Node node) {
                     super.selected(node);
                     String name = node.getName();
 
 
                     if (node.getObject() instanceof GameAsset) {
                         //Make the component and add it
-                        GameAsset<?> gameAsset = (GameAsset<?>)node.getObject();
+                        GameAsset<?> gameAsset = (GameAsset<?>) node.getObject();
 
                         if (gameAsset.type == GameAssetType.SCRIPT) {
                             ScriptComponent scriptComponent = new ScriptComponent();
-                            scriptComponent.setGameAsset((GameAsset<String>)gameAsset);
+                            scriptComponent.setGameAsset((GameAsset<String>) gameAsset);
                             gameObject.addComponent(scriptComponent);
 
                             showComponent(scriptComponent);
@@ -384,13 +385,12 @@ public class SEPropertyPanel extends PropertyPanel {
                             remove();
                             return;
                         }
-
                     } else {
 
                         if (name.equals("createscript")) {
                             setToNameAndCreate("Script Name", "Use characters [a-Z] only", "[a-zA-Z]*", new Consumer<String>() {
                                 @Override
-                                public void accept (String newFileName) {
+                                public void accept(String newFileName) {
                                     //Create the script, and then add it to the game component after registering etc etc
 
                                     //Sugggest to put it in scripts
@@ -409,7 +409,7 @@ public class SEPropertyPanel extends PropertyPanel {
                                         Notifications.fireEvent(Notifications.obtainEvent(DirectoryChangedEvent.class).set(suggestedScriptsFolder.path()));
 
                                         ScriptComponent scriptComponent = new ScriptComponent();
-                                        scriptComponent.setGameAsset((GameAsset<String>)assetForPath);
+                                        scriptComponent.setGameAsset((GameAsset<String>) assetForPath);
                                         gameObject.addComponent(scriptComponent);
 
                                         showComponent(scriptComponent);
@@ -421,7 +421,7 @@ public class SEPropertyPanel extends PropertyPanel {
                         }
                         //Check all the cases we might otherwise have
 
-                        if(name.equals("createRR")) {
+                        if (name.equals("createRR")) {
 
                             setToNameAndCreate("RR Name", "Use characters [a-Z] only", "[a-zA-Z]*", new Consumer<String>() {
                                 @Override
@@ -476,7 +476,7 @@ public class SEPropertyPanel extends PropertyPanel {
                             return;
                         }
 
-                       if (name.equals("newspinecomponent")) {
+                        if (name.equals("newspinecomponent")) {
                             SpineRendererComponent spineRendererComponent = new SpineRendererComponent();
                             gameObject.addComponent(spineRendererComponent);
                             SceneUtils.componentAdded(gameObject.getGameObjectContainerRoot(), gameObject, spineRendererComponent);

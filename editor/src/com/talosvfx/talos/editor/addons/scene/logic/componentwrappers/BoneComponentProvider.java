@@ -8,12 +8,12 @@ import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 
 public class BoneComponentProvider extends AComponentProvider<BoneComponent> {
 
-    public BoneComponentProvider (BoneComponent component) {
+    public BoneComponentProvider(BoneComponent component) {
         super(component);
     }
 
     @Override
-    public Array<PropertyWidget> getListOfProperties () {
+    public Array<PropertyWidget> getListOfProperties() {
         Array<PropertyWidget> properties = new Array<>();
 
         if (component.getGameObject().hasComponent(TransformComponent.class)) {
@@ -31,7 +31,6 @@ public class BoneComponentProvider extends AComponentProvider<BoneComponent> {
             properties.add(positionWidget);
             properties.add(rotationWidget);
             properties.add(scaleWidget);
-
         }
 
 
@@ -39,13 +38,12 @@ public class BoneComponentProvider extends AComponentProvider<BoneComponent> {
     }
 
     @Override
-    public String getPropertyBoxTitle () {
+    public String getPropertyBoxTitle() {
         return "Bone";
     }
 
     @Override
-    public int getPriority () {
+    public int getPriority() {
         return 10;
     }
-
 }

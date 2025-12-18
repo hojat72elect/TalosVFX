@@ -3,62 +3,61 @@ package com.talosvfx.talos.editor.addons.shader.nodes;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.Pools;
+import com.badlogic.gdx.utils.XmlReader;
 import com.talosvfx.talos.TalosMain;
-import com.talosvfx.talos.runtime.vfx.shaders.ShaderBuilder;
 import com.talosvfx.talos.editor.notifications.FileActorBinder;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.events.dynamicnodestage.NodeDataModifiedEvent;
+import com.talosvfx.talos.runtime.vfx.shaders.ShaderBuilder;
 
 import java.io.File;
 
 public class SampleTextureNode extends AbstractShaderNode implements ShaderBuilder.IValueProvider<Texture> {
 
+    private static final Color defaultUVOffset = new Color(0, 0, 1, 1);
+    public final String INPUT_UV_OVERRIDE = "overrideUV";
+    public final String INPUT_UV_OFFSET = "offsetUV";
+    public final String INPUT_UV_MUL = "mulUV";
+    public final String WRAP = "wrap";
+    public final String OUTPUT_RGBA = "outputRGBA";
     private Texture texture;
     private String texturePath;
     private String regionName;
     private String uniformName;
 
-    public final String INPUT_UV_OVERRIDE = "overrideUV";
-    public final String INPUT_UV_OFFSET = "offsetUV";
-    public final String INPUT_UV_MUL = "mulUV";
-
-    public final String WRAP = "wrap";
-
-    public final String OUTPUT_RGBA = "outputRGBA";
-
-    private static final Color defaultUVOffset = new Color(0, 0, 1, 1);
-
     @Override
-    protected String getPreviewOutputName () {
+    protected String getPreviewOutputName() {
         return OUTPUT_RGBA;
     }
 
     @Override
-    protected void inputStateChanged (boolean isInputDynamic) {
+    protected void inputStateChanged(boolean isInputDynamic) {
         showShaderBox();
     }
 
     @Override
-    protected boolean isInputDynamic () {
+    protected boolean isInputDynamic() {
         return true;
     }
 
     @Override
     public void prepareDeclarations(ShaderBuilder shaderBuilder) {
-        if(regionName != null) {
+        if (regionName != null) {
             uniformName = shaderBuilder.registerResource(regionName);
             shaderBuilder.declareUniform(uniformName, ShaderBuilder.Type.TEXTURE, this);
 
 
             shaderBuilder.declareUniform(uniformName + "regionUV", ShaderBuilder.Type.VEC4, new ShaderBuilder.IValueProvider() {
                 @Override
-                public Object getValue () {
+                public Object getValue() {
                     return defaultUVOffset;
                 }
 
                 @Override
-                public String getValueDescriptor () {
+                public String getValueDescriptor() {
                     return regionName;
                 }
             });
@@ -71,14 +70,13 @@ public class SampleTextureNode extends AbstractShaderNode implements ShaderBuild
         applyRegionOffset.addLine("vec2 size = vec2(regionUV.z - regionUV.x, regionUV.w - regionUV.y)");
         applyRegionOffset.addLine("position = position * size + regionUV.xy");
         applyRegionOffset.addLine("return position");
-
     }
 
     @Override
     public String writeOutputCode(String slotId) {
         String output = "";
 
-        if(uniformName == null) {
+        if (uniformName == null) {
             return "vec4(1.0)";
         }
 
@@ -90,13 +88,13 @@ public class SampleTextureNode extends AbstractShaderNode implements ShaderBuild
 
         String sample = "(" + uvSample + " - 0.5)/(" + uvMul + ") + 0.5 + " + uvOffset;
 
-        if(wrap) {
+        if (wrap) {
             sample = "fract(" + sample + ")";
             // apply region adapting
             sample = "applyRegionOffset(" + sample + ", " + uniformName + "regionUV" + ")";
         }
 
-        if(slotId.equals(OUTPUT_RGBA)) {
+        if (slotId.equals(OUTPUT_RGBA)) {
             output = "texture2D(" + uniformName + ", " + sample + ")";
         }
 
@@ -110,7 +108,7 @@ public class SampleTextureNode extends AbstractShaderNode implements ShaderBuild
 
         FileHandle fileHandle = TalosMain.Instance().ProjectController().findFile(texturePath);
 
-        if(fileHandle != null) {
+        if (fileHandle != null) {
             FileActorBinder.FileEvent fileEvent = Pools.obtain(FileActorBinder.FileEvent.class);
             fileEvent.setFileHandle(fileHandle);
             shaderBox.fire(fileEvent);
@@ -120,11 +118,10 @@ public class SampleTextureNode extends AbstractShaderNode implements ShaderBuild
     private String getRegionNameFromPath(String path) {
         int index = path.lastIndexOf(File.separatorChar);
         String nameWithExtension = path.substring(index + 1);
-        if (index < 0) nameWithExtension = path.substring(0);
+        if (index < 0) nameWithExtension = path;
         else nameWithExtension = path.substring(index + 1);
         int dotIndex = nameWithExtension.lastIndexOf(46);
         return dotIndex == -1 ? nameWithExtension : nameWithExtension.substring(0, dotIndex);
-
     }
 
     @Override
@@ -133,7 +130,7 @@ public class SampleTextureNode extends AbstractShaderNode implements ShaderBuild
     }
 
     @Override
-    public void constructNode (XmlReader.Element module) {
+    public void constructNode(XmlReader.Element module) {
         super.constructNode(module);
 
         FileActorBinder.register(shaderBox, "png");
@@ -141,7 +138,7 @@ public class SampleTextureNode extends AbstractShaderNode implements ShaderBuild
         shaderBox.addListener(new FileActorBinder.FileEventListener() {
 
             @Override
-            public void onFileSet (FileHandle fileHandle) {
+            public void onFileSet(FileHandle fileHandle) {
                 try {
                     texture = new Texture(fileHandle);
                     texturePath = fileHandle.path();
@@ -167,12 +164,12 @@ public class SampleTextureNode extends AbstractShaderNode implements ShaderBuild
     }
 
     @Override
-    public Texture getValue () {
+    public Texture getValue() {
         return texture;
     }
 
     @Override
-    public String getValueDescriptor () {
+    public String getValueDescriptor() {
         return regionName;
     }
 }

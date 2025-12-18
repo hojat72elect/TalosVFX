@@ -7,25 +7,25 @@ import com.talosvfx.talos.editor.widgets.propertyWidgets.IPropertyProvider;
 
 public class RoutinePropertyHolder extends PropertyWrapperProviders.ObjectPropertyHolder<RoutineStageData> {
 
-	private final RoutineStageData routineStageData;
-	private final RoutinePropertyProvider routinePropertyProvider;
+    private final RoutineStageData routineStageData;
+    private final RoutinePropertyProvider routinePropertyProvider;
 
-	public RoutinePropertyHolder (RoutineStageData routineStageData) {
-		this.routineStageData = routineStageData;
-		routinePropertyProvider = new RoutinePropertyProvider(routineStageData);
-	}
+    public RoutinePropertyHolder(RoutineStageData routineStageData) {
+        this.routineStageData = routineStageData;
+        routinePropertyProvider = new RoutinePropertyProvider(routineStageData);
+    }
 
-	@Override
-	public Iterable<IPropertyProvider> getPropertyProviders () {
-		Array<IPropertyProvider> list = new Array<>();
+    @Override
+    public Iterable<IPropertyProvider> getPropertyProviders() {
+        Array<IPropertyProvider> list = new Array<>();
 
-		list.add(routinePropertyProvider);
+        list.add(routinePropertyProvider);
 
-		return list;
-	}
+        return list;
+    }
 
-	@Override
-	public String getName () {
-		return routineStageData.getName();
-	}
+    @Override
+    public String getName() {
+        return routineStageData.getName();
+    }
 }

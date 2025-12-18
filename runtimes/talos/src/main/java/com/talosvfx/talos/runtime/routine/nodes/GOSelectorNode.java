@@ -9,12 +9,13 @@ public class GOSelectorNode extends RoutineNode {
 
     private Array<GameObject> gameObjects = new Array<>();
 
-    private Array<GameObject> temp = new Array<>();
+    private final Array<GameObject> temp = new Array<>();
+
     @Override
     public void receiveSignal(String portName) {
         SavableContainer container = routineInstanceRef.getContainer();
 
-        if(container == null) return;
+        if (container == null) return;
 
         gameObjects.clear();
 
@@ -41,12 +42,11 @@ public class GOSelectorNode extends RoutineNode {
         }
 
 
-
         routineInstanceRef.storeGlobal("executedTargets", gameObjects);
 
         int i = 0;
         routineInstanceRef.beginDepth();
-        for(GameObject gameObject: gameObjects) {
+        for (GameObject gameObject : gameObjects) {
             // make sure sendSignal supports payloads
             routineInstanceRef.setSignalPayload(gameObject);
             sendSignal("outSignal");
@@ -59,7 +59,7 @@ public class GOSelectorNode extends RoutineNode {
     public Object queryValue(String targetPortName) {
         SavableContainer container = routineInstanceRef.getContainer();
 
-        if(container == null) return null;
+        if (container == null) return null;
 
         gameObjects.clear();
         String target = fetchStringValue("target");

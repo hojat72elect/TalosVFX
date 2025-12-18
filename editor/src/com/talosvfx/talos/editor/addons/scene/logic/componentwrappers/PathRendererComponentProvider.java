@@ -1,18 +1,10 @@
 package com.talosvfx.talos.editor.addons.scene.logic.componentwrappers;
 
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
 import com.badlogic.gdx.utils.Array;
-import com.talosvfx.talos.editor.addons.scene.SceneUtils;
-import com.talosvfx.talos.editor.addons.scene.widgets.property.PropertyPanelAssetSelectionWidget;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.PropertyWidget;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.WidgetFactory;
-import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.GameAssetType;
-import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.components.PathRendererComponent;
-
-import com.talosvfx.talos.runtime.utils.Supplier;
 
 public class PathRendererComponentProvider extends RendererComponentProvider<PathRendererComponent> {
     public PathRendererComponentProvider(PathRendererComponent component) {
@@ -20,7 +12,7 @@ public class PathRendererComponentProvider extends RendererComponentProvider<Pat
     }
 
     @Override
-    public Array<PropertyWidget> getListOfProperties () {
+    public Array<PropertyWidget> getListOfProperties() {
         Array<PropertyWidget> properties = new Array<>();
 
         PropertyWidget textureWidget = WidgetFactory.generateForGameAsset(component, "gameAsset", null, "Texture", GameAssetType.SPRITE);
@@ -43,12 +35,12 @@ public class PathRendererComponentProvider extends RendererComponentProvider<Pat
     }
 
     @Override
-    public String getPropertyBoxTitle () {
+    public String getPropertyBoxTitle() {
         return "Path Renderer";
     }
 
     @Override
-    public int getPriority () {
+    public int getPriority() {
         return 2;
     }
 }

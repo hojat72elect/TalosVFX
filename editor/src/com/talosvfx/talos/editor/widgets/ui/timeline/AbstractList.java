@@ -9,16 +9,12 @@ import java.util.Comparator;
 
 public abstract class AbstractList<T extends BasicRow<U>, U> extends Table {
 
-    private Pool<T> itemPool;
-    private Array<T> items = new Array<>();
-    private ObjectMap<U, T> itemMap = new ObjectMap<>();
-
-    private ListItem<U> selectedItem;
-
     protected TimelineWidget<U> timeline;
-
     protected boolean rebuildFlag = false;
-
+    private final Pool<T> itemPool;
+    private final Array<T> items = new Array<>();
+    private final ObjectMap<U, T> itemMap = new ObjectMap<>();
+    private ListItem<U> selectedItem;
     private Comparator<T> itemComparator;
 
     public AbstractList(TimelineWidget<U> timeline) {
@@ -57,21 +53,20 @@ public abstract class AbstractList<T extends BasicRow<U>, U> extends Table {
     }
 
 
-
     public void updateItemData(Array<? extends TimelineItemDataProvider<U>> dataArray) {
-        for(TimelineItemDataProvider<U> data: dataArray) {
+        for (TimelineItemDataProvider<U> data : dataArray) {
             U identifier = data.getIdentifier();
             T item = itemMap.get(identifier);
-            if(item != null) {
+            if (item != null) {
                 item.setFrom(data);
             }
         }
     }
 
-    public void setData(Array<? extends  TimelineItemDataProvider<U>> dataArray) {
+    public void setData(Array<? extends TimelineItemDataProvider<U>> dataArray) {
         clearItems();
 
-        for(TimelineItemDataProvider<U> data: dataArray) {
+        for (TimelineItemDataProvider<U> data : dataArray) {
             T item = itemPool.obtain();
             item.setFrom(data);
             addItem(item);
@@ -93,22 +88,6 @@ public abstract class AbstractList<T extends BasicRow<U>, U> extends Table {
         return items;
     }
 
-    public void setSelected(U identifier) {
-
-        T item = itemMap.get(identifier);
-
-        if(item == null) return;
-
-        if(selectedItem != null) {
-            // we must un-select it
-            selectedItem.setSelected(false);
-        }
-
-        selectedItem = item;
-
-        selectedItem.setSelected(true);
-    }
-
     public T getItem(U identifier) {
         return itemMap.get(identifier);
     }
@@ -124,7 +103,7 @@ public abstract class AbstractList<T extends BasicRow<U>, U> extends Table {
         itemMap.remove(identifier);
         items.removeValue(item, true);
 
-        if(selectedItem == item) {
+        if (selectedItem == item) {
             selectedItem = null;
         }
 
@@ -144,7 +123,7 @@ public abstract class AbstractList<T extends BasicRow<U>, U> extends Table {
 
     @Override
     public void act(float delta) {
-        if(rebuildFlag) {
+        if (rebuildFlag) {
             sortItems();
             rebuildFromData();
             rebuildFlag = false;
@@ -155,14 +134,30 @@ public abstract class AbstractList<T extends BasicRow<U>, U> extends Table {
     protected abstract void rebuildFromData();
 
     public U getSelected() {
-        if(selectedItem != null) {
+        if (selectedItem != null) {
             return selectedItem.getIdentifier();
         }
 
         return null;
     }
 
-    public void setComparator (Comparator<T> comparator) {
+    public void setSelected(U identifier) {
+
+        T item = itemMap.get(identifier);
+
+        if (item == null) return;
+
+        if (selectedItem != null) {
+            // we must un-select it
+            selectedItem.setSelected(false);
+        }
+
+        selectedItem = item;
+
+        selectedItem.setSelected(true);
+    }
+
+    public void setComparator(Comparator<T> comparator) {
         this.itemComparator = comparator;
     }
 }

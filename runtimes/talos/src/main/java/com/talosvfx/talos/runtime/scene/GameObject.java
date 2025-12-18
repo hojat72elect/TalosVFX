@@ -2,79 +2,44 @@ package com.talosvfx.talos.runtime.scene;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.collision.BoundingBox;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.ObjectSet;
 import com.esotericsoftware.spine.Bone;
 import com.esotericsoftware.spine.Skeleton;
 import com.talosvfx.talos.runtime.assets.GameResourceOwner;
-import com.talosvfx.talos.runtime.assets.TalosContextProvider;
 import com.talosvfx.talos.runtime.routine.RoutineEventInterface;
 import com.talosvfx.talos.runtime.routine.RoutineEventListener;
-import com.talosvfx.talos.runtime.scene.components.*;
+import com.talosvfx.talos.runtime.scene.components.AComponent;
+import com.talosvfx.talos.runtime.scene.components.BoneComponent;
+import com.talosvfx.talos.runtime.scene.components.CameraComponent;
+import com.talosvfx.talos.runtime.scene.components.CurveComponent;
+import com.talosvfx.talos.runtime.scene.components.DataComponent;
+import com.talosvfx.talos.runtime.scene.components.EdgeCollider2DComponent;
+import com.talosvfx.talos.runtime.scene.components.MapComponent;
+import com.talosvfx.talos.runtime.scene.components.PaintSurfaceComponent;
+import com.talosvfx.talos.runtime.scene.components.ParticleComponent;
+import com.talosvfx.talos.runtime.scene.components.PathRendererComponent;
+import com.talosvfx.talos.runtime.scene.components.RendererComponent;
+import com.talosvfx.talos.runtime.scene.components.RoutineRendererComponent;
+import com.talosvfx.talos.runtime.scene.components.ScriptComponent;
+import com.talosvfx.talos.runtime.scene.components.SpineRendererComponent;
+import com.talosvfx.talos.runtime.scene.components.SpriteRendererComponent;
+import com.talosvfx.talos.runtime.scene.components.TileDataComponent;
+import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 import com.talosvfx.talos.runtime.scene.utils.TransformSettings;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
 import com.talosvfx.talos.runtime.utils.Supplier;
-import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 
+import lombok.Getter;
+
 public class GameObject implements GameObjectContainer, RoutineEventListener, Json.Serializable {
-
-    private transient String talosContextIdentifier;
-
-    private String name = "gameObject";
-    public UUID uuid;
-
-    private String prefabLink = null;
-
-    public boolean active = true;
-    protected boolean optimizeSkeletonBones = false;
-    private boolean editorTransformLocked = false;
-    private boolean editorVisible = true;
-
-    private Array<GameObject> children = new Array<>();
-    private ObjectMap<String, GameObject> childrenMap = new ObjectMap<>();
-    private ObjectSet<AComponent> components = new ObjectSet<>();
-    private ObjectMap<Class, AComponent> componentClasses = new ObjectMap<>();
-
-    private Array<GameObject> tmp = new Array<>();
-    public GameObject parent;
-
-    private GameObjectContainer rootGameObjectContainer;
-
-    public boolean isPlacing;
-
-    public boolean hierarchyDirty = true;
-
-    //ready only
-    private transient String readBoneName;
-
-    @Getter
-    private transient TransformSettings transformSettings = new TransformSettings();
-
-    private Array<RoutineEventInterface> routineEventListeners;
-
-    int componentBitMask = 0;
-    boolean maskDirty = true;
-
-//BoneComponent (com.talosvfx.talos.runtime.scene.components)
-//CameraComponent (com.talosvfx.talos.runtime.scene.components)
-//CurveComponent (com.talosvfx.talos.runtime.scene.components)
-//DataComponent (com.talosvfx.talos.runtime.scene.components)
-//EdgeCollider2DComponent (com.talosvfx.talos.runtime.scene.components)
-//PaintSurfaceComponent (com.talosvfx.talos.runtime.scene.components)
-//RendererComponent (com.talosvfx.talos.runtime.scene.components)
-//MapComponent (com.talosvfx.talos.runtime.scene.components)
-//ParticleComponent (com.talosvfx.talos.runtime.scene.components)
-//PathRendererComponent (com.talosvfx.talos.runtime.scene.components)
-//RoutineRendererComponent (com.talosvfx.talos.runtime.scene.components)
-//SpineRendererComponent (com.talosvfx.talos.runtime.scene.components)
-//SpriteRendererComponent (com.talosvfx.talos.runtime.scene.components)
-//ScriptComponent (com.talosvfx.talos.runtime.scene.components)
-//TileDataComponent (com.talosvfx.talos.runtime.scene.components)
-//TransformComponent (com.talosvfx.talos.runtime.scene.components)
-
 
     private static final int BONE_COMPONENT_BIT = 1 << 0;
     private static final int CAMERA_COMPONENT_BIT = 1 << 1;
@@ -92,18 +57,115 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
     private static final int SCRIPT_COMPONENT_BIT = 1 << 13;
     private static final int TILE_DATA_COMPONENT_BIT = 1 << 14;
     private static final int TRANSFORM_COMPONENT_BIT = 1 << 15;
+    public UUID uuid;
+    public boolean active = true;
+    public GameObject parent;
+    public boolean isPlacing;
+    public boolean hierarchyDirty = true;
+    protected boolean optimizeSkeletonBones = false;
 
-
-
-
+//BoneComponent (com.talosvfx.talos.runtime.scene.components)
+//CameraComponent (com.talosvfx.talos.runtime.scene.components)
+//CurveComponent (com.talosvfx.talos.runtime.scene.components)
+//DataComponent (com.talosvfx.talos.runtime.scene.components)
+//EdgeCollider2DComponent (com.talosvfx.talos.runtime.scene.components)
+//PaintSurfaceComponent (com.talosvfx.talos.runtime.scene.components)
+//RendererComponent (com.talosvfx.talos.runtime.scene.components)
+//MapComponent (com.talosvfx.talos.runtime.scene.components)
+//ParticleComponent (com.talosvfx.talos.runtime.scene.components)
+//PathRendererComponent (com.talosvfx.talos.runtime.scene.components)
+//RoutineRendererComponent (com.talosvfx.talos.runtime.scene.components)
+//SpineRendererComponent (com.talosvfx.talos.runtime.scene.components)
+//SpriteRendererComponent (com.talosvfx.talos.runtime.scene.components)
+//ScriptComponent (com.talosvfx.talos.runtime.scene.components)
+//TileDataComponent (com.talosvfx.talos.runtime.scene.components)
+//TransformComponent (com.talosvfx.talos.runtime.scene.components)
+    int componentBitMask = 0;
+    boolean maskDirty = true;
+    BoundingBox boundingBox = new BoundingBox();
+    private transient String talosContextIdentifier;
+    private String name = "gameObject";
+    private String prefabLink = null;
+    private boolean editorTransformLocked = false;
+    private boolean editorVisible = true;
+    private final Array<GameObject> children = new Array<>();
+    private final ObjectMap<String, GameObject> childrenMap = new ObjectMap<>();
+    private final ObjectSet<AComponent> components = new ObjectSet<>();
+    private final ObjectMap<Class, AComponent> componentClasses = new ObjectMap<>();
+    private final Array<GameObject> tmp = new Array<>();
+    private GameObjectContainer rootGameObjectContainer;
+    //ready only
+    private transient String readBoneName;
+    @Getter
+    private final transient TransformSettings transformSettings = new TransformSettings();
+    private Array<RoutineEventInterface> routineEventListeners;
     private transient TransformComponent transformComponentCache;
     private transient SpineRendererComponent spineComponentCache;
     private transient BoneComponent boneComponentCache;
     private transient SpriteRendererComponent spriteComponentCache;
     private transient ParticleComponent particleComponentCache;
     private transient RoutineRendererComponent routineRendererComponentCache;
+    private final ArrayList<String> goNames = new ArrayList<>();
+    private Array<GameObject> boneChildren;
+    private boolean calculatedBoneChildren = false;
 
-    private void recalculateBitMask () {
+    public GameObject() {
+        uuid = UUID.randomUUID();
+        routineEventListeners = new Array<>();
+    }
+
+    public static void gatherAllChildrenAttachedToBones(GameObject parent, Array<Bone> bones, Array<GameObject> out) {
+        Bone attachedSpineBoneOrNull = parent.getAttachedSpineBoneOrNull();
+
+        if (attachedSpineBoneOrNull != null) {
+            if (bones.contains(attachedSpineBoneOrNull, true)) {
+
+                if (!parent.hasBoneComponent()) {
+                    out.add(parent);
+                    return;
+                }
+            }
+        }
+        for (GameObject gameObject : parent.getGameObjects()) {
+            gatherAllChildrenAttachedToBones(gameObject, bones, out);
+        }
+    }
+
+    private static void estimateSizeForGameObject(GameObject gameObject, BoundingBox minMax) {
+        Iterable<AComponent> components = gameObject.getComponents();
+        for (AComponent component : components) {
+            if (component instanceof RendererComponent) {
+                ((RendererComponent) component).minMaxBounds(gameObject, minMax);
+            }
+        }
+        for (GameObject child : gameObject.children) {
+            estimateSizeForGameObject(child, minMax);
+        }
+    }
+
+    public static void setPositionFromWorldPosition(GameObject object, Vector2 worldPosition) {
+        TransformComponent transformComponent = object.getComponent(TransformComponent.class);
+        transformComponent.worldPosition.set(worldPosition);
+        projectInParentSpace(object.parent, object);
+    }
+
+    public static void projectInParentSpace(GameObject parentToMoveTo, GameObject childThatHasMoved) {
+        if (childThatHasMoved.hasComponent(TransformComponent.class)) {
+            TransformComponent childPositionComponent = childThatHasMoved.getComponent(TransformComponent.class);
+            TransformComponent parentPositionComponent = new TransformComponent();
+            if (parentToMoveTo.hasTransformComponent()) {
+                parentPositionComponent = parentToMoveTo.getTransformComponent();
+            }
+
+            Vector2 tmp = TransformComponent.vec;
+            tmp.set(childPositionComponent.worldPosition);
+            tmp.sub(parentPositionComponent.worldPosition);
+            childPositionComponent.position.set(tmp);
+            childPositionComponent.rotation -= parentPositionComponent.rotation;
+        }
+    }
+
+    private void recalculateBitMask() {
         if (maskDirty) {
 
             componentBitMask = 0;
@@ -130,7 +192,7 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
                     componentBitMask |= EDGE_COLLIDER_2D_COMPONENT_BIT;
                 } else if (aClass == PaintSurfaceComponent.class) {
                     componentBitMask |= PAINT_SURFACE_COMPONENT_BIT;
-                }else if (aClass == MapComponent.class) {
+                } else if (aClass == MapComponent.class) {
                     componentBitMask |= MAP_COMPONENT_BIT;
                 } else if (aClass == ParticleComponent.class) {
                     componentBitMask |= PARTICLE_COMPONENT_BIT;
@@ -158,100 +220,103 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
                 if (aClass.isAssignableFrom(RendererComponent.class)) {
                     componentBitMask |= RENDERER_COMPONENT_BIT;
                 }
-
             }
             maskDirty = false;
         }
     }
 
-    public boolean hasTransformComponent () {
+    public boolean hasTransformComponent() {
         //check bitmask
         recalculateBitMask();
         return (componentBitMask & TRANSFORM_COMPONENT_BIT) != 0;
     }
 
-    public TransformComponent getTransformComponent () {
+    public TransformComponent getTransformComponent() {
         recalculateBitMask();
         return transformComponentCache;
     }
 
-    public boolean hasSpineComponent () {
+    public boolean hasSpineComponent() {
         //check bitmask
         recalculateBitMask();
         return (componentBitMask & SPINE_RENDERER_COMPONENT_BIT) != 0;
     }
 
-    public SpineRendererComponent getSpineComponent () {
+    public SpineRendererComponent getSpineComponent() {
         recalculateBitMask();
         return spineComponentCache;
     }
 
-    public boolean hasBoneComponent ()  {
+    public boolean hasBoneComponent() {
         //check bitmask
         recalculateBitMask();
         return (componentBitMask & BONE_COMPONENT_BIT) != 0;
     }
-    public BoneComponent getBoneComponent () {
+
+    public BoneComponent getBoneComponent() {
         recalculateBitMask();
         return boneComponentCache;
     }
 
-    public boolean hasSpriteComponent () {
+    public boolean hasSpriteComponent() {
         //check bitmask
         recalculateBitMask();
         return (componentBitMask & SPRITE_RENDERER_COMPONENT_BIT) != 0;
     }
 
-    public SpriteRendererComponent getSpriteComponent () {
+    public SpriteRendererComponent getSpriteComponent() {
         recalculateBitMask();
         return spriteComponentCache;
     }
 
-    public boolean hasParticleComponent () {
+    public boolean hasParticleComponent() {
         //check bitmask
         recalculateBitMask();
         return (componentBitMask & PARTICLE_COMPONENT_BIT) != 0;
     }
 
-    public ParticleComponent getParticleComponent () {
+    public ParticleComponent getParticleComponent() {
         recalculateBitMask();
         return particleComponentCache;
     }
 
-    public boolean hasRoutineRendererComponent () {
+    public boolean hasRoutineRendererComponent() {
         //check bitmask
         recalculateBitMask();
         return (componentBitMask & ROUTINE_RENDERER_COMPONENT_BIT) != 0;
     }
 
-    public RoutineRendererComponent getRoutineRendererComponent () {
+    public RoutineRendererComponent getRoutineRendererComponent() {
         recalculateBitMask();
         return routineRendererComponentCache;
     }
 
-
-    public GameObject () {
-        uuid = UUID.randomUUID();
-        routineEventListeners = new Array<>();
-    }
-
     @Override
-    public Array<GameObject> getGameObjects () {
+    public Array<GameObject> getGameObjects() {
         return children;
     }
 
     @Override
-    public Iterable<AComponent> getComponents () {
+    public Iterable<AComponent> getComponents() {
         return components;
     }
 
     @Override
-    public String getName () {
+    public String getName() {
         return name;
     }
 
     @Override
-    public void write (Json json) {
+    public void setName(String name) {
+        String oldName = this.name;
+        this.name = name;
+        if (parent != null) {
+            parent.notifyChildRename(oldName, name);
+        }
+    }
+
+    @Override
+    public void write(Json json) {
 
 
         if (hasComponent(SpineRendererComponent.class)) {
@@ -276,7 +341,6 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
                 json.writeValue(boneGO, GameObject.class);
             }
             json.writeArrayEnd();
-
         }
 
         json.writeValue("name", name);
@@ -307,7 +371,7 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         json.writeArrayEnd();
     }
 
-    public Bone getAttachedSpineBoneOrNull () {
+    public Bone getAttachedSpineBoneOrNull() {
         if (parent != null) {
             if (parent.hasBoneComponent()) {
                 return parent.getBoneComponent().getBone();
@@ -316,25 +380,8 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         return null;
     }
 
-    public static void gatherAllChildrenAttachedToBones(GameObject parent, Array<Bone> bones, Array<GameObject> out) {
-        Bone attachedSpineBoneOrNull = parent.getAttachedSpineBoneOrNull();
-
-        if (attachedSpineBoneOrNull != null) {
-            if (bones.contains(attachedSpineBoneOrNull, true)) {
-
-                if (!parent.hasBoneComponent()) {
-                    out.add(parent);
-                    return;
-                }
-            }
-        }
-        for (GameObject gameObject : parent.getGameObjects()) {
-            gameObject.gatherAllChildrenAttachedToBones(gameObject, bones, out);
-        }
-    }
-
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         name = jsonData.getString("name", null);
         if (name == null) {
             return;
@@ -354,7 +401,7 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         readBoneName = jsonData.getString("parentBone", null);
 
         JsonValue componentsJson = jsonData.get("components");
-        for(JsonValue componentJson : componentsJson) {
+        for (JsonValue componentJson : componentsJson) {
             componentJson.addChild("talosIdentifier", new JsonValue(talosContextIdentifier));
             AComponent component = json.readValue(AComponent.class, componentJson);
 
@@ -377,7 +424,7 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
             SpineRendererComponent component = getComponent(SpineRendererComponent.class);
             // re attach back the children of bones
             JsonValue childrenJson = jsonData.get("boneAttachedGOs");
-            if(childrenJson != null) {
+            if (childrenJson != null) {
                 for (JsonValue childJson : childrenJson) {
                     childJson.addChild("talosIdentifier", new JsonValue(talosContextIdentifier));
                     GameObject childObject = json.readValue(GameObject.class, childJson);
@@ -388,7 +435,7 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         }
 
         JsonValue childrenJson = jsonData.get("children");
-        if(childrenJson != null) {
+        if (childrenJson != null) {
             for (JsonValue childJson : childrenJson) {
                 try {
                     childJson.addChild("talosIdentifier", new JsonValue(talosContextIdentifier));
@@ -402,7 +449,7 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
     }
 
     @Override
-    public void addGameObject (GameObject gameObject) {
+    public void addGameObject(GameObject gameObject) {
         children.add(gameObject);
         childrenMap.put(gameObject.name, gameObject);
 
@@ -413,7 +460,7 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
     }
 
     @Override
-    public  Array<GameObject> deleteGameObject (GameObject gameObject) {
+    public Array<GameObject> deleteGameObject(GameObject gameObject) {
         Array<GameObject> deletedGameObjects = new Array<>();
 
         String name = gameObject.getName();
@@ -430,7 +477,7 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
     }
 
     @Override
-    public void removeObject (GameObject gameObject) {
+    public void removeObject(GameObject gameObject) {
         String name = gameObject.getName();
         if (childrenMap.containsKey(name)) {
             childrenMap.remove(name);
@@ -442,7 +489,7 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
     }
 
     @Override
-    public void clearChildren (Array<GameObject> tmp) {
+    public void clearChildren(Array<GameObject> tmp) {
         for (GameObject child : children) {
             child.clearChildren(tmp);
         }
@@ -457,35 +504,34 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
     }
 
     @Override
-    public GameObject getParent () {
+    public GameObject getParent() {
         return parent;
     }
 
     @Override
-    public GameObject getSelfObject () {
+    public void setParent(GameObject gameObject) {
+        parent = gameObject;
+    }
+
+    @Override
+    public GameObject getSelfObject() {
         return this;
     }
 
     @Override
-    public void setParent (GameObject gameObject) {
-        parent = gameObject;
-    }
-
-    private ArrayList<String> goNames = new ArrayList<>();
-    @Override
-    public Supplier<Collection<String>> getAllGONames () {
+    public Supplier<Collection<String>> getAllGONames() {
         goNames.clear();
         addNamesToList(goNames, this);
         return new Supplier<Collection<String>>() {
             @Override
-            public Collection<String> get () {
+            public Collection<String> get() {
                 return goNames;
             }
         };
     }
 
     @Override
-    public void dispose () {
+    public void dispose() {
         for (GameObject child : children) {
             child.dispose();
         }
@@ -494,7 +540,7 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         for (AComponent component : components) {
             component.setGameObject(null);
             if (component instanceof GameResourceOwner) {
-                ((GameResourceOwner<?>)component).clearResource();
+                ((GameResourceOwner<?>) component).clearResource();
             }
         }
         components.clear();
@@ -513,20 +559,19 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         routineRendererComponentCache = null;
     }
 
-    private void addNamesToList (ArrayList<String> goNames, GameObject gameObject) {
+    private void addNamesToList(ArrayList<String> goNames, GameObject gameObject) {
         goNames.add(gameObject.getName());
         if (gameObject.getGameObjects() != null) {
             Array<GameObject> gameObjects = gameObject.getGameObjects();
             for (int i = 0; i < gameObjects.size; i++) {
                 GameObject child = gameObjects.get(i);
                 addNamesToList(goNames, child);
-
             }
         }
     }
 
     @Override
-    public void addComponent (AComponent component) {
+    public void addComponent(AComponent component) {
         components.add(component);
         component.setGameObject(this);
         componentClasses.put(component.getClass(), component);
@@ -534,13 +579,13 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         gameObjectDirty();
     }
 
-    public void gameObjectDirty () {
+    public void gameObjectDirty() {
         calculatedBoneChildren = false;
         maskDirty = true;
     }
 
     @Override
-    public void removeComponent (AComponent component) {
+    public void removeComponent(AComponent component) {
         components.remove(component);
         componentClasses.remove(component.getClass());
 
@@ -548,10 +593,10 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
     }
 
     @Override
-    public boolean hasGOWithName (String name) {
-        if(childrenMap.containsKey(name)) return true;
-        for(GameObject child: children) {
-            if(child.hasGOWithName(name)) {
+    public boolean hasGOWithName(String name) {
+        if (childrenMap.containsKey(name)) return true;
+        for (GameObject child : children) {
+            if (child.hasGOWithName(name)) {
                 return true;
             }
         }
@@ -560,16 +605,12 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
     }
 
     public boolean hasComponent(Class clazz) {
-        if(componentClasses.containsKey(clazz)) {
-            return true;
-        }
-
-        return false;
+        return componentClasses.containsKey(clazz);
     }
 
     public boolean hasComponentType(Class clazz) {
-        for(Class clazzToCheck: componentClasses.keys()) {
-            if(clazz.isAssignableFrom(clazzToCheck)) {
+        for (Class clazzToCheck : componentClasses.keys()) {
+            if (clazz.isAssignableFrom(clazzToCheck)) {
                 return true;
             }
         }
@@ -577,38 +618,26 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         return false;
     }
 
-    public <T> T findComponent (Class<T> clazz) {
+    public <T> T findComponent(Class<T> clazz) {
         for (AComponent component : components) {
             if (clazz.isAssignableFrom(component.getClass())) {
                 return (T) component;
             }
         }
         return null;
-
     }
 
-    public <T extends AComponent> T getComponent (Class<? extends T> clazz) {
+    public <T extends AComponent> T getComponent(Class<? extends T> clazz) {
         return (T) componentClasses.get(clazz);
     }
 
-    @Override
-    public void setName (String name) {
-        String oldName = this.name;
-        this.name = name;
-        if(parent != null) {
-           parent.notifyChildRename(oldName, name);
-        }
-    }
-
-    private void notifyChildRename (String oldName, String name) {
+    private void notifyChildRename(String oldName, String name) {
         GameObject gameObject = childrenMap.get(oldName);
         childrenMap.remove(oldName);
         childrenMap.put(name, gameObject);
     }
 
-    private Array<GameObject> boneChildren;
-    private boolean calculatedBoneChildren = false;
-    public Array<GameObject> getChildrenWithBoneComponent () {
+    public Array<GameObject> getChildrenWithBoneComponent() {
         if (!calculatedBoneChildren) {
             if (boneChildren == null) {
                 boneChildren = new Array<>();
@@ -659,7 +688,6 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
                     if (!foundInteresting) {
                         boneChildren.removeIndex(i);
                     }
-
                 }
             }
 
@@ -670,12 +698,12 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         return boneChildren;
     }
 
-    public Array<GameObject> getChildrenByComponentFaster (Class<?> clazz, Array<GameObject> list) {
-        for(GameObject gameObject: children) {
-            if(gameObject.hasComponent(clazz)) {
+    public Array<GameObject> getChildrenByComponentFaster(Class<?> clazz, Array<GameObject> list) {
+        for (GameObject gameObject : children) {
+            if (gameObject.hasComponent(clazz)) {
                 list.add(gameObject);
             }
-            if(gameObject.getGameObjects() != null && gameObject.getGameObjects().size > 0) {
+            if (gameObject.getGameObjects() != null && gameObject.getGameObjects().size > 0) {
                 gameObject.getChildrenByComponentFaster(clazz, list);
             }
         }
@@ -683,12 +711,12 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         return list;
     }
 
-    public Array<GameObject> getChildrenByComponent (Class<?> clazz, Array<GameObject> list) {
-        for(GameObject gameObject: children) {
-            if(gameObject.hasComponentType(clazz)) {
+    public Array<GameObject> getChildrenByComponent(Class<?> clazz, Array<GameObject> list) {
+        for (GameObject gameObject : children) {
+            if (gameObject.hasComponentType(clazz)) {
                 list.add(gameObject);
             }
-            if(gameObject.getGameObjects() != null && gameObject.getGameObjects().size > 0) {
+            if (gameObject.getGameObjects() != null && gameObject.getGameObjects().size > 0) {
                 gameObject.getChildrenByComponent(clazz, list);
             }
         }
@@ -696,9 +724,9 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         return list;
     }
 
-    public <T> T getComponentAssignableFrom (Class<? extends T> clazz) {
-        for(Class clazzToCheck: componentClasses.keys()) {
-            if(clazz.isAssignableFrom(clazzToCheck)) {
+    public <T> T getComponentAssignableFrom(Class<? extends T> clazz) {
+        for (Class clazzToCheck : componentClasses.keys()) {
+            if (clazz.isAssignableFrom(clazzToCheck)) {
                 return (T) componentClasses.get(clazzToCheck);
             }
         }
@@ -706,53 +734,17 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         return null;
     }
 
-    public void setPrefabLink (String prefabLink) {
+    public void setPrefabLink(String prefabLink) {
         this.prefabLink = prefabLink;
     }
 
-    BoundingBox boundingBox = new BoundingBox();
-
-    private static void estimateSizeForGameObject (GameObject gameObject, BoundingBox minMax) {
-        Iterable<AComponent> components = gameObject.getComponents();
-        for (AComponent component : components) {
-            if (component instanceof RendererComponent) {
-                ((RendererComponent) component).minMaxBounds(gameObject, minMax);
-            }
-        }
-        for (GameObject child : gameObject.children) {
-            estimateSizeForGameObject(child, minMax);
-        }
-    }
-    public BoundingBox estimateSizeFromRoot () {
+    public BoundingBox estimateSizeFromRoot() {
         boundingBox.clr();
         estimateSizeForGameObject(this, boundingBox);
         return boundingBox;
     }
 
-
-    public static void setPositionFromWorldPosition (GameObject object, Vector2 worldPosition) {
-        TransformComponent transformComponent = object.getComponent(TransformComponent.class);
-        transformComponent.worldPosition.set(worldPosition);
-        projectInParentSpace(object.parent, object);
-    }
-
-    public static void projectInParentSpace(GameObject parentToMoveTo, GameObject childThatHasMoved) {
-        if (childThatHasMoved.hasComponent(TransformComponent.class)) {
-            TransformComponent childPositionComponent = childThatHasMoved.getComponent(TransformComponent.class);
-            TransformComponent parentPositionComponent = new TransformComponent();
-            if (parentToMoveTo.hasTransformComponent()) {
-                parentPositionComponent = parentToMoveTo.getTransformComponent();
-            }
-
-            Vector2 tmp = TransformComponent.vec;
-            tmp.set(childPositionComponent.worldPosition);
-            tmp.sub(parentPositionComponent.worldPosition);
-            childPositionComponent.position.set(tmp);
-            childPositionComponent.rotation -= parentPositionComponent.rotation;
-        }
-    }
-
-    public int getParentCount () {
+    public int getParentCount() {
         int count = 0;
         GameObject par = getParent();
 
@@ -764,7 +756,7 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         return count;
     }
 
-    public GameObject getTopParent (GameObject parentToIgnore) {
+    public GameObject getTopParent(GameObject parentToIgnore) {
         GameObject topParent = this;
         while (topParent.getParent() != null && topParent.getParent() != parentToIgnore) {
             topParent = topParent.getParent();
@@ -772,7 +764,7 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         return topParent;
     }
 
-    public GameObject getChildByName (String name, boolean recursive) {
+    public GameObject getChildByName(String name, boolean recursive) {
         for (int i = 0; i < children.size; i++) {
             GameObject child = children.get(i);
             if (child.name.equals(name)) {
@@ -792,7 +784,7 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         return null;
     }
 
-    public GameObject getChildByUUID (UUID uuid) {
+    public GameObject getChildByUUID(UUID uuid) {
         for (int i = 0; i < children.size; i++) {
             GameObject child = children.get(i);
             if (child.uuid.equals(uuid)) {
@@ -810,6 +802,10 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         return null;
     }
 
+    public boolean isEditorVisible() {
+        return editorVisible;
+    }
+
     public void setEditorVisible(boolean editorVisible) {
         this.editorVisible = editorVisible;
         for (GameObject child : children) {
@@ -817,8 +813,8 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         }
     }
 
-    public boolean isEditorVisible (){
-        return editorVisible;
+    public boolean isEditorTransformLocked() {
+        return editorTransformLocked;
     }
 
     public void setEditorTransformLocked(boolean editorTransformLocked) {
@@ -828,11 +824,7 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         }
     }
 
-    public boolean isEditorTransformLocked (){
-        return editorTransformLocked;
-    }
-
-    public GameObjectContainer getGameObjectContainerRoot () {
+    public GameObjectContainer getGameObjectContainerRoot() {
         if (getParent() == null) {
             return rootGameObjectContainer;
         } else {
@@ -840,12 +832,12 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         }
     }
 
-    public void setGameObjectContainer (GameObjectContainer rootGameObjectContainer) {
+    public void setGameObjectContainer(GameObjectContainer rootGameObjectContainer) {
         this.rootGameObjectContainer = rootGameObjectContainer;
     }
 
     public Array<GameObject> findGOsWithComponents(Array<GameObject> result, Class<? extends AComponent> clazz) {
-        if(hasComponent(clazz)) {
+        if (hasComponent(clazz)) {
             result.add(this);
             return result;
         }
@@ -857,19 +849,19 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
         return result;
     }
 
-    public GameResourceOwner<?> getRenderResourceComponent () {
+    public GameResourceOwner<?> getRenderResourceComponent() {
         for (AComponent component : components) {
             if (component instanceof GameResourceOwner && component instanceof RendererComponent) {
-                return (GameResourceOwner<?>)component;
+                return (GameResourceOwner<?>) component;
             }
         }
         return null;
     }
 
-    public GameResourceOwner<?> getResourceComponent () {
+    public GameResourceOwner<?> getResourceComponent() {
         for (AComponent component : components) {
             if (component instanceof GameResourceOwner) {
-                return (GameResourceOwner<?>)component;
+                return (GameResourceOwner<?>) component;
             }
         }
         return null;
@@ -888,12 +880,12 @@ public class GameObject implements GameObjectContainer, RoutineEventListener, Js
     }
 
     @Override
-    public String getTalosIdentifier () {
+    public String getTalosIdentifier() {
         return talosContextIdentifier;
     }
 
     @Override
-    public void setTalosIdentifier (String identifier) {
+    public void setTalosIdentifier(String identifier) {
         this.talosContextIdentifier = identifier;
     }
 }

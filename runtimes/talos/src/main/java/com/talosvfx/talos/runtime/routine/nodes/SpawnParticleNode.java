@@ -2,7 +2,6 @@ package com.talosvfx.talos.runtime.routine.nodes;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-
 import com.talosvfx.talos.runtime.RuntimeContext;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.routine.RoutineNode;
@@ -10,7 +9,6 @@ import com.talosvfx.talos.runtime.routine.TickableNode;
 import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.SceneLayer;
 import com.talosvfx.talos.runtime.scene.components.ParticleComponent;
-import com.talosvfx.talos.runtime.scene.components.SpineRendererComponent;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 import com.talosvfx.talos.runtime.utils.NamingUtils;
 import com.talosvfx.talos.runtime.vfx.ParticleEffectInstance;
@@ -18,18 +16,18 @@ import com.talosvfx.talos.runtime.vfx.serialization.BaseVFXProjectData;
 
 public class SpawnParticleNode extends RoutineNode implements TickableNode {
 
-    private Vector2 tmp = new Vector2();
+    private final Vector2 tmp = new Vector2();
 
-    private Array<GameObject> trackingVFX = new Array();
+    private final Array<GameObject> trackingVFX = new Array();
     private GameObject goRef;
 
     @Override
-    public void receiveSignal (String portName) {
+    public void receiveSignal(String portName) {
 
         GameObject target = (GameObject) routineInstanceRef.getSignalPayload();
         String parent = fetchStringValue("parent");
-        if(parent != null && !parent.isEmpty()) {
-            if(parent.equals("root")) {
+        if (parent != null && !parent.isEmpty()) {
+            if (parent.equals("root")) {
                 target = routineInstanceRef.getContainer().root;
             } else {
                 Array<GameObject> gameObjects = routineInstanceRef.getContainer().findGameObjects(parent);
@@ -74,12 +72,12 @@ public class SpawnParticleNode extends RoutineNode implements TickableNode {
 
     @Override
     public void tick(float delta) {
-        for(int i = trackingVFX.size - 1; i >= 0 ; i--) {
+        for (int i = trackingVFX.size - 1; i >= 0; i--) {
             GameObject gameObject = trackingVFX.get(i);
             ParticleComponent component = gameObject.getComponent(ParticleComponent.class);
-            if(component.getEffectRef() != null) {
+            if (component.getEffectRef() != null) {
                 ParticleEffectInstance effectRef = component.getEffectRef();
-                if(effectRef.getParticleCount() == 0) {
+                if (effectRef.getParticleCount() == 0) {
                     //todo put back in
                     trackingVFX.removeIndex(i);
                     gameObject.getParent().removeObject(gameObject);
@@ -98,7 +96,7 @@ public class SpawnParticleNode extends RoutineNode implements TickableNode {
 
 
     @Override
-    public void reset () {
+    public void reset() {
         super.reset();
         goRef = null;
     }

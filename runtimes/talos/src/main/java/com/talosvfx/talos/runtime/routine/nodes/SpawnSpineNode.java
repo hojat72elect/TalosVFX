@@ -11,6 +11,7 @@ import com.talosvfx.talos.runtime.scene.SceneLayer;
 import com.talosvfx.talos.runtime.scene.components.SpineRendererComponent;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 import com.talosvfx.talos.runtime.utils.NamingUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +19,7 @@ public class SpawnSpineNode extends RoutineNode {
 
     private static final Logger logger = LoggerFactory.getLogger(SpawnSpineNode.class);
 
-    private Vector2 tmp = new Vector2();
+    private final Vector2 tmp = new Vector2();
     private GameObject goRef;
 
     @Override
@@ -28,11 +29,11 @@ public class SpawnSpineNode extends RoutineNode {
 
         GameAsset<SkeletonData> asset = (GameAsset<SkeletonData>) fetchAssetValue("spine");
 
-        if(asset != null) {
+        if (asset != null) {
             tmp.setZero();
             goRef = new GameObject();
             String nm = fetchStringValue("name");
-            if(nm == null || nm.isEmpty()) nm = "dynamicSpineGo";
+            if (nm == null || nm.isEmpty()) nm = "dynamicSpineGo";
             String name = NamingUtils.getNewName(nm, target.getAllGONames());
             goRef.setName(name);
             TransformComponent transformComponent = new TransformComponent();
@@ -60,6 +61,7 @@ public class SpawnSpineNode extends RoutineNode {
             sendSignal("onComplete");
         }
     }
+
     @Override
     public Object queryValue(String targetPortName) {
         if (targetPortName.equals("gameObject")) {
@@ -70,7 +72,7 @@ public class SpawnSpineNode extends RoutineNode {
 
 
     @Override
-    public void reset () {
+    public void reset() {
         super.reset();
         goRef = null;
     }

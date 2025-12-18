@@ -9,6 +9,13 @@ public class CustomColorWidget extends ATypeWidget<Color> {
 
     private final ColorWidget colorWidget;
 
+    public CustomColorWidget() {
+        colorWidget = new ColorWidget();
+        colorWidget.init(SharedResources.skin, "color");
+
+        add(colorWidget).padLeft(4).padRight(4).width(220).padTop(9).padBottom(5);
+    }
+
     @Override
     public String getTypeName() {
         return "color";
@@ -27,12 +34,5 @@ public class CustomColorWidget extends ATypeWidget<Color> {
     @Override
     public boolean isFastChange() {
         return colorWidget.isFastChange();
-    }
-
-    public CustomColorWidget() {
-        colorWidget = new ColorWidget();
-        colorWidget.init(SharedResources.skin, "color");
-
-        add(colorWidget).padLeft(4).padRight(4).width(220).padTop(9).padBottom(5);
     }
 }

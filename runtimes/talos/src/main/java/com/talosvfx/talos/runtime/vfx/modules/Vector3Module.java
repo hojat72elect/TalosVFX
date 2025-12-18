@@ -45,11 +45,11 @@ public class Vector3Module extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
 
-        if(x.isEmpty()) x.set(defaultX);
-        if(y.isEmpty()) y.set(defaultY);
-        if(z.isEmpty()) z.set(defaultZ);
+        if (x.isEmpty()) x.set(defaultX);
+        if (y.isEmpty()) y.set(defaultY);
+        if (z.isEmpty()) z.set(defaultZ);
 
         output.set(x, y, z);
     }
@@ -79,7 +79,7 @@ public class Vector3Module extends AbstractModule {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("x", getDefaultX());
         json.writeValue("y", getDefaultY());
@@ -87,11 +87,10 @@ public class Vector3Module extends AbstractModule {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         defaultX = jsonData.getFloat("x", 0);
         defaultY = jsonData.getFloat("y", 0);
         defaultZ = jsonData.getFloat("z", 0);
     }
-
 }

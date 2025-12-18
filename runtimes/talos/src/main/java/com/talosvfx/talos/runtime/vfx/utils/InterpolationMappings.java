@@ -24,40 +24,40 @@ import com.badlogic.gdx.utils.reflect.Field;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 
 public class InterpolationMappings {
-	private static final ObjectMap<String, Interpolation> names = new ObjectMap<>();
+    private static final ObjectMap<String, Interpolation> names = new ObjectMap<>();
 
-	static {
-		Array<String> namesArr = new Array<>();
-		// get list of possible interpolations
+    static {
+        Array<String> namesArr = new Array<>();
+        // get list of possible interpolations
 
-		Field[] fields = ClassReflection.getFields(Interpolation.class);
-		for (int i = 0; i < fields.length; i++) {
-			try {
-				Interpolation interp = (Interpolation)fields[i].get(null);
-				names.put(fields[i].getName(), interp);
-				namesArr.add(fields[i].getName());
-			} catch (ReflectionException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+        Field[] fields = ClassReflection.getFields(Interpolation.class);
+        for (int i = 0; i < fields.length; i++) {
+            try {
+                Interpolation interp = (Interpolation) fields[i].get(null);
+                names.put(fields[i].getName(), interp);
+                namesArr.add(fields[i].getName());
+            } catch (ReflectionException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-	public static Interpolation getInterpolationForName (String name) {
-		return names.get(name);
-	}
+    public static Interpolation getInterpolationForName(String name) {
+        return names.get(name);
+    }
 
-	public static String getNameForInterpolation (Interpolation interpolation) {
-		for (ObjectMap.Entry<String, Interpolation> name : names) {
-			if (name.value == interpolation) {
-				return name.key;
-			}
-		}
-		return "fade";
-	}
+    public static String getNameForInterpolation(Interpolation interpolation) {
+        for (ObjectMap.Entry<String, Interpolation> name : names) {
+            if (name.value == interpolation) {
+                return name.key;
+            }
+        }
+        return "fade";
+    }
 
-	public static void getAvailableInterpolations (Array<String> interps) {
-		for (String key : names.keys()) {
-			interps.add(key);
-		}
-	}
+    public static void getAvailableInterpolations(Array<String> interps) {
+        for (String key : names.keys()) {
+            interps.add(key);
+        }
+    }
 }

@@ -15,6 +15,13 @@
  */
 package com.talosvfx.talos;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.update4j.Configuration;
+import org.update4j.LaunchContext;
+import org.update4j.service.Launcher;
+import org.update4j.util.StringUtils;
+
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -24,38 +31,62 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javafx.application.Platform;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.update4j.Configuration;
-import org.update4j.LaunchContext;
-import org.update4j.inject.InjectTarget;
-import org.update4j.service.Launcher;
-import org.update4j.util.StringUtils;
-
 public class CustomLauncher implements Launcher {
-    private Logger logger = LoggerFactory.getLogger(CustomLauncher.class);
-
     public static final String DOMAIN_PREFIX = "default.launcher";
     public static final String MAIN_CLASS_PROPERTY_KEY = DOMAIN_PREFIX + ".main.class";
     public static final String ARGUMENT_PROPERTY_KEY_PREFIX = DOMAIN_PREFIX + ".argument";
     public static final String SYSTEM_PROPERTY_KEY_PREFIX = DOMAIN_PREFIX + ".system";
-
+    private final Logger logger = LoggerFactory.getLogger(CustomLauncher.class);
     private Start start;
 
-    public CustomLauncher (Start start) {
+    public CustomLauncher(Start start) {
         this.start = start;
-    }
-
-    @Override
-    public long version() {
-        return Long.MIN_VALUE;
     }
 
     public CustomLauncher() {
 
     }
 
+    // @formatter:off
+    private static void usage() {
+        System.err.println("Customize the setup of the default launcher by setting properties in the config as following:\n\n\n"
+
+
+                + "\t\tdefault.launcher.main.class\n"
+                + "\t\t\tThe main class of the business app having a main method or subclassing\n"
+                + "\t\t\tjavafx.application.Application\n\n"
+
+                + "\t\tdefault.launcher.argument.<num>\n"
+                + "\t\t\tPass values in the args list, or if no main class is present, execute them;\n"
+                + "\t\t\tordered by <num>. It will throw a  NumberFormatException if <num> is\n"
+                + "\t\t\tnot a valid integer.\n"
+                + "\t\t\tArguments passed from the bootstrap are always first in the list followed\n"
+                + "\t\t\tby these property values.\n\n"
+
+                + "\t\tdefault.launcher.system.<key>\n"
+                + "\t\t\tPass system properties with the provided values using the <key> as the\n"
+                + "\t\t\tsystem property key.\n\n\n"
+
+
+                + "\tYou must provider either a main class, in which case all arguments will be passed\n"
+                + "\tto the main method, or just arguments which will be executed as shell commands.\n"
+                + "\tNote: You can also pass arguments directly from the default bootstrap after a double-dash --\n\n"
+
+                + "\tWhile the default behavior works for a majority of cases, you may even\n"
+                + "\tfurther customize the launch process by implementing your own Launcher\n"
+                + "\tand either register it as a service provider, or pass an instance directly\n"
+                + "\tto a call to Configuration.launch(). This allows you to leverage the dependency\n"
+                + "\tinjection feature by calling any overload of Configuration.launch() that accepts\n"
+                + "\tan Injectable.\n\n"
+
+                + "\tFor more details how to register service providers please refer to the Github wiki:\n"
+                + "\thttps://github.com/update4j/update4j/wiki/Documentation#dealing-with-providers\n");
+    }
+
+    @Override
+    public long version() {
+        return Long.MIN_VALUE;
+    }
 
     @Override
     public void run(LaunchContext context) {
@@ -124,25 +155,21 @@ public class CustomLauncher implements Launcher {
 
                     start.mainThreadRunnables.add(new Runnable() {
                         @Override
-                        public void run () {
+                        public void run() {
                             try {
                                 Method main = clazz.getMethod("main", String[].class);
                                 main.invoke(null, new Object[]{argsArray});
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                logger.error("Error: Uncalled exception:" , e);
+                                logger.error("Error: Uncalled exception:", e);
                             }
                         }
                     });
-
-
                 }
-
             } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException
                      | NoSuchMethodException e) {
                 throw new RuntimeException(e);
             }
-
         } else {
 
             try {
@@ -150,44 +177,7 @@ public class CustomLauncher implements Launcher {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
         }
-    }
-
-    // @formatter:off
-    private static void usage() {
-        System.err.println("Customize the setup of the default launcher by setting properties in the config as following:\n\n\n"
-
-
-                + "\t\tdefault.launcher.main.class\n"
-                + "\t\t\tThe main class of the business app having a main method or subclassing\n"
-                + "\t\t\tjavafx.application.Application\n\n"
-
-                + "\t\tdefault.launcher.argument.<num>\n"
-                + "\t\t\tPass values in the args list, or if no main class is present, execute them;\n"
-                + "\t\t\tordered by <num>. It will throw a  NumberFormatException if <num> is\n"
-                + "\t\t\tnot a valid integer.\n"
-                + "\t\t\tArguments passed from the bootstrap are always first in the list followed\n"
-                + "\t\t\tby these property values.\n\n"
-
-                + "\t\tdefault.launcher.system.<key>\n"
-                + "\t\t\tPass system properties with the provided values using the <key> as the\n"
-                + "\t\t\tsystem property key.\n\n\n"
-
-
-                + "\tYou must provider either a main class, in which case all arguments will be passed\n"
-                + "\tto the main method, or just arguments which will be executed as shell commands.\n"
-                + "\tNote: You can also pass arguments directly from the default bootstrap after a double-dash --\n\n"
-
-                + "\tWhile the default behavior works for a majority of cases, you may even\n"
-                + "\tfurther customize the launch process by implementing your own Launcher\n"
-                + "\tand either register it as a service provider, or pass an instance directly\n"
-                + "\tto a call to Configuration.launch(). This allows you to leverage the dependency\n"
-                + "\tinjection feature by calling any overload of Configuration.launch() that accepts\n"
-                + "\tan Injectable.\n\n"
-
-                + "\tFor more details how to register service providers please refer to the Github wiki:\n"
-                + "\thttps://github.com/update4j/update4j/wiki/Documentation#dealing-with-providers\n");
     }
 
 }

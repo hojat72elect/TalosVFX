@@ -4,16 +4,15 @@ import com.badlogic.gdx.utils.Array;
 
 public class SnapshotTracker {
 
-    private int cursor = 0;
-
     Array<String> snapshots = new Array<>();
+    private int cursor = 0;
 
     public SnapshotTracker() {
 
     }
 
     public void addSnapshot(String data) {
-        if(cursor + 1 <= snapshots.size - 1) {
+        if (cursor + 1 <= snapshots.size - 1) {
             snapshots.removeRange(cursor + 1, snapshots.size - 1);
         }
 
@@ -22,7 +21,7 @@ public class SnapshotTracker {
     }
 
     public boolean moveBack() {
-        if(cursor > 0) {
+        if (cursor > 0) {
             cursor--;
             return true;
         } else {
@@ -31,7 +30,7 @@ public class SnapshotTracker {
     }
 
     public boolean moveForward() {
-        if(cursor < snapshots.size - 1) {
+        if (cursor < snapshots.size - 1) {
             cursor++;
             return true;
         } else {

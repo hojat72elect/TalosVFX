@@ -23,7 +23,6 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.kotcrab.vis.ui.widget.VisSelectBox;
-import com.kotcrab.vis.ui.widget.VisTextField;
 import com.talosvfx.talos.runtime.vfx.Expression;
 import com.talosvfx.talos.runtime.vfx.modules.MathModule;
 import com.talosvfx.talos.runtime.vfx.utils.MathExpressionMappings;
@@ -31,10 +30,9 @@ import com.talosvfx.talos.runtime.vfx.values.NumericalValue;
 
 public class MathModuleWrapper extends ModuleWrapper<MathModule> {
 
+    VisSelectBox<String> selectBox;
     private TextField aField;
     private TextField bField;
-
-    VisSelectBox<String> selectBox;
 
     public MathModuleWrapper() {
         super();
@@ -56,7 +54,7 @@ public class MathModuleWrapper extends ModuleWrapper<MathModule> {
     @Override
     public void setSlotInactive(int slotTo, boolean isInput) {
         super.setSlotInactive(slotTo, isInput);
-        if(!isInput) {
+        if (!isInput) {
             module.a.setFlavour(NumericalValue.Flavour.REGULAR);
             module.b.setFlavour(NumericalValue.Flavour.REGULAR);
         }
@@ -83,7 +81,7 @@ public class MathModuleWrapper extends ModuleWrapper<MathModule> {
 
         aField.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 float a = floatFromText(aField);
                 module.setA(a);
             }
@@ -91,7 +89,7 @@ public class MathModuleWrapper extends ModuleWrapper<MathModule> {
 
         bField.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 float b = floatFromText(bField);
                 module.setB(b);
             }
@@ -112,7 +110,7 @@ public class MathModuleWrapper extends ModuleWrapper<MathModule> {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         selectBox.setSelected(MathExpressionMappings.getNameForMathExpression(module.getExpression()));
 

@@ -31,147 +31,143 @@ import java.util.concurrent.TimeUnit;
  */
 public class GameLoopSystemInvocationStrategy extends SystemInvocationStrategy {
 
-	private final Array<BaseSystem> logicMarkedSystems;
-	private final Array<BaseSystem> otherSystems;
+    private final Array<BaseSystem> logicMarkedSystems;
+    private final Array<BaseSystem> otherSystems;
+    private final BitVector disabledlogicMarkedSystems = new BitVector();
+    private final BitVector disabledOtherSystems = new BitVector();
+    private long nanosPerLogicTick; // ~ dt
+    private long currentTime = System.currentTimeMillis();
+    private long accumulator;
+    private boolean systemsSorted = false;
 
-	private long nanosPerLogicTick; // ~ dt
-	private long currentTime = System.currentTimeMillis();
+    public GameLoopSystemInvocationStrategy() {
+        this(40);
+    }
 
-	private long accumulator;
+    public GameLoopSystemInvocationStrategy(int millisPerLogicTick) {
+        this.nanosPerLogicTick = TimeUnit.MILLISECONDS.toMillis(millisPerLogicTick);
+        logicMarkedSystems = new Array<BaseSystem>();
+        otherSystems = new Array<BaseSystem>();
+    }
 
-	private boolean systemsSorted = false;
+    @Override
+    protected void initialize() {
+        /** Sort Sytems here in case {@link #setEnabled(BaseSystem, boolean)} is called prior to first {@link #process()} */
+        if (!systemsSorted) {
+            sortSystems();
+        }
+    }
 
-	private final BitVector disabledlogicMarkedSystems = new BitVector();
-	private final BitVector disabledOtherSystems = new BitVector();
-
-	public GameLoopSystemInvocationStrategy () {
-		this(40);
-	}
-
-	@Override
-	protected void initialize () {
-		/** Sort Sytems here in case {@link #setEnabled(BaseSystem, boolean)} is called prior to first {@link #process()} */
-		if (!systemsSorted) {
-			sortSystems();
-		}
-	}
-
-	public GameLoopSystemInvocationStrategy (int millisPerLogicTick) {
-		this.nanosPerLogicTick = TimeUnit.MILLISECONDS.toMillis(millisPerLogicTick);
-		logicMarkedSystems = new Array<BaseSystem>();
-		otherSystems = new Array<BaseSystem>();
-	}
-
-	public void setNanosPerLogicTick (long nanosPerLogicTick) {
-		this.nanosPerLogicTick = nanosPerLogicTick;
-	}
+    public void setNanosPerLogicTick(long nanosPerLogicTick) {
+        this.nanosPerLogicTick = nanosPerLogicTick;
+    }
 
 
-	private void sortSystems () {
-		if (!systemsSorted) {
-			Object[] systemsData = systems.getData();
-			for (int i = 0, s = systems.size(); s > i; i++) {
-				BaseSystem system = (BaseSystem)systemsData[i];
-				if (system instanceof PhysicsStepMarker) {
-					logicMarkedSystems.add(system);
-				} else {
-					otherSystems.add(system);
-				}
-			}
-			systemsSorted = true;
-		}
-	}
+    private void sortSystems() {
+        if (!systemsSorted) {
+            Object[] systemsData = systems.getData();
+            for (int i = 0, s = systems.size(); s > i; i++) {
+                BaseSystem system = (BaseSystem) systemsData[i];
+                if (system instanceof PhysicsStepMarker) {
+                    logicMarkedSystems.add(system);
+                } else {
+                    otherSystems.add(system);
+                }
+            }
+            systemsSorted = true;
+        }
+    }
 
-	@Override
-	protected void process () {
-		if (!systemsSorted) {
-			sortSystems();
-		}
+    @Override
+    protected void process() {
+        if (!systemsSorted) {
+            sortSystems();
+        }
 
-		long newTime = System.currentTimeMillis();
-		long frameTime = newTime - currentTime;
+        long newTime = System.currentTimeMillis();
+        long frameTime = newTime - currentTime;
 
-		if (frameTime > 250000000) {
-			frameTime = 250000000;    // Note: Avoid spiral of death
-		}
+        if (frameTime > 250000000) {
+            frameTime = 250000000;    // Note: Avoid spiral of death
+        }
 
-		currentTime = newTime;
-		accumulator += frameTime;
+        currentTime = newTime;
+        accumulator += frameTime;
 
-		// required since artemis-odb-2.0.0-RC4, updateEntityStates() must be called
-		// before processing the first system - in case any entities are
-		// added outside the main process loop
-		updateEntityStates();
+        // required since artemis-odb-2.0.0-RC4, updateEntityStates() must be called
+        // before processing the first system - in case any entities are
+        // added outside the main process loop
+        updateEntityStates();
 
-		/**
-		 * Uncomment this line if you use the world's delta within your systems.
-		 * I recommend to use a fixed value for your logic delta like millisPerLogicTick or nanosPerLogicTick
-		 */
+        /**
+         * Uncomment this line if you use the world's delta within your systems.
+         * I recommend to use a fixed value for your logic delta like millisPerLogicTick or nanosPerLogicTick
+         */
 //		world.setDelta(nanosPerLogicTick * 0.000000001f);
 
-		while (accumulator >= nanosPerLogicTick) {
-			/** Process all entity systems inheriting from {@link PhysicsStepMarker} */
-			for (int i = 0; i < logicMarkedSystems.size; i++) {
-				/**
-				 * Make sure your systems keep the current state before calculating the new state
-				 * else you cannot interpolate later on when rendering
-				 */
-				if (disabledlogicMarkedSystems.get(i)) {
-					continue;
-				}
-				logicMarkedSystems.get(i).process();
-				updateEntityStates();
-			}
+        while (accumulator >= nanosPerLogicTick) {
+            /** Process all entity systems inheriting from {@link PhysicsStepMarker} */
+            for (int i = 0; i < logicMarkedSystems.size; i++) {
+                /**
+                 * Make sure your systems keep the current state before calculating the new state
+                 * else you cannot interpolate later on when rendering
+                 */
+                if (disabledlogicMarkedSystems.get(i)) {
+                    continue;
+                }
+                logicMarkedSystems.get(i).process();
+                updateEntityStates();
+            }
 
-			accumulator -= nanosPerLogicTick;
-		}
+            accumulator -= nanosPerLogicTick;
+        }
 
-		/**
-		 * Uncomment this line if you use the world's delta within your systems.
-		 */
+        /**
+         * Uncomment this line if you use the world's delta within your systems.
+         */
 //		world.setDelta(frameTime * 0.000000001f);
 
-		/**
-		 * When you divide accumulator by nanosPerLogicTick you get your alpha.
-		 * You can store the alpha value in a GameStateComponent f.e.
-		 */
+        /**
+         * When you divide accumulator by nanosPerLogicTick you get your alpha.
+         * You can store the alpha value in a GameStateComponent f.e.
+         */
 //		float alpha = (float) accumulator / nanosPerLogicTick;
 
-		/** Process all NON {@link PhysicsStepMarker} inheriting entity systems */
-		for (int i = 0; i < otherSystems.size; i++) {
-			/**
-			 * Use the kept state from the logic above and interpolate with the current state within your render systems.
-			 */
-			if (disabledOtherSystems.get(i)) {
-				continue;
-			}
-			otherSystems.get(i).process();
-			updateEntityStates();
-		}
-	}
+        /** Process all NON {@link PhysicsStepMarker} inheriting entity systems */
+        for (int i = 0; i < otherSystems.size; i++) {
+            /**
+             * Use the kept state from the logic above and interpolate with the current state within your render systems.
+             */
+            if (disabledOtherSystems.get(i)) {
+                continue;
+            }
+            otherSystems.get(i).process();
+            updateEntityStates();
+        }
+    }
 
-	@Override
-	public boolean isEnabled (BaseSystem target) {
-		Array<BaseSystem> systems = (target instanceof PhysicsStepMarker) ? logicMarkedSystems : otherSystems;
-		BitVector disabledSystems = (target instanceof PhysicsStepMarker) ? disabledlogicMarkedSystems : disabledOtherSystems;
-		Class targetClass = target.getClass();
-		for (int i = 0; i < systems.size; i++) {
-			if (targetClass == systems.get(i).getClass())
-				return !disabledSystems.get(i);
-		}
-		throw new RuntimeException("System not found in this world");
-	}
+    @Override
+    public boolean isEnabled(BaseSystem target) {
+        Array<BaseSystem> systems = (target instanceof PhysicsStepMarker) ? logicMarkedSystems : otherSystems;
+        BitVector disabledSystems = (target instanceof PhysicsStepMarker) ? disabledlogicMarkedSystems : disabledOtherSystems;
+        Class targetClass = target.getClass();
+        for (int i = 0; i < systems.size; i++) {
+            if (targetClass == systems.get(i).getClass())
+                return !disabledSystems.get(i);
+        }
+        throw new RuntimeException("System not found in this world");
+    }
 
-	@Override
-	public void setEnabled (BaseSystem target, boolean value) {
-		Array<BaseSystem> systems = (target instanceof PhysicsStepMarker) ? logicMarkedSystems : otherSystems;
-		BitVector disabledSystems = (target instanceof PhysicsStepMarker) ? disabledlogicMarkedSystems : disabledOtherSystems;
-		Class targetClass = target.getClass();
-		for (int i = 0; i < systems.size; i++) {
-			if (targetClass == systems.get(i).getClass()) {
-				disabledSystems.set(i, !value);
-				break;
-			}
-		}
-	}
+    @Override
+    public void setEnabled(BaseSystem target, boolean value) {
+        Array<BaseSystem> systems = (target instanceof PhysicsStepMarker) ? logicMarkedSystems : otherSystems;
+        BitVector disabledSystems = (target instanceof PhysicsStepMarker) ? disabledlogicMarkedSystems : disabledOtherSystems;
+        Class targetClass = target.getClass();
+        for (int i = 0; i < systems.size; i++) {
+            if (targetClass == systems.get(i).getClass()) {
+                disabledSystems.set(i, !value);
+                break;
+            }
+        }
+    }
 }

@@ -41,10 +41,10 @@ public class SimplexNoise {
     float[] C = new float[4];
 
     public SimplexNoise() {
-        C[0] =  0.211324865405187f;
-        C[1] =  0.366025403784439f;
+        C[0] = 0.211324865405187f;
+        C[1] = 0.366025403784439f;
         C[2] = -0.577350269189626f;
-        C[3] =  0.024390243902439f;
+        C[3] = 0.024390243902439f;
     }
 
     public float query(float x, float y, float frequency) {
@@ -52,13 +52,14 @@ public class SimplexNoise {
 
         // First corner (x0)
         float dot = v.dot(C[1], C[1]);
-        i.set((float)Math.floor(v.x + dot), (float)Math.floor(v.y + dot));
+        i.set((float) Math.floor(v.x + dot), (float) Math.floor(v.y + dot));
         dot = i.dot(C[0], C[0]);
         x0.set(v.x - i.x + dot, v.y - i.y + dot);
 
         // Other two corners (x1, x2)
         i1.set(0, 0);
-        if(x0.x > x0.y) i1.set(1.0f, 0.0f); else i1.set(0.0f, 1.0f);
+        if (x0.x > x0.y) i1.set(1.0f, 0.0f);
+        else i1.set(0.0f, 1.0f);
         x1.set(x0.x + C[0] - i1.x, x0.y + C[0] - i1.y);
         x2.set(x0.x + C[2], x0.y + C[2]);
 
@@ -87,22 +88,21 @@ public class SimplexNoise {
         fract(X);
         X.scl(2.0f).sub(1.0f);
         h.set(Math.abs(X.x) - 0.5f, Math.abs(X.y) - 0.5f, Math.abs(X.z) - 0.5f);
-        ox.set((float)Math.floor(X.x + 0.5f), (float)Math.floor(X.y + 0.5f), (float)Math.floor(X.z + 0.5f));
+        ox.set((float) Math.floor(X.x + 0.5f), (float) Math.floor(X.y + 0.5f), (float) Math.floor(X.z + 0.5f));
         a0.set(X.x - ox.x, X.y - ox.y, X.z - ox.z);
 
         // Normalise gradients implicitly by scaling m
         // Approximation of: m *= inverse sqrt(a0*a0 + h*h);
-        m.scl(1.79284291400159f - 0.85373472095314f * (a0.x*a0.x+h.x*h.x), 1.79284291400159f - 0.85373472095314f * (a0.y*a0.y+h.y*h.y), 1.79284291400159f - 0.85373472095314f * (a0.z*a0.z+h.z*h.z));
+        m.scl(1.79284291400159f - 0.85373472095314f * (a0.x * a0.x + h.x * h.x), 1.79284291400159f - 0.85373472095314f * (a0.y * a0.y + h.y * h.y), 1.79284291400159f - 0.85373472095314f * (a0.z * a0.z + h.z * h.z));
 
         // Compute final noise value at P
         g.set(0, 0, 0);
-        g.x  = a0.x  * x0.x  + h.x  * x0.y;
+        g.x = a0.x * x0.x + h.x * x0.y;
 
         g.y = x1.x * a0.y + x1.y * h.y;
         g.z = x2.x * a0.z + x2.y * h.z;
 
         return 130.0f * m.dot(g);
-
     }
 
     private float fract(float v) {
@@ -128,7 +128,7 @@ public class SimplexNoise {
     }
 
     private float permute(float x) {
-        return (float) (((x*34.0)+1.0)*x);
+        return (float) (((x * 34.0) + 1.0) * x);
     }
 
     private Vector3 permute(Vector3 x) {

@@ -2,49 +2,48 @@ package com.talosvfx.talos;
 
 public class Channel {
 
-	private int major;
-	private int minor;
-	private int patch;
+    private final int major;
+    private final int minor;
+    private final int patch;
 
-	private String displayString;
+    private final String displayString;
 
-	private boolean snapshot;
+    private boolean snapshot;
 
-	public Channel (String versionString) {
+    public Channel(String versionString) {
 
-		if (versionString.contains("SNAPSHOT")) {
-			snapshot = true;
-			versionString = versionString.split("-SNAPSHOT")[0];
-		}
+        if (versionString.contains("SNAPSHOT")) {
+            snapshot = true;
+            versionString = versionString.split("-SNAPSHOT")[0];
+        }
 
-		displayString = versionString;
+        displayString = versionString;
 
-		String[] versions = versionString.split("\\.");
+        String[] versions = versionString.split("\\.");
 
 
-		major = Integer.parseInt(versions[0]);
-		minor = Integer.parseInt(versions[1]);
-		patch = Integer.parseInt(versions[2]);
+        major = Integer.parseInt(versions[0]);
+        minor = Integer.parseInt(versions[1]);
+        patch = Integer.parseInt(versions[2]);
+    }
 
-	}
+    public int getMajor() {
+        return major;
+    }
 
-	public int getMajor () {
-		return major;
-	}
+    public int getMinor() {
+        return minor;
+    }
 
-	public int getMinor () {
-		return minor;
-	}
+    public int getPatch() {
+        return patch;
+    }
 
-	public int getPatch () {
-		return patch;
-	}
+    public String getDisplayString() {
+        return displayString;
+    }
 
-	public String getDisplayString () {
-		return displayString;
-	}
-
-	public boolean isSnapshot () {
-		return snapshot;
-	}
+    public boolean isSnapshot() {
+        return snapshot;
+    }
 }

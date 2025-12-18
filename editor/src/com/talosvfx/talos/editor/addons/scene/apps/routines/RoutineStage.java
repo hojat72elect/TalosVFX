@@ -5,38 +5,52 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.utils.*;
-import com.talosvfx.talos.TalosMain;
-import com.talosvfx.talos.editor.addons.scene.apps.routines.nodes.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.ObjectSet;
+import com.badlogic.gdx.utils.XmlReader;
+import com.talosvfx.talos.editor.addons.scene.apps.routines.nodes.AbstractRoutineNodeWidget;
+import com.talosvfx.talos.editor.addons.scene.apps.routines.nodes.ProbabilityChoiceWidget;
+import com.talosvfx.talos.editor.addons.scene.apps.routines.nodes.RoutineExecuteNodeWidget;
 import com.talosvfx.talos.editor.addons.scene.events.PropertyHolderSelected;
-import com.talosvfx.talos.editor.addons.scene.logic.IPropertyHolder;
-import com.talosvfx.talos.editor.addons.scene.logic.PropertyWrapperProviders;
-import com.talosvfx.talos.editor.utils.Toasts;
-import com.talosvfx.talos.editor.widgets.propertyWidgets.IPropertyProvider;
-import com.talosvfx.talos.runtime.RuntimeContext;
-import com.talosvfx.talos.runtime.routine.RoutineEventInterface;
-import com.talosvfx.talos.runtime.routine.RoutineInstance;
-import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.editor.addons.scene.events.RoutineUpdated;
 import com.talosvfx.talos.editor.addons.scene.events.TweenFinishedEvent;
+import com.talosvfx.talos.editor.addons.scene.logic.IPropertyHolder;
+import com.talosvfx.talos.editor.addons.scene.logic.PropertyWrapperProviders;
 import com.talosvfx.talos.editor.data.RoutineStageData;
 import com.talosvfx.talos.editor.nodes.DynamicNodeStage;
 import com.talosvfx.talos.editor.nodes.NodeBoard;
 import com.talosvfx.talos.editor.nodes.NodeWidget;
-import com.talosvfx.talos.editor.nodes.widgets.*;
+import com.talosvfx.talos.editor.nodes.widgets.AbstractWidget;
+import com.talosvfx.talos.editor.nodes.widgets.CheckBoxWidget;
+import com.talosvfx.talos.editor.nodes.widgets.ColorWidget;
+import com.talosvfx.talos.editor.nodes.widgets.GOSelectionWidget;
+import com.talosvfx.talos.editor.nodes.widgets.GameAssetWidget;
+import com.talosvfx.talos.editor.nodes.widgets.SelectWidget;
+import com.talosvfx.talos.editor.nodes.widgets.TextValueWidget;
+import com.talosvfx.talos.editor.nodes.widgets.ValueWidget;
 import com.talosvfx.talos.editor.notifications.EventHandler;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.Observer;
-import com.talosvfx.talos.editor.notifications.events.dynamicnodestage.*;
+import com.talosvfx.talos.editor.notifications.events.dynamicnodestage.NodeConnectionCreatedEvent;
+import com.talosvfx.talos.editor.notifications.events.dynamicnodestage.NodeConnectionRemovedEvent;
+import com.talosvfx.talos.editor.notifications.events.dynamicnodestage.NodeCreatedEvent;
+import com.talosvfx.talos.editor.notifications.events.dynamicnodestage.NodeDataModifiedEvent;
+import com.talosvfx.talos.editor.notifications.events.dynamicnodestage.NodeRemovedEvent;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.project2.apps.ScenePreviewApp;
+import com.talosvfx.talos.editor.utils.Toasts;
+import com.talosvfx.talos.editor.widgets.propertyWidgets.IPropertyProvider;
+import com.talosvfx.talos.runtime.RuntimeContext;
+import com.talosvfx.talos.runtime.assets.GameAsset;
+import com.talosvfx.talos.runtime.routine.RoutineInstance;
 import com.talosvfx.talos.runtime.routine.RoutineNode;
 import com.talosvfx.talos.runtime.scene.SavableContainer;
-import com.talosvfx.talos.runtime.scene.Scene;
-import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
-import lombok.Getter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import lombok.Getter;
 
 public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements Observer {
 
@@ -44,7 +58,7 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
 
     public final RoutineEditorApp routineEditorApp;
 
-    private Vector2 tmp = new Vector2();
+    private final Vector2 tmp = new Vector2();
 
     @Getter
     private float timeScale = 1f;
@@ -57,19 +71,19 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
 
     private boolean cameraLocked = false;
 
-    public RoutineStage (RoutineEditorApp routineEditorApp, Skin skin) {
+    public RoutineStage(RoutineEditorApp routineEditorApp, Skin skin) {
         super(skin);
         this.routineEditorApp = routineEditorApp;
         Notifications.registerObserver(this);
     }
 
     @Override
-    protected void initActors () {
+    protected void initActors() {
         super.initActors();
         nodeBoard.setTouchable(Touchable.enabled);
     }
 
-    public void loadFrom (GameAsset<RoutineStageData> asset) {
+    public void loadFrom(GameAsset<RoutineStageData> asset) {
         loading = true;
         if (asset == null || asset.getResource() == null) return;
 
@@ -84,14 +98,14 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
     }
 
     @Override
-    public void markAssetChanged () {
-        if(!loading) {
+    public void markAssetChanged() {
+        if (!loading) {
             super.markAssetChanged();
         }
     }
 
     @Override
-    protected void onBaseStageSelected () {
+    protected void onBaseStageSelected() {
         if (gameAsset == null) {
             return;
         }
@@ -103,13 +117,13 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
         data.getRoutineInstance().setListener(new RoutineInstance.RoutineListenerAdapter() {
             @Override
             public void onSignalSent(int nodeId, String port) {
-                AbstractRoutineNodeWidget nodeWidget = (AbstractRoutineNodeWidget)nodeBoard.getNodeById(nodeId);
+                AbstractRoutineNodeWidget nodeWidget = (AbstractRoutineNodeWidget) nodeBoard.getNodeById(nodeId);
                 nodeWidget.animateSignal(port);
             }
 
             @Override
             public void onInputFetched(int nodeId, String port) {
-                AbstractRoutineNodeWidget nodeWidget = (AbstractRoutineNodeWidget)nodeBoard.getNodeById(nodeId);
+                AbstractRoutineNodeWidget nodeWidget = (AbstractRoutineNodeWidget) nodeBoard.getNodeById(nodeId);
                 nodeWidget.animateInput(port);
             }
 
@@ -122,7 +136,7 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
 
 
     @Override
-    protected XmlReader.Element loadData () {
+    protected XmlReader.Element loadData() {
         FileHandle list = Gdx.files.internal("routine/routine-nodes.xml");
         XmlReader xmlReader = new XmlReader();
         XmlReader.Element root = xmlReader.parse(list);
@@ -131,7 +145,7 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
     }
 
     @Override
-    protected void onConnectionClicked (NodeBoard.NodeConnection connection) {
+    protected void onConnectionClicked(NodeBoard.NodeConnection connection) {
 
         // create delay widget
         connection.fromNode.getOutputSlotPos(connection.fromId, tmp);
@@ -172,7 +186,7 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
     }
 
     @Override
-    public void onNodeSelectionChange () {
+    public void onNodeSelectionChange() {
         ObjectSet<NodeWidget> selectedNodes = nodeBoard.getSelectedNodes();
         if (selectedNodes.size == 0) {
 
@@ -184,12 +198,12 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
             }
             Notifications.fireEvent(Notifications.obtainEvent(PropertyHolderSelected.class).setTarget(new IPropertyHolder() {
                 @Override
-                public Iterable<IPropertyProvider> getPropertyProviders () {
+                public Iterable<IPropertyProvider> getPropertyProviders() {
                     return providers;
                 }
 
                 @Override
-                public String getName () {
+                public String getName() {
                     return "Node Properties";
                 }
             }));
@@ -209,13 +223,13 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
         return null;
     }
 
-    public ScenePreviewApp getPreviewAppIfOpened(int uniqueId){
+    public ScenePreviewApp getPreviewAppIfOpened(int uniqueId) {
         GameAsset asset = getAssetIfExist(uniqueId);
         if (asset != null && !asset.isBroken()) {
             return SharedResources.appManager.getAppIfOpened(asset, ScenePreviewApp.class);
         } else {
             String assetName = asset != null ? asset.nameIdentifier : "null";
-           Toasts.getInstance().showErrorToast("Skipping opening of app, asset is broken or null " + assetName);
+            Toasts.getInstance().showErrorToast("Skipping opening of app, asset is broken or null " + assetName);
         }
         return null;
     }
@@ -225,8 +239,8 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
         routineUpdated(false);
     }
 
-    public void routineUpdated (boolean isFastChange) {
-        if(!loading) {
+    public void routineUpdated(boolean isFastChange) {
+        if (!loading) {
             //todo: this isn't right
             if (!isFastChange) {
                 markAssetChanged();
@@ -242,40 +256,39 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
 
                 setInstanceListeners();
             }
-
         }
     }
 
     @EventHandler
-    public void onNodeCreatedEvent (NodeCreatedEvent event) {
+    public void onNodeCreatedEvent(NodeCreatedEvent event) {
         routineUpdated();
         routineEditorApp.controlWindow.update();
     }
 
     @EventHandler
-    public void onNodeRemovedEvent (NodeRemovedEvent event) {
+    public void onNodeRemovedEvent(NodeRemovedEvent event) {
         routineUpdated();
         routineEditorApp.controlWindow.update();
     }
 
     @EventHandler
-    public void onNodeConnectionCreatedEvent (NodeConnectionCreatedEvent event) {
+    public void onNodeConnectionCreatedEvent(NodeConnectionCreatedEvent event) {
         routineUpdated();
     }
 
     @EventHandler
-    public void onNodeConnectionRemovedEvent (NodeConnectionRemovedEvent event) {
+    public void onNodeConnectionRemovedEvent(NodeConnectionRemovedEvent event) {
         routineUpdated();
     }
 
     @EventHandler
-    public void onNodeDataModifiedEvent (NodeDataModifiedEvent event) {
+    public void onNodeDataModifiedEvent(NodeDataModifiedEvent event) {
         NodeWidget node = event.getNode();
         updateRoutineInstanceDataFromWidget(data.getRoutineInstance(), node, event.isFastChange);
         routineEditorApp.controlWindow.update();
     }
 
-    private void updateRoutineInstanceDataFromWidget (RoutineInstance routineInstance, NodeWidget nodeWidget, boolean isFastChange) {
+    private void updateRoutineInstanceDataFromWidget(RoutineInstance routineInstance, NodeWidget nodeWidget, boolean isFastChange) {
         RoutineNode logicNode = routineInstance.getNodeById(nodeWidget.getUniqueId());
 
         if (logicNode == null) return;
@@ -310,7 +323,7 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
      * reset data to normal if needed
      * keep data defaults for next time
      */
-    public void playInitiated () {
+    public void playInitiated() {
         /*
         Array<NodeWidget> nodes = getNodeBoard().getNodes();
         for (NodeWidget node : nodes) {
@@ -329,14 +342,14 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
     /**
      * Time to reset everything to normal and reset any defaults
      */
-    private void playFinished () {
+    private void playFinished() {
         Notifications.fireEvent(Notifications.obtainEvent(TweenFinishedEvent.class));
     }
 
     /**
      * is reported when any node is completed, even though other oe can be started
      */
-    public void nodeReportedComplete () {
+    public void nodeReportedComplete() {
 
         /*
         boolean isRunning = false;
@@ -358,13 +371,13 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
         }*/
     }
 
-    public float getDelta () {
+    public float getDelta() {
         return Gdx.graphics.getDeltaTime() * timeScale;
     }
 
     @Override
     public void act() {
-        if(data == null) return;
+        if (data == null) return;
         data.getRoutineInstance().tick(getDelta());
     }
 
@@ -377,13 +390,13 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
     }
 
     public void play(int uniqueId) {
-            RoutineExecuteNodeWidget executorWidget = (RoutineExecuteNodeWidget) nodeBoard.findNode(uniqueId);
-            boolean result = executorWidget.startPlay();
+        RoutineExecuteNodeWidget executorWidget = (RoutineExecuteNodeWidget) nodeBoard.findNode(uniqueId);
+        boolean result = executorWidget.startPlay();
 
-            if(result) {
-                playing = true;
-                lockCamera(cameraLocked, uniqueId);
-            }
+        if (result) {
+            playing = true;
+            lockCamera(cameraLocked, uniqueId);
+        }
     }
 
     public void stop(int uniqueId) {
@@ -418,7 +431,7 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
     public void setTimeScale(float timeScale, int uniqueId) {
         this.timeScale = timeScale;
         ScenePreviewApp previewApp = getPreviewAppIfOpened(uniqueId);
-        if(previewApp != null) {
+        if (previewApp != null) {
             previewApp.setSpeed(timeScale);
 
             if (data.getRoutineInstance() != null) {
@@ -432,7 +445,7 @@ public class RoutineStage extends DynamicNodeStage<RoutineStageData> implements 
     public void lockCamera(boolean checked, int uniqueId) {
         cameraLocked = checked;
         ScenePreviewApp previewApp = getPreviewAppIfOpened(uniqueId);
-        if(previewApp != null) {
+        if (previewApp != null) {
             previewApp.setLockCamera(checked);
         }
     }

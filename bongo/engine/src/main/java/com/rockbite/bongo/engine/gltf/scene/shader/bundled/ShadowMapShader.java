@@ -3,7 +3,6 @@ package com.rockbite.bongo.engine.gltf.scene.shader.bundled;
 import com.artemis.World;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
@@ -18,117 +17,110 @@ import com.rockbite.bongo.engine.systems.render.ShadowPassSystem;
 public class ShadowMapShader extends BaseSceneShader {
 
 
-	private final static long optionalAttributes = IntAttribute.CullFace | DepthTestAttribute.Type;
+    private final static long optionalAttributes = IntAttribute.CullFace | DepthTestAttribute.Type;
+    //global
+    private int u_projTrans;
+    private int u_lightMatrix;
+    //object
+    private int u_objectSRT;
+    private int u_bones;
+    public ShadowMapShader(FileHandle vertexSource, FileHandle fragmentSource, SceneRenderable sceneRenderable, World world) {
+        super(vertexSource, fragmentSource, sceneRenderable, world);
+    }
 
-	public static class Inputs {
-		//global
-		public final static Uniform cameraProjTrans = new Uniform("u_projTrans");
-		public final static Uniform lightMatrix = new Uniform("u_projTrans");
+    @Override
+    protected long getOptionalAttributes() {
+        return optionalAttributes;
+    }
 
-		//Object
-		public final static Uniform objectSRT = new Uniform("u_srt");
-		public final static Uniform bones = new Uniform("u_jointMatrix");
+    @Override
+    public void begin(Cameras cameras, RenderUtils renderUtils, SceneEnvironment sceneEnvironment) {
+        super.begin(cameras, renderUtils, sceneEnvironment);
 
+        context.setDepthTest(GL20.GL_LEQUAL);
+        context.setCullFace(GL20.GL_BACK);
+        context.setDepthMask(true);
+    }
 
+    @Override
+    public void initClassSpecificUniforms() {
+        //global
+        u_projTrans = register(Inputs.cameraProjTrans, Setters.cameraProjTrans);
+        u_lightMatrix = register(Inputs.lightMatrix, Setters.lightMatrix);
+        //object
+        u_objectSRT = register(Inputs.objectSRT, Setters.objectSRT);
+        u_bones = (sceneRenderable.bones != null) ? register(DepthShader.Inputs.bones, new DepthShader.Setters.Bones(60))
+                : -1;
+    }
 
-	}
+    @Override
+    public int compareTo(BaseSceneShader o) {
+        return 0;
+    }
 
-	public static class Setters {
+    public static class Inputs {
+        //global
+        public final static Uniform cameraProjTrans = new Uniform("u_projTrans");
+        public final static Uniform lightMatrix = new Uniform("u_projTrans");
 
-		//Global
-		public final static Setter cameraProjTrans = new GlobalSetter() {
-			@Override
-			public void set (BaseSceneShader shader, int inputID, SceneRenderable renderable, Attributes combinedAttributes) {
-				shader.set(inputID, shader.cameras.getGameCamera().combined);
-			}
-		};
+        //Object
+        public final static Uniform objectSRT = new Uniform("u_srt");
+        public final static Uniform bones = new Uniform("u_jointMatrix");
+    }
 
-		public final static Setter lightMatrix = new GlobalSetter() {
+    public static class Setters {
 
-			Matrix4 lightSpaceMatrix = new Matrix4();
-			@Override
-			public void set (BaseSceneShader shader, int inputID, SceneRenderable renderable, Attributes combinedAttributes) {
-				final ShadowPassSystem system = shader.world.getSystem(ShadowPassSystem.class);
-				final int shadowMapSize = system.getShadowMapSize();
+        //Global
+        public final static Setter cameraProjTrans = new GlobalSetter() {
+            @Override
+            public void set(BaseSceneShader shader, int inputID, SceneRenderable renderable, Attributes combinedAttributes) {
+                shader.set(inputID, shader.cameras.getGameCamera().combined);
+            }
+        };
 
-				shader.sceneEnvironment.calculateDirectionLightSpaceMatrix(shader.cameras.getGameCamera(), lightSpaceMatrix, shadowMapSize);
+        public final static Setter lightMatrix = new GlobalSetter() {
 
-				shader.set(inputID, lightSpaceMatrix);
-			}
-		};
+            final Matrix4 lightSpaceMatrix = new Matrix4();
 
-		//object
-		public final static Setter objectSRT = new LocalSetter() {
-			@Override
-			public void set (BaseSceneShader shader, int inputID, SceneRenderable renderable, Attributes combinedAttributes) {
-				shader.set(inputID, renderable.worldTransform);
-			}
-		};
+            @Override
+            public void set(BaseSceneShader shader, int inputID, SceneRenderable renderable, Attributes combinedAttributes) {
+                final ShadowPassSystem system = shader.world.getSystem(ShadowPassSystem.class);
+                final int shadowMapSize = system.getShadowMapSize();
 
-		public static class Bones extends LocalSetter {
-			private final static Matrix4 idtMatrix = new Matrix4();
-			public final float bones[];
+                shader.sceneEnvironment.calculateDirectionLightSpaceMatrix(shader.cameras.getGameCamera(), lightSpaceMatrix, shadowMapSize);
 
-			public Bones (final int numBones) {
-				this.bones = new float[numBones * 16];
-			}
+                shader.set(inputID, lightSpaceMatrix);
+            }
+        };
 
-			@Override
-			public void set (BaseSceneShader shader, int inputID, SceneRenderable renderable, Attributes combinedAttributes) {
-				for (int i = 0; i < bones.length; i += 16) {
-					final int idx = i / 16;
-					if (renderable.bones == null || idx >= renderable.bones.length || renderable.bones[idx] == null) {
-						System.arraycopy(idtMatrix.val, 0, bones, i, 16);
-					} else {
-						System.arraycopy(renderable.bones[idx].val, 0, bones, i, 16);
-					}
-				}
-				shader.program.setUniformMatrix4fv(shader.loc(inputID), bones, 0, bones.length);
-			}
-		}
-	}
+        //object
+        public final static Setter objectSRT = new LocalSetter() {
+            @Override
+            public void set(BaseSceneShader shader, int inputID, SceneRenderable renderable, Attributes combinedAttributes) {
+                shader.set(inputID, renderable.worldTransform);
+            }
+        };
 
-	//global
-	private int u_projTrans;
-	private int u_lightMatrix;
-	//object
-	private int u_objectSRT;
-	private int u_bones;
+        public static class Bones extends LocalSetter {
+            private final static Matrix4 idtMatrix = new Matrix4();
+            public final float[] bones;
 
+            public Bones(final int numBones) {
+                this.bones = new float[numBones * 16];
+            }
 
-	public ShadowMapShader (FileHandle vertexSource, FileHandle fragmentSource, SceneRenderable sceneRenderable, World world) {
-		super(vertexSource, fragmentSource, sceneRenderable, world);
-	}
-
-	@Override
-	protected long getOptionalAttributes () {
-		return optionalAttributes;
-	}
-
-	@Override
-	public void begin (Cameras cameras, RenderUtils renderUtils, SceneEnvironment sceneEnvironment) {
-		super.begin(cameras, renderUtils, sceneEnvironment);
-
-		context.setDepthTest(GL20.GL_LEQUAL);
-		context.setCullFace(GL20.GL_BACK);
-		context.setDepthMask(true);
-
-	}
-
-	@Override
-	public void initClassSpecificUniforms () {
-		//global
-		u_projTrans = register(Inputs.cameraProjTrans, Setters.cameraProjTrans);
-		u_lightMatrix = register(Inputs.lightMatrix, Setters.lightMatrix);
-		//object
-		u_objectSRT = register(Inputs.objectSRT, Setters.objectSRT);
-		u_bones = (sceneRenderable.bones != null) ? register(DepthShader.Inputs.bones, new DepthShader.Setters.Bones(60))
-			: -1;
-	}
-
-	@Override
-	public int compareTo (BaseSceneShader o) {
-		return 0;
-	}
-
+            @Override
+            public void set(BaseSceneShader shader, int inputID, SceneRenderable renderable, Attributes combinedAttributes) {
+                for (int i = 0; i < bones.length; i += 16) {
+                    final int idx = i / 16;
+                    if (renderable.bones == null || idx >= renderable.bones.length || renderable.bones[idx] == null) {
+                        System.arraycopy(idtMatrix.val, 0, bones, i, 16);
+                    } else {
+                        System.arraycopy(renderable.bones[idx].val, 0, bones, i, 16);
+                    }
+                }
+                shader.program.setUniformMatrix4fv(shader.loc(inputID), bones, 0, bones.length);
+            }
+        }
+    }
 }

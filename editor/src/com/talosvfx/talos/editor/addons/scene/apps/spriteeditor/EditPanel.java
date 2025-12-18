@@ -10,10 +10,11 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.*;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.utils.Align;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.utils.CursorUtil;
 import com.talosvfx.talos.runtime.assets.meta.SpriteMetadata;
@@ -28,16 +29,16 @@ public class EditPanel extends Table {
     public static final int BOTTOM = 0b1000;
 
     private float zoom = 1.0f;
-    private Vector2 offset = new Vector2();
-    private Vector2 current = new Vector2();
-    private Vector2 last = new Vector2();
-    private Vector2 delta = new Vector2();
-    private Vector2 tmp = new Vector2();
-    private Rectangle bounds;
+    private final Vector2 offset = new Vector2();
+    private final Vector2 current = new Vector2();
+    private final Vector2 last = new Vector2();
+    private final Vector2 delta = new Vector2();
+    private final Vector2 tmp = new Vector2();
+    private final Rectangle bounds;
 
-    private Color borderColor;
-    private Color sliceLineColor;
-    private Color activeSliceLineColor;
+    private final Color borderColor;
+    private final Color sliceLineColor;
+    private final Color activeSliceLineColor;
 
 
     private float leftOffset = 0;
@@ -48,11 +49,11 @@ public class EditPanel extends Table {
 
     private int activeSide = 0b0;
 
-    private EditPanelListener editPanelListener;
+    private final EditPanelListener editPanelListener;
 
     // Shapes
-    private Image circle;
-    private TextureRegion line;
+    private final Image circle;
+    private final TextureRegion line;
 
     private Image image;
     private Texture texture;
@@ -64,9 +65,9 @@ public class EditPanel extends Table {
 
         this.editPanelListener = editPanelListener;
         this.bounds = new Rectangle();
-        borderColor = new Color(92f/255f, 128f/255f, 188f/255f, 1.0f);
-        sliceLineColor = new Color(224f/255f, 142f/255f, 69f/255f, 1.0f);
-        activeSliceLineColor = new Color(254f/255f, 95f/255f, 85f/255f, 1.0f);
+        borderColor = new Color(92f / 255f, 128f / 255f, 188f / 255f, 1.0f);
+        sliceLineColor = new Color(224f / 255f, 142f / 255f, 69f / 255f, 1.0f);
+        activeSliceLineColor = new Color(254f / 255f, 95f / 255f, 85f / 255f, 1.0f);
 
         clip();
         setTouchable(Touchable.enabled);
@@ -175,7 +176,7 @@ public class EditPanel extends Table {
             }
 
             @Override
-            public void touchDragged (InputEvent event, float x, float y, int pointer) {
+            public void touchDragged(InputEvent event, float x, float y, int pointer) {
 
                 // TODO: 23.02.23 dummy refactor
                 if (image == null) {
@@ -248,6 +249,34 @@ public class EditPanel extends Table {
         });
     }
 
+    private static boolean isLeft(int side) {
+        return (side & LEFT) != 0;
+    }
+
+    private static boolean isRight(int side) {
+        return (side & RIGHT) != 0;
+    }
+
+    private static boolean isTop(int side) {
+        return (side & TOP) != 0;
+    }
+
+    private static boolean isBottom(int side) {
+        return (side & BOTTOM) != 0;
+    }
+
+    private static boolean isHorizontal(int side) {
+        return isLeft(side) || isRight(side);
+    }
+
+    private static boolean isVertical(int side) {
+        return isTop(side) || isBottom(side);
+    }
+
+    private static boolean isSame(int side1, int side2) {
+        return (side1 & side2) != 0;
+    }
+
     @Override
     public void drawChildren(Batch batch, float parentAlpha) {
         super.drawChildren(batch, parentAlpha);
@@ -266,11 +295,11 @@ public class EditPanel extends Table {
         // draw pivot
         borderColor.a = parentAlpha;
         drawCircle(
-            batch,
-            bounds.x + bounds.width / 2f * zoom,
-            bounds.y + bounds.height / 2f * zoom,
-            5f,
-            borderColor
+                batch,
+                bounds.x + bounds.width / 2f * zoom,
+                bounds.y + bounds.height / 2f * zoom,
+                5f,
+                borderColor
         );
 
         // draw segment lines
@@ -382,7 +411,7 @@ public class EditPanel extends Table {
         tmp.scl(0.5f).add(x1, y1); // center points
         Color prev = batch.getColor();
         batch.setColor(color);
-        batch.draw(line, tmp.x - 0.5f * length, tmp.y - 0.5f * thickness, length/2f, thickness/2f, length, thickness, 1f, 1f, rotation);
+        batch.draw(line, tmp.x - 0.5f * length, tmp.y - 0.5f * thickness, length / 2f, thickness / 2f, length, thickness, 1f, 1f, rotation);
         batch.setColor(prev);
     }
 
@@ -393,7 +422,7 @@ public class EditPanel extends Table {
         drawLine(batch, x + width, y, x, y, color);
     }
 
-    private void drawCircle (Batch batch, float x, float y, float radius, Color color) {
+    private void drawCircle(Batch batch, float x, float y, float radius, Color color) {
         circle.setSize(radius * 2, radius * 2);
         circle.setPosition(x - radius, y - radius);
         Color prev = batch.getColor();
@@ -402,58 +431,30 @@ public class EditPanel extends Table {
         batch.setColor(prev);
     }
 
-    private static boolean isLeft(int side) {
-        return (side & LEFT) != 0;
-    }
-
-    private static boolean isRight(int side) {
-        return (side & RIGHT) != 0;
-    }
-
-    private static boolean isTop(int side) {
-        return (side & TOP) != 0;
-    }
-
-    private static boolean isBottom(int side) {
-        return (side & BOTTOM) != 0;
-    }
-
-    private static boolean isHorizontal(int side) {
-        return isLeft(side) || isRight(side);
-    }
-
-    private static boolean isVertical(int side) {
-        return isTop(side) || isBottom(side);
-    }
-
-    private static boolean isSame(int side1, int side2) {
-        return (side1 & side2) != 0;
-    }
-
-    public float getLeft () {
+    public float getLeft() {
         return metadata.borderData[0] + leftOffset;
     }
 
-    public float getRight () {
+    public float getRight() {
         return metadata.borderData[1] + rightOffset;
     }
 
-    public float getTop () {
+    public float getTop() {
         return metadata.borderData[2] + topOffset;
     }
 
-    public float getBottom () {
+    public float getBottom() {
         return metadata.borderData[3] + bottomOffset;
     }
 
     public void set(int side, float value) {
         if (isLeft(side)) {
             leftOffset = value - metadata.borderData[0];
-        } else if(isRight(side)) {
+        } else if (isRight(side)) {
             rightOffset = value - metadata.borderData[1];
-        } else if(isTop(side)) {
+        } else if (isTop(side)) {
             topOffset = value - metadata.borderData[2];
-        } else if(isBottom(side)) {
+        } else if (isBottom(side)) {
             bottomOffset = value - metadata.borderData[3];
         }
     }
@@ -477,14 +478,14 @@ public class EditPanel extends Table {
         current.setZero();
     }
 
+    @Override
+    public float getPrefWidth() {
+        return EditPanel.WIDTH;
+    }
 
     public static abstract class EditPanelListener {
         public abstract void changed(float left, float right, float top, float bottom);
-        public abstract void dragStop(float left, float right, float top, float bottom);
-    }
 
-    @Override
-    public float getPrefWidth () {
-        return EditPanel.WIDTH;
+        public abstract void dragStop(float left, float right, float top, float bottom);
     }
 }

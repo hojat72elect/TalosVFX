@@ -9,17 +9,17 @@ public class InverseNode extends AbstractShaderNode {
     public final String OUTPUT = "outputValue";
 
     @Override
-    public ShaderBuilder.Type getVarType (String name) {
+    public ShaderBuilder.Type getVarType(String name) {
 
         if (name.equals(OUTPUT)) {
-           return  getTargetVarType(INPUT);
+            return getTargetVarType(INPUT);
         }
 
         return super.getVarType(name);
     }
 
     @Override
-    public void prepareDeclarations (ShaderBuilder shaderBuilder) {
+    public void prepareDeclarations(ShaderBuilder shaderBuilder) {
         String input = getExpression(INPUT, null);
 
         ShaderBuilder.Type outputType = getVarType(OUTPUT);
@@ -30,7 +30,7 @@ public class InverseNode extends AbstractShaderNode {
     }
 
     @Override
-    public String writeOutputCode (String slotId) {
+    public String writeOutputCode(String slotId) {
         return "oneMinus" + getId();
     }
 }

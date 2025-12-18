@@ -31,11 +31,8 @@ public class MathModule extends AbstractModule {
 
     public NumericalValue a;
     public NumericalValue b;
-
-    float defaultA = 0, defaultB = 0;
-
     public NumericalValue output;
-
+    float defaultA = 0, defaultB = 0;
     private Expression currentExpression = Expression.sum;
 
     @Override
@@ -47,21 +44,21 @@ public class MathModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
-        if(a.isEmpty()) a.set(defaultA);
-        if(b.isEmpty()) b.set(defaultB);
+    public void processCustomValues() {
+        if (a.isEmpty()) a.set(defaultA);
+        if (b.isEmpty()) b.set(defaultB);
 
-        if(currentExpression != null) {
+        if (currentExpression != null) {
             currentExpression.apply(a, b, output);
         }
     }
 
-    public void setExpression(Expression expression) {
-        this.currentExpression = expression;
-    }
-
     public Expression getExpression() {
         return currentExpression;
+    }
+
+    public void setExpression(Expression expression) {
+        this.currentExpression = expression;
     }
 
     public NumericalValue getOutputValue() {
@@ -69,7 +66,7 @@ public class MathModule extends AbstractModule {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("a", getDefaultA());
         json.writeValue("b", getDefaultB());
@@ -77,7 +74,7 @@ public class MathModule extends AbstractModule {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         defaultA = jsonData.getFloat("a", 0);
         defaultB = jsonData.getFloat("b", 0);

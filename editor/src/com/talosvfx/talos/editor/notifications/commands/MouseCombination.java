@@ -2,11 +2,12 @@ package com.talosvfx.talos.editor.notifications.commands;
 
 
 import com.badlogic.gdx.Input;
+
 import lombok.Getter;
 
 public class MouseCombination extends AbstractCombinationWithModifier {
     @Getter
-    private MouseCommand mouseCommand;
+    private final MouseCommand mouseCommand;
     private boolean isMouseCommandDone = false;
 
     public MouseCombination(MouseCommand mouseCommand, ModifierKey... modifierKeys) {
@@ -37,26 +38,17 @@ public class MouseCombination extends AbstractCombinationWithModifier {
 
     @Override
     public void mouseMoved() {
-        isMouseCommandDone = false;
-        if (mouseCommand == MouseCommand.MOVE) {
-            isMouseCommandDone = true;
-        }
+        isMouseCommandDone = mouseCommand == MouseCommand.MOVE;
     }
 
     @Override
     public void touchDown(int button) {
-        isMouseCommandDone = false;
-        if (button == Input.Buttons.MIDDLE && mouseCommand == MouseCommand.WHEEL_IN) {
-            isMouseCommandDone = true;
-        }
+        isMouseCommandDone = button == Input.Buttons.MIDDLE && mouseCommand == MouseCommand.WHEEL_IN;
     }
 
     @Override
     public void touchUp(int button) {
-        isMouseCommandDone = false;
-        if (button == Input.Buttons.MIDDLE && mouseCommand == MouseCommand.WHEEL_OUT) {
-            isMouseCommandDone = true;
-        }
+        isMouseCommandDone = button == Input.Buttons.MIDDLE && mouseCommand == MouseCommand.WHEEL_OUT;
         if (button == Input.Buttons.LEFT && mouseCommand == MouseCommand.LEFT) {
             isMouseCommandDone = true;
         }

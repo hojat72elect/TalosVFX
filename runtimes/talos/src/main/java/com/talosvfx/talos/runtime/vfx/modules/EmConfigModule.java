@@ -28,7 +28,7 @@ public class EmConfigModule extends AbstractModule {
     private EmConfigValue outputValue;
 
     @Override
-    public void init () {
+    public void init() {
         super.init();
 
         userValue = new EmConfigValue();
@@ -44,11 +44,11 @@ public class EmConfigModule extends AbstractModule {
 
     @Override
     protected void defineSlots() {
-        outputValue = (EmConfigValue) createOutputSlot(OUTPUT, new EmConfigValue());
+        outputValue = createOutputSlot(OUTPUT, new EmConfigValue());
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
         outputValue.set(userValue);
     }
 
@@ -70,7 +70,7 @@ public class EmConfigModule extends AbstractModule {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         getUserValue().additive = jsonData.getBoolean("additive");
         getUserValue().isBlendAdd = jsonData.getBoolean("isBlendAdd", false);
@@ -80,7 +80,7 @@ public class EmConfigModule extends AbstractModule {
         getUserValue().immortal = jsonData.getBoolean("immortal", false);
         getUserValue().youngestInBack = jsonData.getBoolean("youngestInFront", true);
 
-        if(outputValue != null) {
+        if (outputValue != null) {
             outputValue.set(getUserValue());
         }
     }

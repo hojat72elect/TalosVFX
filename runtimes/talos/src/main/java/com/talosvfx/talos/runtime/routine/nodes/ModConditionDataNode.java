@@ -12,11 +12,10 @@ public class ModConditionDataNode extends RoutineNode {
         Object valueEven = fetchValue("valueA");
         Object valueOdd = fetchValue("valueB");
 
-        if(input % 2 == 0) {
+        if (input % 2 == 0) {
             return valueEven;
         } else {
             return valueOdd;
         }
-
     }
 }

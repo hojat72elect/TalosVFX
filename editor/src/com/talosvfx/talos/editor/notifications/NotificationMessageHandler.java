@@ -6,11 +6,10 @@ import com.talosvfx.talos.editor.socket.SocketServer;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.Writer;
 
 public class NotificationMessageHandler {
 
-    public static void sendEventToSocket (TalosEvent event) {
+    public static void sendEventToSocket(TalosEvent event) {
         try {
             StringWriter stringWriter = new StringWriter();
             Json json = new Json();
@@ -31,7 +30,7 @@ public class NotificationMessageHandler {
         }
     }
 
-    private static Json collectDataForEvent (TalosEvent event, Json json) {
+    private static Json collectDataForEvent(TalosEvent event, Json json) {
         return event.getAdditionalData(json);
     }
 }

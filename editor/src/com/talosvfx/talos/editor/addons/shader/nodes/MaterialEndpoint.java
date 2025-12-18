@@ -19,12 +19,12 @@ public class MaterialEndpoint extends AbstractShaderNode {
     private ShaderBox3D box3d;
 
     @Override
-    public void constructNode (XmlReader.Element module) {
+    public void constructNode(XmlReader.Element module) {
         super.constructNode(module);
 
         widgetMap.get(PREVIEW_TYPE).addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent changeEvent, Actor actor) {
+            public void changed(ChangeEvent changeEvent, Actor actor) {
                 String value = (String) widgetMap.get(PREVIEW_TYPE).getValue();
 
                 if (value.equals("2D")) {
@@ -48,7 +48,7 @@ public class MaterialEndpoint extends AbstractShaderNode {
         shaderBox = box3d;
     }
 
-    public void prepareDeclarations (ShaderBuilder shaderBuilder) {
+    public void prepareDeclarations(ShaderBuilder shaderBuilder) {
 
     }
 
@@ -65,20 +65,20 @@ public class MaterialEndpoint extends AbstractShaderNode {
     }
 
     @Override
-    public void graphUpdated () {
+    public void graphUpdated() {
         buildFragmentShader(previewBuilder);
         super.graphUpdated();
     }
 
 
     @Override
-    protected void updatePreview () {
+    protected void updatePreview() {
         box2d.setShader(previewBuilder);
         box3d.setShader(previewBuilder);
     }
 
     @Override
-    protected String getPreviewOutputName () {
+    protected String getPreviewOutputName() {
         return null;
     }
 
@@ -88,7 +88,7 @@ public class MaterialEndpoint extends AbstractShaderNode {
     }
 
     @Override
-    protected void addAdditionalContent (Table contentTable) {
+    protected void addAdditionalContent(Table contentTable) {
         box2d = new ShaderBox();
         box3d = new ShaderBox3D();
 

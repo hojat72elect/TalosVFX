@@ -2,9 +2,7 @@ package com.rockbite.bongo.engine.gltf.scene.shader.bundled;
 
 import com.artemis.World;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Cubemap;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.GLTexture;
 import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
@@ -14,102 +12,83 @@ import com.rockbite.bongo.engine.gltf.scene.SceneEnvironment;
 import com.rockbite.bongo.engine.gltf.scene.SceneRenderable;
 import com.rockbite.bongo.engine.gltf.scene.shader.BaseSceneShader;
 
-public class SkyboxShader extends BaseSceneShader  {
+public class SkyboxShader extends BaseSceneShader {
 
-	private final static long optionalAttributes = IntAttribute.CullFace | DepthTestAttribute.Type;
+    private final static long optionalAttributes = IntAttribute.CullFace | DepthTestAttribute.Type;
+    //global
+    private int u_proj;
+    private int u_view;
+    private int u_envMap;
+    public SkyboxShader(FileHandle vertexSource, FileHandle fragmentSource, SceneRenderable sceneRenderable, World world) {
+        super(vertexSource, fragmentSource, sceneRenderable, world);
+    }
 
+    @Override
+    protected long getOptionalAttributes() {
+        return optionalAttributes;
+    }
 
-	public static class Inputs {
-		//global
-		public final static Uniform cameraProj = new Uniform("u_proj");
-		public final static Uniform cameraView = new Uniform("u_view");
+    @Override
+    public void begin(Cameras cameras, RenderUtils renderUtils, SceneEnvironment sceneEnvironment) {
+        super.begin(cameras, renderUtils, sceneEnvironment);
 
-		public final static Uniform envMap = new Uniform("u_envMap");
+        context.setDepthTest(GL20.GL_LEQUAL);
+        context.setCullFace(GL20.GL_BACK);
+        context.setDepthMask(true);
+    }
 
-	}
+    @Override
+    public void initClassSpecificUniforms() {
+        u_proj = register(Inputs.cameraProj, Setters.cameraProj);
+        u_view = register(Inputs.cameraView, Setters.cameraView);
+        u_envMap = register(Inputs.envMap, Setters.envMap);
+    }
 
-	public static class Setters {
+    /**
+     * Compare this shader against the other, used for sorting, light weight shaders are rendered first.
+     *
+     * @param other
+     */
+    @Override
+    public int compareTo(BaseSceneShader other) {
+        return -1;
+    }
 
-		//Global
-		public final static Setter cameraProj = new GlobalSetter() {
-			@Override
-			public void set (BaseSceneShader shader, int inputID, SceneRenderable renderable, Attributes combinedAttributes) {
-				shader.set(inputID, shader.cameras.getGameCamera().projection);
-			}
-		};
+    public static class Inputs {
+        //global
+        public final static Uniform cameraProj = new Uniform("u_proj");
+        public final static Uniform cameraView = new Uniform("u_view");
 
-		public final static Setter cameraView = new GlobalSetter() {
-			@Override
-			public void set (BaseSceneShader shader, int inputID, SceneRenderable renderable, Attributes combinedAttributes) {
-				shader.set(inputID, shader.cameras.getGameCamera().view);
-			}
-		};
+        public final static Uniform envMap = new Uniform("u_envMap");
+    }
 
+    public static class Setters {
 
-		public final static Setter envMap = new GlobalSetter() {
-			@Override
-			public void set (BaseSceneShader shader, int inputID, SceneRenderable renderable, Attributes combinedAttributes) {
-				SceneEnvironment sceneEnvironment = shader.sceneEnvironment;
-				final SceneEnvironment.EnvironmentMap environmentMap = sceneEnvironment.getEnvironmentMap();
-				if (environmentMap != null) {
-					shader.set(inputID, shader.context.textureBinder.bind(environmentMap.getRadianceMap()));
-				}
-			}
-		};
+        //Global
+        public final static Setter cameraProj = new GlobalSetter() {
+            @Override
+            public void set(BaseSceneShader shader, int inputID, SceneRenderable renderable, Attributes combinedAttributes) {
+                shader.set(inputID, shader.cameras.getGameCamera().projection);
+            }
+        };
 
-	}
-
-	//global
-	private int u_proj;
-	private int u_view;
-	private int u_envMap;
-
-
-
-	public SkyboxShader (FileHandle vertexSource, FileHandle fragmentSource, SceneRenderable sceneRenderable, World world) {
-		super(vertexSource, fragmentSource, sceneRenderable, world);
-	}
-
-	@Override
-	protected long getOptionalAttributes () {
-		return optionalAttributes;
-	}
-
-	@Override
-	public void begin (Cameras cameras, RenderUtils renderUtils, SceneEnvironment sceneEnvironment) {
-		super.begin(cameras, renderUtils, sceneEnvironment);
-
-		context.setDepthTest(GL20.GL_LEQUAL);
-		context.setCullFace(GL20.GL_BACK);
-		context.setDepthMask(true);
-
-	}
+        public final static Setter cameraView = new GlobalSetter() {
+            @Override
+            public void set(BaseSceneShader shader, int inputID, SceneRenderable renderable, Attributes combinedAttributes) {
+                shader.set(inputID, shader.cameras.getGameCamera().view);
+            }
+        };
 
 
-
-	@Override
-	public void initClassSpecificUniforms () {
-		u_proj = register(Inputs.cameraProj, Setters.cameraProj);
-		u_view = register(Inputs.cameraView, Setters.cameraView);
-		u_envMap = register(Inputs.envMap, Setters.envMap);
-
-	}
-
-
-	/**
-	 * Compare this shader against the other, used for sorting, light weight shaders are rendered first.
-	 *
-	 * @param other
-	 */
-	@Override
-	public int compareTo (BaseSceneShader other) {
-		return -1;
-	}
-
-
-
-
-
-
-
+        public final static Setter envMap = new GlobalSetter() {
+            @Override
+            public void set(BaseSceneShader shader, int inputID, SceneRenderable renderable, Attributes combinedAttributes) {
+                SceneEnvironment sceneEnvironment = shader.sceneEnvironment;
+                final SceneEnvironment.EnvironmentMap environmentMap = sceneEnvironment.getEnvironmentMap();
+                if (environmentMap != null) {
+                    shader.set(inputID, shader.context.textureBinder.bind(environmentMap.getRadianceMap()));
+                }
+            }
+        };
+    }
 }

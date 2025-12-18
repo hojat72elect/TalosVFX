@@ -8,10 +8,10 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.project.FileTracker;
-import com.talosvfx.talos.editor.project2.TalosVFXUtils;
+import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.LabelWithZoom;
 import com.talosvfx.talos.runtime.vfx.modules.VectorFieldModule;
 import com.talosvfx.talos.runtime.vfx.utils.VectorField;
-import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.LabelWithZoom;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +22,7 @@ public class VectorFieldModuleWrapper extends ModuleWrapper<VectorFieldModule> {
     Label vectorFieldLabel;
 
     @Override
-    protected void configureSlots () {
+    protected void configureSlots() {
         addInputSlot("field position", VectorFieldModule.POSITION);
         addInputSlot("field size", VectorFieldModule.SIZE_SCALE);
         addInputSlot("field force", VectorFieldModule.FORCE_SCALE);
@@ -41,7 +41,7 @@ public class VectorFieldModuleWrapper extends ModuleWrapper<VectorFieldModule> {
 
     @Override
     public void fileDrop(String[] paths, float x, float y) {
-        if(paths.length > 0) {
+        if (paths.length > 0) {
             String path = paths[0];
             FileHandle handle = Gdx.files.absolute(path);
             VectorField vectorField = new VectorField();
@@ -69,7 +69,7 @@ public class VectorFieldModuleWrapper extends ModuleWrapper<VectorFieldModule> {
     public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
 
-        if(module.fgaFileName != null && !module.fgaFileName.isEmpty()) {
+        if (module.fgaFileName != null && !module.fgaFileName.isEmpty()) {
             setVectorFieldLabel(module.fgaFileName);
         }
     }
@@ -84,7 +84,7 @@ public class VectorFieldModuleWrapper extends ModuleWrapper<VectorFieldModule> {
     }
 
     @Override
-    protected float reportPrefWidth () {
+    protected float reportPrefWidth() {
         return 180;
     }
 }

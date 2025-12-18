@@ -40,14 +40,14 @@ public class DeleteButton extends Table {
         super.act(delta);
 
 
-        if(clickListener.isOver()) {
+        if (clickListener.isOver()) {
             icon.getColor().a = 0.8f;
         } else {
             icon.getColor().a = 0.5f;
         }
 
 
-        if(clickListener.isPressed()) {
+        if (clickListener.isPressed()) {
             icon.getColor().a = 1f;
         }
 

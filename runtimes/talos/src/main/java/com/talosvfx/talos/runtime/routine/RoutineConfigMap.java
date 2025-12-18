@@ -15,9 +15,9 @@ public class RoutineConfigMap {
 
         Array<XmlReader.Element> categories = root.getChildrenByName("category");
 
-        for(XmlReader.Element category: categories) {
+        for (XmlReader.Element category : categories) {
             Array<XmlReader.Element> modules = category.getChildrenByName("module");
-            for(XmlReader.Element module: modules) {
+            for (XmlReader.Element module : modules) {
                 String name = module.getAttribute("name");
 
                 map.put(name, module);

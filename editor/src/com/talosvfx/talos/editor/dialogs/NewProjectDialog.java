@@ -20,7 +20,7 @@ public class NewProjectDialog extends VisWindow {
     private TextField parentPathField;
     private NewProjectListener listener;
 
-    public NewProjectDialog () {
+    public NewProjectDialog() {
         super("New Project");
 
         setCenterOnAdd(true);
@@ -41,24 +41,20 @@ public class NewProjectDialog extends VisWindow {
         fileChooser.setBackground(getSkin().getDrawable("window-noborder"));
     }
 
-    public interface NewProjectListener {
-        void create(String path, String name);
-    }
-
-    public static void show (String typeName, String projectName, NewProjectListener listener) {
+    public static void show(String typeName, String projectName, NewProjectListener listener) {
         NewProjectDialog dialog = TalosMain.Instance().UIStage().newProjectDialog;
         dialog.setData(typeName, projectName, listener);
 //        TalosMain.Instance().UIStage().openDialog(dialog);
     }
 
-    private void setData (String typeName, String projectName, NewProjectListener listener) {
+    private void setData(String typeName, String projectName, NewProjectListener listener) {
         this.listener = listener;
         getTitleLabel().setText("New " + typeName + " Project");
         projectNameField.setText(projectName);
         parentPathField.setText(TalosMain.Instance().Prefs().getString("sceneEditorProjectsPath"));
     }
 
-    private void initContent () {
+    private void initContent() {
         addProjectNameRow();
         addPathRow();
 
@@ -81,15 +77,15 @@ public class NewProjectDialog extends VisWindow {
         });
     }
 
-    private void save () {
-        if(listener != null) {
+    private void save() {
+        if (listener != null) {
             listener.create(parentPathField.getText(), projectNameField.getText());
         }
 
         remove();
     }
 
-    private void addProjectNameRow () {
+    private void addProjectNameRow() {
 
         Table inputTable = new Table();
 
@@ -129,11 +125,15 @@ public class NewProjectDialog extends VisWindow {
 
         fileChooser.setListener(new FileChooserAdapter() {
             @Override
-            public void selected (Array<FileHandle> file) {
+            public void selected(Array<FileHandle> file) {
                 parentPathField.setText(file.get(0).path());
             }
         });
 
         getStage().addActor(fileChooser.fadeIn());
+    }
+
+    public interface NewProjectListener {
+        void create(String path, String name);
     }
 }

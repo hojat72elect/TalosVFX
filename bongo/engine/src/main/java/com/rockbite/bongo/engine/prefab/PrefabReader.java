@@ -3,12 +3,12 @@ package com.rockbite.bongo.engine.prefab;
 import com.artemis.utils.reflect.ArrayReflection;
 import com.artemis.utils.reflect.ClassReflection;
 import com.artemis.utils.reflect.ReflectionException;
-import com.artemis.utils.reflect.ReflectionUtil;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.Queue;
 import com.badlogic.gdx.utils.reflect.Field;
 import com.moandjiezana.toml.Toml;
 import com.rockbite.bongo.engine.reflect.ReflectUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,210 +18,199 @@ import java.util.Map;
 
 public class PrefabReader {
 
-	private static final Logger logger = LoggerFactory.getLogger(PrefabReader.class);
+    private static final Logger logger = LoggerFactory.getLogger(PrefabReader.class);
+    public ObjectMap<String, Class> objectMapper = new ObjectMap<>();
+    private final Queue<String> componentParsingStack = new Queue<>();
 
-	public class PrefabException extends RuntimeException {
+    private String componentStackToString() {
+        String buffer = "";
+        for (String s : componentParsingStack) {
+            buffer += s + ".";
+        }
+        return buffer.substring(0, buffer.length() - 1);
+    }
 
-		public PrefabException (String message) {
-			super(message + "\n\t\t" + componentStackToString());
-		}
-	}
+    public Object topLevelParseAndRead(String componentName, Toml data) {
+        componentParsingStack.clear();
 
-	private String componentStackToString () {
-		String buffer = "";
-		for (String s : componentParsingStack) {
-			buffer += s + ".";
-		}
-		return buffer.substring(0, buffer.length() - 1);
-	}
+        componentParsingStack.addLast(componentName);
 
-	private Queue<String> componentParsingStack = new Queue<>();
+        Class<Object> clazz = null;
+        if (componentName != null) {
+            clazz = objectMapper.get(componentName);
+        }
 
-	public ObjectMap<String, Class> objectMapper = new ObjectMap<>();
+        if (data.getString("type") != null) {
+            clazz = objectMapper.get(data.getString("type"));
+        }
+        if (clazz == null) {
+            throw new PrefabException("No class found for type: " + componentName);
+        }
 
-	public Object topLevelParseAndRead (String componentName, Toml data) {
-		componentParsingStack.clear();
+        try {
+            Object object = createObjectFromClassAndToml(clazz, data, null);
 
-		componentParsingStack.addLast(componentName);
+            componentParsingStack.removeLast();
 
-		Class<Object> clazz = null;
-		if (componentName != null) {
-			clazz =	objectMapper.get(componentName);
-		}
+            return object;
+        } catch (ReflectionException e) {
+            throw new PrefabException("Reflection exception when trying to parse top level data: " + componentName);
+        }
+    }
 
-		if (data.getString("type") != null) {
-			clazz = objectMapper.get(data.getString("type"));
-		}
-		if (clazz == null) {
-			throw new PrefabException("No class found for type: " + componentName);
-		}
+    private Object createObjectFromClassAndToml(Class targetType, Object tomlSideData, Class[] generics) throws ReflectionException {
 
-		try {
-			Object object = createObjectFromClassAndToml(clazz, data, null);
+        if (targetType.isEnum()) {
+            if (tomlSideData instanceof String) {
+                return Enum.valueOf(targetType, ((String) tomlSideData));
+            } else {
+                throw new PrefabException("Toml data is not compatible with field enum. Incompatible class =  " + tomlSideData.getClass());
+            }
+        } else if (targetType.isPrimitive()) {
+            //Create a new object parsing the toml side data into friendly targetType data
+            if (targetType.equals(int.class)) {
+                if (tomlSideData instanceof Number) {
+                    tomlSideData = ((Number) tomlSideData).intValue();
+                }
+            }
+            if (targetType.equals(float.class)) {
+                if (tomlSideData instanceof Number) {
+                    tomlSideData = ((Number) tomlSideData).floatValue();
+                }
+            }
+            return tomlSideData;
+        } else if (targetType.equals(String.class)) {
 
-			componentParsingStack.removeLast();
+            if (tomlSideData instanceof String) {
+                return tomlSideData;
+            } else {
+                throw new PrefabException("Toml data is not compatible with field string. Incompatible class =  " + tomlSideData.getClass());
+            }
+        } else if (targetType.equals(ObjectMap.class)) {
+            if (tomlSideData instanceof Toml) {
+                ObjectMap<String, Object> map = new ObjectMap<>();
+                final Toml toml = (Toml) tomlSideData;
+                for (Map.Entry<String, Object> stringObjectEntry : toml.entrySet()) {
+                    map.put(stringObjectEntry.getKey(), stringObjectEntry.getValue());
+                }
+                return map;
+            } else {
+                throw new PrefabException("Toml data is not compatible with field map. Incompatible class =  " + tomlSideData.getClass());
+            }
+        } else if (targetType.isArray()) {
+            if (tomlSideData instanceof List) {
+                final Class elementType = targetType.getComponentType();
+                final List<?> list = (List<?>) tomlSideData;
+                final Object[] convertedList = (Object[]) ArrayReflection.newInstance(elementType, list.size());
+                int idx = 0;
+                for (Object o : list) {
+                    if (o instanceof Toml) {
+                        if (((Toml) o).getString("type") != null) {
+                            Class clazz = objectMapper.get(((Toml) o).getString("type"));
+                            if (clazz != null) {
+                                convertedList[idx++] = createObjectFromClassAndToml(clazz, o, null);
+                                continue;
+                            }
+                        }
+                    }
+                    convertedList[idx++] = createObjectFromClassAndToml(elementType, o, null);
+                }
+                return convertedList;
+            } else {
+                throw new PrefabException("Toml data is not compatible with field []. Incompatible class =  " + tomlSideData.getClass());
+            }
+        } else if (Map.class.isAssignableFrom(targetType)) {
 
-			return object;
+            Class keyType = generics[0];
+            Class valueType = generics[1];
 
-		} catch (ReflectionException e) {
-			throw new PrefabException("Reflection exception when trying to parse top level data: " + componentName);
-		}
-	}
+            final Map<?, ?> map = ((Toml) tomlSideData).toMap();
 
-	private Object createObjectFromClassAndToml (Class targetType, Object tomlSideData, Class[] generics) throws ReflectionException {
+            HashMap deserializedMap = new HashMap();
 
-		if (targetType.isEnum()) {
-			if (tomlSideData instanceof String) {
-				return Enum.valueOf(targetType, ((String)tomlSideData));
-			} else {
-				throw new PrefabException("Toml data is not compatible with field enum. Incompatible class =  " + tomlSideData.getClass());
-			}
-		} else if (targetType.isPrimitive()) {
-			//Create a new object parsing the toml side data into friendly targetType data
-			if (targetType.equals(int.class)) {
-				if (tomlSideData instanceof Number) {
-					tomlSideData = ((Number)tomlSideData).intValue();
-				}
-			}
-			if (targetType.equals(float.class)) {
-				if (tomlSideData instanceof Number) {
-					tomlSideData = ((Number)tomlSideData).floatValue();
-				}
-			}
-			return tomlSideData;
+            for (Object key : map.keySet()) {
+                Object value = map.get(key);
 
-		} else if (targetType.equals(String.class)) {
+                deserializedMap.put(convertInto(key, keyType), convertInto(value, valueType));
+            }
 
-			if (tomlSideData instanceof String) {
-				return tomlSideData;
-			} else {
-				throw new PrefabException("Toml data is not compatible with field string. Incompatible class =  " + tomlSideData.getClass());
-			}
+            return deserializedMap;
+        } else {
+            //Complex object
+            //Make a new instance
 
-		} else if (targetType.equals(ObjectMap.class)) {
-			if (tomlSideData instanceof Toml) {
-				ObjectMap<String, Object> map = new ObjectMap<>();
-				final Toml toml = (Toml)tomlSideData;
-				for (Map.Entry<String, Object> stringObjectEntry : toml.entrySet()) {
-					map.put(stringObjectEntry.getKey(), stringObjectEntry.getValue());
-				}
-				return map;
-			} else {
-				throw new PrefabException("Toml data is not compatible with field map. Incompatible class =  " + tomlSideData.getClass());
-			}
-		} else if (targetType.isArray()) {
-			if (tomlSideData instanceof List) {
-				final Class elementType = targetType.getComponentType();
-				final List<?> list = (List<?>)tomlSideData;
-				final Object[] convertedList = (Object[])ArrayReflection.newInstance(elementType, list.size());
-				int idx = 0;
-				for (Object o : list) {
-					if (o instanceof Toml) {
-						if (((Toml)o).getString("type") != null) {
-							Class clazz = objectMapper.get(((Toml)o).getString("type"));
-							if (clazz != null) {
-								convertedList[idx++] = createObjectFromClassAndToml(clazz, o, null);
-								continue;
-							}
-						}
-					}
-					convertedList[idx++] = createObjectFromClassAndToml(elementType, o, null);
-				}
-				return convertedList;
-			} else {
-				throw new PrefabException("Toml data is not compatible with field []. Incompatible class =  " + tomlSideData.getClass());
-			}
-		} else if (Map.class.isAssignableFrom(targetType)) {
+            final Object objectInstance = ClassReflection.newInstance(targetType);
+            //Parse the toml data into the object
 
-			Class keyType = generics[0];
-			Class valueType = generics[1];
+            if (tomlSideData instanceof Toml) {
+                final Toml toml = (Toml) tomlSideData;
 
-			final Map<?, ?> map = ((Toml)tomlSideData).toMap();
+                for (Map.Entry<String, Object> stringObjectEntry : toml.entrySet()) {
 
-			HashMap deserializedMap = new HashMap();
+                    final String tomlSideKey = stringObjectEntry.getKey();
+                    final Object tomlSideChildData = stringObjectEntry.getValue();
 
-			for (Object key : map.keySet()) {
-				Object value = map.get(key);
+                    try {
+                        final Field declaredField = ReflectUtils.getFieldWithName(tomlSideKey, targetType, null);
 
-				deserializedMap.put(convertInto(key, keyType), convertInto(value, valueType));
-			}
+                        //Get the object
+                        componentParsingStack.addLast(declaredField.getType().getSimpleName());
+                        Class[] gen = null;
+                        if (HashMap.class.isAssignableFrom(declaredField.getType())) {
+                            Class keyType = declaredField.getElementType(0);
+                            Class valueType = declaredField.getElementType(1);
+                            gen = new Class[]{keyType, valueType};
+                        }
+                        final Object child = createObjectFromClassAndToml(declaredField.getType(), tomlSideChildData, gen);
+                        componentParsingStack.removeLast();
 
-			return deserializedMap;
-		} else {
-			//Complex object
-			//Make a new instance
+                        declaredField.setAccessible(true);
+                        declaredField.set(objectInstance, child);
+                    } catch (NoSuchFieldException e) {
+                        throw new PrefabException("No field '" + tomlSideKey + "' found for object " + targetType.getSimpleName());
+                    } catch (IllegalAccessException | IllegalArgumentException e) {
+                        throw new PrefabException("Failure to set data for field '" + tomlSideKey + "' found for object " + targetType.getSimpleName());
+                    } catch (Throwable throwable) {
+                        throw new PrefabException("Oopsi " + throwable.getMessage());
+                    }
+                }
+                return objectInstance;
+            } else {
+                throw new PrefabException("Complex object cannot be parsed from " + tomlSideData);
+            }
+        }
+    }
 
-			final Object objectInstance = ClassReflection.newInstance(targetType);
-			//Parse the toml data into the object
+    private Object convertInto(Object key, Class keyType) {
+        if (keyType.isPrimitive()) {
+            if (keyType.equals(int.class)) {
+                return Integer.parseInt(key.toString());
+            } else if (keyType.equals(float.class)) {
+                return Float.parseFloat(key.toString());
+            } else {
+                throw new PrefabException("Not supported primitive " + keyType);
+            }
+        } else if (keyType.isEnum()) {
+            return Enum.valueOf(keyType, ((String) key));
+        } else if (keyType.equals(String.class)) {
+            return String.valueOf(keyType);
+        } else if (Integer.class.equals(keyType)) {
+            return Integer.parseInt(key.toString());
+        } else {
+            try {
+                Object object = createObjectFromClassAndToml(keyType, key, null);
+                System.out.println();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            throw new PrefabException("Not supported type " + keyType);
+        }
+    }
 
-			if (tomlSideData instanceof Toml) {
-				final Toml toml = (Toml)tomlSideData;
+    public class PrefabException extends RuntimeException {
 
-				for (Map.Entry<String, Object> stringObjectEntry : toml.entrySet()) {
-
-					final String tomlSideKey = stringObjectEntry.getKey();
-					final Object tomlSideChildData = stringObjectEntry.getValue();
-
-					try {
-						final Field declaredField = ReflectUtils.getFieldWithName(tomlSideKey, targetType, null);
-
-						//Get the object
-						componentParsingStack.addLast(declaredField.getType().getSimpleName());
-						Class[] gen = null;
-						if (HashMap.class.isAssignableFrom(declaredField.getType())) {
-							Class keyType = declaredField.getElementType(0);
-							Class valueType = declaredField.getElementType(1);
-							gen = new Class[]{keyType, valueType};
-						}
-						final Object child = createObjectFromClassAndToml(declaredField.getType(), tomlSideChildData, gen);
-						componentParsingStack.removeLast();
-
-						declaredField.setAccessible(true);
-						declaredField.set(objectInstance, child);
-
-
-					} catch (NoSuchFieldException e) {
-						throw new PrefabException("No field '" + tomlSideKey + "' found for object " + targetType.getSimpleName());
-					} catch (IllegalAccessException | IllegalArgumentException e) {
-						throw new PrefabException("Failure to set data for field '" + tomlSideKey + "' found for object " + targetType.getSimpleName());
-					} catch (Throwable throwable) {
-						throw new PrefabException("Oopsi " + throwable.getMessage());
-
-					}
-
-				}
-				return objectInstance;
-
-			} else {
-				throw new PrefabException("Complex object cannot be parsed from " + tomlSideData);
-			}
-		}
-	}
-
-	private Object convertInto (Object key, Class keyType) {
-		if (keyType.isPrimitive()) {
-			if (keyType.equals(int.class)) {
-				return Integer.parseInt(key.toString());
-			} else if (keyType.equals(float.class)) {
-				return Float.parseFloat(key.toString());
-			} else {
-				throw new PrefabException("Not supported primitive " + keyType);
-			}
-		} else if (keyType.isEnum()) {
-			return Enum.valueOf(keyType, ((String)key));
-		} else if (keyType.equals(String.class)) {
-			return String.valueOf(keyType);
-		} else if (Integer.class.equals(keyType)) {
-			return Integer.parseInt(key.toString());
-		} else {
-			try {
-				Object object = createObjectFromClassAndToml(keyType, key, null);
-				System.out.println();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			throw new PrefabException("Not supported type " + keyType);
-		}
-	}
-
+        public PrefabException(String message) {
+            super(message + "\n\t\t" + componentStackToString());
+        }
+    }
 }

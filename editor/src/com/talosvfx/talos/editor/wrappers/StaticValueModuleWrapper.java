@@ -48,7 +48,7 @@ public class StaticValueModuleWrapper extends ModuleWrapper<StaticValueModule> {
     @Override
     public void setSlotInactive(int slotTo, boolean isInput) {
         super.setSlotInactive(slotTo, isInput);
-        if(!isInput) {
+        if (!isInput) {
             floatInput.setFlavour(NumericalValue.Flavour.REGULAR);
             floatInput.setText("Number");
         }
@@ -80,7 +80,7 @@ public class StaticValueModuleWrapper extends ModuleWrapper<StaticValueModule> {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         floatInput.setValue(module.getStaticValue());
     }

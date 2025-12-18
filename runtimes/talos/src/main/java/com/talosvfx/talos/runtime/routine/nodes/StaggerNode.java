@@ -9,9 +9,8 @@ import java.util.Comparator;
 
 public class StaggerNode extends RoutineNode {
 
-    private Array<GameObject> orderedArray = new Array<>();
-
     private final PositionComparator positionComparator;
+    private final Array<GameObject> orderedArray = new Array<>();
 
     public StaggerNode() {
         positionComparator = new PositionComparator();
@@ -31,24 +30,24 @@ public class StaggerNode extends RoutineNode {
 
         float interpolation = 0;
 
-        if(executedTargets != null && !executedTargets.isEmpty() && executedTargets.size > 1) {
-            if(strategy.equals("INDEX")) {
-                interpolation = (float)executedTargets.indexOf(target, true)/(executedTargets.size-1);
-            } else if(strategy.equals("YPOS") || strategy.equals("XPOS")) {
+        if (executedTargets != null && !executedTargets.isEmpty() && executedTargets.size > 1) {
+            if (strategy.equals("INDEX")) {
+                interpolation = (float) executedTargets.indexOf(target, true) / (executedTargets.size - 1);
+            } else if (strategy.equals("YPOS") || strategy.equals("XPOS")) {
                 orderedArray.clear();
                 orderedArray.addAll(executedTargets);
 
                 PositionComparator.Dimension dimension = PositionComparator.Dimension.X;
                 PositionComparator.Order order = PositionComparator.Order.ASC;
 
-                if(strategy.equals("YPOS")) dimension = PositionComparator.Dimension.Y;
-                if(sorting.equals("DESC")) order = PositionComparator.Order.DESC;
+                if (strategy.equals("YPOS")) dimension = PositionComparator.Dimension.Y;
+                if (sorting.equals("DESC")) order = PositionComparator.Order.DESC;
 
                 positionComparator.configure(dimension, order);
 
                 orderedArray.sort(positionComparator);
 
-                interpolation = (float)orderedArray.indexOf(target, true)/(orderedArray.size-1);
+                interpolation = (float) orderedArray.indexOf(target, true) / (orderedArray.size - 1);
             }
 
 
@@ -58,15 +57,13 @@ public class StaggerNode extends RoutineNode {
         return super.queryValue(targetPortName);
     }
 
+    @Override
+    public void reset() {
+        super.reset();
+        orderedArray.clear();
+    }
+
     static class PositionComparator implements Comparator<GameObject> {
-
-        public enum Dimension {
-            X, Y
-        }
-
-        public enum Order {
-            ASC, DESC
-        }
 
         private Order order;
         private Dimension dimension;
@@ -83,7 +80,7 @@ public class StaggerNode extends RoutineNode {
 
             float mul = -1;
 
-            if(order == Order.DESC) mul = 1;
+            if (order == Order.DESC) mul = 1;
 
             float res = 0;
             if (dimension == Dimension.X) {
@@ -92,16 +89,18 @@ public class StaggerNode extends RoutineNode {
                 res = (t2.position.y - t1.position.y) * mul;
             }
 
-            if(res > 0) return 1;
-            if(res < 0) return -1;
+            if (res > 0) return 1;
+            if (res < 0) return -1;
 
             return 0;
         }
-    }
 
-    @Override
-    public void reset() {
-        super.reset();
-        orderedArray.clear();
+        public enum Dimension {
+            X, Y
+        }
+
+        public enum Order {
+            ASC, DESC
+        }
     }
 }

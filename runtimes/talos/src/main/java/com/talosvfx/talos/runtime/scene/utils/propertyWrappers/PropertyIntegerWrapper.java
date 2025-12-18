@@ -5,12 +5,12 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 
 public class PropertyIntegerWrapper extends PropertyNumberWrapper<Integer> {
-    public PropertyIntegerWrapper () {
+    public PropertyIntegerWrapper() {
         defaultValue = 0;
     }
 
     @Override
-    public void collectAttributes (Array<String> attributes) {
+    public void collectAttributes(Array<String> attributes) {
         super.collectAttributes(attributes);
         if (minValue == null) {
             minValue = Integer.MIN_VALUE;
@@ -27,7 +27,7 @@ public class PropertyIntegerWrapper extends PropertyNumberWrapper<Integer> {
     }
 
     @Override
-    public Integer parseValueFromString (String value) {
+    public Integer parseValueFromString(String value) {
         try {
             return Integer.valueOf(value);
         } catch (NumberFormatException e) {
@@ -37,7 +37,7 @@ public class PropertyIntegerWrapper extends PropertyNumberWrapper<Integer> {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         defaultValue = jsonData.getInt("defaultValue", 0);
         value = jsonData.getInt("value", defaultValue);
@@ -49,7 +49,7 @@ public class PropertyIntegerWrapper extends PropertyNumberWrapper<Integer> {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("value", value);
         json.writeValue("defaultValue", defaultValue);

@@ -26,9 +26,9 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.Scaling;
 import com.talosvfx.talos.editor.addons.scene.assets.AssetRepository;
+import com.talosvfx.talos.editor.widgets.ui.common.GenericAssetSelectionWidget;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.GameAssetType;
-import com.talosvfx.talos.editor.widgets.ui.common.GenericAssetSelectionWidget;
 import com.talosvfx.talos.runtime.vfx.modules.MaterialModule;
 import com.talosvfx.talos.runtime.vfx.modules.SpriteMaterialModule;
 
@@ -40,22 +40,22 @@ public class SpriteMaterialModuleWrapper extends ModuleWrapper<SpriteMaterialMod
     private GameAsset<AtlasSprite> asset;
     private Image texturePreview;
 
-    public SpriteMaterialModuleWrapper () {
+    public SpriteMaterialModuleWrapper() {
         super();
     }
 
     @Override
-    public void setModuleToDefaults () {
+    public void setModuleToDefaults() {
         module.setToDefault();
     }
 
     @Override
-    protected float reportPrefWidth () {
+    protected float reportPrefWidth() {
         return 250;
     }
 
     @Override
-    protected void configureSlots () {
+    protected void configureSlots() {
 
         addOutputSlot("", MaterialModule.MATERIAL_MODULE);
 
@@ -76,7 +76,7 @@ public class SpriteMaterialModuleWrapper extends ModuleWrapper<SpriteMaterialMod
 
         selector.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 asset = selector.getValue();
                 module.setGameAsset(asset);
                 if (asset.getResource() != null) {
@@ -89,13 +89,13 @@ public class SpriteMaterialModuleWrapper extends ModuleWrapper<SpriteMaterialMod
 
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("asset", asset.nameIdentifier);
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         String identifier = jsonData.getString("asset", "white");
         asset = AssetRepository.getInstance().getAssetForIdentifier(identifier, GameAssetType.SPRITE);
@@ -106,5 +106,4 @@ public class SpriteMaterialModuleWrapper extends ModuleWrapper<SpriteMaterialMod
             texturePreview.setDrawable(new TextureRegionDrawable(asset.getResource()));
         }
     }
-
 }

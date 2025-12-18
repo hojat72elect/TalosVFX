@@ -17,8 +17,8 @@ public class GenericListPopup<T> extends VisWindow {
 
     private InputListener stageListener;
 
-    private FilteredTree<T> tree;
-    private SearchFilteredTree<T> searchFilteredTree;
+    private final FilteredTree<T> tree;
+    private final SearchFilteredTree<T> searchFilteredTree;
 
     private TemplateListPopup.ListListener listListener;
 
@@ -46,23 +46,23 @@ public class GenericListPopup<T> extends VisWindow {
         createListeners();
     }
 
-    protected void build () {
+    protected void build() {
         add(searchFilteredTree).width(300).height(200).row();
     }
 
     @Override
-    protected void setStage (Stage stage) {
+    protected void setStage(Stage stage) {
         super.setStage(stage);
         if (stage != null) stage.addListener(stageListener);
     }
 
     @Override
-    public boolean remove () {
+    public boolean remove() {
         if (getStage() != null) getStage().removeListener(stageListener);
         return super.remove();
     }
 
-    public void showPopup (Stage stage, Array<T> items, Vector2 location, Predicate<FilteredTree.Node<T>> filter, FilteredTree.ItemListener<T> listener) {
+    public void showPopup(Stage stage, Array<T> items, Vector2 location, Predicate<FilteredTree.Node<T>> filter, FilteredTree.ItemListener<T> listener) {
         loadTree(items, filter);
 
         setPosition(location.x, location.y - getHeight());
@@ -85,7 +85,7 @@ public class GenericListPopup<T> extends VisWindow {
         tree.clearSelection(false);
     }
 
-    private void loadTree (Array<T> items, Predicate<FilteredTree.Node<T>> predicate) {
+    private void loadTree(Array<T> items, Predicate<FilteredTree.Node<T>> predicate) {
         tree.clearChildren();
 
         for (T item : items) {
@@ -99,14 +99,14 @@ public class GenericListPopup<T> extends VisWindow {
     }
 
 
-    private boolean contains (float x, float y) {
+    private boolean contains(float x, float y) {
         return getX() < x && getX() + getWidth() > x && getY() < y && getY() + getHeight() > y;
     }
 
-    private void createListeners () {
+    private void createListeners() {
         stageListener = new InputListener() {
             @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 if (!GenericListPopup.this.contains(x, y) && button == 0) {
                     remove();
                     return false;
@@ -117,14 +117,14 @@ public class GenericListPopup<T> extends VisWindow {
 
         tree.addItemListener(new FilteredTree.ItemListener() {
             @Override
-            public void selected (FilteredTree.Node node) {
+            public void selected(FilteredTree.Node node) {
                 if (node.children.size == 0) {
                     // do shit
                 }
             }
 
             @Override
-            public void addedIntoSelection (FilteredTree.Node node) {
+            public void addedIntoSelection(FilteredTree.Node node) {
                 super.addedIntoSelection(node);
             }
         });

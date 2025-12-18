@@ -12,7 +12,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Pools;
 import com.talosvfx.talos.editor.addons.scene.events.ComponentUpdated;
-import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.editor.addons.scene.widgets.gizmos.PaintSurfaceGizmo;
 import com.talosvfx.talos.editor.nodes.widgets.ColorWidget;
 import com.talosvfx.talos.editor.nodes.widgets.ValueWidget;
@@ -21,6 +20,7 @@ import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.Observer;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.ui.common.SquareButton;
+import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.components.AComponent;
 import com.talosvfx.talos.runtime.scene.components.PaintSurfaceComponent;
 
@@ -40,12 +40,7 @@ public class PaintToolsPane extends Table implements Observer {
 
     private Tool currentTool = Tool.BRUSH;
 
-    private Color fullColor = new Color(Color.WHITE);
-
-    public enum Tool {
-        BRUSH,
-        ERASER
-    }
+    private final Color fullColor = new Color(Color.WHITE);
 
     public PaintToolsPane(PaintSurfaceGizmo paintSurfaceGizmo) {
         this.paintSurfaceGizmo = paintSurfaceGizmo;
@@ -162,7 +157,6 @@ public class PaintToolsPane extends Table implements Observer {
         }
     }
 
-
     private ValueWidget createFloatWidget(String name, float min, float max, float value) {
         ValueWidget hardnessWidget = new ValueWidget(SharedResources.skin);
         hardnessWidget.setRange(min, max);
@@ -173,7 +167,6 @@ public class PaintToolsPane extends Table implements Observer {
 
         return hardnessWidget;
     }
-
 
     @Override
     public void act(float delta) {
@@ -271,5 +264,10 @@ public class PaintToolsPane extends Table implements Observer {
 
     public Tool getCurrentTool() {
         return currentTool;
+    }
+
+    public enum Tool {
+        BRUSH,
+        ERASER
     }
 }

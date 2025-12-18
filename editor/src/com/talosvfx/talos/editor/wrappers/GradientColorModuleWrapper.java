@@ -24,10 +24,10 @@ import com.badlogic.gdx.utils.JsonValue;
 import com.kotcrab.vis.ui.widget.color.ColorPicker;
 import com.kotcrab.vis.ui.widget.color.ColorPickerAdapter;
 import com.talosvfx.talos.editor.project2.SharedResources;
-import com.talosvfx.talos.runtime.vfx.values.ColorPoint;
 import com.talosvfx.talos.editor.widgets.GradientWidget;
 import com.talosvfx.talos.runtime.vfx.modules.GradientColorModule;
 import com.talosvfx.talos.runtime.vfx.modules.InterpolationModule;
+import com.talosvfx.talos.runtime.vfx.values.ColorPoint;
 
 public class GradientColorModuleWrapper extends ModuleWrapper<GradientColorModule> {
 
@@ -83,7 +83,7 @@ public class GradientColorModuleWrapper extends ModuleWrapper<GradientColorModul
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         gradientWidget.updateGradientData();
     }
@@ -100,7 +100,7 @@ public class GradientColorModuleWrapper extends ModuleWrapper<GradientColorModul
 
 
     @Override
-    public void act (float delta) {
+    public void act(float delta) {
         super.act(delta);
 
 //        ScreenshotService.testForPicker(picker);

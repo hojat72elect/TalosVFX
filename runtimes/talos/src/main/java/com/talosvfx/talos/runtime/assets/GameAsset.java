@@ -3,12 +3,11 @@ package com.talosvfx.talos.runtime.assets;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ObjectIntMap;
-import com.badlogic.gdx.utils.ObjectSet;
-import com.talosvfx.talos.runtime.scene.GameObjectContainer;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.Objects;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * GameAsset is a potentially complex resource. It links 1+ {@link RawAsset} together to reference
@@ -17,127 +16,125 @@ import java.util.Objects;
 public class GameAsset<T> implements Disposable {
 
 
-	public String nameIdentifier;
-	public GameAssetType type;
+    public String nameIdentifier;
+    public GameAssetType type;
 
-	public Array<RawAsset> dependentRawAssets = new Array<>();
-	public Array<GameAsset<?>> dependentGameAssets = new Array<>();
+    public Array<RawAsset> dependentRawAssets = new Array<>();
+    public Array<GameAsset<?>> dependentGameAssets = new Array<>();
 
 
-	//Export only
+    //Export only
+    public Array<GameAssetUpdateListener> listeners = new Array<>();
+    @Getter
+    private final ObjectIntMap<GameAsset<?>> gameResourcesThatRequireMe = new ObjectIntMap<>();
+    private T resourcePayload;
+    private boolean broken;
+    private Exception brokenReason;
+    @Setter
+    @Getter
+    private boolean nonFound;
+    @Getter
+    @Setter
+    private boolean dummy;
 
-	@Getter
-	private ObjectIntMap<GameAsset<?>> gameResourcesThatRequireMe = new ObjectIntMap<>();
+    public GameAsset(String nameIdentifier, GameAssetType type) {
+        this.nameIdentifier = nameIdentifier;
+        this.type = type;
+    }
 
-	private T resourcePayload;
+    public void addDependency(GameAsset<?> containerAsset) {
+        addDependency(containerAsset, 1);
+    }
 
-	private boolean broken;
-	private Exception brokenReason;
+    public void addDependency(GameAsset<?> containerAsset, int counter) {
+        gameResourcesThatRequireMe.getAndIncrement(containerAsset, 0, counter);
+        for (int i = 0; i < dependentGameAssets.size; i++) {
+            dependentGameAssets.get(i).addDependency(containerAsset, counter);
+        }
+    }
 
-	@Setter@Getter
-	private boolean nonFound;
+    @Override
+    public void dispose() {
+        try {
+            if (resourcePayload instanceof Disposable) {
+                ((Disposable) resourcePayload).dispose();
+            }
+            resourcePayload = null;
 
-	@Getter@Setter
-	private boolean dummy;
+            for (GameAsset<?> gameAsset : dependentGameAssets) {
+                gameAsset.dispose();
+            }
+            dependentGameAssets.clear();
+            gameResourcesThatRequireMe.clear();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-	public void addDependency (GameAsset<?> containerAsset) {
-		addDependency(containerAsset, 1);
-	}
-	public void addDependency (GameAsset<?> containerAsset, int counter) {
-		gameResourcesThatRequireMe.getAndIncrement(containerAsset, 0, counter);
-		for (int i = 0; i < dependentGameAssets.size; i++) {
-			dependentGameAssets.get(i).addDependency(containerAsset, counter);
-		}
-	}
+    public void setResourcePayload(T resourcePayload) {
+        this.resourcePayload = resourcePayload;
+    }
 
-	@Override
-	public void dispose () {
-		try {
-			if (resourcePayload instanceof Disposable) {
-				((Disposable)resourcePayload).dispose();
-			}
-			resourcePayload = null;
+    public T getResource() {
+        return this.resourcePayload;
+    }
 
-			for (GameAsset<?> gameAsset : dependentGameAssets) {
-				gameAsset.dispose();
-			}
-			dependentGameAssets.clear();
-			gameResourcesThatRequireMe.clear();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+    public boolean isBroken() {
+        return broken;
+    }
 
-	public interface GameAssetUpdateListener {
-		void onUpdate ();
-	}
+    public void setBroken(Exception e) {
+        this.broken = true;
+        this.brokenReason = e;
+    }
 
-	public Array<GameAssetUpdateListener> listeners = new Array<>();
+    public void setUpdated() {
+        for (GameAssetUpdateListener listener : listeners) {
+            listener.onUpdate();
+        }
+    }
 
-	public GameAsset (String nameIdentifier, GameAssetType type) {
-		this.nameIdentifier = nameIdentifier;
-		this.type = type;
-	}
+    public RawAsset getRootRawAsset() {
+        if (dependentRawAssets.isEmpty()) {
 
-	public void setResourcePayload (T resourcePayload) {
-		this.resourcePayload = resourcePayload;
-	}
+            System.out.println("something is wrong");
+            return null;
+        }
 
-	public T getResource () {
-		return this.resourcePayload;
-	}
+        return dependentRawAssets.first();
+    }
 
-	public boolean isBroken () {
-		return broken;
-	}
+    public GameAsset<T> copy() {
+        GameAsset<T> copy = new GameAsset<>(nameIdentifier, type);
 
-	public void setBroken (Exception e) {
-		this.broken = true;
-		this.brokenReason = e;
-	}
+        for (RawAsset dependentRawAsset : dependentRawAssets) {
+            copy.dependentRawAssets.add(dependentRawAsset.copy());
+        }
 
-	public void setUpdated () {
-		for (GameAssetUpdateListener listener : listeners) {
-			listener.onUpdate();
-		}
-	}
+        copy.dependentGameAssets.addAll(dependentGameAssets);
+        copy.resourcePayload = resourcePayload;
+        copy.broken = broken;
+        copy.dummy = dummy;
+        copy.nonFound = nonFound;
+        return copy;
+    }
 
-	public RawAsset getRootRawAsset () {
-		if (dependentRawAssets.isEmpty()) {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof GameAsset)) return false;
+        GameAsset<?> other = (GameAsset<?>) o;
 
-			System.out.println("something is wrong");
-			return null;
-		}
+        if (isBroken()) return false;
+        return Objects.equals(getRootRawAsset().metaData.uuid, other.getRootRawAsset().metaData.uuid);
+    }
 
-		return dependentRawAssets.first();
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(getRootRawAsset().metaData.uuid);
+    }
 
-	public GameAsset<T> copy () {
-		GameAsset<T> copy = new GameAsset<>(nameIdentifier, type);
-
-		for (RawAsset dependentRawAsset : dependentRawAssets) {
-			copy.dependentRawAssets.add(dependentRawAsset.copy());
-		}
-
-		copy.dependentGameAssets.addAll(dependentGameAssets);
-		copy.resourcePayload = resourcePayload;
-		copy.broken = broken;
-		copy.dummy = dummy;
-		copy.nonFound = nonFound;
-		return copy;
-	}
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof GameAsset)) return false;
-		GameAsset<?> other = (GameAsset<?>) o;
-
-		if (isBroken()) return false;
-		return Objects.equals(getRootRawAsset().metaData.uuid, other.getRootRawAsset().metaData.uuid);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(getRootRawAsset().metaData.uuid);
-	}
+    public interface GameAssetUpdateListener {
+        void onUpdate();
+    }
 }

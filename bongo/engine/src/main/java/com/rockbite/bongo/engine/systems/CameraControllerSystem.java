@@ -5,68 +5,68 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.FirstPersonCameraController;
-import com.badlogic.gdx.math.Vector3;
 import com.rockbite.bongo.engine.camera.BongoCameraController;
 import com.rockbite.bongo.engine.components.singletons.Cameras;
 import com.rockbite.bongo.engine.events.render.WindowResizeEvent;
 import com.rockbite.bongo.engine.input.InputProvider;
-import lombok.Getter;
-import lombok.Setter;
+
 import net.mostlyoriginal.api.event.common.Subscribe;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.rockbite.bongo.engine.systems.RenderPassSystem.glViewport;
+import lombok.Getter;
+import lombok.Setter;
 
 public class CameraControllerSystem extends BaseSystem implements InputProvider {
 
-	static Logger logger = LoggerFactory.getLogger(CameraControllerSystem.class);
+    static Logger logger = LoggerFactory.getLogger(CameraControllerSystem.class);
 
-	//SINGLETONS
-	@Getter
-	private Cameras cameras;
+    //SINGLETONS
+    @Getter
+    private Cameras cameras;
 
-	@Getter@Setter
-	private InputAdapter cameraController;
+    @Getter
+    @Setter
+    private InputAdapter cameraController;
 
-	@Override
-	protected void initialize () {
-		super.initialize();
-		cameraController = new FirstPersonCameraController(cameras.getGameCamera());
-	}
+    @Override
+    protected void initialize() {
+        super.initialize();
+        cameraController = new FirstPersonCameraController(cameras.getGameCamera());
+    }
 
-	public void setYUp (boolean yUp) {
-		if (cameraController instanceof BongoCameraController) {
-			((BongoCameraController)cameraController).setYUp(yUp);
-		}
-	}
+    public void setYUp(boolean yUp) {
+        if (cameraController instanceof BongoCameraController) {
+            ((BongoCameraController) cameraController).setYUp(yUp);
+        }
+    }
 
-	/**
-	 * Process the system.
-	 */
-	@Override
-	protected void processSystem () {
-		if (cameraController instanceof FirstPersonCameraController) {
-			((FirstPersonCameraController)cameraController).update();
-		}
-		if (cameraController instanceof BongoCameraController) {
-			((BongoCameraController)cameraController).update();
-		}
-	}
+    /**
+     * Process the system.
+     */
+    @Override
+    protected void processSystem() {
+        if (cameraController instanceof FirstPersonCameraController) {
+            ((FirstPersonCameraController) cameraController).update();
+        }
+        if (cameraController instanceof BongoCameraController) {
+            ((BongoCameraController) cameraController).update();
+        }
+    }
 
-	@Subscribe
-	public void onResize (WindowResizeEvent resizeEvent) {
-		Camera gameCamera = cameras.getGameCamera();
-		if (gameCamera instanceof PerspectiveCamera) {
-			gameCamera.viewportWidth = resizeEvent.getWidth();
-			gameCamera.viewportHeight = resizeEvent.getHeight();
-		}
-	}
+    @Subscribe
+    public void onResize(WindowResizeEvent resizeEvent) {
+        Camera gameCamera = cameras.getGameCamera();
+        if (gameCamera instanceof PerspectiveCamera) {
+            gameCamera.viewportWidth = resizeEvent.getWidth();
+            gameCamera.viewportHeight = resizeEvent.getHeight();
+        }
+    }
 
-	@Override
-	public InputProcessor getInputProcessor () {
-		return cameraController;
-	}
+    @Override
+    public InputProcessor getInputProcessor() {
+        return cameraController;
+    }
 }

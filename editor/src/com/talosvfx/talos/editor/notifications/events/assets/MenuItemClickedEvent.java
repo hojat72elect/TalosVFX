@@ -1,6 +1,7 @@
 package com.talosvfx.talos.editor.notifications.events.assets;
 
 import com.talosvfx.talos.editor.notifications.TalosEvent;
+
 import lombok.Getter;
 
 public class MenuItemClickedEvent implements TalosEvent {

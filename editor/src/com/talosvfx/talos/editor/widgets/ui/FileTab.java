@@ -3,13 +3,12 @@ package com.talosvfx.talos.editor.widgets.ui;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.kotcrab.vis.ui.widget.tabbedpane.Tab;
-import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.project.IProject;
 
 public class FileTab extends Tab {
 
     public FileHandle projectFileHandle;
-    private IProject projectType;
+    private final IProject projectType;
     private boolean unworthy = false;
 
     public FileTab(FileHandle projectFileHandle, IProject projectType) {
@@ -31,14 +30,14 @@ public class FileTab extends Tab {
 
     @Override
     public boolean equals(Object obj) {
-        if(projectFileHandle.name() == null || obj == null) return false;
+        if (projectFileHandle.name() == null || obj == null) return false;
 
-        return projectFileHandle.name().equals(((FileTab)obj).projectFileHandle.name());
+        return projectFileHandle.name().equals(((FileTab) obj).projectFileHandle.name());
     }
 
     @Override
     public boolean save() {
-        if(isSavable()) {
+        if (isSavable()) {
             //TalosMain.Instance().UIStage().saveProjectAction();
         }
 
@@ -58,7 +57,7 @@ public class FileTab extends Tab {
         return projectFileHandle;
     }
 
-    public void setProjectFileHandle (FileHandle projectFileHandle) {
+    public void setProjectFileHandle(FileHandle projectFileHandle) {
         this.projectFileHandle = projectFileHandle;
     }
 

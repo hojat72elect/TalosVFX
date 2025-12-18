@@ -3,6 +3,7 @@ package com.talosvfx.talos.runtime.scene.components;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.talosvfx.talos.runtime.scene.ValueProperty;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -4,6 +4,5 @@ import com.artemis.Component;
 
 public interface Marshallable<T extends Component> {
 
-	void marshallFrom (T other);
-
+    void marshallFrom(T other);
 }

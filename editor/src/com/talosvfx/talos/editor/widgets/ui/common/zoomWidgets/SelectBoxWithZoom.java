@@ -3,13 +3,11 @@ package com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.talosvfx.talos.editor.utils.UIUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +17,7 @@ public class SelectBoxWithZoom<T> extends SelectBox<T> {
 
     SelectBox.SelectBoxStyle providedStyle;
     UIUtils.RegisteredFont registeredFont;
+
     public SelectBoxWithZoom(Skin skin) {
         super(skin);
         cloneStyle();
@@ -34,7 +33,7 @@ public class SelectBoxWithZoom<T> extends SelectBox<T> {
         cloneStyle();
     }
 
-    private void cloneStyle () {
+    private void cloneStyle() {
         SelectBox.SelectBoxStyle style = getStyle();
         SelectBox.SelectBoxStyle textFieldStyle = new SelectBox.SelectBoxStyle(style);
         this.providedStyle = textFieldStyle;
@@ -83,5 +82,4 @@ public class SelectBoxWithZoom<T> extends SelectBox<T> {
             invalidateHierarchy();
         }
     }
-
 }

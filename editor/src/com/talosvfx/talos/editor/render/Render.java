@@ -8,32 +8,30 @@ import com.rockbite.bongo.engine.render.SpriteShaderCompiler;
 
 public class Render {
 
-	private static Render instance;
+    private static Render instance;
+    private final ShapeRenderer shapeRenderer;
 
-	public static Render instance () {
-		if (instance == null) {
-			instance = new Render();
-		}
-		return instance;
-	}
+    public Render() {
+        String shapeVertexSource = ShaderSourceProvider.resolveVertex("core/shape", Files.FileType.Classpath).readString();
+        String shapeFragmentSource = ShaderSourceProvider.resolveFragment("core/shape", Files.FileType.Classpath).readString();
 
-	private final ShapeRenderer shapeRenderer;
+        shapeRenderer = new ShapeRenderer(5000,
+                SpriteShaderCompiler.getOrCreateShader("core/shape", shapeVertexSource, shapeFragmentSource, new ShaderFlags())
+        );
+    }
 
-	public Render () {
-		String shapeVertexSource = ShaderSourceProvider.resolveVertex("core/shape", Files.FileType.Classpath).readString();
-		String shapeFragmentSource = ShaderSourceProvider.resolveFragment("core/shape", Files.FileType.Classpath).readString();
+    public static Render instance() {
+        if (instance == null) {
+            instance = new Render();
+        }
+        return instance;
+    }
 
-		shapeRenderer = new ShapeRenderer(5000,
-			SpriteShaderCompiler.getOrCreateShader("core/shape", shapeVertexSource, shapeFragmentSource, new ShaderFlags())
-		);
-	}
+    public ShapeRenderer shapeRenderer() {
+        return shapeRenderer;
+    }
 
-	public ShapeRenderer shapeRenderer () {
-		return shapeRenderer;
-	}
-
-	public void dispose () {
-		shapeRenderer.dispose();
-	}
-
+    public void dispose() {
+        shapeRenderer.dispose();
+    }
 }

@@ -10,66 +10,66 @@ import java.nio.file.Files;
 
 public class Config {
 
-	private final Channel releaseChannel;
+    private final Channel releaseChannel;
 
-	public Config (Channel releaseChannel) {
-		this.releaseChannel = releaseChannel;
-		String channelPath = getChannelPath(releaseChannel);
+    public Config(Channel releaseChannel) {
+        this.releaseChannel = releaseChannel;
+        String channelPath = getChannelPath(releaseChannel);
 
-		String editorBuildPath = "../editor-desktop/build/libs/";
-		String configFileToCreate = "dist/" +  getTalosJarNameNoExtension(releaseChannel) + "-config.xml";
+        String editorBuildPath = "../editor-desktop/build/libs/";
+        String configFileToCreate = "dist/" + getTalosJarNameNoExtension(releaseChannel) + "-config.xml";
 
-		File talosJar = new File(editorBuildPath + getTalosJarName(releaseChannel));
-		File configFile = new File(configFileToCreate);
-		configFile.getParentFile().mkdirs();
+        File talosJar = new File(editorBuildPath + getTalosJarName(releaseChannel));
+        File configFile = new File(configFileToCreate);
+        configFile.getParentFile().mkdirs();
 
-		Configuration config = Configuration.builder()
-			.property("version", releaseChannel.getDisplayString())
-			.property("snapshot", String.valueOf(releaseChannel.isSnapshot()))
-			.property("channel", channelPath)
-			.property("user.location", "${user.home}/Talos")
-			.basePath("${user.location}/${channel}/")
-			.baseUri("https://editor.talosvfx.com/channels/" + channelPath + "/")
-			.file(FileMetadata.readFrom(talosJar.toPath())
-				.path(getTalosJarName(releaseChannel))
-				.uri(getTalosJarName(releaseChannel))
-				.classpath())
-			.property("default.launcher.main.class", "com.talosvfx.talos.TalosLauncher")
-			.build();
+        Configuration config = Configuration.builder()
+                .property("version", releaseChannel.getDisplayString())
+                .property("snapshot", String.valueOf(releaseChannel.isSnapshot()))
+                .property("channel", channelPath)
+                .property("user.location", "${user.home}/Talos")
+                .basePath("${user.location}/${channel}/")
+                .baseUri("https://editor.talosvfx.com/channels/" + channelPath + "/")
+                .file(FileMetadata.readFrom(talosJar.toPath())
+                        .path(getTalosJarName(releaseChannel))
+                        .uri(getTalosJarName(releaseChannel))
+                        .classpath())
+                .property("default.launcher.main.class", "com.talosvfx.talos.TalosLauncher")
+                .build();
 
-		try (Writer out = Files.newBufferedWriter(configFile.toPath().toAbsolutePath())) {
-			config.write(out);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+        try (Writer out = Files.newBufferedWriter(configFile.toPath().toAbsolutePath())) {
+            config.write(out);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	private String getChannelPath (Channel releaseChannel) {
-		if (releaseChannel.isSnapshot()) {
-			return releaseChannel.getMajor() + "." + releaseChannel.getMinor() + "-SNAPSHOT";
-		} else {
-			return releaseChannel.getMajor() + "." + releaseChannel.getMinor();
-		}
-	}
+    public static void main(String[] args) {
 
-	private String getTalosJarNameNoExtension (Channel releaseChannel) {
-		String baseString = "editor-desktop-" + releaseChannel.getMajor() + "." + releaseChannel.getMinor() + "." + releaseChannel.getPatch();
-		if (releaseChannel.isSnapshot()) {
-			baseString  += "-SNAPSHOT";
-		}
-		return baseString;
-	}
+        //Parse the release channel from versioning
 
-	private String getTalosJarName (Channel releaseChannel) {
-		String baseString = getTalosJarNameNoExtension(releaseChannel);
-		baseString += ".jar";
-		return baseString;
-	}
+        new Config(new Channel("2.0.4-SNAPSHOT"));
+    }
 
-	public static void main (String[] args) {
+    private String getChannelPath(Channel releaseChannel) {
+        if (releaseChannel.isSnapshot()) {
+            return releaseChannel.getMajor() + "." + releaseChannel.getMinor() + "-SNAPSHOT";
+        } else {
+            return releaseChannel.getMajor() + "." + releaseChannel.getMinor();
+        }
+    }
 
-		//Parse the release channel from versioning
+    private String getTalosJarNameNoExtension(Channel releaseChannel) {
+        String baseString = "editor-desktop-" + releaseChannel.getMajor() + "." + releaseChannel.getMinor() + "." + releaseChannel.getPatch();
+        if (releaseChannel.isSnapshot()) {
+            baseString += "-SNAPSHOT";
+        }
+        return baseString;
+    }
 
-		new Config(new Channel("2.0.4-SNAPSHOT"));
-	}
+    private String getTalosJarName(Channel releaseChannel) {
+        String baseString = getTalosJarNameNoExtension(releaseChannel);
+        baseString += ".jar";
+        return baseString;
+    }
 }

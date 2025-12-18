@@ -10,7 +10,7 @@ public class StepNode extends AbstractShaderNode {
     public final String EDGE = "edge";
 
     @Override
-    public ShaderBuilder.Type getVarType (String name) {
+    public ShaderBuilder.Type getVarType(String name) {
 
         if (name.equals(OUTPUT)) {
             return getTargetVarType(INPUT, ShaderBuilder.Type.FLOAT);
@@ -21,7 +21,7 @@ public class StepNode extends AbstractShaderNode {
 
 
     @Override
-    public void prepareDeclarations (ShaderBuilder shaderBuilder) {
+    public void prepareDeclarations(ShaderBuilder shaderBuilder) {
         String input = getExpression(INPUT);
         String edge = getExpression(EDGE, null);
 
@@ -33,7 +33,7 @@ public class StepNode extends AbstractShaderNode {
     }
 
     @Override
-    public String writeOutputCode (String slotId) {
+    public String writeOutputCode(String slotId) {
         return "stepVar" + getId();
     }
 }

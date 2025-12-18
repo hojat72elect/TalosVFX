@@ -9,18 +9,17 @@ import com.talosvfx.talos.runtime.scene.components.RoutineRendererComponent;
 
 public class RoutineComponentRenderer extends ComponentRenderer<RoutineRendererComponent<?>> {
 
-	private final RoutineRenderer routineRenderer;
+    private final RoutineRenderer routineRenderer;
 
-	public RoutineComponentRenderer (GameObjectRenderer gameObjectRenderer) {
-		super(gameObjectRenderer);
+    public RoutineComponentRenderer(GameObjectRenderer gameObjectRenderer) {
+        super(gameObjectRenderer);
 
-		routineRenderer = new RoutineRenderer();
-	}
+        routineRenderer = new RoutineRenderer();
+    }
 
-	@Override
-	public void render (Batch batch, Camera camera, GameObject parent, RoutineRendererComponent<?> rendererComponent) {
+    @Override
+    public void render(Batch batch, Camera camera, GameObject parent, RoutineRendererComponent<?> rendererComponent) {
 
-		routineRenderer.render(batch, camera, parent, rendererComponent);
-
-	}
+        routineRenderer.render(batch, camera, parent, rendererComponent);
+    }
 }

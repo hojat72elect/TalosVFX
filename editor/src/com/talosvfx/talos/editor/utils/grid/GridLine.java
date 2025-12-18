@@ -9,7 +9,7 @@ public class GridLine {
     public Color color;
     public float thickness;
 
-    public GridLine (Vector2 startCoordinate, Vector2 endCoordinate, Color color, float thickness) {
+    public GridLine(Vector2 startCoordinate, Vector2 endCoordinate, Color color, float thickness) {
         this.startCoordinate = startCoordinate;
         this.endCoordinate = endCoordinate;
         this.color = color;

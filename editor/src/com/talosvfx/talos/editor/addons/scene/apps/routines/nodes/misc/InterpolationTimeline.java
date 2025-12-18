@@ -1,5 +1,9 @@
 package com.talosvfx.talos.editor.addons.scene.apps.routines.nodes.misc;
 
+import static com.badlogic.gdx.graphics.GL20.GL_BLEND;
+import static com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA;
+import static com.badlogic.gdx.graphics.GL20.GL_SRC_ALPHA;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
@@ -8,38 +12,25 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.utils.IntMap;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.ObjectFloatMap;
-import com.badlogic.gdx.utils.ObjectIntMap;
-import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.Field;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
-import com.rockbite.bongo.engine.EngineBuilder;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.nodes.AsyncRoutineNodeWidget;
-import lombok.Setter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.badlogic.gdx.graphics.GL20.*;
+import lombok.Setter;
 
 public class InterpolationTimeline extends Table {
-    private static Logger logger = LoggerFactory.getLogger(InterpolationTimeline.class);
-
-    @Setter
-    private float progress;
-
-    @Setter
-    private Interpolation interpolation = Interpolation.linear;
     private static final Color bgColor = Color.valueOf("#37574aff");
     private static final Color lineColor = Color.valueOf("18db66ff");
-
-    private ShapeRenderer shapeRenderer;
-
-
-    private static ObjectFloatMap<Interpolation> interpolationMaxValues;
-    private static ObjectFloatMap<Interpolation> interpolationMinValues;
+    private static final Logger logger = LoggerFactory.getLogger(InterpolationTimeline.class);
+    private static final ObjectFloatMap<Interpolation> interpolationMaxValues;
+    private static final ObjectFloatMap<Interpolation> interpolationMinValues;
 
     static {
         // beforehand calculate min/max for all interpolation functions
@@ -65,6 +56,12 @@ public class InterpolationTimeline extends Table {
             }
         }
     }
+
+    @Setter
+    private float progress;
+    @Setter
+    private Interpolation interpolation = Interpolation.linear;
+    private final ShapeRenderer shapeRenderer;
 
     public InterpolationTimeline(AsyncRoutineNodeWidget asyncRoutineNodeWidget, Skin skin) {
         super(skin);

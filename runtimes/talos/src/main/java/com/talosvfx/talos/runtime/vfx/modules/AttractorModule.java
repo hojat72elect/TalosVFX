@@ -22,10 +22,10 @@ public class AttractorModule extends AbstractModule {
     NumericalValue angle;
     NumericalValue velocity;
 
-    Vector2 initialVector  = new Vector2();
-    Vector2 attractionVector  = new Vector2();
+    Vector2 initialVector = new Vector2();
+    Vector2 attractionVector = new Vector2();
     Vector2 pos = new Vector2();
-    Vector2 result  = new Vector2();
+    Vector2 result = new Vector2();
 
     @Override
     protected void defineSlots() {
@@ -41,13 +41,13 @@ public class AttractorModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
         NumericalValue posNumVal = getScope().get(ScopePayload.PARTICLE_POSITION);
         pos.set(posNumVal.get(0), posNumVal.get(1));
 
 
-        float alphaVal =  getScope().getFloat(ScopePayload.PARTICLE_ALPHA);;
-        if(!alpha.isEmpty()) {
+        float alphaVal = getScope().getFloat(ScopePayload.PARTICLE_ALPHA);
+        if (!alpha.isEmpty()) {
             alphaVal = alpha.getFloat();
         }
 
@@ -61,7 +61,7 @@ public class AttractorModule extends AbstractModule {
 
         // now let's mix them
         result.set(interpolation.apply(initialVector.x, attractionVector.x, alphaVal),
-                   interpolation.apply(initialVector.y, attractionVector.y, alphaVal));
+                interpolation.apply(initialVector.y, attractionVector.y, alphaVal));
 
         angle.set(result.angle());
         velocity.set(result.len());

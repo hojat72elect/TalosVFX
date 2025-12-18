@@ -2,9 +2,15 @@ package com.talosvfx.talos.editor.widgets.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g2d.PolygonBatch;
-import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
@@ -15,9 +21,9 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.rockbite.bongo.engine.systems.RenderPassSystem;
 import com.talosvfx.talos.editor.wrappers.IDragPointProvider;
-import lombok.Getter;
-
 import com.talosvfx.talos.runtime.utils.Supplier;
+
+import lombok.Getter;
 
 public class Preview3D extends PreviewWidget {
 
@@ -26,15 +32,16 @@ public class Preview3D extends PreviewWidget {
 
     @Getter
     private final BongoPreview bongoPreview;
-
+    boolean isPerspective = true;
     //Render
     private boolean isDrawXYZ, isDrawXZPlane, isDrawXYPlane;
-    private Array<Model> models;
-    private ModelInstance xyzInstance, xzPlaneInstance, xyPlaneInstance;
-    private Environment environment;
-
+    private final Array<Model> models;
+    private final ModelInstance xyzInstance;
+    private final ModelInstance xzPlaneInstance;
+    private final ModelInstance xyPlaneInstance;
+    private final Environment environment;
     private IDragPointProvider dragPointProvider;
-    private Array<DragPoint> dragPoints = new Array<>();
+    private final Array<DragPoint> dragPoints = new Array<>();
 
     public Preview3D() {
         super();
@@ -45,12 +52,12 @@ public class Preview3D extends PreviewWidget {
         setWorldSize(10);
 
         environment = new Environment();
-        environment.add(new DirectionalLight().set(Color.WHITE, 0,0,-1));
+        environment.add(new DirectionalLight().set(Color.WHITE, 0, 0, -1));
 
 
         models = new Array<Model>();
         ModelBuilder builder = new ModelBuilder();
-        Model 	xyzModel = builder.createXYZCoordinates(10, new Material(), VertexAttributes.Usage.Position| VertexAttributes.Usage.ColorPacked),
+        Model xyzModel = builder.createXYZCoordinates(10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.ColorPacked),
                 planeModel = builder.createLineGrid(10, 10, 1, 1, new Material(ColorAttribute.createDiffuse(Color.WHITE)), VertexAttributes.Usage.Position);
         models.add(xyzModel);
         models.add(planeModel);
@@ -67,8 +74,6 @@ public class Preview3D extends PreviewWidget {
         bongoPreview = new BongoPreview();
 
         bongoPreview.setCameraController(viewportViewSettings.getCurrentCameraController());
-
-
     }
 
     @Override
@@ -76,36 +81,29 @@ public class Preview3D extends PreviewWidget {
 
     }
 
-    public void setDrawXYZ(boolean isDraw)
-    {
+    public void setDrawXYZ(boolean isDraw) {
         isDrawXYZ = isDraw;
     }
 
-    public boolean IsDrawXYZ()
-    {
+    public boolean IsDrawXYZ() {
         return isDrawXYZ;
     }
 
-    public void setDrawXZPlane(boolean isDraw)
-    {
+    public void setDrawXZPlane(boolean isDraw) {
         isDrawXZPlane = isDraw;
     }
 
-    public boolean IsDrawXZPlane()
-    {
+    public boolean IsDrawXZPlane() {
         return isDrawXZPlane;
     }
 
-    public void setDrawXYPlane(boolean isDraw)
-    {
+    public void setDrawXYPlane(boolean isDraw) {
         isDrawXYPlane = isDraw;
     }
 
-    public boolean IsDrawXYPlane()
-    {
+    public boolean IsDrawXYPlane() {
         return isDrawXYPlane;
     }
-
 
     @Override
     public void act(float delta) {
@@ -168,8 +166,6 @@ public class Preview3D extends PreviewWidget {
 //        Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
 
 
-
-
         Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
 
         Vector2 temp = new Vector2();
@@ -184,10 +180,10 @@ public class Preview3D extends PreviewWidget {
         temp.y = Gdx.graphics.getHeight() - temp.y;
         temp2.y = Gdx.graphics.getHeight() - temp2.y;
 
-        int width = (int)(temp2.x - temp.x);
-        int height = (int)(temp2.y - temp.y);
-        int x = (int)temp.x;
-        int y = (int)temp.y;
+        int width = (int) (temp2.x - temp.x);
+        int height = (int) (temp2.y - temp.y);
+        int x = (int) temp.x;
+        int y = (int) temp.y;
 
         x = HdpiUtils.toBackBufferX(x);
         y = HdpiUtils.toBackBufferY(y);
@@ -199,10 +195,10 @@ public class Preview3D extends PreviewWidget {
         RenderPassSystem.glViewport.width = width;
         RenderPassSystem.glViewport.height = height;
         HdpiUtils.glViewport(
-            RenderPassSystem.glViewport.x,
-            RenderPassSystem.glViewport.y,
-            RenderPassSystem.glViewport.width,
-            RenderPassSystem.glViewport.height
+                RenderPassSystem.glViewport.x,
+                RenderPassSystem.glViewport.y,
+                RenderPassSystem.glViewport.width,
+                RenderPassSystem.glViewport.height
         );
 
 //        if (worldCamera instanceof PerspectiveCamera) {
@@ -228,17 +224,15 @@ public class Preview3D extends PreviewWidget {
         }
 
         batch.begin();
-
     }
 
     @Override
-    protected void updateParticlePosition (Vector3 tmp) {
+    protected void updateParticlePosition(Vector3 tmp) {
         super.updateParticlePosition(tmp);
         bongoPreview.updateParticlePosition(tmp);
     }
 
-    boolean isPerspective = true;
-    private void switchCamera () {
+    private void switchCamera() {
 //        final Vector3 position = worldCamera.position;
 //        final Vector3 direction = worldCamera.direction;
 //
@@ -278,7 +272,7 @@ public class Preview3D extends PreviewWidget {
         this.dragPointProvider = dragPointProvider;
         DragPoint[] arr = dragPointProvider.fetchDragPoints();
         dragPoints.clear();
-        for(int i = 0; i < arr.length; i++) {
+        for (int i = 0; i < arr.length; i++) {
             dragPoints.add(arr[i]);
         }
     }
@@ -289,7 +283,7 @@ public class Preview3D extends PreviewWidget {
     }
 
     public void unregisterDragPoints(IDragPointProvider dragPointProvider) {
-        if(this.dragPointProvider == dragPointProvider) {
+        if (this.dragPointProvider == dragPointProvider) {
             this.dragPointProvider = null;
             dragPoints.clear();
         }

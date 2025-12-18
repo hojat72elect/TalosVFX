@@ -6,40 +6,47 @@ public interface LayoutApp {
 
 //	change tis to focus
 
-	void setTabActive (boolean active);
+    boolean isTabActive();
 
-	boolean isTabActive ();
+    void setTabActive(boolean active);
 
-	void setTabFocused (boolean focused);
+    boolean isTabFocused();
 
-	boolean isTabFocused ();
+    void setTabFocused(boolean focused);
 
-	String getUniqueIdentifier ();
+    String getUniqueIdentifier();
 
-	void setUniqueIdentifier (String uuid);
-	String getFriendlyName ();
-	Actor getTabWidget ();
-	Actor copyTabWidget ();
+    void setUniqueIdentifier(String uuid);
 
-	Actor getMainContent ();
-	Actor getCopyMainContent ();
+    String getFriendlyName();
 
-	void setDestroyCallback (DestroyCallback destroyCallback);
+    Actor getTabWidget();
 
-	DestroyCallback getDestroyCallback ();
+    Actor copyTabWidget();
 
-	void setScrollFocus ();
+    Actor getMainContent();
 
-	void onInputProcessorAdded ();
-	void onInputProcessorRemoved ();
+    Actor getCopyMainContent();
 
-	void updateTabName(String name);
+    DestroyCallback getDestroyCallback();
 
-	void setLayoutContent(LayoutContent layoutContent);
-	LayoutContent getLayoutContent();
-	void actInBackground(float delta);
+    void setDestroyCallback(DestroyCallback destroyCallback);
 
-	boolean hasPreferredWidth();
+    void setScrollFocus();
 
-	boolean hasPreferredHeight();
+    void onInputProcessorAdded();
+
+    void onInputProcessorRemoved();
+
+    void updateTabName(String name);
+
+    LayoutContent getLayoutContent();
+
+    void setLayoutContent(LayoutContent layoutContent);
+
+    void actInBackground(float delta);
+
+    boolean hasPreferredWidth();
+
+    boolean hasPreferredHeight();
 }

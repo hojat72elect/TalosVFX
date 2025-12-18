@@ -16,6 +16,10 @@
 
 package com.talosvfx.talos.editor.widgets;
 
+import static com.talosvfx.talos.runtime.vfx.modules.OffsetModule.TYPE_ELLIPSE;
+import static com.talosvfx.talos.runtime.vfx.modules.OffsetModule.TYPE_LINE;
+import static com.talosvfx.talos.runtime.vfx.modules.OffsetModule.TYPE_SQUARE;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
@@ -30,30 +34,23 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.talosvfx.talos.editor.render.Render;
 
-import static com.talosvfx.talos.runtime.vfx.modules.OffsetModule.*;
-
 public class ShapeWidget extends Actor {
-
-    Skin skin;
-    Color tmpColor;
-    Vector2 tmp = new Vector2();
-    ShapeRenderer shapeRenderer;
-
-    Vector2 shapePos = new Vector2();
-    Vector2 shapeSize = new Vector2();
 
     private final int LEFT = 0;
     private final int RIGHT = 1;
     private final int TOP = 2;
     private final int BOTTOM = 3;
-
+    Skin skin;
+    Color tmpColor;
+    Vector2 tmp = new Vector2();
+    ShapeRenderer shapeRenderer;
+    Vector2 shapePos = new Vector2();
+    Vector2 shapeSize = new Vector2();
+    ChangeListener changeListener;
     private int selectedSide = -1;
     private boolean centerHover = false;
     private boolean draggingCenter = false;
-
     private int shapeType = TYPE_SQUARE;
-
-    ChangeListener changeListener;
 
     public ShapeWidget(Skin skin) {
         this.skin = skin;
@@ -66,30 +63,30 @@ public class ShapeWidget extends Actor {
 
         addListener(new ClickListener() {
 
-            Vector2 prevPos = new Vector2();
-            Vector2 tmp = new Vector2();
+            final Vector2 prevPos = new Vector2();
+            final Vector2 tmp = new Vector2();
 
             private int hitSide(float x, float y) {
                 selectedSide = -1;
                 float tolerance = 5f;
                 // left side
-                float line = getWidth()/2f + shapePos.x - shapeSize.x/2f;
-                if(Math.abs(x - line) < tolerance) {
+                float line = getWidth() / 2f + shapePos.x - shapeSize.x / 2f;
+                if (Math.abs(x - line) < tolerance) {
                     selectedSide = LEFT;
                 }
                 // right side
-                line = getWidth()/2f + shapePos.x + shapeSize.x/2f;
-                if(Math.abs(x - line) < tolerance) {
+                line = getWidth() / 2f + shapePos.x + shapeSize.x / 2f;
+                if (Math.abs(x - line) < tolerance) {
                     selectedSide = RIGHT;
                 }
                 // top side
-                line = getHeight()/2f + shapePos.y + shapeSize.y/2f;
-                if(Math.abs(y - line) < tolerance) {
+                line = getHeight() / 2f + shapePos.y + shapeSize.y / 2f;
+                if (Math.abs(y - line) < tolerance) {
                     selectedSide = TOP;
                 }
                 // bottom side
-                line = getHeight()/2f + shapePos.y - shapeSize.y/2f;
-                if(Math.abs(y - line) < tolerance) {
+                line = getHeight() / 2f + shapePos.y - shapeSize.y / 2f;
+                if (Math.abs(y - line) < tolerance) {
                     selectedSide = BOTTOM;
                 }
 
@@ -98,11 +95,7 @@ public class ShapeWidget extends Actor {
 
             private boolean hitCenter(float x, float y) {
                 tmp.set(shapePos);
-                if(tmp.dst(x - getWidth()/2f, y - getHeight()/2f) < 5) {
-                    return true;
-                }
-
-                return false;
+                return tmp.dst(x - getWidth() / 2f, y - getHeight() / 2f) < 5;
             }
 
 
@@ -126,79 +119,77 @@ public class ShapeWidget extends Actor {
             @Override
             public void touchDragged(InputEvent event, float x, float y, int pointer) {
                 super.touchDragged(event, x, y, pointer);
-                if(selectedSide == TOP) {
+                if (selectedSide == TOP) {
                     float diff = y - prevPos.y;
                     shapeSize.add(0, diff * 2f);
                     //if(shapeSize.y < 0) shapeSize.y = 0;
-                    if(shapeSize.y > getHeight()) shapeSize.y = getHeight();
-                    if(y > getHeight()) shapeSize.y = getHeight();
-                    if(Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) shapeSize.x = shapeSize.y;
+                    if (shapeSize.y > getHeight()) shapeSize.y = getHeight();
+                    if (y > getHeight()) shapeSize.y = getHeight();
+                    if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) shapeSize.x = shapeSize.y;
                     fitSize();
                 }
-                if(selectedSide == BOTTOM) {
+                if (selectedSide == BOTTOM) {
                     float diff = prevPos.y - y;
                     shapeSize.add(0, diff * 2f);
                     //if(shapeSize.y < 0) shapeSize.y = 0;
-                    if(shapeSize.y > getHeight()) shapeSize.y = getHeight();
-                    if(y > getHeight()) shapeSize.y = getHeight();
-                    if(Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) shapeSize.x = shapeSize.y;
+                    if (shapeSize.y > getHeight()) shapeSize.y = getHeight();
+                    if (y > getHeight()) shapeSize.y = getHeight();
+                    if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) shapeSize.x = shapeSize.y;
                     fitSize();
                 }
-                if(selectedSide == LEFT) {
+                if (selectedSide == LEFT) {
                     float diff = prevPos.x - x;
                     shapeSize.add(diff * 2f, 0f);
                     //if(shapeSize.x < 0) shapeSize.x = 0;
-                    if(shapeSize.x > getWidth()) shapeSize.x = getWidth();
-                    if(x > getWidth()) shapeSize.x = getWidth();
-                    if(Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) shapeSize.y = shapeSize.x;
+                    if (shapeSize.x > getWidth()) shapeSize.x = getWidth();
+                    if (x > getWidth()) shapeSize.x = getWidth();
+                    if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) shapeSize.y = shapeSize.x;
                     fitSize();
                 }
-                if(selectedSide == RIGHT) {
+                if (selectedSide == RIGHT) {
                     float diff = x - prevPos.x;
                     shapeSize.add(diff * 2f, 0f);
                     //if(shapeSize.x < 0) shapeSize.x = 0;
-                    if(shapeSize.x > getWidth()) shapeSize.x = getWidth();
-                    if(x > getWidth()) shapeSize.x = getWidth();
-                    if(Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) shapeSize.y = shapeSize.x;
+                    if (shapeSize.x > getWidth()) shapeSize.x = getWidth();
+                    if (x > getWidth()) shapeSize.x = getWidth();
+                    if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) shapeSize.y = shapeSize.x;
                     fitSize();
                 }
 
 
-                if(draggingCenter && selectedSide == -1) {
+                if (draggingCenter && selectedSide == -1) {
                     tmp.set(x, y);
                     tmp.sub(prevPos);
                     shapePos.add(tmp);
 
-                    if(shapePos.x > getWidth()/2f) shapePos.x = getWidth()/2f;
-                    if(shapePos.y > getHeight()/2f) shapePos.y = getHeight()/2f;
-                    if(shapePos.x < -getWidth()/2f) shapePos.x = -getWidth()/2f;
-                    if(shapePos.y < -getHeight()/2f) shapePos.y = -getHeight()/2f;
+                    if (shapePos.x > getWidth() / 2f) shapePos.x = getWidth() / 2f;
+                    if (shapePos.y > getHeight() / 2f) shapePos.y = getHeight() / 2f;
+                    if (shapePos.x < -getWidth() / 2f) shapePos.x = -getWidth() / 2f;
+                    if (shapePos.y < -getHeight() / 2f) shapePos.y = -getHeight() / 2f;
 
                     //fitting inside parent
                     fitSize();
-
-
                 }
 
-                if(changeListener != null) changeListener.changed(new ChangeListener.ChangeEvent(), ShapeWidget.this);
+                if (changeListener != null) changeListener.changed(new ChangeListener.ChangeEvent(), ShapeWidget.this);
 
                 prevPos.set(x, y);
             }
 
             private void fitSize() {
-                if(shapePos.x + shapeSize.x/2f > getWidth()/2f) {
-                    shapeSize.x = (getWidth()/2f - shapePos.x) * 2f;
+                if (shapePos.x + shapeSize.x / 2f > getWidth() / 2f) {
+                    shapeSize.x = (getWidth() / 2f - shapePos.x) * 2f;
                     //if( shapeSize.x < 0)  shapeSize.x = 0;
                 }
-                if(shapePos.x - shapeSize.x/2f < -getWidth()/2f) {
-                    shapeSize.x = (getWidth()/2f + shapePos.x) * 2f;
+                if (shapePos.x - shapeSize.x / 2f < -getWidth() / 2f) {
+                    shapeSize.x = (getWidth() / 2f + shapePos.x) * 2f;
                 }
-                if(shapePos.y + shapeSize.y/2f > getHeight()/2f) {
-                    shapeSize.y = (getHeight()/2f - shapePos.y) * 2f;
+                if (shapePos.y + shapeSize.y / 2f > getHeight() / 2f) {
+                    shapeSize.y = (getHeight() / 2f - shapePos.y) * 2f;
                     //if( shapeSize.y < 0)  shapeSize.y = 0;
                 }
-                if(shapePos.y - shapeSize.y/2f < -getHeight()/2f) {
-                    shapeSize.y = (getHeight()/2f + shapePos.y) * 2f;
+                if (shapePos.y - shapeSize.y / 2f < -getHeight() / 2f) {
+                    shapeSize.y = (getHeight() / 2f + shapePos.y) * 2f;
                 }
                 //if( shapeSize.x < 0)  shapeSize.x = 0;
                 //if( shapeSize.y < 0)  shapeSize.y = 0;
@@ -215,7 +206,7 @@ public class ShapeWidget extends Actor {
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 super.touchUp(event, x, y, pointer, button);
                 draggingCenter = false;
-                if(changeListener != null) changeListener.changed(new ChangeListener.ChangeEvent(), ShapeWidget.this);
+                if (changeListener != null) changeListener.changed(new ChangeListener.ChangeEvent(), ShapeWidget.this);
             }
         });
     }
@@ -240,53 +231,52 @@ public class ShapeWidget extends Actor {
 
         shapeRenderer.end();
         batch.begin();
-
     }
 
     private void drawTools(Batch batch, float parentAlpha) {
         shapeRenderer.setColor(1f, 1, 0, 0.3f);
-        shapeRenderer.rect(tmp.x + getWidth()/2f + shapePos.x - shapeSize.x/2f, tmp.y + getHeight()/2f + shapePos.y - shapeSize.y/2f, shapeSize.x, shapeSize.y);
+        shapeRenderer.rect(tmp.x + getWidth() / 2f + shapePos.x - shapeSize.x / 2f, tmp.y + getHeight() / 2f + shapePos.y - shapeSize.y / 2f, shapeSize.x, shapeSize.y);
 
-        if(centerHover) {
+        if (centerHover) {
             shapeRenderer.setColor(1f, 1, 0, 1f);
         } else {
             shapeRenderer.setColor(1f, 1, 1, 1f);
         }
-        shapeRenderer.circle(tmp.x + getWidth()/2f + shapePos.x, tmp.y + getHeight()/2f + shapePos.y, 4f);
+        shapeRenderer.circle(tmp.x + getWidth() / 2f + shapePos.x, tmp.y + getHeight() / 2f + shapePos.y, 4f);
 
 
-        shapeRenderer.setColor(207/255f, 86/255f, 62/255f, 1f);
-        if(selectedSide == LEFT) {
-            shapeRenderer.rectLine(tmp.x + getWidth()/2f + shapePos.x - shapeSize.x/2f, tmp.y + getHeight()/2f + shapePos.y - shapeSize.y/2f, tmp.x + getWidth()/2f + shapePos.x - shapeSize.x/2f, tmp.y + getHeight()/2f + shapePos.y + shapeSize.y/2f, 1f);
+        shapeRenderer.setColor(207 / 255f, 86 / 255f, 62 / 255f, 1f);
+        if (selectedSide == LEFT) {
+            shapeRenderer.rectLine(tmp.x + getWidth() / 2f + shapePos.x - shapeSize.x / 2f, tmp.y + getHeight() / 2f + shapePos.y - shapeSize.y / 2f, tmp.x + getWidth() / 2f + shapePos.x - shapeSize.x / 2f, tmp.y + getHeight() / 2f + shapePos.y + shapeSize.y / 2f, 1f);
         }
-        if(selectedSide == RIGHT) {
-            shapeRenderer.rectLine(tmp.x + getWidth()/2f + shapePos.x + shapeSize.x/2f, tmp.y + getHeight()/2f + shapePos.y - shapeSize.y/2f, tmp.x + getWidth()/2f + shapePos.x + shapeSize.x/2f, tmp.y + getHeight()/2f + shapePos.y + shapeSize.y/2f, 1f);
+        if (selectedSide == RIGHT) {
+            shapeRenderer.rectLine(tmp.x + getWidth() / 2f + shapePos.x + shapeSize.x / 2f, tmp.y + getHeight() / 2f + shapePos.y - shapeSize.y / 2f, tmp.x + getWidth() / 2f + shapePos.x + shapeSize.x / 2f, tmp.y + getHeight() / 2f + shapePos.y + shapeSize.y / 2f, 1f);
         }
-        if(selectedSide == TOP) {
-            shapeRenderer.rectLine(tmp.x + getWidth()/2f + shapePos.x - shapeSize.x/2f, tmp.y + getHeight()/2f + shapePos.y + shapeSize.y/2f, tmp.x + getWidth()/2f + shapePos.x + shapeSize.x/2f, tmp.y + getHeight()/2f + shapePos.y + shapeSize.y/2f, 1f);
+        if (selectedSide == TOP) {
+            shapeRenderer.rectLine(tmp.x + getWidth() / 2f + shapePos.x - shapeSize.x / 2f, tmp.y + getHeight() / 2f + shapePos.y + shapeSize.y / 2f, tmp.x + getWidth() / 2f + shapePos.x + shapeSize.x / 2f, tmp.y + getHeight() / 2f + shapePos.y + shapeSize.y / 2f, 1f);
         }
-        if(selectedSide == BOTTOM) {
-            shapeRenderer.rectLine(tmp.x + getWidth()/2f + shapePos.x - shapeSize.x/2f, tmp.y + getHeight()/2f + shapePos.y - shapeSize.y/2f, tmp.x + getWidth()/2f + shapePos.x + shapeSize.x/2f, tmp.y + getHeight()/2f + shapePos.y - shapeSize.y/2f, 1f);
+        if (selectedSide == BOTTOM) {
+            shapeRenderer.rectLine(tmp.x + getWidth() / 2f + shapePos.x - shapeSize.x / 2f, tmp.y + getHeight() / 2f + shapePos.y - shapeSize.y / 2f, tmp.x + getWidth() / 2f + shapePos.x + shapeSize.x / 2f, tmp.y + getHeight() / 2f + shapePos.y - shapeSize.y / 2f, 1f);
         }
     }
 
     private void drawShape(Batch batch, float parentAlpha) {
         shapeRenderer.setColor(1f, 0, 0, 1f);
 
-        if(shapeType == TYPE_SQUARE) {
-            shapeRenderer.rect(tmp.x + getWidth()/2f + shapePos.x - shapeSize.x/2f, tmp.y + getHeight()/2f + shapePos.y - shapeSize.y/2f, shapeSize.x, shapeSize.y);
-        } else if(shapeType == TYPE_ELLIPSE) {
-            shapeRenderer.ellipse(tmp.x + getWidth()/2f + shapePos.x - shapeSize.x/2f, tmp.y + getHeight()/2f + shapePos.y - shapeSize.y/2f, shapeSize.x, shapeSize.y);
-        } else if(shapeType == TYPE_LINE) {
-            shapeRenderer.line(tmp.x + getWidth()/2f + shapePos.x - shapeSize.x/2f, tmp.y + getHeight()/2f + shapePos.y - shapeSize.y/2f,
-                                   tmp.x + getWidth()/2f + shapePos.x + shapeSize.x/2f, tmp.y + getHeight()/2f + shapePos.y + shapeSize.y/2f);
+        if (shapeType == TYPE_SQUARE) {
+            shapeRenderer.rect(tmp.x + getWidth() / 2f + shapePos.x - shapeSize.x / 2f, tmp.y + getHeight() / 2f + shapePos.y - shapeSize.y / 2f, shapeSize.x, shapeSize.y);
+        } else if (shapeType == TYPE_ELLIPSE) {
+            shapeRenderer.ellipse(tmp.x + getWidth() / 2f + shapePos.x - shapeSize.x / 2f, tmp.y + getHeight() / 2f + shapePos.y - shapeSize.y / 2f, shapeSize.x, shapeSize.y);
+        } else if (shapeType == TYPE_LINE) {
+            shapeRenderer.line(tmp.x + getWidth() / 2f + shapePos.x - shapeSize.x / 2f, tmp.y + getHeight() / 2f + shapePos.y - shapeSize.y / 2f,
+                    tmp.x + getWidth() / 2f + shapePos.x + shapeSize.x / 2f, tmp.y + getHeight() / 2f + shapePos.y + shapeSize.y / 2f);
         }
     }
 
     private void drawGrid(Batch batch, float parentAlpha) {
         shapeRenderer.setColor(1f, 1f, 1f, 0.2f);
-        shapeRenderer.rectLine(tmp.x + getWidth()/2f, tmp.y, tmp.x + getWidth()/2f, tmp.y + getHeight(), 1f);
-        shapeRenderer.rectLine(tmp.x, tmp.y + getHeight()/2f, tmp.x + getWidth(), tmp.y + getHeight()/2f, 1f);
+        shapeRenderer.rectLine(tmp.x + getWidth() / 2f, tmp.y, tmp.x + getWidth() / 2f, tmp.y + getHeight(), 1f);
+        shapeRenderer.rectLine(tmp.x, tmp.y + getHeight() / 2f, tmp.x + getWidth(), tmp.y + getHeight() / 2f, 1f);
     }
 
     private void drawBg(Batch batch, float parentAlpha) {
@@ -296,7 +286,7 @@ public class ShapeWidget extends Actor {
 
         tmpColor.set(0.2f, 0.2f, 0.2f, 1f);
         batch.setColor(tmpColor);
-        skin.getDrawable("white").draw(batch, getX()+1, getY()+1, getWidth()-2, getWidth()-2);
+        skin.getDrawable("white").draw(batch, getX() + 1, getY() + 1, getWidth() - 2, getWidth() - 2);
     }
 
     public void setType(int type) {
@@ -304,19 +294,19 @@ public class ShapeWidget extends Actor {
     }
 
     public float getPosX() {
-        return shapePos.x/getWidth();
+        return shapePos.x / getWidth();
     }
 
     public float getPosY() {
-        return shapePos.y/getHeight();
+        return shapePos.y / getHeight();
     }
 
     public float getShapeWidth() {
-        return shapeSize.x/getWidth();
+        return shapeSize.x / getWidth();
     }
 
     public float getShapeHeight() {
-        return shapeSize.y/getHeight();
+        return shapeSize.y / getHeight();
     }
 
     public void setListener(ChangeListener listener) {

@@ -31,23 +31,20 @@ public class CurveModule extends AbstractModule {
 
     NumericalValue alpha;
     NumericalValue output;
-
-    private Array<Vector2> points;
-
-    private Vector2 tmp = new Vector2();
-
     Comparator<Vector2> comparator = new Comparator<Vector2>() {
         @Override
         public int compare(Vector2 o1, Vector2 o2) {
-            if(o1.x < o2.x) return -1;
-            if(o1.x > o2.x) return 1;
+            if (o1.x < o2.x) return -1;
+            if (o1.x > o2.x) return 1;
 
             return 0;
         }
     };
+    private Array<Vector2> points;
+    private final Vector2 tmp = new Vector2();
 
     @Override
-    public void init () {
+    public void init() {
         super.init();
         resetPoints();
     }
@@ -73,10 +70,10 @@ public class CurveModule extends AbstractModule {
 
     public int createPoint(float x, float y) {
 
-        if(x < 0) x = 0;
-        if(x > 1) x = 1;
-        if(y < 0) y = 0;
-        if(y > 1) y = 1;
+        if (x < 0) x = 0;
+        if (x > 1) x = 1;
+        if (y < 0) y = 0;
+        if (y > 1) y = 1;
 
         Vector2 point = new Vector2(x, y);
         points.add(point);
@@ -92,7 +89,7 @@ public class CurveModule extends AbstractModule {
 
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
         fetchInputSlotValue(ALPHA);
         output.set(interpolate(alpha.getFloat()));
     }
@@ -100,32 +97,32 @@ public class CurveModule extends AbstractModule {
     private float interpolate(float alpha) {
         // interpolate alpha in this point space
 
-        if(points.get(0).x >= 0 && alpha <= points.get(0).x) {
+        if (points.get(0).x >= 0 && alpha <= points.get(0).x) {
             return points.get(0).y;
         }
 
-        for(int i = 0; i < points.size-1; i++) {
+        for (int i = 0; i < points.size - 1; i++) {
             Vector2 from = points.get(i);
-            Vector2 to = points.get(i+1);
-            if(alpha > from.x && alpha <= to.x) {
+            Vector2 to = points.get(i + 1);
+            if (alpha > from.x && alpha <= to.x) {
                 float localAlpha = 1f;
-                if(from.x != to.x) {
+                if (from.x != to.x) {
                     localAlpha = (alpha - from.x) / (to.x - from.x);
                 }
                 return interpolate(localAlpha, from.x, from.y, to.x, to.y);
             }
         }
 
-        if(points.get(points.size-1).x <= 1f && alpha >= points.get(points.size-1).x) {
-            return points.get(points.size-1).y;
+        if (points.get(points.size - 1).x <= 1f && alpha >= points.get(points.size - 1).x) {
+            return points.get(points.size - 1).y;
         }
 
         return 0;
     }
 
     private float interpolate(float alpha, float x1, float y1, float x2, float y2) {
-        if(y1 == y2) return y1;
-        if(x1 == x2) return y1;
+        if (y1 == y2) return y1;
+        if (x1 == x2) return y1;
 
         tmp.set(x2, y2);
         tmp.sub(x1, y1);
@@ -136,13 +133,13 @@ public class CurveModule extends AbstractModule {
     }
 
     public void removePoint(int i) {
-        if(points.size > 1) {
+        if (points.size > 1) {
             points.removeIndex(i);
         }
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeArrayStart("points");
         for (Vector2 point : getPoints()) {
@@ -155,7 +152,7 @@ public class CurveModule extends AbstractModule {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         points.clear();
         final JsonValue points = jsonData.get("points");

@@ -2,7 +2,6 @@ package com.talosvfx.talos.runtime.routine.nodes;
 
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ObjectMap;
-import com.badlogic.gdx.utils.ObjectSet;
 import com.badlogic.gdx.utils.XmlReader;
 import com.esotericsoftware.spine.Animation;
 import com.esotericsoftware.spine.AnimationState;
@@ -13,7 +12,7 @@ import com.talosvfx.talos.runtime.scene.components.SpineRendererComponent;
 
 public class SetSpineAnimationNode extends RoutineNode {
 
-    private ObjectMap<AnimationState, AnimationState.AnimationStateListener> listeners = new ObjectMap<>();
+    private final ObjectMap<AnimationState, AnimationState.AnimationStateListener> listeners = new ObjectMap<>();
 
     @Override
     protected void constructNode(XmlReader.Element config) {
@@ -48,14 +47,14 @@ public class SetSpineAnimationNode extends RoutineNode {
             gameObject = (GameObject) routineInstanceRef.getSignalPayload();
         }
 
-        if(animationName != null && !animationName.isEmpty() && gameObject != null) {
+        if (animationName != null && !animationName.isEmpty() && gameObject != null) {
             SpineRendererComponent component = gameObject.getComponent(SpineRendererComponent.class);
 
 
-            if(component != null) {
+            if (component != null) {
                 SkeletonData skeletonData = component.skeleton.getData();
                 Animation animation = skeletonData.findAnimation(animationName);
-                if(animation == null) {
+                if (animation == null) {
                     animation = skeletonData.getAnimations().first();
                 }
 
@@ -65,7 +64,7 @@ public class SetSpineAnimationNode extends RoutineNode {
                 if (!listeners.containsKey(animationState)) {
                     AnimationState.AnimationStateAdapter listener = new AnimationState.AnimationStateAdapter() {
                         @Override
-                        public void complete (AnimationState.TrackEntry entry) {
+                        public void complete(AnimationState.TrackEntry entry) {
                             if (entry.getAnimation().getName().equals(animationName)) {
                                 sendSignal("onAnimationComplete");
                             }
@@ -98,9 +97,8 @@ public class SetSpineAnimationNode extends RoutineNode {
     }
 
 
-
     @Override
-    public void reset () {
+    public void reset() {
         super.reset();
         for (ObjectMap.Entry<AnimationState, AnimationState.AnimationStateListener> listener : listeners) {
             listener.key.removeListener(listener.value);

@@ -19,7 +19,6 @@ package com.talosvfx.talos.editor.wrappers;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.kotcrab.vis.ui.widget.VisTextField;
 import com.talosvfx.talos.runtime.vfx.Slot;
 import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
 import com.talosvfx.talos.runtime.vfx.modules.HistoryParticlePointDataGeneratorModule;
@@ -31,7 +30,7 @@ public class HistoryParticlePointDataGeneratorModuleWrapper extends ModuleWrappe
     private TextField minDistanceTextField;
 
 
-    public HistoryParticlePointDataGeneratorModuleWrapper () {
+    public HistoryParticlePointDataGeneratorModuleWrapper() {
         super();
     }
 
@@ -56,7 +55,7 @@ public class HistoryParticlePointDataGeneratorModuleWrapper extends ModuleWrappe
         maxPointsTextField = addInputSlotWithTextField("max points", HistoryParticlePointDataGeneratorModule.POINTS_COUNT);
         maxPointsTextField.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 float numPoints = floatFromText(maxPointsTextField);
                 module.setMaxPoints(numPoints);
             }
@@ -66,23 +65,16 @@ public class HistoryParticlePointDataGeneratorModuleWrapper extends ModuleWrappe
         minDistanceTextField = addInputSlotWithTextField("min distance", HistoryParticlePointDataGeneratorModule.MIN_DISTANCE);
         minDistanceTextField.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 float numPoints = floatFromText(minDistanceTextField);
                 module.setMinDistance(numPoints);
             }
         });
         minDistanceTextField.setText(HistoryParticlePointDataGeneratorModule.defaultMinDistanceBetweenPoints + "");
-
-
-
     }
 
     @Override
-    public Class<? extends AbstractModule> getSlotsPreferredModule (Slot slot) {
+    public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
         return null;
     }
-
-
-
-
 }

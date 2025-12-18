@@ -7,30 +7,27 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.PolygonBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.talosvfx.talos.editor.addons.scene.assets.AssetRepository;
-import com.talosvfx.talos.runtime.assets.GameAsset;
-import com.talosvfx.talos.runtime.assets.GameAssetType;
-import com.talosvfx.talos.runtime.assets.GameResourceOwner;
 import com.talosvfx.talos.editor.addons.scene.events.ComponentUpdated;
-import com.talosvfx.talos.runtime.scene.GameObject;
-import com.talosvfx.talos.runtime.scene.GameObjectContainer;
-import com.talosvfx.talos.runtime.scene.GameObjectRenderer;
-import com.talosvfx.talos.runtime.maps.GridPosition;
-import com.talosvfx.talos.runtime.maps.StaticTile;
 import com.talosvfx.talos.editor.addons.scene.utils.EntitySelectionBuffer;
 import com.talosvfx.talos.editor.addons.scene.utils.PolyBatchWithEncodingOverride;
 import com.talosvfx.talos.editor.notifications.EventHandler;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.Observer;
-import com.talosvfx.talos.runtime.scene.Scene;
+import com.talosvfx.talos.runtime.assets.GameAsset;
+import com.talosvfx.talos.runtime.assets.GameAssetType;
+import com.talosvfx.talos.runtime.assets.GameResourceOwner;
+import com.talosvfx.talos.runtime.maps.GridPosition;
+import com.talosvfx.talos.runtime.maps.StaticTile;
+import com.talosvfx.talos.runtime.scene.GameObject;
+import com.talosvfx.talos.runtime.scene.GameObjectContainer;
+import com.talosvfx.talos.runtime.scene.GameObjectRenderer;
 import com.talosvfx.talos.runtime.scene.SceneLayer;
 import com.talosvfx.talos.runtime.scene.components.ParticleComponent;
 import com.talosvfx.talos.runtime.scene.components.RendererComponent;
@@ -39,51 +36,32 @@ import com.talosvfx.talos.runtime.scene.components.SpriteRendererComponent;
 import com.talosvfx.talos.runtime.scene.components.TileDataComponent;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 import com.talosvfx.talos.runtime.scene.render.RenderState;
-import com.talosvfx.talos.runtime.scene.render.RenderStrategy;
 import com.talosvfx.talos.runtime.scene.utils.TransformSettings;
 import com.talosvfx.talos.runtime.vfx.ParticleEffectDescriptor;
 import com.talosvfx.talos.runtime.vfx.ParticleEffectInstance;
 
-import java.util.Comparator;
-
 public class MainRenderer implements Observer {
-
-    public float timeScale = 1f;
-
-    private TransformComponent tempTransform = new TransformComponent();
-    private Vector2 vec = new Vector2();
-    private Vector2 vector2 = new Vector2();
-
-    private Vector2[] points = new Vector2[4];
 
     private static final int LB = 0;
     private static final int LT = 1;
     private static final int RT = 2;
     private static final int RB = 3;
-
-    private ObjectMap<ParticleComponent, ParticleEffectInstance> particleCache = new ObjectMap<>();
-
-    private ShapeRenderer shapeRenderer;
-
-
-    private TextureRegion textureRegion = new TextureRegion();
+    public float timeScale = 1f;
+    public boolean skipUpdates = false;
+    Array<GameObject> temp = new Array<>();
+    private final TransformComponent tempTransform = new TransformComponent();
+    private final Vector2 vec = new Vector2();
+    private final Vector2 vector2 = new Vector2();
+    private final Vector2[] points = new Vector2[4];
+    private final ObjectMap<ParticleComponent, ParticleEffectInstance> particleCache = new ObjectMap<>();
+    private final ShapeRenderer shapeRenderer;
+    private final TextureRegion textureRegion = new TextureRegion();
     private Camera camera;
-
     private boolean renderParentTiles = false;
     private boolean renderingToEntitySelectionBuffer = false;
-
-    public boolean skipUpdates = false;
-
-    private Texture white;
+    private final Texture white;
     private Array<SceneLayer> layerList;
-
-    public void setLayers (Array<SceneLayer> layerList) {
-        this.layerList = layerList;
-    }
-
-
-
-    private GameObjectRenderer gameObjectRenderer;
+    private final GameObjectRenderer gameObjectRenderer;
 
     public MainRenderer() {
         for (int i = 0; i < 4; i++) {
@@ -100,16 +78,16 @@ public class MainRenderer implements Observer {
         white = new Texture(Gdx.files.internal("white.png"));
     }
 
+    public void setLayers(Array<SceneLayer> layerList) {
+        this.layerList = layerList;
+    }
 
-
-
-
-    public void update (GameObject root) {
+    public void update(GameObject root) {
         float delta = Gdx.graphics.getDeltaTime();
         gameObjectRenderer.update(root, delta);
     }
 
-    private void fillRenderableEntities (Array<GameObject> rootObjects, Array<GameObject> list) {
+    private void fillRenderableEntities(Array<GameObject> rootObjects, Array<GameObject> list) {
         for (GameObject root : rootObjects) {
             if (!root.active || !root.isEditorVisible()) continue;
 
@@ -127,24 +105,20 @@ public class MainRenderer implements Observer {
                 }
             }
         }
-
     }
 
-
-    Array<GameObject> temp = new Array<>();
-
-    public void render (PolygonBatch batch, RenderState state, GameObjectContainer container) {
+    public void render(PolygonBatch batch, RenderState state, GameObjectContainer container) {
         render(batch, state, container.getSelfObject());
     }
 
 
-
-    public void render (PolygonBatch batch, RenderState state, GameObject root) {
+    public void render(PolygonBatch batch, RenderState state, GameObject root) {
         temp.clear();
         temp.add(root);
         render(batch, state, temp);
     }
-    public void render (PolygonBatch batch, RenderState state, Array<GameObject> rootObjects) {
+
+    public void render(PolygonBatch batch, RenderState state, Array<GameObject> rootObjects) {
         gameObjectRenderer.setCamera(this.camera);
         gameObjectRenderer.setSkipUpdates(skipUpdates);
         //fill entities
@@ -193,8 +167,7 @@ public class MainRenderer implements Observer {
                             posX -= transformSettings.offsetX;
                             posY -= transformSettings.offsetY;
 
-                            shapeRenderer.rect(posX, posY, 1,1);
-
+                            shapeRenderer.rect(posX, posY, 1, 1);
                         } else {
                             float posY = parentTile.getIntY();
                             float posX = parentTile.getIntX();
@@ -208,15 +181,10 @@ public class MainRenderer implements Observer {
                             posX -= bottomLeftParentTile.getIntX();
                             posY -= bottomLeftParentTile.getIntY();
 
-                            shapeRenderer.rect(posX, posY, 1,1);
-
+                            shapeRenderer.rect(posX, posY, 1, 1);
                         }
-
-
-
                     }
                 }
-
             }
             shapeRenderer.end();
             Gdx.gl.glDisable(GL20.GL_BLEND);
@@ -232,17 +200,15 @@ public class MainRenderer implements Observer {
 
                     if (batch instanceof PolyBatchWithEncodingOverride) {
                         Color colourForEntityUUID = EntitySelectionBuffer.getColourForEntityUUID(gameObject);
-                        ((PolyBatchWithEncodingOverride)batch).setCustomEncodingColour(colourForEntityUUID.r, colourForEntityUUID.g, colourForEntityUUID.b, colourForEntityUUID.a);
+                        ((PolyBatchWithEncodingOverride) batch).setCustomEncodingColour(colourForEntityUUID.r, colourForEntityUUID.g, colourForEntityUUID.b, colourForEntityUUID.a);
                     }
 
                     TileDataComponent tileDataComponent = gameObject.getComponent(TileDataComponent.class);
 
                     for (GridPosition parentTile : tileDataComponent.getParentTiles()) {
                         batch.draw(white, parentTile.x, parentTile.y, 1, 1);
-
                     }
                 }
-
             }
         }
 
@@ -251,7 +217,7 @@ public class MainRenderer implements Observer {
 
             if (batch instanceof PolyBatchWithEncodingOverride) {
                 Color colourForEntityUUID = EntitySelectionBuffer.getColourForEntityUUID(gameObject);
-                ((PolyBatchWithEncodingOverride)batch).setCustomEncodingColour(colourForEntityUUID.r, colourForEntityUUID.g, colourForEntityUUID.b, colourForEntityUUID.a);
+                ((PolyBatchWithEncodingOverride) batch).setCustomEncodingColour(colourForEntityUUID.r, colourForEntityUUID.g, colourForEntityUUID.b, colourForEntityUUID.a);
             }
 
             GameResourceOwner<?> resourceComponent = gameObject.getRenderResourceComponent();
@@ -276,7 +242,7 @@ public class MainRenderer implements Observer {
         batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
     }
 
-    private void renderBrokenComponent (Batch batch, GameObject gameObject, TransformComponent transformComponent) {
+    private void renderBrokenComponent(Batch batch, GameObject gameObject, TransformComponent transformComponent) {
 
         float width = 1f;
         float height = 1f;
@@ -295,22 +261,21 @@ public class MainRenderer implements Observer {
     }
 
 
-
-    public void renderStaticTileDynamic (StaticTile staticTile, Batch batch, float tileSizeX, float tileSizeY) {
+    public void renderStaticTileDynamic(StaticTile staticTile, Batch batch, float tileSizeX, float tileSizeY) {
         GridPosition gridPosition = staticTile.getGridPosition();
         GameAsset<?> staticTilesAsset = staticTile.getStaticTilesAsset();
         if (staticTilesAsset.type == GameAssetType.SPRITE) {
-            GameAsset<AtlasSprite> texGameAsset = (GameAsset<AtlasSprite>)staticTilesAsset;
+            GameAsset<AtlasSprite> texGameAsset = (GameAsset<AtlasSprite>) staticTilesAsset;
             Texture resource = texGameAsset.getResource().getTexture();
 
             batch.draw(resource, gridPosition.getIntX(), gridPosition.getIntY(), tileSizeX, tileSizeY);
         }
     }
 
-    private ParticleEffectInstance obtainParticle (GameObject gameObject, ParticleEffectDescriptor descriptor) {
+    private ParticleEffectInstance obtainParticle(GameObject gameObject, ParticleEffectDescriptor descriptor) {
         ParticleComponent component = gameObject.getComponent(ParticleComponent.class);
 
-        if(particleCache.containsKey(component)) {
+        if (particleCache.containsKey(component)) {
             ParticleEffectInstance particleEffectInstance = particleCache.get(component);
             component.setEffectRef(particleEffectInstance);
             return particleEffectInstance;
@@ -323,16 +288,15 @@ public class MainRenderer implements Observer {
     }
 
 
-
     private TransformComponent getWorldTransform(GameObject gameObject) {
         getWorldLocAround(gameObject, points[LB], -0.5f, -0.5f);
-        getWorldLocAround(gameObject, points[LT],-0.5f, 0.5f);
-        getWorldLocAround(gameObject, points[RT],0.5f, 0.5f);
-        getWorldLocAround(gameObject, points[RB],0.5f, -0.5f);
+        getWorldLocAround(gameObject, points[LT], -0.5f, 0.5f);
+        getWorldLocAround(gameObject, points[RT], 0.5f, 0.5f);
+        getWorldLocAround(gameObject, points[RB], 0.5f, -0.5f);
 
         TransformComponent transform = gameObject.getComponent(TransformComponent.class);
-        float xSign = transform.scale.x < 0 ? -1: 1;
-        float ySign = transform.scale.y < 0 ? -1: 1;
+        float xSign = transform.scale.x < 0 ? -1 : 1;
+        float ySign = transform.scale.y < 0 ? -1 : 1;
 
         vec.set(points[RT]).sub(points[LB]).scl(0.5f).add(points[LB]); // midpoint
         tempTransform.position.set(vec);
@@ -341,8 +305,8 @@ public class MainRenderer implements Observer {
         vec.set(points[RT]).sub(points[LT]).angleDeg();
         tempTransform.rotation = vec.angleDeg();
 
-        if(xSign < 0) tempTransform.rotation -= 180;
-        if(ySign < 0) tempTransform.rotation += 0;
+        if (xSign < 0) tempTransform.rotation -= 180;
+        if (ySign < 0) tempTransform.rotation += 0;
 
 
         return tempTransform;
@@ -357,8 +321,8 @@ public class MainRenderer implements Observer {
 
     @EventHandler
     public void onComponentUpdated(ComponentUpdated event) {
-        if(event.getComponent() instanceof ParticleComponent) {
-            particleCache.remove((ParticleComponent)event.getComponent());
+        if (event.getComponent() instanceof ParticleComponent) {
+            particleCache.remove((ParticleComponent) event.getComponent());
         }
 
         if (event.getComponent() instanceof RoutineRendererComponent) {
@@ -373,18 +337,11 @@ public class MainRenderer implements Observer {
         }
     }
 
-    public void setCamera (Camera camera) {
-
-        this.camera = camera;
-//        talosRenderer.setCamera(camera);
-    }
-
-
-    public void setRenderParentTiles (boolean renderParentTiles) {
+    public void setRenderParentTiles(boolean renderParentTiles) {
         this.renderParentTiles = renderParentTiles;
     }
 
-    public void setRenderingEntitySelectionBuffer (boolean renderingToBuffer) {
+    public void setRenderingEntitySelectionBuffer(boolean renderingToBuffer) {
         this.renderingToEntitySelectionBuffer = renderingToBuffer;
     }
 
@@ -394,5 +351,11 @@ public class MainRenderer implements Observer {
 
     public Camera getCamera() {
         return camera;
+    }
+
+    public void setCamera(Camera camera) {
+
+        this.camera = camera;
+//        talosRenderer.setCamera(camera);
     }
 }

@@ -14,7 +14,7 @@ public class RadToCartModuleWrapper extends ModuleWrapper<RadToCartModule> {
 
 
     @Override
-    protected float reportPrefWidth () {
+    protected float reportPrefWidth() {
         return 210;
     }
 }

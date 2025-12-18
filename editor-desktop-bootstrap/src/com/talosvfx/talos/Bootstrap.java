@@ -5,6 +5,30 @@ import com.google.gson.JsonSyntaxException;
 import com.talosvfx.talos.data.ChannelData;
 import com.talosvfx.talos.data.LocalPreferences;
 import com.talosvfx.talos.data.RepoData;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.update4j.Archive;
+import org.update4j.Configuration;
+import org.update4j.UpdateOptions;
+import org.update4j.UpdateResult;
+import org.update4j.service.Delegate;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -29,248 +53,231 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.update4j.Archive;
-import org.update4j.Configuration;
-import org.update4j.UpdateOptions;
-import org.update4j.UpdateResult;
-import org.update4j.service.DefaultLauncher;
-import org.update4j.service.Delegate;
-
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class Bootstrap extends Application implements Delegate {
 
-	private static final Logger logger = LoggerFactory.getLogger(Bootstrap.class);
+    private static final Logger logger = LoggerFactory.getLogger(Bootstrap.class);
 
 
-	private static Start start;
-	private static String[] args;
-	@FXML
-	Label updateLabel;
+    private static Start start;
+    private static String[] args;
+    @FXML
+    Label updateLabel;
 
-	@FXML
-	ProgressBar progressBar;
+    @FXML
+    ProgressBar progressBar;
 
-	@FXML
-	ComboBox<ChannelData> versionBox;
+    @FXML
+    ComboBox<ChannelData> versionBox;
 
-	@FXML
-	Button updateButton;
-	@FXML
-	Button launchButton;
+    @FXML
+    Button updateButton;
+    @FXML
+    Button launchButton;
 
-	@FXML
-	CheckBox autoLaunchCheckbox;
+    @FXML
+    CheckBox autoLaunchCheckbox;
 
-	private AppUpdater appUpdater;
+    private AppUpdater appUpdater;
 
-	private LocalPreferences preferences;
-	private ChannelData currentTarget;
+    private LocalPreferences preferences;
+    private ChannelData currentTarget;
 
-	private Configuration currentConfig;
-	private OkHttpClient okHttpClient;
-	private boolean wasAutoLaunchOnLoad;
-	private Stage stage;
+    private Configuration currentConfig;
+    private OkHttpClient okHttpClient;
+    private boolean wasAutoLaunchOnLoad;
+    private Stage stage;
 
-	@FXML
-	public void onAutoLaunch (ActionEvent actionEvent) {
-		preferences.setAutoLaunch(autoLaunchCheckbox.isSelected());
-		savePrefsToFile();
-	}
+    public static void main(String[] args, Start start) {
+        Bootstrap.args = args;
+        Bootstrap.start = start;
 
-	@FXML
-	public void onUpdateButton (ActionEvent actionEvent) {
-		if (currentConfig != null) {
-			updateButton.setDisable(true);
-			launchButton.setDisable(true);
+        Platform.startup(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    new Bootstrap().start(new Stage());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
 
-			updateLabel.setText("Updating to " + currentConfig.getResolvedProperty("version"));
+    @FXML
+    public void onAutoLaunch(ActionEvent actionEvent) {
+        preferences.setAutoLaunch(autoLaunchCheckbox.isSelected());
+        savePrefsToFile();
+    }
 
-			logger.info("updating");
+    @FXML
+    public void onUpdateButton(ActionEvent actionEvent) {
+        if (currentConfig != null) {
+            updateButton.setDisable(true);
+            launchButton.setDisable(true);
 
-			Configuration finalConfig = currentConfig;
+            updateLabel.setText("Updating to " + currentConfig.getResolvedProperty("version"));
 
-			progressBar.setVisible(true);
-			Task<Void> doUpdate = new Task<Void>() {
-				@Override
-				protected Void call () throws Exception {
-					logger.info("HIYA");
-					Path zip = Paths.get(currentConfig.getResolvedProperty("user.location") + "/talos.zip");
-					logger.info("got zip");
-					try {
-						UpdateOptions.ArchiveUpdateOptions archive = UpdateOptions.archive(zip);
-						logger.info("Got achive");
-						UpdateOptions.ArchiveUpdateOptions options = archive.updateHandler(appUpdater);
-						logger.info("options");
-						UpdateResult update = finalConfig.update(options);
-						if (update.getException() == null) {
-							try {
-								logger.info("installing");
-								Archive.read(zip).install();
-								logger.info("installed");
-							} catch (Exception e) {
-								logger.info("failed");
-								e.printStackTrace();
-							}
-						} else {
-							logger.error("exception in update", update.getException());
-						}
-					} catch (Exception e) {
-						logger.error("Some error", e);
-					}
+            logger.info("updating");
 
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run () {
-							updateLabel.setText("Update complete");
-							launchButton.setDisable(false);
-						}
-					});
-					return null;
-				}
-			};
+            Configuration finalConfig = currentConfig;
 
-			Thread thread = new Thread(doUpdate);
-			thread.setName("DoUpdateThread");
-			thread.start();
+            progressBar.setVisible(true);
+            Task<Void> doUpdate = new Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                    logger.info("HIYA");
+                    Path zip = Paths.get(currentConfig.getResolvedProperty("user.location") + "/talos.zip");
+                    logger.info("got zip");
+                    try {
+                        UpdateOptions.ArchiveUpdateOptions archive = UpdateOptions.archive(zip);
+                        logger.info("Got achive");
+                        UpdateOptions.ArchiveUpdateOptions options = archive.updateHandler(appUpdater);
+                        logger.info("options");
+                        UpdateResult update = finalConfig.update(options);
+                        if (update.getException() == null) {
+                            try {
+                                logger.info("installing");
+                                Archive.read(zip).install();
+                                logger.info("installed");
+                            } catch (Exception e) {
+                                logger.info("failed");
+                                e.printStackTrace();
+                            }
+                        } else {
+                            logger.error("exception in update", update.getException());
+                        }
+                    } catch (Exception e) {
+                        logger.error("Some error", e);
+                    }
 
-		}
-	}
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateLabel.setText("Update complete");
+                            launchButton.setDisable(false);
+                        }
+                    });
+                    return null;
+                }
+            };
 
-	@FXML
-	public void onLaunchButton (ActionEvent actionEvent) {
-		if (currentConfig != null) {
+            Thread thread = new Thread(doUpdate);
+            thread.setName("DoUpdateThread");
+            thread.start();
+        }
+    }
 
-			currentConfig.launch(new CustomLauncher(start));
-			exitBootsrap();
-		}
-	}
+    @FXML
+    public void onLaunchButton(ActionEvent actionEvent) {
+        if (currentConfig != null) {
 
-	private void exitBootsrap () {
-		stage.close();
-	}
+            currentConfig.launch(new CustomLauncher(start));
+            exitBootsrap();
+        }
+    }
 
-	@FXML
-	public void onVersionBoxSelect (ActionEvent actionEvent) {
-		SingleSelectionModel<ChannelData> channelDataSingleSelectionModel = versionBox.selectionModelProperty().get();
-		currentTarget = channelDataSingleSelectionModel.getSelectedItem();
+    private void exitBootsrap() {
+        stage.close();
+    }
 
-		preferences.setSelectedChannel(currentTarget.getVersionIdentifier());
-		savePrefsToFile();
+    @FXML
+    public void onVersionBoxSelect(ActionEvent actionEvent) {
+        SingleSelectionModel<ChannelData> channelDataSingleSelectionModel = versionBox.selectionModelProperty().get();
+        currentTarget = channelDataSingleSelectionModel.getSelectedItem();
 
-		//Check the config
+        preferences.setSelectedChannel(currentTarget.getVersionIdentifier());
+        savePrefsToFile();
 
-		checkConfigForCurrentTarget();
-	}
+        //Check the config
 
-	private void checkConfigForCurrentTarget () {
-		updateButton.setDisable(true);
-		launchButton.setDisable(true);
+        checkConfigForCurrentTarget();
+    }
 
-		updateLabel.setText("Checking for updates on " + currentTarget.getVersionIdentifier() + " channel...");
+    private void checkConfigForCurrentTarget() {
+        updateButton.setDisable(true);
+        launchButton.setDisable(true);
 
-		try {
-			URL configUrl = new URL("https://editor.talosvfx.com/channels/" + currentTarget.getVersionIdentifier() + "/config.xml");
-			currentConfig = null;
-			try (Reader in = new InputStreamReader(configUrl.openStream(), StandardCharsets.UTF_8)) {
-				currentConfig = Configuration.read(in);
+        updateLabel.setText("Checking for updates on " + currentTarget.getVersionIdentifier() + " channel...");
 
-				if (currentConfig.requiresUpdate()) {
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run () {
-							updateLabel.setText("Update available");
-							updateButton.setDisable(false);
+        try {
+            URL configUrl = new URL("https://editor.talosvfx.com/channels/" + currentTarget.getVersionIdentifier() + "/config.xml");
+            currentConfig = null;
+            try (Reader in = new InputStreamReader(configUrl.openStream(), StandardCharsets.UTF_8)) {
+                currentConfig = Configuration.read(in);
 
-							launchButton.setDisable(!canLaunchChannel(currentTarget));
+                if (currentConfig.requiresUpdate()) {
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateLabel.setText("Update available");
+                            updateButton.setDisable(false);
 
-						}
-					});
-				} else {
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run () {
-							updateLabel.setText("No updates found");
-							launchButton.setDisable(false);
+                            launchButton.setDisable(!canLaunchChannel(currentTarget));
+                        }
+                    });
+                } else {
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateLabel.setText("No updates found");
+                            launchButton.setDisable(false);
 
-							if (wasAutoLaunchOnLoad) {
-								onLaunchButton(null);
-							}
+                            if (wasAutoLaunchOnLoad) {
+                                onLaunchButton(null);
+                            }
+                        }
+                    });
+                }
+            } catch (IOException e) {
+                System.err.println("Could not load remote config, falling back to local. TODO STORE OLD CACHE");
+            }
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-						}
-					});
-				}
+    private boolean canLaunchChannel(ChannelData currentTarget) {
+        String versionIdentifier = currentTarget.getVersionIdentifier();
+        String userHome = System.getProperty("user.home");
+        File file = new File(userHome + "/Talos/" + versionIdentifier);
+        return file.exists();
+    }
 
-			} catch (IOException e) {
-				System.err.println("Could not load remote config, falling back to local. TODO STORE OLD CACHE");
-			}
-		} catch (MalformedURLException e) {
-			throw new RuntimeException(e);
-		}
+    private LocalPreferences readPrefsFromFile() {
+        String userHome = System.getProperty("user.home");
+        File file = new File(userHome + "/Talos/boostrapPreferences.json");
+        if (file.exists()) {
+            try (FileReader reader = new FileReader(file)) {
+                return new Gson().fromJson(reader, LocalPreferences.class);
+            } catch (IOException e) {
+                return new LocalPreferences();
+            }
+        } else {
+            return new LocalPreferences();
+        }
+    }
 
-	}
+    private void savePrefsToFile() {
+        String userHome = System.getProperty("user.home");
+        File file = new File(userHome + "/Talos/boostrapPreferences.json");
+        file.getParentFile().mkdirs();
+        String preferencesJson = new Gson().toJson(preferences);
 
-	private boolean canLaunchChannel (ChannelData currentTarget) {
-		String versionIdentifier = currentTarget.getVersionIdentifier();
-		String userHome = System.getProperty("user.home");
-		File file = new File(userHome + "/Talos/" + versionIdentifier);
-		if (!file.exists()) {
-			return false;
-		}
-		return true;
-	}
+        try (FileWriter writer = new FileWriter(file, false)) {
+            writer.write(preferencesJson);
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+    }
 
-	private LocalPreferences readPrefsFromFile () {
-		String userHome = System.getProperty("user.home");
-		File file = new File(userHome + "/Talos/boostrapPreferences.json");
-		if (file.exists()) {
-			try (FileReader reader = new FileReader(file)) {
-				return new Gson().fromJson(reader, LocalPreferences.class);
-			} catch (IOException e) {
-				return new LocalPreferences();
-			}
-		} else {
-			return new LocalPreferences();
-		}
-	}
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        this.stage = primaryStage;
 
-	private void savePrefsToFile () {
-		String userHome = System.getProperty("user.home");
-		File file = new File(userHome + "/Talos/boostrapPreferences.json");
-		file.getParentFile().mkdirs();
-		String preferencesJson = new Gson().toJson(preferences);
+        okHttpClient = new OkHttpClient();
 
-		try (FileWriter writer = new FileWriter(file, false)) {
-			writer.write(preferencesJson);
-		} catch (IOException ioException) {
-			ioException.printStackTrace();
-		}
-	}
-
-	@Override
-	public void start (Stage primaryStage) throws Exception {
-		this.stage = primaryStage;
-
-		okHttpClient = new OkHttpClient();
-
-		appUpdater = new AppUpdater(this);
+        appUpdater = new AppUpdater(this);
 
 //		URL configUrl = new URL("https://talosvfx.com/update.xml");
 //		Configuration config = null;
@@ -283,41 +290,41 @@ public class Bootstrap extends Application implements Delegate {
 //			}
 //		}
 
-		// set up the scene
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("main.fxml"));
-		loader.setController(this);
-		Parent root = loader.load();
-		Scene scene = new Scene(root);
+        // set up the scene
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("main.fxml"));
+        loader.setController(this);
+        Parent root = loader.load();
+        Scene scene = new Scene(root);
 
-		scene.setFill(Color.TRANSPARENT);
+        scene.setFill(Color.TRANSPARENT);
 
-		primaryStage.setTitle("Talos Launcher");
-		primaryStage.setResizable(false);
-		JMetro jMetro = new JMetro(Style.DARK);
-		jMetro.setScene(scene);
+        primaryStage.setTitle("Talos Launcher");
+        primaryStage.setResizable(false);
+        JMetro jMetro = new JMetro(Style.DARK);
+        jMetro.setScene(scene);
 
-		URL resource = getClass().getResource("root.css");
-		if (resource == null) {
-			logger.info("NO css found");
-		} else {
-			scene.getStylesheets().add(resource.toExternalForm());
-		}
-		primaryStage.setScene(scene);
-		primaryStage.show();
+        URL resource = getClass().getResource("root.css");
+        if (resource == null) {
+            logger.info("NO css found");
+        } else {
+            scene.getStylesheets().add(resource.toExternalForm());
+        }
+        primaryStage.setScene(scene);
+        primaryStage.show();
 
-		versionBox.setDisable(true);
-		updateButton.setDisable(true);
-		launchButton.setDisable(true);
+        versionBox.setDisable(true);
+        updateButton.setDisable(true);
+        launchButton.setDisable(true);
 
-		progressBar.setVisible(false);
+        progressBar.setVisible(false);
 
-		preferences = readPrefsFromFile();
+        preferences = readPrefsFromFile();
 
-		autoLaunchCheckbox.setSelected(preferences.isAutoLaunch());
+        autoLaunchCheckbox.setSelected(preferences.isAutoLaunch());
 
-		wasAutoLaunchOnLoad = preferences.isAutoLaunch();
+        wasAutoLaunchOnLoad = preferences.isAutoLaunch();
 
-		fetchRepoData();
+        fetchRepoData();
 
 //		if (config.requiresUpdate()) {
 //			updateLabel.setText("Updating");
@@ -340,92 +347,72 @@ public class Bootstrap extends Application implements Delegate {
 //
 //		}
 
-	}
+    }
 
-	private void fetchRepoData () {
-		updateLabel.setText("Fetching version data...");
+    private void fetchRepoData() {
+        updateLabel.setText("Fetching version data...");
 
-		String url = "https://editor.talosvfx.com/channels/repo.json";
+        String url = "https://editor.talosvfx.com/channels/repo.json";
 
-		Call call = okHttpClient.newCall(new Request.Builder().url(url).build());
+        Call call = okHttpClient.newCall(new Request.Builder().url(url).build());
 
-		call.enqueue(new Callback() {
-			@Override
-			public void onFailure (@NotNull Call call, @NotNull IOException e) {
-				onRepoDataFetchComplete(null);
-				e.printStackTrace();
-			}
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                onRepoDataFetchComplete(null);
+                e.printStackTrace();
+            }
 
-			@Override
-			public void onResponse (@NotNull Call call, @NotNull Response response) throws IOException {
-				if (response.isSuccessful()) {
-					ResponseBody body = response.body();
-					if (body != null) {
-						String responseString = body.string();
-						try {
-							RepoData repoData = new Gson().fromJson(responseString, RepoData.class);
-							onRepoDataFetchComplete(repoData);
-						} catch (JsonSyntaxException jsonSyntaxException) {
-							jsonSyntaxException.printStackTrace();
-							onRepoDataFetchComplete(null);
-						}
-					}
-				} else {
-					onRepoDataFetchComplete(null);
-				}
-			}
-		});
-	}
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    ResponseBody body = response.body();
+                    if (body != null) {
+                        String responseString = body.string();
+                        try {
+                            RepoData repoData = new Gson().fromJson(responseString, RepoData.class);
+                            onRepoDataFetchComplete(repoData);
+                        } catch (JsonSyntaxException jsonSyntaxException) {
+                            jsonSyntaxException.printStackTrace();
+                            onRepoDataFetchComplete(null);
+                        }
+                    }
+                } else {
+                    onRepoDataFetchComplete(null);
+                }
+            }
+        });
+    }
 
-	private void onRepoDataFetchComplete (@Nullable RepoData repoData) {
-		if (repoData == null) {
-			//defaults
-		} else {
-			Platform.runLater(new Runnable() {
-				@Override
-				public void run () {
-					updateLabel.setText("Updates fetched");
+    private void onRepoDataFetchComplete(@Nullable RepoData repoData) {
+        if (repoData == null) {
+            //defaults
+        } else {
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    updateLabel.setText("Updates fetched");
 
-					repoData.sort();
-					for (ChannelData version : repoData.getVersions()) {
-						versionBox.getItems().add(version);
-					}
+                    repoData.sort();
+                    for (ChannelData version : repoData.getVersions()) {
+                        versionBox.getItems().add(version);
+                    }
 
-					versionBox.setDisable(false);
+                    versionBox.setDisable(false);
 
-					if (preferences.getSelectedChannel() != null) {
-						ChannelData channel = repoData.getChannel(preferences.getSelectedChannel());
-						if (channel != null) {
-							versionBox.getSelectionModel().select(channel);
-						}
-					}
-				}
-			});
+                    if (preferences.getSelectedChannel() != null) {
+                        ChannelData channel = repoData.getChannel(preferences.getSelectedChannel());
+                        if (channel != null) {
+                            versionBox.getSelectionModel().select(channel);
+                        }
+                    }
+                }
+            });
+        }
+    }
 
-		}
-	}
-
-	@Override
-	public void main (List<String> args) throws Throwable {
-		logger.info("main");
-	}
-
-
-
-	public static void main (String[] args, Start start) {
-		Bootstrap.args = args;
-		Bootstrap.start = start;
-
-		Platform.startup(new Runnable() {
-			@Override
-			public void run () {
-				try {
-					new Bootstrap().start(new Stage());
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
-			}
-		});
-	}
-
+    @Override
+    public void main(List<String> args) throws Throwable {
+        logger.info("main");
+    }
 }

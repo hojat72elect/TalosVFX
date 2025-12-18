@@ -23,7 +23,7 @@ public class FlatButton extends Button {
     private void build(Skin skin, Drawable drawable, boolean toggle) {
         setSkin(skin);
         setStyle(skin.get("flat", ButtonStyle.class));
-        if(!toggle) {
+        if (!toggle) {
             setDisabled(true);
         }
         setSize(24, 24);

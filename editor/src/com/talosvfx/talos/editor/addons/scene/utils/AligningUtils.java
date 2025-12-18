@@ -5,6 +5,7 @@ import com.badlogic.gdx.utils.Array;
 import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.components.SpriteRendererComponent;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
+
 import lombok.Getter;
 
 
@@ -17,12 +18,11 @@ enum PositionAlign {
     CENTER(0);
 
     @Getter
-    private float multiplayer;
+    private final float multiplayer;
 
     PositionAlign(float multiplayer) {
         this.multiplayer = multiplayer;
     }
-
 }
 
 public class AligningUtils {

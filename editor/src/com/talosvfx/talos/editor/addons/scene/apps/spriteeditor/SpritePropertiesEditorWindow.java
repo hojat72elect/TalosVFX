@@ -2,33 +2,30 @@ package com.talosvfx.talos.editor.addons.scene.apps.spriteeditor;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.talosvfx.talos.editor.addons.scene.assets.AssetRepository;
-import com.talosvfx.talos.editor.project2.AppManager;
-import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.FloatPropertyWidget;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.PropertyWidget;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.WidgetFactory;
 import com.talosvfx.talos.editor.widgets.ui.common.CollapsableWidget;
 import com.talosvfx.talos.editor.widgets.ui.common.SquareButton;
+import com.talosvfx.talos.runtime.assets.GameAsset;
 
 public class SpritePropertiesEditorWindow extends SpriteEditorWindow {
+    // color property widget
+    public Color color = new Color(Color.WHITE);
     // size property widgets
     private float width, height;
     private PropertyWidget widthWidget;
     private PropertyWidget heightWidget;
-
-    // color property widget
-    public Color color = new Color(Color.WHITE);
     private PropertyWidget colorWidget;
 
-    public SpritePropertiesEditorWindow (SpriteEditor spriteEditor) {
+    public SpritePropertiesEditorWindow(SpriteEditor spriteEditor) {
         super(spriteEditor);
 
         padTop(10).defaults().growX().padLeft(10).padRight(5).space(3);
@@ -46,7 +43,7 @@ public class SpritePropertiesEditorWindow extends SpriteEditorWindow {
         sizePanel.expand();
     }
 
-    private CollapsableWidget initSizePanel () {
+    private CollapsableWidget initSizePanel() {
         // init size widgets
         widthWidget = WidgetFactory.generate(this, "width", "Width");
         heightWidget = WidgetFactory.generate(this, "height", "Height");
@@ -59,7 +56,7 @@ public class SpritePropertiesEditorWindow extends SpriteEditorWindow {
 
         // change into smaller font
         final Label.LabelStyle labelStyle = new Label.LabelStyle(SharedResources.skin.get(Label.LabelStyle.class));
-        labelStyle.font= SharedResources.skin.getFont("small-font");
+        labelStyle.font = SharedResources.skin.getFont("small-font");
         if (widthWidget.getPropertyName() != null) {
             widthWidget.getPropertyName().setStyle(labelStyle);
         }
@@ -96,7 +93,7 @@ public class SpritePropertiesEditorWindow extends SpriteEditorWindow {
         return sizePanel;
     }
 
-    private CollapsableWidget initColorPanel () {
+    private CollapsableWidget initColorPanel() {
         // init panel
         final CollapsableWidget colorPanel = new CollapsableWidget("Color");
         colorWidget = WidgetFactory.generate(this, "color", "Fill Color");
@@ -130,7 +127,7 @@ public class SpritePropertiesEditorWindow extends SpriteEditorWindow {
     }
 
     @Override
-    public void updateForGameAsset (GameAsset<AtlasSprite> gameAsset) {
+    public void updateForGameAsset(GameAsset<AtlasSprite> gameAsset) {
         this.gameAsset = gameAsset;
 
         final Texture texture = gameAsset.getResource().getTexture();

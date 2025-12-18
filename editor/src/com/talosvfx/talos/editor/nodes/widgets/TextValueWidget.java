@@ -1,8 +1,16 @@
 package com.talosvfx.talos.editor.nodes.widgets;
 
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.EventListener;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.FocusListener;
 import com.badlogic.gdx.utils.Align;
@@ -24,17 +32,10 @@ public class TextValueWidget extends AbstractWidget<String> {
     private TextField textField;
 
     private Stage stageRef;
-
-    public enum Type {
-        NORMAL, TOP, MID, BOTTOM
-    }
-
     private ValueWidget.Type type = ValueWidget.Type.MID;
     private boolean isSelected;
     private boolean isHover;
-
     private String value;
-
     private EventListener stageListener;
 
     public TextValueWidget(Skin skin) {
@@ -45,6 +46,7 @@ public class TextValueWidget extends AbstractWidget<String> {
         this();
         init(skin, noLabel);
     }
+
     public TextValueWidget() {
         editing = new Table();
         main = new Table();
@@ -69,7 +71,7 @@ public class TextValueWidget extends AbstractWidget<String> {
 
         editing.add(textField).growX().padLeft(12);
 
-        if(!noLabel) {
+        if (!noLabel) {
             main.add(label).padLeft(12).left().expandX();
             main.add(valueLabel).padRight(12).right().width(0).growX();
             valueLabel.setEllipsis(true);
@@ -79,7 +81,6 @@ public class TextValueWidget extends AbstractWidget<String> {
             valueLabel.setEllipsis(true);
             valueLabel.setAlignment(Align.left);
         }
-
 
 
         mainStack.add(editing);
@@ -110,7 +111,7 @@ public class TextValueWidget extends AbstractWidget<String> {
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 super.exit(event, x, y, pointer, toActor);
                 isHover = false;
-                if(pointer == -1) {
+                if (pointer == -1) {
                     setBackgrounds();
                 }
             }
@@ -132,7 +133,7 @@ public class TextValueWidget extends AbstractWidget<String> {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
-                if(!dragged) {
+                if (!dragged) {
                     showEditMode();
                 }
             }
@@ -153,14 +154,14 @@ public class TextValueWidget extends AbstractWidget<String> {
             @Override
             public void keyboardFocusChanged(FocusEvent event, Actor actor, boolean focused) {
                 super.keyboardFocusChanged(event, actor, focused);
-                if(!focused) {
+                if (!focused) {
                     hideEditMode();
                 }
             }
         });
 
         stageListener = new InputListener() {
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 Vector2 tmpVec = new Vector2();
                 tmpVec.set(x, y);
                 TextValueWidget.this.stageToLocalCoordinates(tmpVec);
@@ -183,7 +184,7 @@ public class TextValueWidget extends AbstractWidget<String> {
             getStage().getRoot().addCaptureListener(stageListener);
             stageRef = getStage();
         } else {
-            if(stageRef != null) {
+            if (stageRef != null) {
                 stageRef.getRoot().removeCaptureListener(stageListener);
                 stageRef = null;
             }
@@ -192,7 +193,7 @@ public class TextValueWidget extends AbstractWidget<String> {
 
     private void showEditMode() {
         if (getStage() == null) return;
-        if(editing.isVisible()) return;
+        if (editing.isVisible()) return;
 
         getStage().setKeyboardFocus(textField);
         textField.selectAll();
@@ -229,12 +230,12 @@ public class TextValueWidget extends AbstractWidget<String> {
         return shape;
     }
 
-    private void setBackgrounds () {
+    private void setBackgrounds() {
         String shape = getShape();
 
         ColorLibrary.BackgroundColor color = ColorLibrary.BackgroundColor.LIGHT_GRAY;
 
-        if(isSelected) {
+        if (isSelected) {
             color = ColorLibrary.BackgroundColor.MID_GRAY;
         } else {
             if (isHover) {
@@ -254,10 +255,6 @@ public class TextValueWidget extends AbstractWidget<String> {
         label.setText(text);
     }
 
-    public void setValue(String text) {
-        setValue(text, isChanged(text));
-    }
-
     public void setValue(String text, boolean notify) {
         valueLabel.setText(text);
         textField.setText(text);
@@ -268,7 +265,6 @@ public class TextValueWidget extends AbstractWidget<String> {
             fireChangedEvent();
         }
     }
-
 
     @Override
     public void loadFromXML(XmlReader.Element element) {
@@ -281,17 +277,21 @@ public class TextValueWidget extends AbstractWidget<String> {
     }
 
     @Override
-    public String getValue () {
+    public String getValue() {
         return value;
     }
 
+    public void setValue(String text) {
+        setValue(text, isChanged(text));
+    }
+
     @Override
-    public void read (Json json, JsonValue jsonValue) {
+    public void read(Json json, JsonValue jsonValue) {
         setValue(jsonValue.asString(), false);
     }
 
     @Override
-    public void write (Json json, String name) {
+    public void write(Json json, String name) {
         json.writeValue(name, getValue());
     }
 
@@ -302,5 +302,9 @@ public class TextValueWidget extends AbstractWidget<String> {
 
     public void setNone() {
         valueLabel.setText("-");
+    }
+
+    public enum Type {
+        NORMAL, TOP, MID, BOTTOM
     }
 }

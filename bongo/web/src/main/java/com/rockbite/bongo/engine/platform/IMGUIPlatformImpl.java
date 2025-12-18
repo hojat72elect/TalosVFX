@@ -7,25 +7,25 @@ import com.artemis.utils.Bag;
 
 public class IMGUIPlatformImpl implements IMGUIPlatform {
 
-	public IMGUIPlatformImpl () {
+    public IMGUIPlatformImpl() {
 
-	}
+    }
 
-	@Override
-	public void init () {
-	}
+    @Override
+    public void init() {
+    }
 
-	@Override
-	public void newFrame () {
-	}
+    @Override
+    public void newFrame() {
+    }
 
-	@Override
-	public void renderDrawData (World world) {
+    @Override
+    public void renderDrawData(World world) {
 
-	}
+    }
 
-	@Override
-	public boolean renderDebug (World world, EntitySubscription allEntities, Bag<Component> singletons) {
-		return false;
-	}
+    @Override
+    public boolean renderDebug(World world, EntitySubscription allEntities, Bag<Component> singletons) {
+        return false;
+    }
 }

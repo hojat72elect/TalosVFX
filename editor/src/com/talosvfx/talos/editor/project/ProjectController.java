@@ -3,7 +3,10 @@ package com.talosvfx.talos.editor.project;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.dialogs.NewProjectDialog;
 import com.talosvfx.talos.editor.widgets.ui.FileTab;
@@ -13,19 +16,22 @@ import java.util.Comparator;
 
 public class ProjectController {
 
+    public FileTab currentTab;
+    IProject currentProject;
+    Comparator<RecentsEntry> recentsEntryComparator = new Comparator<RecentsEntry>() {
+        @Override
+        public int compare(RecentsEntry o1, RecentsEntry o2) {
+            return o2.time - o1.time;
+        }
+    };
     private String currentProjectPath = null;
     private String projectFileName = null;
-    public FileTab currentTab;
-    private ObjectMap<String, String> fileCache = new ObjectMap<>();
-    private ObjectMap<String, String> pathCache = new ObjectMap<>();
-    private ObjectMap<String, FileTab> tabCache = new ObjectMap<>();
-    private ObjectMap<String, String> exporthPathCache = new ObjectMap<>();
+    private final ObjectMap<String, String> fileCache = new ObjectMap<>();
+    private final ObjectMap<String, String> pathCache = new ObjectMap<>();
+    private final ObjectMap<String, FileTab> tabCache = new ObjectMap<>();
+    private final ObjectMap<String, String> exporthPathCache = new ObjectMap<>();
     private boolean loading = false;
-
-    IProject currentProject;
-
-    private SnapshotTracker snapshotTracker;
-
+    private final SnapshotTracker snapshotTracker;
     private boolean lastDirTracking = true;
 
     public ProjectController() {
@@ -33,7 +39,7 @@ public class ProjectController {
         snapshotTracker = new SnapshotTracker();
     }
 
-    public void loadProject (FileHandle projectFileHandle) {
+    public void loadProject(FileHandle projectFileHandle) {
         try {
             if (projectFileHandle.exists()) {
                 FileTab prevTab = currentTab;
@@ -101,7 +107,7 @@ public class ProjectController {
         }
     }
 
-    public void saveProject (FileHandle destination) {
+    public void saveProject(FileHandle destination) {
         try {
             String data = currentProject.getProjectString(false);
             destination.writeString(data, false);
@@ -128,19 +134,19 @@ public class ProjectController {
     }
 
     public void saveProject() {
-        if(isBoundToFile()) {
+        if (isBoundToFile()) {
             FileHandle handle = Gdx.files.absolute(currentProjectPath);
             saveProject(handle);
         }
     }
 
-    public void newProject (IProject project) {
-        if(project.requiresWorkspaceLocation()) {
+    public void newProject(IProject project) {
+        if (project.requiresWorkspaceLocation()) {
             String fileName = getNewFilename(project);
             String projectName = fileName.substring(0, fileName.indexOf("."));
             NewProjectDialog.show(project.getProjectTypeName(), projectName, new NewProjectDialog.NewProjectListener() {
                 @Override
-                public void create (String path, String name) {
+                public void create(String path, String name) {
                     createNewProjectTab(project, fileName);
                     project.createWorkspaceEnvironment(path, name);
                 }
@@ -156,11 +162,11 @@ public class ProjectController {
 
         boolean removingUnworthy = false;
 
-        if(currentTab != null) {
-            if(currentTab.getProjectType() == project && currentTab.isUnworthy()) {
+        if (currentTab != null) {
+            if (currentTab.getProjectType() == project && currentTab.isUnworthy()) {
                 removingUnworthy = true;
                 clearCache(currentTab.getFileName());
-            }  else {
+            } else {
                 saveProjectToCache(projectFileName);
             }
         }
@@ -176,7 +182,7 @@ public class ProjectController {
         snapshotTracker.reset(currentProject.getProjectString(true));
         currentProjectPath = null;
 
-        if(removingUnworthy) {
+        if (removingUnworthy) {
             safeRemoveTab(prevTab);
         }
     }
@@ -209,13 +215,12 @@ public class ProjectController {
         currentProjectPath = null;
     }
 
-    public String getCurrentProjectPath () {
+    public String getCurrentProjectPath() {
         return currentProjectPath;
     }
 
-
     public void setDirty() {
-        if(!loading) {
+        if (!loading) {
             currentTab.setDirty(true);
             currentTab.setWorthy();
 
@@ -251,7 +256,7 @@ public class ProjectController {
     public void removeTab(FileTab tab) {
         String fileName = tab.getFileName();
         clearCache(fileName);
-        if(tab == currentTab) {
+        if (tab == currentTab) {
             currentTab = null;
         }
     }
@@ -261,12 +266,12 @@ public class ProjectController {
         fileCache.remove(fileName);
     }
 
-    public void setProject(IProject project) {
-        currentProject = project;
-    }
-
     public IProject getProject() {
         return currentProject;
+    }
+
+    public void setProject(IProject project) {
+        currentProject = project;
     }
 
     public FileHandle findFile(String path) {
@@ -278,24 +283,24 @@ public class ProjectController {
 
         // local is priority, then the path, then the default lookup
         // do we currently have project loaded?
-        if(currentProjectPath != null) {
+        if (currentProjectPath != null) {
             // we can look for local file then
             FileHandle currentProjectHandle = Gdx.files.absolute(currentProjectPath);
-            if(currentProjectHandle.exists()) {
+            if (currentProjectHandle.exists()) {
                 String localPath = currentProjectHandle.parent().path() + File.separator + fileName;
                 FileHandle localTry = Gdx.files.absolute(localPath);
-                if(localTry.exists()) {
+                if (localTry.exists()) {
                     return localTry;
                 }
             }
         }
 
         //Maybe the absolute path was a better ideas
-        if(initialFile.exists()) return initialFile;
+        if (initialFile.exists()) return initialFile;
 
         //oh crap it's nowhere to be found, default path to the rescue!
         FileHandle lastHopeHandle = currentProject.findFileInDefaultPaths(fileName);
-        if(lastHopeHandle != null && lastHopeHandle.exists()) {
+        if (lastHopeHandle != null && lastHopeHandle.exists()) {
             return lastHopeHandle;
         }
 
@@ -309,12 +314,12 @@ public class ProjectController {
         String data = currentProject.exportProject();
         fileHandle.writeString(data, false);
 
-        TalosMain.Instance().Prefs().putString("lastExport"+currentProject.getExtension(), fileHandle.parent().path());
+        TalosMain.Instance().Prefs().putString("lastExport" + currentProject.getExtension(), fileHandle.parent().path());
         TalosMain.Instance().Prefs().flush();
     }
 
     public String getCurrentExportNameSuggestion() {
-        if(currentTab != null) {
+        if (currentTab != null) {
             String projectName = currentTab.getFileName();
             String exportExt = currentProject.getExportExtension();
             return projectName.substring(0, projectName.lastIndexOf(".")) + exportExt;
@@ -325,7 +330,7 @@ public class ProjectController {
     public String getLastDir(String action, IProject projectType) {
         String path = TalosMain.Instance().Prefs().getString("last" + action + projectType.getExtension());
         FileHandle handle = Gdx.files.absolute(path);
-        if(handle.exists()) {
+        if (handle.exists()) {
             return handle.path();
         }
 
@@ -362,13 +367,6 @@ public class ProjectController {
         safeRemoveTab(currentTab);
     }
 
-    Comparator<RecentsEntry> recentsEntryComparator = new Comparator<RecentsEntry>() {
-        @Override
-        public int compare(RecentsEntry o1, RecentsEntry o2) {
-            return (int) (o2.time - o1.time);
-        }
-    };
-
     public void reportProjectFileInterraction(FileHandle handle) {
         Preferences prefs = TalosMain.Instance().Prefs();
         String data = prefs.getString("recents");
@@ -381,10 +379,10 @@ public class ProjectController {
             if (data != null && !data.isEmpty()) {
                 recents = json.fromJson(Recents.class, data);
             }
-        } catch( Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        RecentsEntry newEntry = new RecentsEntry(handle.path(), (int)TimeUtils.millis());
+        RecentsEntry newEntry = new RecentsEntry(handle.path(), (int) TimeUtils.millis());
         recents.getRecents().removeValue(newEntry, false);
         recents.getRecents().add(newEntry);
         //sort

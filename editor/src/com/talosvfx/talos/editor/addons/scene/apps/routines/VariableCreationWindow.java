@@ -6,18 +6,20 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.nodes.RoutineExposedVariableNodeWidget;
-import com.talosvfx.talos.editor.addons.scene.apps.routines.ui.types.PropertyTypeWidgetMapper;
-import com.talosvfx.talos.runtime.routine.RoutineInstance;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.ui.CustomVarWidget;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.ui.types.ATypeWidget;
+import com.talosvfx.talos.editor.addons.scene.apps.routines.ui.types.PropertyTypeWidgetMapper;
 import com.talosvfx.talos.editor.nodes.NodeListPopup;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.events.dynamicnodestage.NodeCreatedEvent;
@@ -25,10 +27,12 @@ import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
 import com.talosvfx.talos.editor.widgets.ui.common.ImageButton;
 import com.talosvfx.talos.editor.widgets.ui.menu.BasicPopup;
+import com.talosvfx.talos.runtime.routine.RoutineInstance;
 import com.talosvfx.talos.runtime.routine.RoutineNode;
 import com.talosvfx.talos.runtime.routine.nodes.ExposedVariableNode;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyType;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,12 +43,12 @@ public class VariableCreationWindow extends Table {
     private final Table content;
     private final Cell<Table> contentCell;
     private final Label routineName;
-    private DragAndDrop dragAndDrop;
-    private Array<CustomVarWidget> templateRowArray = new Array<>();
+    private final DragAndDrop dragAndDrop;
+    private final Array<CustomVarWidget> templateRowArray = new Array<>();
 
-    private RoutineStage routineStage;
+    private final RoutineStage routineStage;
 
-    public VariableCreationWindow (RoutineStage routineStage) {
+    public VariableCreationWindow(RoutineStage routineStage) {
         setTouchable(Touchable.enabled);
 
         this.routineStage = routineStage;
@@ -69,11 +73,11 @@ public class VariableCreationWindow extends Table {
         plusButton.addListener(new ClickListener() {
             private BasicPopup<PropertyType> popup;
 
-            private Vector2 temp = new Vector2();
+            private final Vector2 temp = new Vector2();
 
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if(popup!=null)popup.hide();
+                if (popup != null) popup.hide();
                 temp.set(x, y);
                 plusButton.localToScreenCoordinates(temp);
                 popup = BasicPopup.build(PropertyType.class)
@@ -108,7 +112,7 @@ public class VariableCreationWindow extends Table {
         addListener(new ClickListener() {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-               event.stop();
+                event.stop();
                 return true;
             }
 
@@ -123,15 +127,15 @@ public class VariableCreationWindow extends Table {
         RoutineInstance routineInstance = routineStage.data.getRoutineInstance();
         Array<PropertyWrapper<?>> propertyWrappers = routineInstance.getParentPropertyWrappers();
         Array<String> names = new Array<>();
-        for(PropertyWrapper tmp: propertyWrappers) {
-            if(tmp != wrapper) {
+        for (PropertyWrapper tmp : propertyWrappers) {
+            if (tmp != wrapper) {
                 names.add(tmp.propertyName);
             }
         }
 
         String suggestion = "value";
         int iterator = 0;
-        while(names.contains(suggestion + iterator, false)) {
+        while (names.contains(suggestion + iterator, false)) {
             iterator++;
         }
 
@@ -145,7 +149,7 @@ public class VariableCreationWindow extends Table {
         ScrollPane scrollPane = new ScrollPane(inner);
         scrollPane.setScrollingDisabled(true, false);
         content.add(scrollPane).grow().maxHeight(300).padBottom(10);
-        if(routineStage.data == null) return;
+        if (routineStage.data == null) return;
 
         RoutineInstance routineInstance = routineStage.data.getRoutineInstance();
         Array<PropertyWrapper<?>> propertyWrappers = routineInstance.getParentPropertyWrappers();
@@ -183,7 +187,7 @@ public class VariableCreationWindow extends Table {
         configureDragAndDrop();
     }
 
-    public void setRoutineName(String routineName){
+    public void setRoutineName(String routineName) {
         this.routineName.setText(routineName);
     }
 
@@ -192,7 +196,7 @@ public class VariableCreationWindow extends Table {
         for (CustomVarWidget row : templateRowArray) {
             dragAndDrop.addSource(new DragAndDrop.Source(row.getFieldContainer()) {
                 @Override
-                public DragAndDrop.Payload dragStart (InputEvent event, float x, float y, int pointer) {
+                public DragAndDrop.Payload dragStart(InputEvent event, float x, float y, int pointer) {
                     DragAndDrop.Payload payload = new DragAndDrop.Payload();
                     payload.setObject(routineStage.data.getRoutineInstance().getPropertyWrapperWithIndex(row.getIndex()));
                     Table payloadTable = new Table();
@@ -211,12 +215,12 @@ public class VariableCreationWindow extends Table {
 
         dragAndDrop.addTarget(new DragAndDrop.Target(routineStage.routineEditorApp.uiContent) {
             @Override
-            public boolean drag (DragAndDrop.Source source, DragAndDrop.Payload payload, float x, float y, int pointer) {
+            public boolean drag(DragAndDrop.Source source, DragAndDrop.Payload payload, float x, float y, int pointer) {
                 return true;
             }
 
             @Override
-            public void drop (DragAndDrop.Source source, DragAndDrop.Payload payload, float x, float y, int pointer) {
+            public void drop(DragAndDrop.Source source, DragAndDrop.Payload payload, float x, float y, int pointer) {
 
                 RoutineExposedVariableNodeWidget exposedVariable = ((RoutineExposedVariableNodeWidget) routineStage.createNode("ExposedVariableNode", Gdx.input.getX(), Gdx.input.getY()));
                 PropertyWrapper<?> propertyWrapper = (PropertyWrapper<?>) payload.getObject();

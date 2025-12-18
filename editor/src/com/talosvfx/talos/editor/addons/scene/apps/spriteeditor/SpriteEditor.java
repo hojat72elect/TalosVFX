@@ -1,17 +1,18 @@
 package com.talosvfx.talos.editor.addons.scene.apps.spriteeditor;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Scaling;
 import com.talosvfx.talos.editor.addons.scene.apps.spriteeditor.widgets.VerticalIconMenu;
-import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
+import com.talosvfx.talos.runtime.assets.GameAsset;
 
 public class SpriteEditor extends Table {
     private final VerticalIconMenu<Actor, SpriteEditorWindow> editorMenu;
@@ -50,7 +51,7 @@ public class SpriteEditor extends Table {
         setCurrentTab(propertiesTab);
     }
 
-    private void setCurrentTab (SpriteEditorWindowMenuTab tab) {
+    private void setCurrentTab(SpriteEditorWindowMenuTab tab) {
         if (currentTab != null) currentTab.spriteEditorTab.setChecked(false);
         currentTab = tab;
         currentTab.spriteEditorTab.setChecked(true);
@@ -60,7 +61,7 @@ public class SpriteEditor extends Table {
         window.show();
     }
 
-    public void updateForGameAsset (GameAsset<AtlasSprite> gameAsset) {
+    public void updateForGameAsset(GameAsset<AtlasSprite> gameAsset) {
         for (SpriteEditorWindow spriteEditorWindow : editorMenu.getTabWindowMap().values()) {
             spriteEditorWindow.updateForGameAsset(gameAsset);
         }
@@ -72,6 +73,7 @@ public class SpriteEditor extends Table {
 
     public class SpriteEditorWindowMenuTab extends Table {
         private final Button spriteEditorTab;
+
         public SpriteEditorWindowMenuTab(String iconName) {
             spriteEditorTab = new Button(SharedResources.skin);
 

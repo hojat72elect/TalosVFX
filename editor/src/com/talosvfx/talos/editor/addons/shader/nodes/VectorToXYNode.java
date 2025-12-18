@@ -10,13 +10,13 @@ public class VectorToXYNode extends AbstractShaderNode {
     public final String INPUT = "inputValue";
 
     @Override
-    public void prepareDeclarations (ShaderBuilder shaderBuilder) {
+    public void prepareDeclarations(ShaderBuilder shaderBuilder) {
         String inputVal = getExpression(INPUT, null);
 
         String x = widgetMap.get(X).getValue() + "";
         String y = widgetMap.get(Y).getValue() + "";
 
-        if(inputVal != null && !inputVal.equals("null")) {
+        if (inputVal != null && !inputVal.equals("null")) {
             x = "(" + inputVal + ").x";
             y = "(" + inputVal + ").y";
         }
@@ -26,7 +26,7 @@ public class VectorToXYNode extends AbstractShaderNode {
     }
 
     @Override
-    public String writeOutputCode (String slotId) {
+    public String writeOutputCode(String slotId) {
         if (slotId.equals(X)) {
             return "vec2OutX" + getId();
         } else if (slotId.equals(Y)) {
@@ -37,12 +37,12 @@ public class VectorToXYNode extends AbstractShaderNode {
     }
 
     @Override
-    protected void inputStateChanged (boolean isInputDynamic) {
+    protected void inputStateChanged(boolean isInputDynamic) {
 
     }
 
     @Override
-    protected boolean isInputDynamic () {
+    protected boolean isInputDynamic() {
         return false;
     }
 }

@@ -14,18 +14,14 @@ public class GridRendererWrapper extends Actor {
 
     private final Stage stage;
     private final OrthographicCamera camera;
-
-    private ShapeRenderer shapeRenderer;
-
     GridRenderer gridRenderer;
-
     DynamicGridPropertyProvider gridPropertyProvider;
+    private final ShapeRenderer shapeRenderer;
+    private final Vector3 tmp = new Vector3();
 
-    private Vector3 tmp = new Vector3();
-
-    public GridRendererWrapper (Stage stage) {
+    public GridRendererWrapper(Stage stage) {
         this.stage = stage;
-        camera = (OrthographicCamera)this.stage.getViewport().getCamera();
+        camera = (OrthographicCamera) this.stage.getViewport().getCamera();
         shapeRenderer = new ShapeRenderer();
         gridPropertyProvider = new DynamicGridPropertyProvider();
         gridPropertyProvider.setLineThickness(pixelToWorld(1.2f));
@@ -36,14 +32,14 @@ public class GridRendererWrapper extends Actor {
     }
 
     @Override
-    public void act (float delta) {
+    public void act(float delta) {
         super.act(delta);
         gridPropertyProvider.distanceThatLinesShouldBe = pixelToWorld(150f);
         gridPropertyProvider.setLineThickness(pixelToWorld(1.2f));
     }
 
     @Override
-    public void draw (Batch batch, float parentAlpha) {
+    public void draw(Batch batch, float parentAlpha) {
         super.draw(batch, parentAlpha);
         gridPropertyProvider.update(camera, parentAlpha);
         batch.end();
@@ -51,7 +47,7 @@ public class GridRendererWrapper extends Actor {
         batch.begin();
     }
 
-    protected float pixelToWorld (float pixelSize) {
+    protected float pixelToWorld(float pixelSize) {
         tmp.set(0, 0, 0);
         camera.unproject(tmp);
         float baseline = tmp.x;

@@ -4,24 +4,22 @@ import com.badlogic.gdx.utils.Array;
 import com.talosvfx.talos.editor.addons.scene.utils.FilePropertyProvider;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.IPropertyProvider;
 import com.talosvfx.talos.runtime.assets.meta.PrefabMetadata;
-import com.talosvfx.talos.runtime.scene.GameObject;
-import com.talosvfx.talos.runtime.scene.Prefab;
 
 public class PrefabMetaDataHolder extends AMetaDataHolder<PrefabMetadata> {
 
-	public PrefabMetaDataHolder (PrefabMetadata meta) {
-		super(meta);
-	}
+    public PrefabMetaDataHolder(PrefabMetadata meta) {
+        super(meta);
+    }
 
-	@Override
-	public Iterable<IPropertyProvider> getPropertyProviders () {
-		Array<IPropertyProvider> propertyProviders = new Array<>();
+    @Override
+    public Iterable<IPropertyProvider> getPropertyProviders() {
+        Array<IPropertyProvider> propertyProviders = new Array<>();
 
-		propertyProviders.add(new FilePropertyProvider(meta.link.handle));
+        propertyProviders.add(new FilePropertyProvider(meta.link.handle));
 
 
-		//todo
-		//		Prefab prefab = new Prefab();
+        //todo
+        //		Prefab prefab = new Prefab();
 //		prefab.path = link.handle.path();
 //		prefab.loadFromPath();
 
@@ -31,7 +29,6 @@ public class PrefabMetaDataHolder extends AMetaDataHolder<PrefabMetadata> {
 //			propertyProviders.add(provider);
 //		}
 
-		return propertyProviders;
-	}
-
+        return propertyProviders;
+    }
 }

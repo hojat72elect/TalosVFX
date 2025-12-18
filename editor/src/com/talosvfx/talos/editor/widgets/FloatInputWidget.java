@@ -18,20 +18,23 @@ package com.talosvfx.talos.editor.widgets;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ObjectMap;
-import com.talosvfx.talos.runtime.vfx.values.NumericalValue;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.LabelWithZoom;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.TextFieldWithZoom;
+import com.talosvfx.talos.runtime.vfx.values.NumericalValue;
 
 public class FloatInputWidget extends Table {
 
 
     private NumericalValue.Flavour flavour;
 
-    private ObjectMap<NumericalValue.Flavour, Table> flavourContainers = new ObjectMap<>();
+    private final ObjectMap<NumericalValue.Flavour, Table> flavourContainers = new ObjectMap<>();
 
     private ChangeListener listener;
 
@@ -51,7 +54,7 @@ public class FloatInputWidget extends Table {
         flavourContainers.put(NumericalValue.Flavour.NORMALIZED, new Table());
 
 
-        for(Table table: flavourContainers.values()) {
+        for (Table table : flavourContainers.values()) {
             stack.add(table);
             table.setVisible(false);
         }
@@ -89,7 +92,7 @@ public class FloatInputWidget extends Table {
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
 
-                if(regularCarrier.getSelection().length() == 0) {
+                if (regularCarrier.getSelection().length() == 0) {
                     regularCarrier.selectAll();
                 }
             }
@@ -105,7 +108,7 @@ public class FloatInputWidget extends Table {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 getValue();
-                if(listener != null) {
+                if (listener != null) {
                     listener.changed(event, actor);
                 }
             }
@@ -119,23 +122,19 @@ public class FloatInputWidget extends Table {
     }
 
     public void setFlavour(NumericalValue.Flavour newFlavour) {
-        for(NumericalValue.Flavour flavour: flavourContainers.keys()) {
+        for (NumericalValue.Flavour flavour : flavourContainers.keys()) {
             Table table = flavourContainers.get(flavour);
-            if(flavour == newFlavour) {
-                table.setVisible(true);
-            } else {
-                table.setVisible(false);
-            }
+            table.setVisible(flavour == newFlavour);
         }
         this.flavour = newFlavour;
 
-        if(flavour == NumericalValue.Flavour.REGULAR) {
+        if (flavour == NumericalValue.Flavour.REGULAR) {
             regularCarrier.setText(value + "");
         }
-        if(flavour == NumericalValue.Flavour.ANGLE) {
+        if (flavour == NumericalValue.Flavour.ANGLE) {
             angleCarrier.setValue(value);
         }
-        if(flavour == NumericalValue.Flavour.NORMALIZED) {
+        if (flavour == NumericalValue.Flavour.NORMALIZED) {
             //TODO: normalized case
         }
     }
@@ -146,7 +145,7 @@ public class FloatInputWidget extends Table {
 
     public float getValue() {
         float val = 0;
-        if(flavour == NumericalValue.Flavour.REGULAR) {
+        if (flavour == NumericalValue.Flavour.REGULAR) {
             String text = regularCarrier.getText();
             if (text.length() > 0) {
                 try {
@@ -155,7 +154,7 @@ public class FloatInputWidget extends Table {
                     val = 0;
                 }
             }
-        } else if(flavour == NumericalValue.Flavour.ANGLE) {
+        } else if (flavour == NumericalValue.Flavour.ANGLE) {
             val = angleCarrier.getValue();
         } else {
             //TODO: normalized case
@@ -168,9 +167,9 @@ public class FloatInputWidget extends Table {
 
     public void setValue(float val) {
         value = val;
-        if(flavour == NumericalValue.Flavour.REGULAR) {
+        if (flavour == NumericalValue.Flavour.REGULAR) {
             regularCarrier.setText(value + "");
-        } else if(flavour == NumericalValue.Flavour.ANGLE) {
+        } else if (flavour == NumericalValue.Flavour.ANGLE) {
             angleCarrier.setValue(value);
         } else {
             //TODO: normalized case

@@ -9,7 +9,7 @@ public class GetMemoryNode extends RoutineNode {
         String name = fetchStringValue("name");
 
         String key = name;
-        if(fetchBooleanValue("local") && routineInstanceRef.getSignalPayload() != null) {
+        if (fetchBooleanValue("local") && routineInstanceRef.getSignalPayload() != null) {
             key = name + (routineInstanceRef.getSignalPayload().hashCode() + "");
         }
 

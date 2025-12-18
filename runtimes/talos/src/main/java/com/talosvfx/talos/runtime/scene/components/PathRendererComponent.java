@@ -3,9 +3,7 @@ package com.talosvfx.talos.runtime.scene.components;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.PolygonBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Bezier;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -14,7 +12,6 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.Pool;
-import com.talosvfx.talos.runtime.RuntimeContext;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.runtime.assets.GameResourceOwner;
@@ -22,8 +19,6 @@ import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.IColorHolder;
 import com.talosvfx.talos.runtime.scene.ISizableComponent;
 import com.talosvfx.talos.runtime.scene.ValueProperty;
-
-import java.util.UUID;
 
 
 public class PathRendererComponent extends RendererComponent implements GameResourceOwner<AtlasSprite>, ISizableComponent, IColorHolder {
@@ -39,28 +34,14 @@ public class PathRendererComponent extends RendererComponent implements GameReso
 
     @ValueProperty
     public float repeatCount = 5f;
-
-    private short[] indices;
-    private float[] vertices;
-    private Array<Vector2> edgePoints = new Array<>();
-
-    private Array<Vector2> controlPoints = new Array<>();
-
-    private Array<Vector2> points = new Array<>();
-
-    private Vector2 tmp = new Vector2();
-    private Vector2 tmp2 = new Vector2();
-    private Vector2 tmp3 = new Vector2();
-
+    public transient Vector2[] tmpArr = new Vector2[]{new Vector2(), new Vector2(), new Vector2(), new Vector2()};
     Bezier<Vector2> bezier = new Bezier<>();
-
     Pool<Vector2> vectorPool = new Pool<Vector2>() {
         @Override
         protected Vector2 newObject() {
             return new Vector2();
         }
     };
-
     transient GameAsset.GameAssetUpdateListener gameAssetUpdateListener = new GameAsset.GameAssetUpdateListener() {
         @Override
         public void onUpdate() {
@@ -69,8 +50,17 @@ public class PathRendererComponent extends RendererComponent implements GameReso
             }
         }
     };
-    private float THRESHOLD = 0.0001f;
-
+    float progress = 0f;
+    private short[] indices;
+    private float[] vertices;
+    private final Array<Vector2> edgePoints = new Array<>();
+    private Array<Vector2> controlPoints = new Array<>();
+    private final Array<Vector2> points = new Array<>();
+    private final Vector2 tmp = new Vector2();
+    private final Vector2 tmp2 = new Vector2();
+    private final Vector2 tmp3 = new Vector2();
+    private final float THRESHOLD = 0.0001f;
+    private Vector2 prev;
 
     @Override
     public GameAssetType getGameAssetType() {
@@ -93,7 +83,6 @@ public class PathRendererComponent extends RendererComponent implements GameReso
         super.write(json);
     }
 
-
     @Override
     public void read(Json json, JsonValue jsonData) {
         GameAsset<AtlasSprite> objectGameAsset = GameResourceOwner.readAsset(json, jsonData);
@@ -102,7 +91,7 @@ public class PathRendererComponent extends RendererComponent implements GameReso
         thickness = jsonData.getFloat("thickness", 3f);
         repeatCount = jsonData.getFloat("repeatCount", 5f);
         color = json.readValue(Color.class, jsonData.get("color"));
-        if(color == null) color = new Color(Color.WHITE);
+        if (color == null) color = new Color(Color.WHITE);
 
         super.read(json, jsonData);
     }
@@ -125,7 +114,7 @@ public class PathRendererComponent extends RendererComponent implements GameReso
     }
 
     @Override
-    public void clearResource () {
+    public void clearResource() {
         if (gameAsset != null) {
             gameAsset.listeners.removeValue(gameAssetUpdateListener, true);
             gameAsset = null;
@@ -139,13 +128,13 @@ public class PathRendererComponent extends RendererComponent implements GameReso
     }
 
     @Override
-    public float getHeight() {
-        return 0;
+    public void setWidth(float width) {
+
     }
 
     @Override
-    public void setWidth(float width) {
-
+    public float getHeight() {
+        return 0;
     }
 
     @Override
@@ -290,16 +279,12 @@ public class PathRendererComponent extends RendererComponent implements GameReso
         vectorPool.free(lastTangent);
     }
 
-
     Vector2 getTangent(Vector2 p1, Vector2 p2) {
         Vector2 tangent = vectorPool.obtain().set(p2);
         tangent.sub(p1);
         tangent.nor();
         return tangent;
     }
-
-    float progress = 0f;
-    private Vector2 prev;
 
     public int setData(int idx, float x1, float y1, float x2, float y2, float centerX, float centerY, float pixelSize) {
         AtlasSprite region = gameAsset.getResource();
@@ -349,8 +334,6 @@ public class PathRendererComponent extends RendererComponent implements GameReso
         }
         return idx;
     }
-
-    public transient Vector2[] tmpArr = new Vector2[]{new Vector2(), new Vector2(), new Vector2(), new Vector2()};
 
     public Vector2[] getPointsInSegment(int index) {
         for (int i = 0; i < 4; i++) {

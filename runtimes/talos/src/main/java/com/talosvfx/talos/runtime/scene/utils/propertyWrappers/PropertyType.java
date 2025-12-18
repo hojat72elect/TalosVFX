@@ -9,5 +9,5 @@ public enum PropertyType {
     ASSET,
     BOOLEAN,
     STRING,
-    GAME_OBJECT;
+    GAME_OBJECT
 }

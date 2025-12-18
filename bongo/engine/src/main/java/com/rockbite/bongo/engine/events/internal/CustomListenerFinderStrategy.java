@@ -9,8 +9,8 @@ import java.util.List;
  */
 public interface CustomListenerFinderStrategy {
 
-	/**
-	 * Find all listeners in o and return as EventListeners.
-	 */
-	public List<CustomEventListenerAbstraction> resolve (Object o);
+    /**
+     * Find all listeners in o and return as EventListeners.
+     */
+    List<CustomEventListenerAbstraction> resolve(Object o);
 }

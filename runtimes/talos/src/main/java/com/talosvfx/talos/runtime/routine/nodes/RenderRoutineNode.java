@@ -23,16 +23,16 @@ public class RenderRoutineNode extends RoutineNode {
 
     @Override
     public Object queryValue(String targetPortName) {
-        if(targetPortName.equals("position")) {
+        if (targetPortName.equals("position")) {
             return position;
         }
-        if(targetPortName.equals("size")) {
+        if (targetPortName.equals("size")) {
             return size;
         }
-        if(targetPortName.equals("viewportSize")) {
+        if (targetPortName.equals("viewportSize")) {
             return viewportSize;
         }
-        if(targetPortName.equals("viewportPos")) {
+        if (targetPortName.equals("viewportPos")) {
             return viewportPosition;
         }
         if (targetPortName.equals("gameObject")) {

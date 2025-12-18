@@ -18,7 +18,7 @@ public class PlayMusicNode extends RoutineNode {
     public void reset() {
         super.reset();
 
-        if(asset != null && asset.getResource() != null) {
+        if (asset != null && asset.getResource() != null) {
             asset.getResource().stop();
         }
     }

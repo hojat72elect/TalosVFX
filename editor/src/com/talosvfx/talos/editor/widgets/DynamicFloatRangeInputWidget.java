@@ -22,13 +22,13 @@ import com.talosvfx.talos.runtime.vfx.values.NumericalValue;
 
 public class DynamicFloatRangeInputWidget extends Table {
 
-    private CurveWidget curveWidget;
+    private final CurveWidget curveWidget;
 
-    private FloatRangeInputWidget lowInput;
-    private FloatRangeInputWidget highInput;
+    private final FloatRangeInputWidget lowInput;
+    private final FloatRangeInputWidget highInput;
 
     public DynamicFloatRangeInputWidget(Skin skin) {
-       setSkin(skin);
+        setSkin(skin);
 
         Table container = new Table();
 

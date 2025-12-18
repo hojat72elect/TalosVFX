@@ -7,48 +7,13 @@ import com.talosvfx.talos.runtime.vfx.shaders.ShaderBuilder;
 
 public class ShaderDescriptor {
 
-    public static class UniformData {
-        public String name;
-        public Type type;
-        public String payload;
-    }
-
-    public enum Type {
-        FLOAT("float"),
-        VEC2("vec2"), VEC3("vec3"), VEC4("vec4"),
-        TEXTURE("sampler2D");
-
-        private String typeString;
-
-        Type(String typeString) {
-            this.typeString = typeString;
-        }
-
-        public static Type getFor(String type) {
-            if(type.equals("float")) return FLOAT;
-            if(type.equals("vec2")) return VEC2;
-            if(type.equals("vec3")) return VEC3;
-            if(type.equals("vec4")) return VEC4;
-            if(type.equals("sampler2D")) return TEXTURE;
-
-            return FLOAT;
-        }
-
-        public String getTypeString() {
-            return typeString;
-        }
-
-    }
-
-    private ObjectMap<String, UniformData> uniformMap = new ObjectMap<>();
-
+    private final ObjectMap<String, UniformData> uniformMap = new ObjectMap<>();
     private String fragResolve;
     private String customMethods;
 
     public ShaderDescriptor() {
 
     }
-
     public ShaderDescriptor(FileHandle fileHandle) {
         setData(fileHandle.readString());
     }
@@ -66,7 +31,7 @@ public class ShaderDescriptor {
         fragResolve = main.getText();
         customMethods = methods.getText();
 
-        for (XmlReader.Element uniformElement: uniforms.getChildrenByName("uniform")) {
+        for (XmlReader.Element uniformElement : uniforms.getChildrenByName("uniform")) {
             String name = uniformElement.getAttribute("name");
             String type = uniformElement.getAttribute("type");
 
@@ -85,21 +50,21 @@ public class ShaderDescriptor {
         }
     }
 
-    public ObjectMap<String, UniformData> getUniformMap () {
+    public ObjectMap<String, UniformData> getUniformMap() {
         return uniformMap;
     }
 
-    public String getCustomMethods () {
+    public String getCustomMethods() {
         return customMethods;
     }
 
-    public String getShaderLogic () {
+    public String getShaderLogic() {
         return fragResolve;
     }
 
-    public String getCustomUniforms () {
+    public String getCustomUniforms() {
         String uniformString = "";
-        for(UniformData uniformData: uniformMap.values()) {
+        for (UniformData uniformData : uniformMap.values()) {
             String line = "uniform " + uniformData.type.getTypeString() + " " + uniformData.name + ";";
             uniformString += line + "\n";
         }
@@ -107,10 +72,41 @@ public class ShaderDescriptor {
         return uniformString;
     }
 
-    public String getFragCode () {
+    public String getFragCode() {
         String string = ShaderBuilder.compileShaderString(this, ShaderBuilder.DEFAULT_TEMPLATE());
 
         return string;
     }
 
+    public enum Type {
+        FLOAT("float"),
+        VEC2("vec2"), VEC3("vec3"), VEC4("vec4"),
+        TEXTURE("sampler2D");
+
+        private final String typeString;
+
+        Type(String typeString) {
+            this.typeString = typeString;
+        }
+
+        public static Type getFor(String type) {
+            if (type.equals("float")) return FLOAT;
+            if (type.equals("vec2")) return VEC2;
+            if (type.equals("vec3")) return VEC3;
+            if (type.equals("vec4")) return VEC4;
+            if (type.equals("sampler2D")) return TEXTURE;
+
+            return FLOAT;
+        }
+
+        public String getTypeString() {
+            return typeString;
+        }
+    }
+
+    public static class UniformData {
+        public String name;
+        public Type type;
+        public String payload;
+    }
 }

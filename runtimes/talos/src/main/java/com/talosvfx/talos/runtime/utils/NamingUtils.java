@@ -9,62 +9,58 @@ import java.util.regex.Pattern;
 public class NamingUtils {
 
 
+    public static String getNewName(String newNameAttempt, Supplier<Collection<String>> potentialConflicts) {
+        return getNewName(newNameAttempt, potentialConflicts.get());
+    }
 
-	public static String getNewName (String newNameAttempt, Supplier<Collection<String>> potentialConflicts) {
-		return getNewName(newNameAttempt, potentialConflicts.get());
-	}
-
-	public static String getNewName (String newNameAttempt, Collection<String> potentialConflicts) {
-		Pattern extractBase = Pattern.compile(  "(.*)\\([0-9]*\\)$");
-
-
-		if (!potentialConflicts.contains(newNameAttempt)) {
-			return newNameAttempt;
-		}
-
-		Matcher matcher = extractBase.matcher(newNameAttempt);
-		if (matcher.matches()) {
-			newNameAttempt = matcher.group(1);
-		}
-		Pattern duplicatePattern = Pattern.compile(newNameAttempt + "\\([0-9]*\\)$");
-
-		long count = 0;
-		for (String potentialConflict : potentialConflicts) {
-			if (duplicatePattern.matcher(potentialConflict).find()) {
-				count++;
-			}
-		}
-
-		if (count > 0) {
-			//We have things that match our regex
-
-			//Something already matches it, lets test new names
-
-			int i = 1;
-			while (true) {
-				if (i > 10000) {
-					throw new GdxRuntimeException("Ok you're being silly now");
-				}
-
-				String test = newNameAttempt + "(" + (i) + ")";
-
-				i++;
+    public static String getNewName(String newNameAttempt, Collection<String> potentialConflicts) {
+        Pattern extractBase = Pattern.compile("(.*)\\([0-9]*\\)$");
 
 
-				if (potentialConflicts.contains(test)) {
-					continue;
-				} else {
-					return test;
-				}
+        if (!potentialConflicts.contains(newNameAttempt)) {
+            return newNameAttempt;
+        }
+
+        Matcher matcher = extractBase.matcher(newNameAttempt);
+        if (matcher.matches()) {
+            newNameAttempt = matcher.group(1);
+        }
+        Pattern duplicatePattern = Pattern.compile(newNameAttempt + "\\([0-9]*\\)$");
+
+        long count = 0;
+        for (String potentialConflict : potentialConflicts) {
+            if (duplicatePattern.matcher(potentialConflict).find()) {
+                count++;
+            }
+        }
+
+        if (count > 0) {
+            //We have things that match our regex
+
+            //Something already matches it, lets test new names
+
+            int i = 1;
+            while (true) {
+                if (i > 10000) {
+                    throw new GdxRuntimeException("Ok you're being silly now");
+                }
+
+                String test = newNameAttempt + "(" + (i) + ")";
+
+                i++;
 
 
-			}
-
-		} else {
-			//First one
-			return newNameAttempt+"(" + 1 + ")";
-		}
-	}
+                if (potentialConflicts.contains(test)) {
+                    continue;
+                } else {
+                    return test;
+                }
+            }
+        } else {
+            //First one
+            return newNameAttempt + "(" + 1 + ")";
+        }
+    }
 
 //	public static void main (String[] args) {
 //		Supplier<Collection<String>> supplier = new Supplier<Collection<String>>() {
@@ -85,5 +81,4 @@ public class NamingUtils {
 //		System.out.println(getNewName("banana2", supplier));
 //		System.out.println(getNewName("banana3", supplier));
 //	}
-
 }

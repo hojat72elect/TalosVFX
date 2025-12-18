@@ -1,18 +1,19 @@
 package com.talosvfx.talos.editor.notifications.commands;
 
 import com.badlogic.gdx.Input;
+
 import lombok.Getter;
 
 public class KeyboardCombination extends AbstractCombinationWithModifier {
 
     @Getter
-    private int regularKey;
+    private final int regularKey;
 
     @Getter
-    private boolean repeat;
+    private final boolean repeat;
 
-    private float repeatStartTime = 0.5f;
-    private float repeatTime = 0.1f;
+    private final float repeatStartTime = 0.5f;
+    private final float repeatTime = 0.1f;
     private float repeatCooldown = this.repeatStartTime;
     private boolean timerCooledDown = false;
     private boolean firstTimeDone = false;
@@ -79,7 +80,7 @@ public class KeyboardCombination extends AbstractCombinationWithModifier {
         }
     }
 
-    private boolean areAllButtonsPressed () {
+    private boolean areAllButtonsPressed() {
         return isRegularKeyPressed && super.shouldExecute();
     }
 

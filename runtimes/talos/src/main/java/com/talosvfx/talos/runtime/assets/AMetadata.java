@@ -13,30 +13,26 @@ public abstract class AMetadata implements Json.Serializable {
 
     public UUID uuid;
 
-    public AMetadata () {
+    public AMetadata() {
         uuid = UUID.randomUUID();
     }
 
-    public void setLinkRawAsset (RawAsset link) {
+    public void setLinkRawAsset(RawAsset link) {
         this.link = link;
     }
 
 
-
-
-    public void postProcessForHandle (FileHandle handle) {
+    public void postProcessForHandle(FileHandle handle) {
     }
 
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         json.writeValue("uuid", uuid.toString());
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         uuid = UUID.fromString(jsonData.getString("uuid"));
     }
-
-
 }

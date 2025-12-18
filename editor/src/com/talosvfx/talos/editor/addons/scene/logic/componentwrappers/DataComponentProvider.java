@@ -1,9 +1,7 @@
 package com.talosvfx.talos.editor.addons.scene.logic.componentwrappers;
 
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.talosvfx.talos.editor.addons.scene.SceneUtils;
@@ -33,8 +31,8 @@ public class DataComponentProvider extends AComponentProvider<DataComponent> {
             SquareButton deleteProperty = new SquareButton(SharedResources.skin, new Label("-", SharedResources.skin), "Delete property");
             deleteProperty.addListener(new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
-                   component.getProperties().removeValue(property, true);
+                public void clicked(InputEvent event, float x, float y) {
+                    component.getProperties().removeValue(property, true);
 
                     SceneUtils.componentUpdated(component.getGameObject().getGameObjectContainerRoot(), component.getGameObject(), component, false);
                 }
@@ -44,11 +42,11 @@ public class DataComponentProvider extends AComponentProvider<DataComponent> {
             properties.add(generate);
         }
 
-		ButtonPropertyWidget buttonPropertyWidget = new PropertyPanelFieldWidget();
+        ButtonPropertyWidget buttonPropertyWidget = new PropertyPanelFieldWidget();
         buttonPropertyWidget.setParent(component);
-		properties.add(buttonPropertyWidget);
-		return properties;
-	}
+        properties.add(buttonPropertyWidget);
+        return properties;
+    }
 
     @Override
     public String getPropertyBoxTitle() {

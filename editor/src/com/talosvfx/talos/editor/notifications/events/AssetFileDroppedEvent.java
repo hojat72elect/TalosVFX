@@ -6,28 +6,28 @@ import com.talosvfx.talos.editor.notifications.TalosEvent;
 
 public class AssetFileDroppedEvent implements TalosEvent {
 
-    private Vector2 screenPos = new Vector2();
+    private final Vector2 screenPos = new Vector2();
     private FileHandle fileHandle;
 
     @Override
-    public void reset () {
+    public void reset() {
         fileHandle = null;
-        screenPos.set(0,0);
+        screenPos.set(0, 0);
     }
 
-    public Vector2 getScreenPos () {
+    public Vector2 getScreenPos() {
         return screenPos;
     }
 
-    public void setScreenPos (float x, float y) {
+    public void setScreenPos(float x, float y) {
         this.screenPos.set(x, y);
     }
 
-    public FileHandle getFileHandle () {
+    public FileHandle getFileHandle() {
         return fileHandle;
     }
 
-    public void setFileHandle (FileHandle fileHandle) {
+    public void setFileHandle(FileHandle fileHandle) {
         this.fileHandle = fileHandle;
     }
 }

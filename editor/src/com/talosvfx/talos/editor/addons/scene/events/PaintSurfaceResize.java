@@ -6,6 +6,7 @@ import com.talosvfx.talos.runtime.scene.components.PaintSurfaceComponent;
 public class PaintSurfaceResize implements TalosEvent {
 
     public PaintSurfaceComponent component;
+
     @Override
     public void reset() {
         component = null;

@@ -1,11 +1,25 @@
 package com.talosvfx.talos.editor.nodes.widgets;
 
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.EventListener;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.FocusListener;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.CharArray;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.Predicate;
+import com.badlogic.gdx.utils.XmlReader;
 import com.talosvfx.talos.editor.addons.scene.SceneEditorWorkspace;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.nodes.RoutineExecuteNodeWidget;
 import com.talosvfx.talos.editor.addons.scene.widgets.GameObjectListPopup;
@@ -22,14 +36,14 @@ import com.talosvfx.talos.runtime.scene.Scene;
 public class GOSelectionWidget extends AbstractWidget<String> {
 
     // label widget, default mode
-    private Table GOsLabelDefaultModeTable;
+    private final Table GOsLabelDefaultModeTable;
     private LabelWithZoom GOsNameLabel;
     private LabelWithZoom typeLabel;
     // textField widget, edit mode
-    private Table GOsLabelEditingModeTable;
+    private final Table GOsLabelEditingModeTable;
     private TextField GOsNameTextField;
     // connect two modes
-    private Stack currentModeWrapper;
+    private final Stack currentModeWrapper;
 
     private Button selectGOButton;
 
@@ -41,7 +55,7 @@ public class GOSelectionWidget extends AbstractWidget<String> {
     private EventListener stageListener;
 
     // go selection widget
-    private Predicate<FilteredTree.Node<GameObject>> filter;
+    private final Predicate<FilteredTree.Node<GameObject>> filter;
 
     // data
     private String value;
@@ -53,11 +67,11 @@ public class GOSelectionWidget extends AbstractWidget<String> {
         super();
 
         filter = new Predicate<FilteredTree.Node<GameObject>>() {
-			@Override
-			public boolean evaluate (FilteredTree.Node<GameObject> node) {
-				return true;
-			}
-		};
+            @Override
+            public boolean evaluate(FilteredTree.Node<GameObject> node) {
+                return true;
+            }
+        };
 
         GOsLabelDefaultModeTable = new Table();
         GOsLabelEditingModeTable = new Table();
@@ -65,7 +79,7 @@ public class GOSelectionWidget extends AbstractWidget<String> {
     }
 
     @Override
-    public void init (Skin skin) {
+    public void init(Skin skin) {
         super.init(skin);
 
         typeLabel = new LabelWithZoom("Target", skin);
@@ -103,7 +117,7 @@ public class GOSelectionWidget extends AbstractWidget<String> {
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 super.exit(event, x, y, pointer, toActor);
                 isHover = false;
-                if(pointer == -1) {
+                if (pointer == -1) {
                     setBgs();
                 }
             }
@@ -125,7 +139,7 @@ public class GOSelectionWidget extends AbstractWidget<String> {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
-                if(!dragged) {
+                if (!dragged) {
                     showEditMode();
                 }
             }
@@ -134,26 +148,26 @@ public class GOSelectionWidget extends AbstractWidget<String> {
         GOsNameTextField.addListener(new InputListener() {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
-            if (SceneEditorWorkspace.isEnterPressed(keycode)) {
-                hideEditMode();
-            }
+                if (SceneEditorWorkspace.isEnterPressed(keycode)) {
+                    hideEditMode();
+                }
 
-            return super.keyDown(event, keycode);
+                return super.keyDown(event, keycode);
             }
         });
 
         GOsNameTextField.addListener(new FocusListener() {
             @Override
             public void keyboardFocusChanged(FocusEvent event, Actor actor, boolean focused) {
-            super.keyboardFocusChanged(event, actor, focused);
-            if(!focused) {
-                hideEditMode();
-            }
+                super.keyboardFocusChanged(event, actor, focused);
+                if (!focused) {
+                    hideEditMode();
+                }
             }
         });
 
         stageListener = new InputListener() {
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 Vector2 tmpVec = new Vector2();
                 tmpVec.set(x, y);
                 GOSelectionWidget.this.stageToLocalCoordinates(tmpVec);
@@ -169,9 +183,9 @@ public class GOSelectionWidget extends AbstractWidget<String> {
         };
 
         selectGOButton.addListener(new ClickListener() {
-			@Override
-			public void clicked (InputEvent event, float x, float y) {
-				Vector2 pos = new Vector2(selectGOButton.getWidth() / 2f, selectGOButton.getHeight() / 2f);
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Vector2 pos = new Vector2(selectGOButton.getWidth() / 2f, selectGOButton.getHeight() / 2f);
                 selectGOButton.localToStageCoordinates(pos);
 
                 GameAssetWidget assetWidget = (GameAssetWidget) routineExecuteNodeWidget.getWidget("scene");
@@ -185,9 +199,9 @@ public class GOSelectionWidget extends AbstractWidget<String> {
                 GameObject rootGO = sceneAsset.getResource().root.getSelfObject();
                 gameObjectListPopup.showPopup(getStage(), rootGO, pos, filter, new FilteredTree.ItemListener<GameObject>() {
 
-					@Override
-					public void selected (FilteredTree.Node<GameObject> node) {
-						GameObject gameObject = node.getObject();
+                    @Override
+                    public void selected(FilteredTree.Node<GameObject> node) {
+                        GameObject gameObject = node.getObject();
 
                         if (gameObject == rootGO) {
                             return;
@@ -206,12 +220,11 @@ public class GOSelectionWidget extends AbstractWidget<String> {
 
                         setValue(path.toString(), true);
 
-						gameObjectListPopup.remove();
-					}
-				});
-
-			}
-		});
+                        gameObjectListPopup.remove();
+                    }
+                });
+            }
+        });
     }
 
     private void setBgs() {
@@ -233,7 +246,7 @@ public class GOSelectionWidget extends AbstractWidget<String> {
             getStage().getRoot().addCaptureListener(stageListener);
             stageRef = getStage();
         } else {
-            if(stageRef != null) {
+            if (stageRef != null) {
                 stageRef.getRoot().removeCaptureListener(stageListener);
                 stageRef = null;
             }
@@ -241,7 +254,7 @@ public class GOSelectionWidget extends AbstractWidget<String> {
     }
 
     private void showEditMode() {
-        if(getStage() == null) return;
+        if (getStage() == null) return;
 
         GOsLabelDefaultModeTable.setVisible(false);
         GOsLabelEditingModeTable.setVisible(true);
@@ -274,10 +287,6 @@ public class GOSelectionWidget extends AbstractWidget<String> {
         GOsNameLabel.setText(name);
     }
 
-    public void setValue(String text) {
-        setValue(text, isChanged(text));
-    }
-
     public void setRoutineExecuteNodeWidget(RoutineExecuteNodeWidget routineExecuteNodeWidget) {
         this.routineExecuteNodeWidget = routineExecuteNodeWidget;
     }
@@ -304,17 +313,21 @@ public class GOSelectionWidget extends AbstractWidget<String> {
     }
 
     @Override
-    public String getValue () {
+    public String getValue() {
         return value;
     }
 
+    public void setValue(String text) {
+        setValue(text, isChanged(text));
+    }
+
     @Override
-    public void read (Json json, JsonValue jsonValue) {
+    public void read(Json json, JsonValue jsonValue) {
         setValue(jsonValue.asString(), false);
     }
 
     @Override
-    public void write (Json json, String name) {
+    public void write(Json json, String name) {
         json.writeValue(name, getValue());
     }
 }

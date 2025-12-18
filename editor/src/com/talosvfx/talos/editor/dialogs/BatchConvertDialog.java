@@ -19,11 +19,15 @@ package com.talosvfx.talos.editor.dialogs;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.List;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.kotcrab.vis.ui.widget.VisWindow;
-import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.filesystem.FileChooserListener;
 import com.talosvfx.talos.editor.filesystem.FileSystemInteraction;
 
@@ -59,7 +63,6 @@ public class BatchConvertDialog extends VisWindow {
         centerWindow();
 
         initContent();
-
     }
 
     private void initContent() {
@@ -126,7 +129,7 @@ public class BatchConvertDialog extends VisWindow {
     private void showFolderSelect(final TextField pathField) {
         FileSystemInteraction.instance().showFolderChooser(new FileChooserListener() {
             @Override
-            public void selected (Array<FileHandle> files) {
+            public void selected(Array<FileHandle> files) {
                 pathField.setText(files.get(0).path());
             }
         });
@@ -141,7 +144,7 @@ public class BatchConvertDialog extends VisWindow {
 
         FileHandle input = Gdx.files.absolute(inputPath);
 
-        if(input.isDirectory() && input.exists()) {
+        if (input.isDirectory() && input.exists()) {
             traverseFolder(input, fileList, extension, 0);
         }
 
@@ -153,9 +156,9 @@ public class BatchConvertDialog extends VisWindow {
     public void act(float delta) {
         super.act(delta);
 
-        if(fileList.size == 0) isConverting = false;
+        if (fileList.size == 0) isConverting = false;
 
-        if(isConverting) {
+        if (isConverting) {
             String path = fileList.pop();
 
             FileHandle fileHandle = Gdx.files.absolute(path);
@@ -170,10 +173,10 @@ public class BatchConvertDialog extends VisWindow {
         if (inputPathField.getText().length() == fileHandle.parent().path().length()) {
             subPath = File.separator;
         } else {
-             subPath = fileHandle.parent().path().substring(inputPathField.getText().length() + 1) + File.separator;
+            subPath = fileHandle.parent().path().substring(inputPathField.getText().length() + 1) + File.separator;
         }
-        String projectPath = outputPath + File.separator + "projects" +  File.separator + subPath + fileHandle.nameWithoutExtension() + ".tls";
-        String runtimePath = outputPath + File.separator + "runtime" +  File.separator + subPath + fileHandle.nameWithoutExtension() + ".p";
+        String projectPath = outputPath + File.separator + "projects" + File.separator + subPath + fileHandle.nameWithoutExtension() + ".tls";
+        String runtimePath = outputPath + File.separator + "runtime" + File.separator + subPath + fileHandle.nameWithoutExtension() + ".p";
 
         FileHandle projectDestination = Gdx.files.absolute(projectPath);
         FileHandle exportDestination = Gdx.files.absolute(runtimePath);
@@ -194,18 +197,18 @@ public class BatchConvertDialog extends VisWindow {
 
         logItems.add(new Label(text, getSkin()));
         logArea.setItems(logItems);
-        Label lbl = logArea.getItems().get(logArea.getItems().size-1);
+        Label lbl = logArea.getItems().get(logArea.getItems().size - 1);
         logArea.setSelected(lbl);
         scrollPane.layout();
         scrollPane.scrollTo(0, 0, 0, 0);
     }
 
     private void traverseFolder(FileHandle folder, Array<String> fileList, String extension, int depth) {
-        for(FileHandle file : folder.list()) {
-            if(file.isDirectory() && depth < 10) {
+        for (FileHandle file : folder.list()) {
+            if (file.isDirectory() && depth < 10) {
                 traverseFolder(file, fileList, extension, depth + 1);
             }
-            if(file.extension().equals(extension)) {
+            if (file.extension().equals(extension)) {
                 fileList.add(file.path());
             }
         }

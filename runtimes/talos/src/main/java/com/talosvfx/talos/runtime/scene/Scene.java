@@ -5,9 +5,10 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 import com.talosvfx.talos.runtime.utils.TempHackUtil;
+
 import lombok.Getter;
 
-public class Scene extends SavableContainer  {
+public class Scene extends SavableContainer {
 
     protected transient String name;
     private transient String talosIdentifier;
@@ -20,18 +21,18 @@ public class Scene extends SavableContainer  {
     }
 
     @Override
-    public String getName () {
+    public String getName() {
         return name;
     }
 
     @Override
-    public void setName (String name) {
+    public void setName(String name) {
         this.name = name;
         root.setName(name);
     }
 
     @Override
-    protected void writeData (Json json) {
+    protected void writeData(Json json) {
         json.writeValue("name", getName());
         json.writeValue("optimized", optimized);
         super.writeData(json);
@@ -45,16 +46,15 @@ public class Scene extends SavableContainer  {
         //Shit is nasty, we bypass normal json idk why
         JsonValue jsonValue = new JsonReader().parse(TempHackUtil.hackIt(handle.readString()));
         optimized = jsonValue.getBoolean("optimized", false);
-
     }
 
     @Override
-    public String getTalosIdentifier () {
-       return talosIdentifier;
+    public String getTalosIdentifier() {
+        return talosIdentifier;
     }
 
     @Override
-    public void setTalosIdentifier (String identifier) {
+    public void setTalosIdentifier(String identifier) {
         this.talosIdentifier = identifier;
     }
 }

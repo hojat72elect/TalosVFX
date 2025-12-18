@@ -25,7 +25,12 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntMap;
@@ -33,17 +38,19 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.kotcrab.vis.ui.FocusManager;
 import com.kotcrab.vis.ui.VisUI;
-import com.kotcrab.vis.ui.widget.*;
+import com.kotcrab.vis.ui.widget.VisTextArea;
+import com.kotcrab.vis.ui.widget.VisTextField;
+import com.kotcrab.vis.ui.widget.VisWindow;
 import com.talosvfx.talos.editor.project2.TalosVFXUtils;
 import com.talosvfx.talos.editor.widgets.ui.DynamicTable;
 import com.talosvfx.talos.editor.widgets.ui.EditableLabel;
 import com.talosvfx.talos.editor.widgets.ui.ModuleBoardWidget;
-import com.talosvfx.talos.runtime.vfx.Slot;
-import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
-import com.talosvfx.talos.runtime.vfx.values.NumericalValue;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.LabelWithZoom;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.SelectBoxWithZoom;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.TextFieldWithZoom;
+import com.talosvfx.talos.runtime.vfx.Slot;
+import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
+import com.talosvfx.talos.runtime.vfx.values.NumericalValue;
 
 public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow implements Json.Serializable {
 
@@ -59,11 +66,11 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
     private int hoveredSlot = -1;
     private boolean hoveredSlotIsInput = false;
 
-    private Vector2 tmp = new Vector2();
-    private Vector2 tmp2 = new Vector2();
+    private final Vector2 tmp = new Vector2();
+    private final Vector2 tmp2 = new Vector2();
 
-    private IntMap<String> leftSlotNames = new IntMap<>();
-    private IntMap<String> rightSlotNames = new IntMap<>();
+    private final IntMap<String> leftSlotNames = new IntMap<>();
+    private final IntMap<String> rightSlotNames = new IntMap<>();
 
     private int id;
 
@@ -72,65 +79,21 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
     private int lastAttachedTargetSlot;
     private ModuleWrapper lastAttachedWrapper;
 
-    private EditableLabel titleLabel;
+    private final EditableLabel titleLabel;
     private String titleOverride = "";
-
-    public void setSelectionState(boolean selected) {
-        if(isSelected != selected) {
-            if(selected) {
-                wrapperSelected();
-            } else {
-                wrapperDeselected();
-            }
-        }
-        isSelected = selected;
-    }
-
-    protected void wrapperSelected() {
-
-    }
-
-    protected void wrapperDeselected() {
-
-    }
-
-    /**
-     * Called only when creating a new Module, not when deserializing
-     */
-    public void setModuleToDefaults () {
-
-    }
-
-    public void onGraphSet () {
-
-    }
-
-    class SlotRowData {
-        String title;
-        int key;
-
-        public SlotRowData(String title, int key) {
-            this.title = title;
-            this.key = key;
-        }
-    }
-
-    public void setTitleText(String text) {
-        titleLabel.setText(text);
-    }
 
     public ModuleWrapper() {
         super("", "panel");
 
         // change title label
-        Cell cell = ((Table)getTitleLabel().getParent()).getCell(getTitleLabel());
+        Cell cell = ((Table) getTitleLabel().getParent()).getCell(getTitleLabel());
         titleLabel = new EditableLabel(getTitleLabel().getText().toString(), getSkin());
         cell.setActor(titleLabel);
 
         titleLabel.setListener(new EditableLabel.EditableLabelChangeListener() {
 
             @Override
-            public void editModeStarted () {
+            public void editModeStarted() {
                 titleLabel.setText(constructTitle(false));
             }
 
@@ -172,10 +135,10 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
 
         addCaptureListener(new InputListener() {
 
-            Vector2 tmp = new Vector2();
-            Vector2 prev = new Vector2();
+            final Vector2 tmp = new Vector2();
+            final Vector2 prev = new Vector2();
 
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 prev.set(x, y);
                 ModuleWrapper.this.localToStageCoordinates(prev);
                 moduleBoardWidget.wrapperClicked(ModuleWrapper.this);
@@ -198,7 +161,40 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
                 moduleBoardWidget.wrapperClickedUp(ModuleWrapper.this);
             }
         });
+    }
 
+    public void setSelectionState(boolean selected) {
+        if (isSelected != selected) {
+            if (selected) {
+                wrapperSelected();
+            } else {
+                wrapperDeselected();
+            }
+        }
+        isSelected = selected;
+    }
+
+    protected void wrapperSelected() {
+
+    }
+
+    protected void wrapperDeselected() {
+
+    }
+
+    /**
+     * Called only when creating a new Module, not when deserializing
+     */
+    public void setModuleToDefaults() {
+
+    }
+
+    public void onGraphSet() {
+
+    }
+
+    public void setTitleText(String text) {
+        titleLabel.setText(text);
     }
 
     @Override
@@ -214,7 +210,7 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
     }
 
     protected void addSeparator(boolean input) {
-        if(input) {
+        if (input) {
             leftWrapper.addSeparator();
         } else {
             leftWrapper.addSeparator();
@@ -222,8 +218,8 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
     }
 
     protected Label getLabelFromCell(Cell cell) {
-        for(Actor actor: ((Table)cell.getActor()).getChildren()) {
-            if(actor instanceof Label) {
+        for (Actor actor : ((Table) cell.getActor()).getChildren()) {
+            if (actor instanceof Label) {
                 return (Label) actor;
             }
         }
@@ -274,7 +270,6 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
         return cell;
     }
 
-
     protected VisTextField addTextField(String title) {
         Table slotRow = new Table();
         VisTextField textField = new VisTextField(title);
@@ -291,7 +286,7 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
         SelectBoxWithZoom selectBox = new SelectBoxWithZoom<>(VisUI.getSkin());
         selectBox.addListener(new InputListener() {
             @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 FocusManager.resetFocus(getStage());
                 return false;
             }
@@ -310,9 +305,9 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
         return addSelectBox(values.toArray());
     }
 
-    protected void  configureNodeActions(final Image icon, final int key, final boolean isInput) {
+    protected void configureNodeActions(final Image icon, final int key, final boolean isInput) {
 
-        if(isInput) {
+        if (isInput) {
             inputSlotMap.put(key, icon);
         } else {
             outputSlotMap.put(key, icon);
@@ -320,8 +315,8 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
 
         icon.addListener(new ClickListener() {
 
-            private Vector2 tmp = new Vector2();
-            private Vector2 tmp2 = new Vector2();
+            private final Vector2 tmp = new Vector2();
+            private final Vector2 tmp2 = new Vector2();
 
             private ModuleWrapper currentWrapper;
 
@@ -337,7 +332,7 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
                 currentWrapper = ModuleWrapper.this;
                 tmp.set(x, y);
                 icon.localToStageCoordinates(tmp);
-                tmp2.set(icon.getWidth()/2f, icon.getHeight()/2f);
+                tmp2.set(icon.getWidth() / 2f, icon.getHeight() / 2f);
                 icon.localToStageCoordinates(tmp2);
 
                 currentSlot = key;
@@ -346,7 +341,7 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
 
                 ModuleBoardWidget.NodeConnection connection = moduleBoardWidget.findConnection(ModuleWrapper.this, isInput, key);
 
-                if(isInput && connection!= null) {
+                if (isInput && connection != null) {
                     moduleBoardWidget.removeConnection(connection, true);
                     moduleBoardWidget.ccCurrentlyRemoving = true;
 
@@ -379,7 +374,7 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
                 moduleBoardWidget.connectNodeIfCan(currentWrapper, currentSlot, currentIsInput);
                 moduleBoardWidget.ccCurrentlyRemoving = false;
 
-                if(!dragged) {
+                if (!dragged) {
                     // clicked
                     slotClicked(currentSlot, currentIsInput);
                 }
@@ -398,19 +393,18 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
                 hoveredSlot = -1;
             }
         });
-
     }
 
     public void slotClicked(int slotId, boolean isInput) {
 
         Slot slot = module.getInputSlot(slotId);
-        if(!isInput) {
+        if (!isInput) {
             slot = module.getOutputSlot(slotId);
         }
 
-        if(slot == null) return;
+        if (slot == null) return;
 
-        if(slot.isInput()) {
+        if (slot.isInput()) {
             Class<? extends AbstractModule> clazz = getSlotsPreferredModule(slot);
 
             if (clazz != null) {
@@ -447,31 +441,26 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
         super.draw(batch, parentAlpha);
     }
 
-    public void setModule(T module) {
-        this.module = module;
-        setTitleText(constructTitle());
-    }
-
     protected String getOverrideTitle() {
         return null;
     }
 
-    public String constructTitle () {
+    public String constructTitle() {
         return constructTitle(false);
     }
 
     public String constructTitle(boolean appendModule) {
 
         String override = getOverrideTitle();
-        if(override != null) {
+        if (override != null) {
             return override;
         }
 
         String moduleName = TalosVFXUtils.moduleNames.get(this.getClass());
 
-        if(!titleOverride.equals("")) {
+        if (!titleOverride.equals("")) {
             if (appendModule) {
-                return titleOverride  + "\n[" + moduleName + "]";
+                return titleOverride + "\n[" + moduleName + "]";
             } else {
                 return titleOverride;
             }
@@ -495,14 +484,19 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
         return module;
     }
 
+    public void setModule(T module) {
+        this.module = module;
+        setTitleText(constructTitle());
+    }
+
     public void setBoard(ModuleBoardWidget moduleBoardWidget) {
         this.moduleBoardWidget = moduleBoardWidget;
     }
 
     public boolean findHoveredSlot(int[] result) {
-        if(hoveredSlot >= 0) {
+        if (hoveredSlot >= 0) {
             result[0] = hoveredSlot;
-            if(hoveredSlotIsInput) {
+            if (hoveredSlotIsInput) {
                 result[1] = 0;
             } else {
                 result[1] = 1;
@@ -517,29 +511,29 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
     }
 
     public void getInputSlotPos(int slot, Vector2 tmp) {
-        if(inputSlotMap.get(slot) == null) return;
-        tmp.set(inputSlotMap.get(slot).getWidth()/2f, inputSlotMap.get(slot).getHeight()/2f);
+        if (inputSlotMap.get(slot) == null) return;
+        tmp.set(inputSlotMap.get(slot).getWidth() / 2f, inputSlotMap.get(slot).getHeight() / 2f);
         inputSlotMap.get(slot).localToStageCoordinates(tmp);
     }
 
     public void getOutputSlotPos(int slot, Vector2 tmp) {
-        if(outputSlotMap.get(slot) == null) return;
-        tmp.set(outputSlotMap.get(slot).getWidth()/2f, outputSlotMap.get(slot).getHeight()/2f);
+        if (outputSlotMap.get(slot) == null) return;
+        tmp.set(outputSlotMap.get(slot).getWidth() / 2f, outputSlotMap.get(slot).getHeight() / 2f);
         outputSlotMap.get(slot).localToStageCoordinates(tmp);
     }
 
     public void setSlotActive(int slotTo, boolean isInput) {
-        if(isInput) {
-            if(inputSlotMap.get(slotTo) == null) return;
+        if (isInput) {
+            if (inputSlotMap.get(slotTo) == null) return;
             inputSlotMap.get(slotTo).setDrawable(getSkin().getDrawable("node-connector-on"));
         } else {
-            if(outputSlotMap.get(slotTo) == null) return;
+            if (outputSlotMap.get(slotTo) == null) return;
             outputSlotMap.get(slotTo).setDrawable(getSkin().getDrawable("node-connector-on"));
         }
     }
 
     public void setSlotInactive(int slotTo, boolean isInput) {
-        if(isInput) {
+        if (isInput) {
             inputSlotMap.get(slotTo).setDrawable(getSkin().getDrawable("node-connector-off"));
         } else {
             outputSlotMap.get(slotTo).setDrawable(getSkin().getDrawable("node-connector-off"));
@@ -557,7 +551,7 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
         return addInputSlotWithTextField(title, key, size, false);
     }
 
-    protected VisTextArea addInputSlotWithTextArea (String title, int key) {
+    protected VisTextArea addInputSlotWithTextArea(String title, int key) {
         Table slotRow = new Table();
         Image icon = new Image(getSkin().getDrawable("node-connector-off"));
         LabelWithZoom label = new LabelWithZoom(title, VisUI.getSkin(), "small");
@@ -586,7 +580,7 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
         slotRow.add(textField).right().width(size);
 
         Cell cell = leftWrapper.add(slotRow).pad(3).expandX().left();
-        if(grow) {
+        if (grow) {
             cell.growX();
         }
 
@@ -597,7 +591,7 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
 
-                if(textField.getSelection().length() == 0) {
+                if (textField.getSelection().length() == 0) {
                     textField.selectAll();
                 }
             }
@@ -638,12 +632,9 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
         return id;
     }
 
-
     public void setId(int id) {
         this.id = id;
     }
-
-
 
     public void fileDrop(String[] paths, float x, float y) {
         // do nothing
@@ -657,8 +648,8 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
         // find the flavour
         Slot mySlotObject = getModule().getOutputSlot(mySlot);
         Slot toSlotObject = moduleWrapper.getModule().getInputSlot(targetSlot);
-        if(mySlotObject == null || toSlotObject == null) return;
-        if(mySlotObject.getValue() instanceof NumericalValue && toSlotObject.getValue() instanceof NumericalValue) {
+        if (mySlotObject == null || toSlotObject == null) return;
+        if (mySlotObject.getValue() instanceof NumericalValue && toSlotObject.getValue() instanceof NumericalValue) {
             NumericalValue myValue = (NumericalValue) mySlotObject.getValue();
             NumericalValue toValue = (NumericalValue) toSlotObject.getValue();
 
@@ -676,35 +667,45 @@ public abstract class ModuleWrapper<T extends AbstractModule> extends VisWindow 
     }
 
     @Override
-    public void write (Json json) {
-		json.writeValue("id", getId());
-		if(!titleOverride.equals("")) {
+    public void write(Json json) {
+        json.writeValue("id", getId());
+        if (!titleOverride.equals("")) {
             json.writeValue("titleOverride", titleOverride);
         }
-		json.writeValue("x", getX());
-		json.writeValue("y", getY());
+        json.writeValue("x", getX());
+        json.writeValue("y", getY());
 
-		json.writeObjectStart("module", module.getClass(), module.getClass());
-		json.writeValue("data", module, null);
-		json.writeObjectEnd();
+        json.writeObjectStart("module", module.getClass(), module.getClass());
+        json.writeValue("data", module, null);
+        json.writeObjectEnd();
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         String talosIdentifier = jsonData.getString("talosIdentifier", "default");
 
-		setId(jsonData.getInt("id"));
-		setX(jsonData.getFloat("x"));
- 		setY(jsonData.getFloat("y"));
- 		titleOverride = jsonData.getString("titleOverride", "");
+        setId(jsonData.getInt("id"));
+        setX(jsonData.getFloat("x"));
+        setY(jsonData.getFloat("y"));
+        titleOverride = jsonData.getString("titleOverride", "");
 
         JsonValue moduleData = jsonData.get("module").get("data");
         moduleData.addChild("talosIdentifier", new JsonValue(talosIdentifier));
 
-        module = (T)json.readValue(AbstractModule.class, moduleData);
+        module = (T) json.readValue(AbstractModule.class, moduleData);
         //TODO: this has to be create through module graph to go with properr creation channels
 
         setModule(module);
+    }
+
+    class SlotRowData {
+        String title;
+        int key;
+
+        public SlotRowData(String title, int key) {
+            this.title = title;
+            this.key = key;
+        }
     }
 }
 

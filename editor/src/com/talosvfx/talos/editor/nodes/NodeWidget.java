@@ -9,73 +9,75 @@ import com.badlogic.gdx.scenes.scene2d.ui.Stack;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.XmlReader;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
-import com.talosvfx.talos.editor.nodes.widgets.*;
+import com.talosvfx.talos.editor.nodes.widgets.AbstractWidget;
+import com.talosvfx.talos.editor.nodes.widgets.ButtonWidget;
+import com.talosvfx.talos.editor.nodes.widgets.CheckBoxWidget;
+import com.talosvfx.talos.editor.nodes.widgets.ColorWidget;
+import com.talosvfx.talos.editor.nodes.widgets.GOSelectionWidget;
+import com.talosvfx.talos.editor.nodes.widgets.GameAssetWidget;
+import com.talosvfx.talos.editor.nodes.widgets.LabelWidget;
+import com.talosvfx.talos.editor.nodes.widgets.SelectWidget;
+import com.talosvfx.talos.editor.nodes.widgets.TextValueWidget;
+import com.talosvfx.talos.editor.nodes.widgets.ValueWidget;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.events.dynamicnodestage.NodeDataModifiedEvent;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.IPropertyProvider;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.PropertyWidget;
 import com.talosvfx.talos.editor.widgets.ui.EditableLabel;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
-
 import com.talosvfx.talos.runtime.utils.Supplier;
 
 public abstract class NodeWidget extends EmptyWindow implements Json.Serializable, IPropertyProvider {
 
+    private final ObjectMap<String, Class<? extends AbstractWidget>> widgetClassMap = new ObjectMap<>();
+    public NodeBoard nodeBoard;
+    public ObjectMap<String, AbstractWidget> widgetMap = new ObjectMap();
     protected EditableLabel title;
-
     protected ObjectMap<String, Table> inputSlotMap = new ObjectMap<>();
     protected ObjectMap<String, Table> outputSlotMap = new ObjectMap<>();
-
-    public NodeBoard nodeBoard;
-
-    private String hoveredSlot = null;
-    private boolean hoveredSlotIsInput = false;
-    private Vector2 tmp = new Vector2();
-    private Vector2 tmp2 = new Vector2();
-    private NodeWidget lastAttachedNode;
-
     protected Array<String> inputSlots = new Array();
     protected Array<String> outputSlots = new Array();
-
-    public ObjectMap<String, AbstractWidget> widgetMap = new ObjectMap();
-
     protected ObjectMap<String, String> typeMap = new ObjectMap();
     protected ObjectMap<String, String> defaultsMap = new ObjectMap();
-
     protected ObjectMap<String, Array<Connection>> inputs = new ObjectMap();
     protected ObjectMap<String, Array<Connection>> outputs = new ObjectMap();
-    private int id = 0;
-    private int uniqueId = 0;
-
-    private final ObjectMap<String, Class<? extends AbstractWidget>> widgetClassMap = new ObjectMap<>();
-
     protected Table widgetContainer = new Table();
     protected Table headerTable;
+    private String hoveredSlot = null;
+    private boolean hoveredSlotIsInput = false;
+    private final Vector2 tmp = new Vector2();
+    private final Vector2 tmp2 = new Vector2();
+    private NodeWidget lastAttachedNode;
+    private int id = 0;
+    private int uniqueId = 0;
     private String nodeName;
-    private ObjectMap<String, Table> containerMap = new ObjectMap<>();
+    private final ObjectMap<String, Table> containerMap = new ObjectMap<>();
 
-    public void graphUpdated () {
+    public void graphUpdated() {
 
-    }
-
-    public void setId (int id) {
-        this.id = id;
     }
 
     public int getId() {
         return id;
     }
 
-    public void setUniqueId (int uniqueId) {
-        this.uniqueId = uniqueId;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public int getUniqueId() {
         return uniqueId;
+    }
+
+    public void setUniqueId(int uniqueId) {
+        this.uniqueId = uniqueId;
     }
 
     public void setSelected(boolean selected) {
@@ -96,25 +98,6 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
 
     public void resetNode() {
 
-    }
-
-    public class Connection {
-        public String targetSlot;
-        public NodeWidget targetNode;
-
-        public Connection(NodeWidget targetNode, String targetSlot) {
-            this.targetNode = targetNode;
-            this.targetSlot = targetSlot;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            Connection con = (Connection) obj;
-
-            if(con.targetSlot.equals(targetSlot) && con.targetNode == this.targetNode) return true;
-
-            return false;
-        }
     }
 
     private void initMaps() {
@@ -171,17 +154,17 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
 
         addListener(new InputListener() {
 
-            Vector2 tmp = new Vector2();
-            Vector2 prev = new Vector2();
+            final Vector2 tmp = new Vector2();
+            final Vector2 prev = new Vector2();
 
-            Vector2 start = new Vector2();
+            final Vector2 start = new Vector2();
             boolean hasMoved = false;
 
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 prev.set(x, y);
                 start.set(getX(), getY());
                 NodeWidget.this.localToStageCoordinates(prev);
-                if(nodeBoard != null) {
+                if (nodeBoard != null) {
                     nodeBoard.nodeClicked(NodeWidget.this);
                 }
                 return true;
@@ -192,7 +175,7 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
                 tmp.set(x, y);
                 NodeWidget.this.localToStageCoordinates(tmp);
                 super.touchDragged(event, x, y, pointer);
-                if(nodeBoard != null) {
+                if (nodeBoard != null) {
                     nodeBoard.wrapperMovedBy(NodeWidget.this, tmp.x - prev.x, tmp.y - prev.y);
                 }
 
@@ -206,9 +189,9 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 super.touchUp(event, x, y, pointer, button);
-                if(nodeBoard != null) {
+                if (nodeBoard != null) {
                     // if we clicked up but not anymore on top of that node then don't bother
-                    if(NodeWidget.this.hit(x, y, true) != null) {
+                    if (NodeWidget.this.hit(x, y, true) != null) {
                         nodeBoard.nodeClickedUp(NodeWidget.this, hasMoved);
                     }
 
@@ -238,16 +221,15 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
     }
 
     @Override
-    public float getTitlePrefWidth () {
-        if(title == null) return 0;
+    public float getTitlePrefWidth() {
+        if (title == null) return 0;
         return title.getPrefWidth();
     }
 
     @Override
-    public float getDragPadTop () {
+    public float getDragPadTop() {
         return 32 + 15;
     }
-
 
     protected void addConnection(AbstractWidget widget, String variableName, boolean isInput) {
         Table portTable = widget.addPort(isInput);
@@ -261,9 +243,8 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
         }
     }
 
-
-    private void configureNodeActions (Table port, String key, boolean isInput) {
-        if(isInput) {
+    private void configureNodeActions(Table port, String key, boolean isInput) {
+        if (isInput) {
             inputSlotMap.put(key, port);
         } else {
             outputSlotMap.put(key, port);
@@ -271,8 +252,8 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
 
         port.addListener(new ClickListener() {
 
-            private Vector2 tmp = new Vector2();
-            private Vector2 tmp2 = new Vector2();
+            private final Vector2 tmp = new Vector2();
+            private final Vector2 tmp2 = new Vector2();
 
             private NodeWidget currentWrapper;
 
@@ -288,7 +269,7 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
                 currentWrapper = NodeWidget.this;
                 tmp.set(x, y);
                 port.localToStageCoordinates(tmp);
-                tmp2.set(port.getWidth()/2f, port.getHeight()/2f);
+                tmp2.set(port.getWidth() / 2f, port.getHeight() / 2f);
                 port.localToStageCoordinates(tmp2);
 
                 currentSlot = key;
@@ -297,7 +278,7 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
 
                 NodeBoard.NodeConnection connection = nodeBoard.findConnection(NodeWidget.this, isInput, key);
 
-                if(isInput && connection!= null) {
+                if (isInput && connection != null) {
                     nodeBoard.removeConnection(connection, true);
                     nodeBoard.ccCurrentlyRemoving = true;
 
@@ -330,7 +311,7 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
                 nodeBoard.connectNodeIfCan(currentWrapper, currentSlot, currentIsInput);
                 nodeBoard.ccCurrentlyRemoving = false;
 
-                if(!dragged) {
+                if (!dragged) {
                     // clicked
                     slotClicked(currentSlot, currentIsInput);
                 }
@@ -352,70 +333,72 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
     }
 
     public void getInputSlotPos(String id, Vector2 tmp) {
-        if(inputSlotMap.get(id) == null) return;
-        tmp.set(inputSlotMap.get(id).getWidth()/2f, inputSlotMap.get(id).getHeight()/2f);
+        if (inputSlotMap.get(id) == null) return;
+        tmp.set(inputSlotMap.get(id).getWidth() / 2f, inputSlotMap.get(id).getHeight() / 2f);
         inputSlotMap.get(id).localToStageCoordinates(tmp);
     }
 
     public void getOutputSlotPos(String id, Vector2 tmp) {
-        if(outputSlotMap.get(id) == null) return;
-        tmp.set(outputSlotMap.get(id).getWidth()/2f, outputSlotMap.get(id).getHeight()/2f);
+        if (outputSlotMap.get(id) == null) return;
+        tmp.set(outputSlotMap.get(id).getWidth() / 2f, outputSlotMap.get(id).getHeight() / 2f);
         outputSlotMap.get(id).localToStageCoordinates(tmp);
     }
 
     public void setSlotActive(String slotTo, boolean isInput) {
-        if(isInput) {
-            if(inputSlotMap.get(slotTo) == null) return;
+        if (isInput) {
+            if (inputSlotMap.get(slotTo) == null) {
+            }
             //inputSlotMap.get(slotTo).setDrawable(getSkin().getDrawable("node-connector-on"));
         } else {
-            if(outputSlotMap.get(slotTo) == null) return;
+            if (outputSlotMap.get(slotTo) == null) {
+            }
             //outputSlotMap.get(slotTo).setDrawable(getSkin().getDrawable("node-connector-on"));
         }
     }
 
-    public void setSlotConnectionInactive (NodeBoard.NodeConnection nodeConnection, boolean isInput) {
-        if(isInput) {
+    public void setSlotConnectionInactive(NodeBoard.NodeConnection nodeConnection, boolean isInput) {
+        if (isInput) {
             Array<Connection> connections = inputs.get(nodeConnection.toId);
-            if(connections == null) {
+            if (connections == null) {
                 return;
             }
             Connection deleteConnection = null;
-            for(Connection connection : connections) {
+            for (Connection connection : connections) {
                 if (connection.targetSlot.equals(nodeConnection.fromId) && connection.targetNode == nodeConnection.fromNode) {
                     deleteConnection = connection;
                     break;
                 }
             }
-            if(deleteConnection != null) {
+            if (deleteConnection != null) {
                 connections.removeValue(deleteConnection, true);
             }
         } else {
             Array<Connection> connections = outputs.get(nodeConnection.fromId);
-            if(connections == null) {
+            if (connections == null) {
                 lastAttachedNode = null;
                 return;
             }
             Connection deleteConnection = null;
-            for(Connection connection : connections) {
+            for (Connection connection : connections) {
                 if (connection.targetSlot.equals(nodeConnection.toId) && connection.targetNode == nodeConnection.toNode) {
                     deleteConnection = connection;
                     break;
                 }
             }
-            if(deleteConnection != null) {
+            if (deleteConnection != null) {
                 connections.removeValue(deleteConnection, true);
             }
 
-            if(connections.size == 0) {
+            if (connections.size == 0) {
                 lastAttachedNode = null;
             }
         }
     }
 
     public boolean findHoveredSlot(Object[] result) {
-        if(hoveredSlot != null) {
+        if (hoveredSlot != null) {
             result[0] = hoveredSlot;
-            if(hoveredSlotIsInput) {
+            if (hoveredSlotIsInput) {
                 result[1] = 0;
             } else {
                 result[1] = 1;
@@ -441,7 +424,7 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
         }
 
         Connection connection = new Connection(node, targetSlot);
-        if(!connections.contains(connection, false)) {
+        if (!connections.contains(connection, false)) {
             connections.add(connection);
         }
     }
@@ -454,12 +437,12 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
         }
 
         Connection connection = new Connection(node, targetSlot);
-        if(!connections.contains(connection, false)) {
+        if (!connections.contains(connection, false)) {
             connections.add(connection);
         }
     }
 
-    public Array<String> getInputSlots () {
+    public Array<String> getInputSlots() {
         return inputSlots;
     }
 
@@ -467,7 +450,7 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
         return inputs;
     }
 
-    public Array<String> getOutputSlots () {
+    public Array<String> getOutputSlots() {
         return outputSlots;
     }
 
@@ -478,7 +461,7 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
     protected void addRow(XmlReader.Element row, int index, int count, boolean isGroup, Table customContainer, boolean skipListener) {
         String tagName = row.getName();
 
-        if(tagName.equals("container")) {
+        if (tagName.equals("container")) {
             Table container = new Table();
             containerMap.put(row.getAttribute("name"), container);
             customContainer.add(container).padTop(10).padBottom(1).growX().row();
@@ -488,7 +471,7 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
 
         Class<? extends AbstractWidget> clazz = widgetClassMap.get(tagName);
 
-        if(tagName.equals("button")) {
+        if (tagName.equals("button")) {
             skipListener = true;
         }
 
@@ -499,11 +482,11 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
 
                 widget.loadFromXML(row);
 
-                if(widget instanceof ValueWidget && isGroup) {
+                if (widget instanceof ValueWidget && isGroup) {
                     ValueWidget valueWidget = (ValueWidget) widget;
-                    if(index == 0) {
+                    if (index == 0) {
                         valueWidget.setType(ValueWidget.Type.TOP);
-                    } else if(index == count - 1) {
+                    } else if (index == count - 1) {
                         valueWidget.setType(ValueWidget.Type.BOTTOM);
                     } else {
                         valueWidget.setType(ValueWidget.Type.MID);
@@ -512,7 +495,7 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
 
                 if (isGroup) {
                     float padTop = 0;
-                    if(index == 0) {
+                    if (index == 0) {
                         padTop = 10;
                     }
                     customContainer.add(widget).padTop(padTop).padBottom(1).growX().row();
@@ -527,9 +510,9 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
                 defaultsMap.put(variableName, row.getAttribute("default", "0.0"));
 
                 // does it have a port?
-                if(row.hasAttribute("port")) {
+                if (row.hasAttribute("port")) {
                     String portType = row.getAttribute("port", "input");
-                    if(portType.equals("input")) {
+                    if (portType.equals("input")) {
                         addConnection(widget, variableName, true);
                     } else if (portType.equals("output")) {
                         addConnection(widget, variableName, false);
@@ -537,16 +520,15 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
                 }
 
                 // init listener
-                if(!skipListener) {
+                if (!skipListener) {
                     widget.addListener(new ChangeListener() {
                         @Override
-                        public void changed (ChangeEvent changeEvent, Actor actor) {
+                        public void changed(ChangeEvent changeEvent, Actor actor) {
                             boolean fastChange = widget.isFastChange();
                             reportNodeDataModified(fastChange);
                         }
                     });
                 }
-
             } catch (ReflectionException exception) {
                 exception.printStackTrace();
             }
@@ -555,7 +537,7 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
                 XmlReader.Element group = row;
                 for (int i = 0; i < group.getChildCount(); i++) {
                     XmlReader.Element groupRow = group.getChild(i);
-                    if(groupRow.getName().equals("dynamicValue") || groupRow.getName().equals("value") || groupRow.getName().equals("color") || groupRow.getName().equals("checkbox")) {
+                    if (groupRow.getName().equals("dynamicValue") || groupRow.getName().equals("value") || groupRow.getName().equals("color") || groupRow.getName().equals("checkbox")) {
                         addRow(groupRow, i, group.getChildCount(), true);
                     }
                 }
@@ -594,14 +576,14 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
         return widgetMap.get(key);
     }
 
-    public ObjectMap<String, AbstractWidget> getWidgetMap () {
+    public ObjectMap<String, AbstractWidget> getWidgetMap() {
         return widgetMap;
     }
 
     public ButtonWidget getButton(String key) {
-        if(widgetMap.containsKey(key)) {
+        if (widgetMap.containsKey(key)) {
             AbstractWidget abstractWidget = widgetMap.get(key);
-            if(abstractWidget instanceof ButtonWidget) {
+            if (abstractWidget instanceof ButtonWidget) {
                 return (ButtonWidget) widgetMap.get(key);
             }
         }
@@ -620,18 +602,18 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
         json.writeObjectEnd();
     }
 
-    protected String getNodeName () {
+    protected String getNodeName() {
         return nodeName;
     }
 
     @Override
     public void read(Json json, JsonValue jsonValue) {
-        if(title == null) return;
+        if (title == null) return;
 
         title.setText(jsonValue.getString("title", "Empty"));
         setUniqueId(jsonValue.getInt("id"));
         JsonValue position = jsonValue.get("position");
-        if(position != null) {
+        if (position != null) {
             setX(position.getFloat("x", 0));
             setY(position.getFloat("y", 0));
         } else {
@@ -657,12 +639,12 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
     }
 
     @Override
-    public Array<PropertyWidget> getListOfProperties () {
+    public Array<PropertyWidget> getListOfProperties() {
         Array<PropertyWidget> properties = new Array<>();
 
         com.talosvfx.talos.editor.widgets.propertyWidgets.LabelWidget labelWidget = new com.talosvfx.talos.editor.widgets.propertyWidgets.LabelWidget("Name", new Supplier<String>() {
             @Override
-            public String get () {
+            public String get() {
                 return nodeName;
             }
         }, this);
@@ -672,20 +654,36 @@ public abstract class NodeWidget extends EmptyWindow implements Json.Serializabl
     }
 
     @Override
-    public String getPropertyBoxTitle () {
+    public String getPropertyBoxTitle() {
         return "Node properties";
     }
 
     @Override
-    public int getPriority () {
+    public int getPriority() {
         return 0;
     }
 
     @Override
-    public Class<? extends IPropertyProvider> getType () {
+    public Class<? extends IPropertyProvider> getType() {
         return this.getClass();
     }
 
-    //    public Array<PropertyWidget> getListOfProperties ();
+    public class Connection {
+        public String targetSlot;
+        public NodeWidget targetNode;
 
+        public Connection(NodeWidget targetNode, String targetSlot) {
+            this.targetNode = targetNode;
+            this.targetSlot = targetSlot;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            Connection con = (Connection) obj;
+
+            return con.targetSlot.equals(targetSlot) && con.targetNode == this.targetNode;
+        }
+    }
+
+    //    public Array<PropertyWidget> getListOfProperties ();
 }

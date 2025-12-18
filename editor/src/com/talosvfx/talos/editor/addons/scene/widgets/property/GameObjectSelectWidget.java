@@ -18,101 +18,101 @@ import com.talosvfx.talos.editor.widgets.ui.common.SquareButton;
 import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.GameObjectContainer;
 import com.talosvfx.talos.runtime.scene.SavableContainer;
+import com.talosvfx.talos.runtime.utils.Supplier;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.talosvfx.talos.runtime.utils.Supplier;
-
 public class GameObjectSelectWidget extends PropertyWidget<GameObject> {
 
-	private static final Logger logger = LoggerFactory.getLogger(GameObjectSelectWidget.class);
+    private static final Logger logger = LoggerFactory.getLogger(GameObjectSelectWidget.class);
 
-	private Label nameLabel;
-	private GameObject gameObject;
+    private Label nameLabel;
+    private GameObject gameObject;
 
-	private Predicate<FilteredTree.Node<GameObject>> filter;
-	protected GameObjectSelectWidget () {}
+    private Predicate<FilteredTree.Node<GameObject>> filter;
 
-	public GameObjectSelectWidget (String name, Supplier<GameObject> supplier, ValueChanged<GameObject> valueChanged, Object parent) {
-		super(name, supplier, valueChanged, parent);
-		this.filter = new Predicate<FilteredTree.Node<GameObject>>() {
-			@Override
-			public boolean evaluate (FilteredTree.Node<GameObject> node) {
-				return true;
-			}
-		};
-	}
+    protected GameObjectSelectWidget() {
+    }
 
-	@Override
-	public PropertyWidget clone () {
-		GameObjectSelectWidget clone = (GameObjectSelectWidget)super.clone();
-		clone.filter = filter;
-		return clone;
-	}
+    public GameObjectSelectWidget(String name, Supplier<GameObject> supplier, ValueChanged<GameObject> valueChanged, Object parent) {
+        super(name, supplier, valueChanged, parent);
+        this.filter = new Predicate<FilteredTree.Node<GameObject>>() {
+            @Override
+            public boolean evaluate(FilteredTree.Node<GameObject> node) {
+                return true;
+            }
+        };
+    }
 
-	@Override
-	public GameObject getValue () {
-		return gameObject;
-	}
+    @Override
+    public PropertyWidget clone() {
+        GameObjectSelectWidget clone = (GameObjectSelectWidget) super.clone();
+        clone.filter = filter;
+        return clone;
+    }
 
-	@Override
-	public Actor getSubWidget () {
-		Table table = new Table();
-		Skin skin = SharedResources.skin;
-		final SquareButton button = new SquareButton(skin, skin.getDrawable("ic-file-edit"), "Select game object");
+    @Override
+    public GameObject getValue() {
+        return gameObject;
+    }
 
-		nameLabel = new Label("", skin);
-		nameLabel.setEllipsis(true);
-		nameLabel.setAlignment(Align.right);
+    @Override
+    public Actor getSubWidget() {
+        Table table = new Table();
+        Skin skin = SharedResources.skin;
+        final SquareButton button = new SquareButton(skin, skin.getDrawable("ic-file-edit"), "Select game object");
 
-		table.right();
-		table.add(nameLabel).growX().maxWidth(130).padRight(2);
-		table.add(button);
+        nameLabel = new Label("", skin);
+        nameLabel.setEllipsis(true);
+        nameLabel.setAlignment(Align.right);
 
-		button.addListener(new ClickListener() {
-			@Override
-			public void clicked (InputEvent event, float x, float y) {
-				Vector2 pos = new Vector2(button.getWidth() / 2f, button.getHeight() / 2f);
-				button.localToStageCoordinates(pos);
+        table.right();
+        table.add(nameLabel).growX().maxWidth(130).padRight(2);
+        table.add(button);
 
-				GameObjectListPopup gameObjectListPopup = new GameObjectListPopup();
-				IPropertyHolder currentHolder = GameObjectSelectWidget.this.topLevelPropertiesPanel.getCurrentHolder();
+        button.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Vector2 pos = new Vector2(button.getWidth() / 2f, button.getHeight() / 2f);
+                button.localToStageCoordinates(pos);
 
-				GameObjectContainer rootGO = null;
-				if (currentHolder instanceof GameObject) {
-					rootGO = ((GameObject)currentHolder).getGameObjectContainerRoot();
-				} else if (currentHolder instanceof SavableContainer) {
-					rootGO = (GameObjectContainer)currentHolder;
-				}
+                GameObjectListPopup gameObjectListPopup = new GameObjectListPopup();
+                IPropertyHolder currentHolder = GameObjectSelectWidget.this.topLevelPropertiesPanel.getCurrentHolder();
 
-				gameObjectListPopup.showPopup(getStage(), rootGO.getSelfObject(), pos, filter, new FilteredTree.ItemListener<GameObject>() {
+                GameObjectContainer rootGO = null;
+                if (currentHolder instanceof GameObject) {
+                    rootGO = ((GameObject) currentHolder).getGameObjectContainerRoot();
+                } else if (currentHolder instanceof SavableContainer) {
+                    rootGO = (GameObjectContainer) currentHolder;
+                }
 
-					@Override
-					public void selected (FilteredTree.Node<GameObject> node) {
-						GameObject gameObject = node.getObject();
+                gameObjectListPopup.showPopup(getStage(), rootGO.getSelfObject(), pos, filter, new FilteredTree.ItemListener<GameObject>() {
 
-						updateWidget(gameObject);
-						callValueChanged(gameObject);
-						gameObjectListPopup.remove();
-					}
-				});
+                    @Override
+                    public void selected(FilteredTree.Node<GameObject> node) {
+                        GameObject gameObject = node.getObject();
 
-			}
-		});
+                        updateWidget(gameObject);
+                        callValueChanged(gameObject);
+                        gameObjectListPopup.remove();
+                    }
+                });
+            }
+        });
 
-		return table;
-	}
+        return table;
+    }
 
-	@Override
-	public void updateWidget (GameObject value) {
-		if (value == null) {
-			nameLabel.setText("No Game Object");
-			gameObject = null;
-			return;
-		}
+    @Override
+    public void updateWidget(GameObject value) {
+        if (value == null) {
+            nameLabel.setText("No Game Object");
+            gameObject = null;
+            return;
+        }
 
-		this.gameObject = value;
-		this.nameLabel.setText(gameObject.getName());
-	}
-
+        this.gameObject = value;
+        this.nameLabel.setText(gameObject.getName());
+    }
 }

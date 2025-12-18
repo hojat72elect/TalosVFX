@@ -9,61 +9,48 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.FocusListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Selection;
 import com.badlogic.gdx.utils.Array;
-import com.talosvfx.talos.TalosMain;
-import com.talosvfx.talos.editor.addons.scene.SceneEditorWorkspace;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.ui.EditableLabel;
 import com.talosvfx.talos.editor.widgets.ui.FilteredTree;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
 import com.talosvfx.talos.editor.widgets.ui.common.SquareButton;
-
 import com.talosvfx.talos.runtime.utils.Supplier;
 
 
 public class DynamicItemListWidget<T> extends PropertyWidget<Array<T>> {
 
-    private DynamicItemListInteraction<T> interaction;
     public FilteredTree<T> list;
+    private DynamicItemListInteraction<T> interaction;
     private boolean draggableInLayerOnly;
 
-    public interface DynamicItemListInteraction<T> {
-        Supplier<T> newInstanceCreator ();
-        String getID (T t);
-
-        String updateName (T t, String newText);
-
-        void onUpdate();
-
-        void onDeleteNode(T t);
+    protected DynamicItemListWidget() {
     }
-    protected DynamicItemListWidget () {}
 
-
-    public DynamicItemListWidget (String name, Supplier<Array<T>> supplier, ValueChanged<Array<T>> valueChanged, DynamicItemListInteraction<T> interaction, Object parent) {
+    public DynamicItemListWidget(String name, Supplier<Array<T>> supplier, ValueChanged<Array<T>> valueChanged, DynamicItemListInteraction<T> interaction, Object parent) {
         super(name, supplier, valueChanged, parent);
         this.interaction = interaction;
     }
 
-    public DynamicItemListWidget (String name, Supplier<Array<T>> supplier, ValueChanged<Array<T>> valueChanged, Object parent) {
+
+    public DynamicItemListWidget(String name, Supplier<Array<T>> supplier, ValueChanged<Array<T>> valueChanged, Object parent) {
         super(name, supplier, valueChanged, parent);
     }
+
     public void setInteraction(DynamicItemListInteraction<T> interaction) {
         this.interaction = interaction;
     }
 
-    public void setDraggableInLayerOnly (boolean draggableInLayerOnly) {
+    public void setDraggableInLayerOnly(boolean draggableInLayerOnly) {
         this.draggableInLayerOnly = draggableInLayerOnly;
     }
 
-
     @Override
-    protected boolean isFullSize () {
+    protected boolean isFullSize() {
         return true;
     }
 
-
     @Override
-    public Actor getSubWidget () {
+    public Actor getSubWidget() {
         Table table = new Table();
 
         Skin skin = SharedResources.skin;
@@ -82,19 +69,19 @@ public class DynamicItemListWidget<T> extends PropertyWidget<Array<T>> {
 
         list.addItemListener(new FilteredTree.ItemListener<T>() {
             @Override
-            public void selected (FilteredTree.Node<T> node) {
+            public void selected(FilteredTree.Node<T> node) {
                 super.selected(node);
                 list.getSelection().clear();
                 list.getSelection().add(node);
             }
 
             @Override
-            public void onNodeMove (FilteredTree.Node<T> parentToMoveTo, FilteredTree.Node<T> childThatHasMoved, int indexInParent, int indexOfPayloadInPayloadBefore) {
+            public void onNodeMove(FilteredTree.Node<T> parentToMoveTo, FilteredTree.Node<T> childThatHasMoved, int indexInParent, int indexOfPayloadInPayloadBefore) {
                 callValueChanged(makeDataArray());
             }
 
             @Override
-            public void delete (Array<FilteredTree.Node<T>> nodes) {
+            public void delete(Array<FilteredTree.Node<T>> nodes) {
                 deleteSelection();
             }
         });
@@ -105,16 +92,16 @@ public class DynamicItemListWidget<T> extends PropertyWidget<Array<T>> {
 
         newBtn.addListener(new ClickListener() {
             @Override
-            public void clicked (InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
 
                 T newT = interaction.newInstanceCreator().get();
                 Selection<FilteredTree.Node<T>> selection = list.getSelection();
                 FilteredTree.Node<T> node;
-                if(selection.size() > 0) {
+                if (selection.size() > 0) {
                     int index = 0;
                     Array<FilteredTree.Node<T>> rootNodes = list.getRootNodes();
-                    for(index = 0; index < rootNodes.size; index++) {
-                        if(rootNodes.get(index) == selection.first()) {
+                    for (index = 0; index < rootNodes.size; index++) {
+                        if (rootNodes.get(index) == selection.first()) {
                             break;
                         }
                     }
@@ -132,7 +119,7 @@ public class DynamicItemListWidget<T> extends PropertyWidget<Array<T>> {
 
         deleteBtn.addListener(new ClickListener() {
             @Override
-            public void clicked (InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 deleteSelection();
             }
         });
@@ -140,16 +127,16 @@ public class DynamicItemListWidget<T> extends PropertyWidget<Array<T>> {
         return table;
     }
 
-    public boolean canDelete (T t) {
+    public boolean canDelete(T t) {
         return true;
     }
 
-    private void deleteSelection () {
+    private void deleteSelection() {
         Selection<FilteredTree.Node<T>> selection = list.getSelection();
-        if(selection.size() > 0) {
+        if (selection.size() > 0) {
             FilteredTree.Node<T> item = selection.first();
             T t = item.getObject();
-            if(canDelete(t)) {
+            if (canDelete(t)) {
                 int index = 0;
                 Array<FilteredTree.Node<T>> rootNodes = list.getRootNodes();
                 for (index = 0; index < rootNodes.size; index++) {
@@ -171,10 +158,10 @@ public class DynamicItemListWidget<T> extends PropertyWidget<Array<T>> {
         }
     }
 
-    private Array<T> makeDataArray () {
+    private Array<T> makeDataArray() {
         Array<T> arr = new Array<>();
         Array<FilteredTree.Node<T>> rootNodes = list.getRootNodes();
-        for(FilteredTree.Node<T> node: rootNodes) {
+        for (FilteredTree.Node<T> node : rootNodes) {
             arr.add(node.getObject());
         }
         return arr;
@@ -185,12 +172,12 @@ public class DynamicItemListWidget<T> extends PropertyWidget<Array<T>> {
         EditableLabel editableLabel = new EditableLabel(t.toString(), skin);
         editableLabel.setListener(new EditableLabel.EditableLabelChangeListener() {
             @Override
-            public void editModeStarted () {
+            public void editModeStarted() {
 
             }
 
             @Override
-            public void changed (String newText) {
+            public void changed(String newText) {
                 String checkedName = interaction.updateName(t, newText);
                 editableLabel.setText(checkedName);
                 callValueChanged(makeDataArray());
@@ -198,15 +185,14 @@ public class DynamicItemListWidget<T> extends PropertyWidget<Array<T>> {
         });
         editableLabel.addListener(new FocusListener() {
             @Override
-            public void keyboardFocusChanged (FocusEvent event, Actor actor, boolean focused) {
+            public void keyboardFocusChanged(FocusEvent event, Actor actor, boolean focused) {
                 super.keyboardFocusChanged(event, actor, focused);
                 if (!focused) {
                     if (editableLabel.isEditMode()) {
                         Gdx.app.postRunnable(new Runnable() {
                             @Override
-                            public void run () {
+                            public void run() {
                                 editableLabel.finishTextEdit(true);
-
                             }
                         });
                     }
@@ -237,13 +223,23 @@ public class DynamicItemListWidget<T> extends PropertyWidget<Array<T>> {
     }
 
     @Override
-    public void updateWidget (Array<T> value) {
+    public void updateWidget(Array<T> value) {
         list.clearChildren();
-        for(T item: value) {
+        for (T item : value) {
             addNode(item);
         }
         interaction.onUpdate();
     }
 
+    public interface DynamicItemListInteraction<T> {
+        Supplier<T> newInstanceCreator();
 
+        String getID(T t);
+
+        String updateName(T t, String newText);
+
+        void onUpdate();
+
+        void onDeleteNode(T t);
+    }
 }

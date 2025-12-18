@@ -13,7 +13,7 @@ public class WavefrontReader {
 
     private Mesh mesh;
 
-    public WavefrontReader () {
+    public WavefrontReader() {
 
     }
 
@@ -32,7 +32,7 @@ public class WavefrontReader {
 
         Array<Face> faces = new Array<>();
 
-        for(int i = 0; i < lines.length; i++) {
+        for (int i = 0; i < lines.length; i++) {
             lines[i] = lines[i].replace("\r", "");
 
             String[] words = lines[i].split(" ");
@@ -63,10 +63,10 @@ public class WavefrontReader {
         float[] verts = new float[faces.size * 3 * attribCount];
 
         int index = 0;
-        for(int i = 0; i < faces.size; i++) {
+        for (int i = 0; i < faces.size; i++) {
             Face face = faces.get(i);
 
-            for(int j = 0; j < 3; j++) {
+            for (int j = 0; j < 3; j++) {
                 verts[index++] = vertices.get(face.points[j].vIndex - 1).x;
                 verts[index++] = vertices.get(face.points[j].vIndex - 1).y;
                 verts[index++] = vertices.get(face.points[j].vIndex - 1).z;
@@ -101,7 +101,7 @@ public class WavefrontReader {
             points[2] = parsePoint(point3);
         }
 
-        private PointData parsePoint (String point) {
+        private PointData parsePoint(String point) {
             PointData pointData = new PointData(point);
             return pointData;
         }
@@ -113,9 +113,9 @@ public class WavefrontReader {
         int nIndex;
 
         public PointData(String data) {
-            String parts[] = data.split("/");
+            String[] parts = data.split("/");
 
-            if(parts[1].equals("")) parts[1] = "0";
+            if (parts[1].equals("")) parts[1] = "0";
 
             vIndex = Integer.parseInt(parts[0]);
             tIndex = Integer.parseInt(parts[1]);

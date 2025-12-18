@@ -21,9 +21,9 @@ import com.talosvfx.talos.editor.ParticleEmitterWrapper;
 
 public class VFXEditorState {
 
-	public Array<ParticleEmitterWrapper> activeWrappers = new Array<>();
+    public Array<ParticleEmitterWrapper> activeWrappers = new Array<>();
 
-	public void reset () {
-		activeWrappers.clear();
-	}
+    public void reset() {
+        activeWrappers.clear();
+    }
 }

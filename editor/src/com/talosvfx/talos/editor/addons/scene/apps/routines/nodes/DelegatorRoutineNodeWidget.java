@@ -3,19 +3,30 @@ package com.talosvfx.talos.editor.addons.scene.apps.routines.nodes;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.Predicate;
+import com.badlogic.gdx.utils.XmlReader;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
-import com.talosvfx.talos.editor.widgets.ui.FilteredTree;
-import com.talosvfx.talos.runtime.RuntimeContext;
-import com.talosvfx.talos.runtime.routine.RoutineInstance;
 import com.talosvfx.talos.editor.addons.scene.assets.AssetRepository;
-import com.talosvfx.talos.runtime.assets.GameAsset;
-import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.editor.data.RoutineStageData;
-import com.talosvfx.talos.editor.nodes.widgets.*;
+import com.talosvfx.talos.editor.nodes.widgets.AbstractWidget;
+import com.talosvfx.talos.editor.nodes.widgets.CheckBoxWidget;
+import com.talosvfx.talos.editor.nodes.widgets.ColorWidget;
+import com.talosvfx.talos.editor.nodes.widgets.GameAssetWidget;
+import com.talosvfx.talos.editor.nodes.widgets.SelectWidget;
+import com.talosvfx.talos.editor.nodes.widgets.ValueWidget;
+import com.talosvfx.talos.editor.nodes.widgets.Vector2Widget;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.events.dynamicnodestage.NodeDataModifiedEvent;
 import com.talosvfx.talos.editor.project2.SharedResources;
+import com.talosvfx.talos.editor.widgets.ui.FilteredTree;
+import com.talosvfx.talos.runtime.RuntimeContext;
+import com.talosvfx.talos.runtime.assets.GameAsset;
+import com.talosvfx.talos.runtime.assets.GameAssetType;
+import com.talosvfx.talos.runtime.routine.RoutineInstance;
 import com.talosvfx.talos.runtime.routine.nodes.RoutineExecutorNode;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyGameAssetWrapper;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyType;
@@ -43,7 +54,7 @@ public class DelegatorRoutineNodeWidget extends RoutineNodeWidget {
 
         Table container = getCustomContainer("customParams");
 
-        GameAssetWidget<RoutineStageData> assetSelector = (GameAssetWidget<RoutineStageData>)widgetMap.get("asset");
+        GameAssetWidget<RoutineStageData> assetSelector = (GameAssetWidget<RoutineStageData>) widgetMap.get("asset");
         assetSelector.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -62,31 +73,30 @@ public class DelegatorRoutineNodeWidget extends RoutineNodeWidget {
         assetSelector.getWidget().setFilter(filter);
         GameAsset<RoutineStageData> value = assetSelector.getValue();
 
-        if(value != null) {
+        if (value != null) {
             buildContainer(container, value);
         }
     }
 
     @Override
     public void read(Json json, JsonValue jsonValue) {
-        if(asset == null) {
+        if (asset == null) {
             Table container = getCustomContainer("customParams");
             JsonValue props = jsonValue.get("properties");
-            if(props.has("asset") && props.get("asset").has("id")) {
+            if (props.has("asset") && props.get("asset").has("id")) {
                 String id = props.get("asset").getString("id");
                 GameAsset<RoutineStageData> value = AssetRepository.getInstance().getAssetForIdentifier(id, GameAssetType.ROUTINE);
                 if (value != null) {
                     buildContainer(container, value);
                 }
             }
-
         }
 
         super.read(json, jsonValue);
     }
 
     private void buildContainer(Table container, GameAsset<RoutineStageData> routineAsset) {
-        if(asset != routineAsset) {
+        if (asset != routineAsset) {
             asset = routineAsset;
 
             Array<String> titles = new Array<>();
@@ -108,14 +118,14 @@ public class DelegatorRoutineNodeWidget extends RoutineNodeWidget {
                             AbstractWidget widget = ClassReflection.newInstance(clazz);
 
                             // todo: this needs to be done better
-                            if(widget instanceof GameAssetWidget) {
-                                ((GameAssetWidget) widget).build(((PropertyGameAssetWrapper)wrapper).getGameAssetType().toString());
+                            if (widget instanceof GameAssetWidget) {
+                                ((GameAssetWidget) widget).build(((PropertyGameAssetWrapper) wrapper).getGameAssetType().toString());
                             }
 
                             widget.init(SharedResources.skin);
 
 
-                            if(widget instanceof ValueWidget) {
+                            if (widget instanceof ValueWidget) {
                                 ((ValueWidget) widget).setLabel(wrapper.propertyName);
                             }
 
@@ -127,11 +137,10 @@ public class DelegatorRoutineNodeWidget extends RoutineNodeWidget {
 
                             widget.addListener(new ChangeListener() {
                                 @Override
-                                public void changed (ChangeEvent changeEvent, Actor actor) {
+                                public void changed(ChangeEvent changeEvent, Actor actor) {
                                     reportNodeDataModified();
                                 }
                             });
-
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -154,12 +163,10 @@ public class DelegatorRoutineNodeWidget extends RoutineNodeWidget {
 
             executorSelector.addListener(new ChangeListener() {
                 @Override
-                public void changed (ChangeEvent changeEvent, Actor actor) {
+                public void changed(ChangeEvent changeEvent, Actor actor) {
                     reportNodeDataModified();
                 }
             });
-
-
 
 
             Notifications.fireEvent(Notifications.obtainEvent(NodeDataModifiedEvent.class).set(nodeBoard.getNodeStage(), this));

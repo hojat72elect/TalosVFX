@@ -1,19 +1,21 @@
 package com.talosvfx.talos.editor.project2;
 
+import static com.talosvfx.talos.editor.layouts.LayoutGrid.LayoutJsonStructure;
+import static com.talosvfx.talos.editor.project2.TalosProjectData.TALOS_PROJECT_EXTENSION;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonReader;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.JsonWriter;
+import com.badlogic.gdx.utils.XmlReader;
 import com.kotcrab.vis.ui.util.dialog.Dialogs;
 import com.kotcrab.vis.ui.util.dialog.OptionDialogListener;
 import com.talosvfx.talos.editor.addons.scene.assets.AssetRepository;
-import com.talosvfx.talos.editor.notifications.events.assets.AssetChangeDirectoryEvent;
-import com.talosvfx.talos.editor.project2.localprefs.TalosLocalPrefs;
-import com.talosvfx.talos.editor.utils.Toasts;
-import com.talosvfx.talos.editor.addons.scene.events.save.SaveRequest;
 import com.talosvfx.talos.editor.addons.scene.events.save.ExportRequest;
-import com.talosvfx.talos.runtime.RuntimeContext;
-import com.talosvfx.talos.runtime.assets.GameAsset;
-import com.talosvfx.talos.runtime.assets.GameAssetType;
+import com.talosvfx.talos.editor.addons.scene.events.save.SaveRequest;
 import com.talosvfx.talos.editor.addons.scene.utils.importers.AssetImporter;
 import com.talosvfx.talos.editor.filesystem.FileChooserListener;
 import com.talosvfx.talos.editor.filesystem.FileSystemInteraction;
@@ -23,18 +25,20 @@ import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.Observer;
 import com.talosvfx.talos.editor.notifications.events.FinishInitializingEvent;
 import com.talosvfx.talos.editor.notifications.events.MenuPopupOpenCommand;
+import com.talosvfx.talos.editor.notifications.events.assets.AssetChangeDirectoryEvent;
 import com.talosvfx.talos.editor.notifications.events.assets.GameAssetOpenEvent;
 import com.talosvfx.talos.editor.notifications.events.assets.MenuItemClickedEvent;
+import com.talosvfx.talos.editor.project2.localprefs.TalosLocalPrefs;
+import com.talosvfx.talos.editor.utils.Toasts;
 import com.talosvfx.talos.editor.widgets.ui.menu.MainMenu;
+import com.talosvfx.talos.runtime.RuntimeContext;
+import com.talosvfx.talos.runtime.assets.GameAsset;
+import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.runtime.maps.TilePaletteData;
 import com.talosvfx.talos.runtime.routine.RoutineDefaultEventInterface;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
 
 import java.util.function.Consumer;
-
-import static com.talosvfx.talos.editor.layouts.LayoutGrid.LayoutJsonStructure;
-
-import static com.talosvfx.talos.editor.project2.TalosProjectData.TALOS_PROJECT_EXTENSION;
 
 public class TalosControl implements Observer {
 
@@ -44,22 +48,51 @@ public class TalosControl implements Observer {
         Notifications.registerObserver(this);
     }
 
+    public static boolean validateAndOpenProject(TalosProjectData talosProjectData) {
+        try {
+            // unload old project, before loading new one
+            SharedResources.projectLoader.unloadProject();
+
+            String talosProjectIdentifier = talosProjectData.getTalosProjectIdentifier();
+            RuntimeContext.TalosContext editorContext = new RuntimeContext.TalosContext(talosProjectIdentifier);
+            editorContext.setBaseAssetRepository(AssetRepository.getInstance());
+            editorContext.setRoutineDefaultEventInterface(new RoutineDefaultEventInterface() {
+                @Override
+                public void onEventFromRoutines(String eventName, Array<PropertyWrapper<?>> properties) {
+                    System.out.println("On event from routines " + eventName + " " + properties);
+                }
+            });
+
+            RuntimeContext.getInstance().registerContext(talosProjectIdentifier, editorContext);
+
+            //Map the default for backwards compatibity, after save it should overwrite with proper uuid
+            RuntimeContext.getInstance().registerContext("default", editorContext);
+
+            RuntimeContext.getInstance().setEditorContext(editorContext);
+
+            SharedResources.projectLoader.loadProject(talosProjectData);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
     @EventHandler
-    public void onMenuPopupOpenCommand (MenuPopupOpenCommand menuPopupOpenCommand) {
-       if (menuPopupOpenCommand.getPath().equals("window/layouts")) {
-           SharedResources.mainMenu.registerMenuProvider(new MainMenu.IMenuProvider() {
-               @Override
-               public void inject(String path, MainMenu menu) {
-                   Array<String> customLayouts = TalosLocalPrefs.Instance().getCustomLayouts();
+    public void onMenuPopupOpenCommand(MenuPopupOpenCommand menuPopupOpenCommand) {
+        if (menuPopupOpenCommand.getPath().equals("window/layouts")) {
+            SharedResources.mainMenu.registerMenuProvider(new MainMenu.IMenuProvider() {
+                @Override
+                public void inject(String path, MainMenu menu) {
+                    Array<String> customLayouts = TalosLocalPrefs.Instance().getCustomLayouts();
 
-                   for(String customLayoutPath : customLayouts) {
-                       FileHandle handle = Gdx.files.absolute(customLayoutPath);
-                       menu.addItem(path, handle.path(), handle.name(), null, handle);
-                   }
-               }
-           }, "window/layouts/custom_list");
-       }
+                    for (String customLayoutPath : customLayouts) {
+                        FileHandle handle = Gdx.files.absolute(customLayoutPath);
+                        menu.addItem(path, handle.path(), handle.name(), null, handle);
+                    }
+                }
+            }, "window/layouts/custom_list");
+        }
     }
 
     @EventHandler
@@ -67,12 +100,12 @@ public class TalosControl implements Observer {
         // TODO: switch this to some kind of reflection thing? or like map to instance thing *but how about startsWith things
         // or at least start delegating this into methods
 
-        if(event.getPath().equals("file/open")) {
+        if (event.getPath().equals("file/open")) {
             openProjectByChoosingFile();
             return;
         }
 
-        if(event.getPath().startsWith("file/open_recent")) {
+        if (event.getPath().startsWith("file/open_recent")) {
             String path = (String) event.getPayload();
             FileHandle handle = new FileHandle(path);
 
@@ -132,14 +165,14 @@ public class TalosControl implements Observer {
             }
         }
 
-        if(event.getPath().equals("edit/undo")) {
+        if (event.getPath().equals("edit/undo")) {
             SharedResources.globalSaveStateSystem.onUndoRequest();
         }
-        if(event.getPath().equals("edit/redo")) {
+        if (event.getPath().equals("edit/redo")) {
             SharedResources.globalSaveStateSystem.onRedoRequest();
         }
 
-        if(event.getPath().equals("file/new/routine")) {
+        if (event.getPath().equals("file/new/routine")) {
             // create routine
             askToSaveFile("rt", (newScriptDestination) -> newScriptDestination.writeString("{}", false));
         } else if (event.getPath().equals("file/new/vfx")) {
@@ -166,23 +199,23 @@ public class TalosControl implements Observer {
             });
         }
 
-        if(event.getPath().equals("file/export/project")) {
+        if (event.getPath().equals("file/export/project")) {
             Notifications.quickFire(ExportRequest.class);
         }
 
-        if(event.getPath().equals("file/save")) {
+        if (event.getPath().equals("file/save")) {
             Notifications.quickFire(SaveRequest.class);
         }
 
-        if(event.getPath().equals("window/panels/close_all")) {
+        if (event.getPath().equals("window/panels/close_all")) {
             SharedResources.appManager.closeAllFloatingWindows();
             return;
-        } else if(event.getPath().startsWith("window/panels/")) {
+        } else if (event.getPath().startsWith("window/panels/")) {
             AppManager.BaseApp app = (AppManager.BaseApp) event.getPayload();
             return;
         }
 
-        if(event.getPath().startsWith("window/apps/")) {
+        if (event.getPath().startsWith("window/apps/")) {
             Class<AppManager.BaseApp> clazz = (Class<AppManager.BaseApp>) event.getPayload();
 
             if (SharedResources.appManager.canOpenInApp(AppManager.singletonAsset, clazz)) {
@@ -194,7 +227,7 @@ public class TalosControl implements Observer {
             return;
         }
 
-        if(event.getPath().equals("window/layouts/save_layout")) {
+        if (event.getPath().equals("window/layouts/save_layout")) {
             String jsonValue = SharedResources.currentProject.getCurrentJsonLayoutRepresentation();
 
             String ext = GameAssetType.LAYOUT_DATA.getExtensions().first();
@@ -235,7 +268,7 @@ public class TalosControl implements Observer {
             }
         }
 
-        if(event.getPath().equals("file/quit")) {
+        if (event.getPath().equals("file/quit")) {
             if (SharedResources.appManager.hasChangesToSave()) {
                 SharedResources.appManager.requestConfirmationToCloseWithoutSave(new OptionDialogListener() {
                     @Override
@@ -265,7 +298,7 @@ public class TalosControl implements Observer {
         }
     }
 
-    private void askToSaveFile (String extension, Consumer<FileHandle> saveCallback) {
+    private void askToSaveFile(String extension, Consumer<FileHandle> saveCallback) {
         FileSystemInteraction.instance().showSaveFileChooser(extension, new FileChooserListener() {
             @Override
             public void selected(Array<FileHandle> files) {
@@ -313,7 +346,7 @@ public class TalosControl implements Observer {
             @Override
             public void inject(String path, MainMenu menu) {
                 Array<XmlReader.Element> layouts = root.getChildrenByName("layout");
-                for(XmlReader.Element layout : layouts) {
+                for (XmlReader.Element layout : layouts) {
                     String fileName = layout.getAttribute("file");
                     String title = layout.getText();
 
@@ -337,7 +370,7 @@ public class TalosControl implements Observer {
                         public void yes() {
                             boolean success = validateAndOpenProject(files.first());
                             if (success) {
-                                if(after != null) {
+                                if (after != null) {
                                     after.run();
                                 }
                             }
@@ -347,7 +380,7 @@ public class TalosControl implements Observer {
                         public void no() {
                             boolean success = validateAndOpenProject(files.first());
                             if (success) {
-                                if(after != null) {
+                                if (after != null) {
                                     after.run();
                                 }
                             }
@@ -361,7 +394,7 @@ public class TalosControl implements Observer {
                 } else {
                     boolean success = validateAndOpenProject(files.first());
                     if (success) {
-                        if(after != null) {
+                        if (after != null) {
                             after.run();
                         }
                     }
@@ -370,7 +403,7 @@ public class TalosControl implements Observer {
         });
     }
 
-    public boolean validateAndOpenProject (FileHandle first) {
+    public boolean validateAndOpenProject(FileHandle first) {
         FileHandle projectToTryToLoad = null;
         if (first.isDirectory()) {
             FileHandle[] list = first.list();
@@ -398,37 +431,6 @@ public class TalosControl implements Observer {
         }
 
         return false;
-
-    }
-
-    public static boolean validateAndOpenProject (TalosProjectData talosProjectData) {
-        try {
-            // unload old project, before loading new one
-            SharedResources.projectLoader.unloadProject();
-
-            String talosProjectIdentifier = talosProjectData.getTalosProjectIdentifier();
-            RuntimeContext.TalosContext editorContext = new RuntimeContext.TalosContext(talosProjectIdentifier);
-            editorContext.setBaseAssetRepository(AssetRepository.getInstance());
-            editorContext.setRoutineDefaultEventInterface(new RoutineDefaultEventInterface() {
-                @Override
-                public void onEventFromRoutines (String eventName, Array<PropertyWrapper<?>> properties) {
-                    System.out.println("On event from routines " + eventName + " " + properties);
-                }
-            });
-
-            RuntimeContext.getInstance().registerContext(talosProjectIdentifier, editorContext);
-
-            //Map the default for backwards compatibity, after save it should overwrite with proper uuid
-            RuntimeContext.getInstance().registerContext("default", editorContext);
-
-            RuntimeContext.getInstance().setEditorContext(editorContext);
-
-            SharedResources.projectLoader.loadProject(talosProjectData);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
     }
 
     @EventHandler

@@ -27,427 +27,406 @@ import com.talosvfx.talos.runtime.vfx.modules.ParticleModule;
 
 public class ParticleEmitterInstance implements IEmitter {
 
+    private static int globalUniqueID = 1;
     private final ParticleEffectInstance parentParticleInstance;
-	public boolean isComplete = false;
-	public ParticleEmitterDescriptor emitterGraph;
-	private ScopePayload scopePayload;
-
-	public boolean isAdditive = true;
-	private boolean isBlendAdd = false;
-
-	Vector2 position = new Vector2();
-	float duration;
-	float delay;
-	float delayTimer;
-
-	public boolean isVisible = true;
-	boolean paused = false;
-	boolean isContinuous = false;
-	boolean isAttached = false;
-	boolean isImmortal = false;
-
-	public Color tint = new Color(Color.WHITE);
-
-	private EmitterModule emitterModule;
-
-	float rate; // emission rate
-
-	int maxParticles;
-
-	// inner vars
-	public float alpha;
-	public float particlesToEmmit;
-
-	public boolean initialized = false;
-
-	public Array<Particle> activeParticles = new Array<>();
-
-	private final Pool<Particle> particlePool = new Pool<Particle>() {
-		@Override
-		protected Particle newObject () {
-			return new Particle();
-		}
-	};
+    private final Pool<Particle> particlePool = new Pool<Particle>() {
+        @Override
+        protected Particle newObject() {
+            return new Particle();
+        }
+    };
+    public boolean isComplete = false;
+    public ParticleEmitterDescriptor emitterGraph;
+    public boolean isAdditive = true;
+    public boolean isVisible = true;
+    public Color tint = new Color(Color.WHITE);
+    // inner vars
+    public float alpha;
+    public float particlesToEmmit;
+    public boolean initialized = false;
+    public Array<Particle> activeParticles = new Array<>();
+    public Pool<ParticlePointData> particlePointDataPool = new Pool<ParticlePointData>() {
+        @Override
+        protected ParticlePointData newObject() {
+            return new ParticlePointData();
+        }
+    };
+    public Pool<ParticlePointGroup> groupPool = new Pool<ParticlePointGroup>() {
+        @Override
+        protected ParticlePointGroup newObject() {
+            return new ParticlePointGroup();
+        }
+    };
+    Vector2 position = new Vector2();
+    float duration;
+    float delay;
+    float delayTimer;
+    boolean paused = false;
+    boolean isContinuous = false;
+    boolean isAttached = false;
+    boolean isImmortal = false;
+    float rate; // emission rate
+    int maxParticles;
+    private ScopePayload scopePayload;
+    private boolean isBlendAdd = false;
+    private EmitterModule emitterModule;
     private boolean isStopped = false;
+    private final int uniqueID;
+    private final Array<ParticlePointGroup> pointData = new Array<>();
 
-	private int uniqueID;
-	private static int globalUniqueID = 1;
-
-	private Array<ParticlePointGroup> pointData = new Array<>();
-
-    public ParticleEmitterInstance (ParticleEmitterDescriptor moduleGraph, ParticleEffectInstance particleEffectInstance) {
-		this.emitterGraph = moduleGraph;
+    public ParticleEmitterInstance(ParticleEmitterDescriptor moduleGraph, ParticleEffectInstance particleEffectInstance) {
+        this.emitterGraph = moduleGraph;
         parentParticleInstance = particleEffectInstance;
         setScope(particleEffectInstance.scopePayload); //Default set to the parent payload instance
         init();
-		uniqueID = globalUniqueID++;
-	}
+        uniqueID = globalUniqueID++;
+    }
 
-	@Override
-	public Array<ParticlePointGroup> pointData () {
-		return pointData;
-	}
+    @Override
+    public Array<ParticlePointGroup> pointData() {
+        return pointData;
+    }
 
-	public void init () {
-		position.set(0, 0);
+    public void init() {
+        position.set(0, 0);
 
-		emitterModule = emitterGraph.getEmitterModule();
-		if (emitterModule == null)
-			return;
+        emitterModule = emitterGraph.getEmitterModule();
+        if (emitterModule == null)
+            return;
 
-		delay = emitterModule.getDelay();
-		duration = emitterModule.getDuration();
-		isContinuous = emitterModule.isContinuous();
+        delay = emitterModule.getDelay();
+        duration = emitterModule.getDuration();
+        isContinuous = emitterModule.isContinuous();
 
-		delayTimer = delay;
+        delayTimer = delay;
 
 
-		// inner variable defaults
-		alpha = 0f;
-		isComplete = false;
-		particlesToEmmit = 1f; // always emmit one first
+        // inner variable defaults
+        alpha = 0f;
+        isComplete = false;
+        particlesToEmmit = 1f; // always emmit one first
 
-		initialized = true;
-	}
+        initialized = true;
+    }
 
-	public void update (float delta) {
-		final DrawableModule drawableModule = getDrawableModule();
-		if (drawableModule == null)
-			return;
+    public void update(float delta) {
+        final DrawableModule drawableModule = getDrawableModule();
+        if (drawableModule == null)
+            return;
 
-		emitterModule = emitterGraph.getEmitterModule();
-		if (emitterModule == null)
-			return;
+        emitterModule = emitterGraph.getEmitterModule();
+        if (emitterModule == null)
+            return;
 
-		if (!initialized) {
-			init();
-		}
+        if (!initialized) {
+            init();
+        }
 
-		if (paused)
-			return;
+        if (paused)
+            return;
 
-		//update variables to their real values
-		emitterModule.updateScopeData(this);
+        //update variables to their real values
+        emitterModule.updateScopeData(this);
 
-		if (getDrawableModule() != null) {
-			getDrawableModule().processValues();
-		}
+        if (getDrawableModule() != null) {
+            getDrawableModule().processValues();
+        }
 
-		delay = emitterModule.getDelay();
-		duration = emitterModule.getDuration();
-		isContinuous = emitterModule.isContinuous();
-		rate = emitterModule.getRate();
-		maxParticles = emitterModule.getMaxParticles();
-		isAttached = emitterModule.isAttached();
-		isAdditive = emitterModule.isAdditive();
-		isBlendAdd = emitterModule.isBlendAdd();
-		isImmortal = emitterModule.isImmortal();
-		boolean youngestInBack = emitterModule.isYoungestInBack();
+        delay = emitterModule.getDelay();
+        duration = emitterModule.getDuration();
+        isContinuous = emitterModule.isContinuous();
+        rate = emitterModule.getRate();
+        maxParticles = emitterModule.getMaxParticles();
+        isAttached = emitterModule.isAttached();
+        isAdditive = emitterModule.isAdditive();
+        isBlendAdd = emitterModule.isBlendAdd();
+        isImmortal = emitterModule.isImmortal();
+        boolean youngestInBack = emitterModule.isYoungestInBack();
 
-		if (delayTimer > 0) {
-			delayTimer -= delta;
-			if (delayTimer < 0)
-				delayTimer = 0;
-			if (delayTimer > 0) {
+        if (delayTimer > 0) {
+            delayTimer -= delta;
+            if (delayTimer < 0)
+                delayTimer = 0;
+            if (delayTimer > 0) {
 
-				updateParticles(delta); // process existing particles at least
+                updateParticles(delta); // process existing particles at least
 
-				emitterGraph.resetRequesters();
-				return;
-			}
-		}
+                emitterGraph.resetRequesters();
+                return;
+            }
+        }
 
-		float normDelta = delta / duration;
+        float normDelta = delta / duration;
 
-		float deltaLeftover = 0;
-		if (alpha + normDelta > 1f) {
-			deltaLeftover = (1f - alpha) * duration;
-			alpha = 1f;
-		} else {
-			alpha += normDelta;
-			deltaLeftover = delta;
-		}
+        float deltaLeftover = 0;
+        if (alpha + normDelta > 1f) {
+            deltaLeftover = (1f - alpha) * duration;
+            alpha = 1f;
+        } else {
+            alpha += normDelta;
+            deltaLeftover = delta;
+        }
 
-		//update variables to their real values
-		emitterModule.updateScopeData(this);
+        //update variables to their real values
+        emitterModule.updateScopeData(this);
 
-		//
-		if (maxParticles == -1 || activeParticles.size < maxParticles) {
-			if (alpha < 1f || (alpha == 1f && deltaLeftover > 0)) { // emission only here
-				// let's emmit
-				particlesToEmmit += rate * deltaLeftover;
+        //
+        if (maxParticles == -1 || activeParticles.size < maxParticles) {
+            if (alpha < 1f || (alpha == 1f && deltaLeftover > 0)) { // emission only here
+                // let's emmit
+                particlesToEmmit += rate * deltaLeftover;
 
-				if (isImmortal) {
-					particlesToEmmit = Math.max(0, Math.round(rate * duration) - activeParticles.size);
-				}
+                if (isImmortal) {
+                    particlesToEmmit = Math.max(0, Math.round(rate * duration) - activeParticles.size);
+                }
 
-				int count = (int)particlesToEmmit;
-				for (int i = 0; i < count; i++) {
-					Particle particle = particlePool.obtain();
-					if (emitterGraph.getParticleModule() != null) {
-						particle.init(this);
-						if (youngestInBack) {
-							activeParticles.add(particle);
-						} else {
-							activeParticles.insert(0, particle);
-						}
-					}
-				}
-				particlesToEmmit -= count;
-			}
-		}
+                int count = (int) particlesToEmmit;
+                for (int i = 0; i < count; i++) {
+                    Particle particle = particlePool.obtain();
+                    if (emitterGraph.getParticleModule() != null) {
+                        particle.init(this);
+                        if (youngestInBack) {
+                            activeParticles.add(particle);
+                        } else {
+                            activeParticles.insert(0, particle);
+                        }
+                    }
+                }
+                particlesToEmmit -= count;
+            }
+        }
 
-		// process existing particles.
-		updateParticles(delta);
+        // process existing particles.
+        updateParticles(delta);
 
-		if (alpha == 1f) {
-			if (isContinuous && !isStopped) {
-				// let's repeat
-				restart();
-			} else {
-				// all immortals must die
-				if(isImmortal) {
-					for (int i = activeParticles.size - 1; i >= 0; i--) {
-						Particle particle = activeParticles.get(i);
-						particle.alpha = 1f;
-						particle.notifyKill();
-						particlePool.free(particle);
-						activeParticles.removeIndex(i);
-					}
-				}
-			}
-		}
+        if (alpha == 1f) {
+            if (isContinuous && !isStopped) {
+                // let's repeat
+                restart();
+            } else {
+                // all immortals must die
+                if (isImmortal) {
+                    for (int i = activeParticles.size - 1; i >= 0; i--) {
+                        Particle particle = activeParticles.get(i);
+                        particle.alpha = 1f;
+                        particle.notifyKill();
+                        particlePool.free(particle);
+                        activeParticles.removeIndex(i);
+                    }
+                }
+            }
+        }
 
-		if(activeParticles.size == 0) {
-			isComplete = true;
-		} else {
-			isComplete = false;
-		}
+        isComplete = activeParticles.size == 0;
 
-		emitterGraph.resetRequesters();
-	}
+        emitterGraph.resetRequesters();
+    }
 
-	@Override
-	public ParticleEmitterDescriptor getEmitterGraph () {
-		return emitterGraph;
-	}
+    @Override
+    public ParticleEmitterDescriptor getEmitterGraph() {
+        return emitterGraph;
+    }
 
-	@Override
-	public boolean isVisible () {
-		return isVisible;
-	}
+    @Override
+    public boolean isVisible() {
+        return isVisible;
+    }
 
-	@Override
-	public boolean isAdditive () {
-		return isAdditive;
-	}
+    public void setVisible(boolean isVisible) {
+        this.isVisible = isVisible;
+    }
 
-	@Override
-	public boolean isBlendAdd () {
-		return isBlendAdd;
-	}
+    @Override
+    public boolean isAdditive() {
+        return isAdditive;
+    }
 
-	@Override
-	public Array<Particle> getActiveParticles () {
-		return activeParticles;
-	}
+    @Override
+    public boolean isBlendAdd() {
+        return isBlendAdd;
+    }
 
-	public Pool<ParticlePointData> particlePointDataPool = new Pool<ParticlePointData>() {
-		@Override
-		protected ParticlePointData newObject () {
-			return new ParticlePointData();
-		}
-	};
+    @Override
+    public Array<Particle> getActiveParticles() {
+        return activeParticles;
+    }
 
-	public Pool<ParticlePointGroup> groupPool = new Pool<ParticlePointGroup>() {
-		@Override
-		protected ParticlePointGroup newObject () {
-			return new ParticlePointGroup();
-		}
-	};
+    private void updateParticles(float delta) {
+        final DrawableModule drawableModule = getDrawableModule();
+        if (drawableModule == null) return;
 
-	private void updateParticles(float delta) {
-		final DrawableModule drawableModule = getDrawableModule();
-		if (drawableModule == null) return;
+        freePoints(this, particlePointDataPool, groupPool);
 
-		freePoints(this, particlePointDataPool, groupPool);
+        for (int i = activeParticles.size - 1; i >= 0; i--) {
+            Particle particle = activeParticles.get(i);
 
-		for (int i = activeParticles.size - 1; i >= 0; i--) {
-			Particle particle = activeParticles.get(i);
+            particle.update(this, delta);
 
-			particle.update(this, delta);
+            if (isImmortal) {
+                // if immortal we don't kill them
+                if (particle.alpha >= 1f) {
+                    particle.alpha = particle.alpha - 1f;
+                }
+            }
 
-			if(isImmortal) {
-				// if immortal we don't kill them
-				if (particle.alpha >= 1f) {
-					particle.alpha = particle.alpha - 1f;
-				}
-			}
+            if (particle.alpha >= 1f) {
+                particle.notifyKill();
+                particlePool.free(particle);
+                activeParticles.removeIndex(i);
+            }
+        }
 
-			if (particle.alpha >= 1f) {
-				particle.notifyKill();
-				particlePool.free(particle);
-				activeParticles.removeIndex(i);
-			}
-		}
+        // do some immortality cleaning
+        if (isImmortal) {
+            int particlesToExpect = Math.max(0, Math.round(rate * duration));
+            int particlesToDelete = activeParticles.size - particlesToExpect;
+            if (particlesToDelete > 0) {
+                for (int i = activeParticles.size - 1; i >= particlesToExpect; i--) {
+                    Particle particle = activeParticles.get(i);
+                    particle.alpha = 1f;
+                    particle.notifyKill();
+                    particlePool.free(particle);
+                    activeParticles.removeIndex(i);
+                }
+            }
+        }
+    }
 
-		// do some immortality cleaning
-		if(isImmortal) {
-			int particlesToExpect = Math.max(0, Math.round(rate * duration));
-			int particlesToDelete = activeParticles.size - particlesToExpect;
-			if(particlesToDelete > 0) {
-				for (int i = activeParticles.size - 1; i >= particlesToExpect; i--) {
-					Particle particle = activeParticles.get(i);
-					particle.alpha = 1f;
-					particle.notifyKill();
-					particlePool.free(particle);
-					activeParticles.removeIndex(i);
-				}
-			}
-		}
-	}
-
-	public void restart() {
-    	delayTimer = delay;
-    	alpha = 0;
-    	isComplete = false;
-		particlesToEmmit = 1f;
+    public void restart() {
+        delayTimer = delay;
+        alpha = 0;
+        isComplete = false;
+        particlesToEmmit = 1f;
         isStopped = false;
-	}
+    }
 
-	@Override
-	public void reset () {
-		delayTimer = delay;
-		alpha = 0;
-		isComplete = false;
-		particlesToEmmit = 1f;
-		isStopped = true;
-		Array.ArrayIterator<Particle> iterator = activeParticles.iterator();
-		while (iterator.hasNext()) {
-			Particle next = iterator.next();
-			next.notifyKill();
-			particlePool.free(next);
-			iterator.remove();
-		}
-		freePoints(this, particlePointDataPool, groupPool);
+    @Override
+    public void reset() {
+        delayTimer = delay;
+        alpha = 0;
+        isComplete = false;
+        particlesToEmmit = 1f;
+        isStopped = true;
+        Array.ArrayIterator<Particle> iterator = activeParticles.iterator();
+        while (iterator.hasNext()) {
+            Particle next = iterator.next();
+            next.notifyKill();
+            particlePool.free(next);
+            iterator.remove();
+        }
+        freePoints(this, particlePointDataPool, groupPool);
+    }
 
-	}
+    @Override
+    public float getDelayRemaining() {
+        return delayTimer;
+    }
 
-	@Override
-	public float getDelayRemaining () {
-		return delayTimer;
-	}
+    @Override
+    public int getActiveParticleCount() {
+        return activeParticles.size;
+    }
 
-	public void setScope (ScopePayload scope) {
+    @Override
+    public boolean isContinuous() {
+        return isContinuous;
+    }
+
+    @Override
+    public boolean isComplete() {
+        return isComplete;
+    }
+
+    @Override
+    public float getAlpha() {
+        return alpha;
+    }
+
+    @Override
+    public ParticleModule getParticleModule() {
+        return emitterGraph.getParticleModule();
+    }
+
+    @Override
+    public EmitterModule getEmitterModule() {
+        return emitterGraph.getEmitterModule();
+    }
+
+    @Override
+    public DrawableModule getDrawableModule() {
+        return emitterGraph.getDrawableModule();
+    }
+
+    @Override
+    public Vector3 getEffectPosition() {
+        return getEffect().position;
+    }
+
+    @Override
+    public float getWorldRotation() {
+        return getEffect().worldRotation;
+    }
+
+    @Override
+    public Vector2 getWorldScale() {
+        return getEffect().worldScale;
+    }
+
+    @Override
+    public int getEffectUniqueID() {
+        return uniqueID;
+    }
+
+    public ScopePayload getScope() {
+        return scopePayload;
+    }
+
+    public void setScope(ScopePayload scope) {
         this.scopePayload = scope;
     }
 
-	@Override
-	public int getActiveParticleCount () {
-		return activeParticles.size;
-	}
+    @Override
+    public Color getTint() {
+        return tint;
+    }
 
-	@Override
-	public boolean isContinuous () {
-		return isContinuous;
-	}
+    public void setTint(Color color) {
+        tint.set(color);
+    }
 
-	@Override
-	public boolean isComplete () {
-		return isComplete;
-	}
+    public ParticleEffectInstance getEffect() {
+        return parentParticleInstance;
+    }
 
-	@Override
-	public float getAlpha () {
-		return alpha;
-	}
+    public boolean isAttached() {
+        return isAttached;
+    }
 
-	@Override
-	public ParticleModule getParticleModule () {
-		return emitterGraph.getParticleModule();
-	}
-
-	@Override
-	public EmitterModule getEmitterModule () {
-		return emitterGraph.getEmitterModule();
-	}
-
-	@Override
-	public DrawableModule getDrawableModule () {
-		return emitterGraph.getDrawableModule();
-	}
-
-	@Override
-	public Vector3 getEffectPosition () {
-		return getEffect().position;
-	}
-
-	@Override
-	public float getWorldRotation () {
-		return getEffect().worldRotation;
-	}
-
-	@Override
-	public Vector2 getWorldScale () {
-		return getEffect().worldScale;
-	}
-
-	@Override
-	public int getEffectUniqueID () {
-		return uniqueID;
-	}
-
-	public ScopePayload getScope () {
-    	return scopePayload;
-	}
-
-	@Override
-	public Color getTint () {
-		return tint;
-	}
-
-	public ParticleEffectInstance getEffect() {
-    	return parentParticleInstance;
-	}
-
-	public boolean isAttached() {
-		return isAttached;
-	}
-
-	public void stop() {
-		alpha = 1f;
+    public void stop() {
+        alpha = 1f;
         isStopped = true;
-	}
+    }
 
-	public void pause() {
-		paused = true;
-	}
+    public void pause() {
+        paused = true;
+    }
 
-	public void resume() {
-		paused = false;
-	}
+    public void resume() {
+        paused = false;
+    }
 
-	public void setVisible(boolean isVisible) {
-		this.isVisible = isVisible;
-	}
+    public void setTint(float r, float g, float b, float a) {
+        tint.set(r, g, b, a);
+    }
 
-	public void setTint(float r, float g, float b, float a) {
-		tint.set(r, g, b, a);
-	}
+    public void freePoints(IEmitter emitter, Pool<ParticlePointData> particlePointDataPool, Pool<ParticlePointGroup> groupPool) {
+        Array<ParticlePointGroup> pointData = emitter.pointData();
+        for (ParticlePointGroup group : pointData) {
+            particlePointDataPool.freeAll(group.pointDataArray);
+            group.pointDataArray.clear();
 
-	public void setTint(Color color) {
-    	tint.set(color);
-	}
-
-	public void freePoints (IEmitter emitter, Pool<ParticlePointData> particlePointDataPool, Pool<ParticlePointGroup> groupPool) {
-		Array<ParticlePointGroup> pointData = emitter.pointData();
-		for (ParticlePointGroup group : pointData) {
-			particlePointDataPool.freeAll(group.pointDataArray);
-			group.pointDataArray.clear();
-
-			groupPool.free(group);
-		}
-		pointData.clear();
-	}
-
+            groupPool.free(group);
+        }
+        pointData.clear();
+    }
 }

@@ -5,7 +5,7 @@ import com.talosvfx.talos.editor.addons.scene.logic.PropertyWrapperProviders;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.IPropertyProvider;
 import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.components.AComponent;
-import com.talosvfx.talos.runtime.scene.components.BoneComponent;
+
 import lombok.Getter;
 
 public class GameObjectPropertyHolder extends PropertyWrapperProviders.ObjectPropertyHolder<GameObject> {
@@ -13,13 +13,13 @@ public class GameObjectPropertyHolder extends PropertyWrapperProviders.ObjectPro
     private final GameObject gameObject;
     private final GameObjectPropertyProvider gameObjectPropertyProvider;
 
-    public GameObjectPropertyHolder (GameObject gameObject) {
+    public GameObjectPropertyHolder(GameObject gameObject) {
         this.gameObject = gameObject;
         gameObjectPropertyProvider = new GameObjectPropertyProvider(gameObject);
     }
 
     @Override
-    public Iterable<IPropertyProvider> getPropertyProviders () {
+    public Iterable<IPropertyProvider> getPropertyProviders() {
         Array<IPropertyProvider> list = new Array<>();
 
         list.add(gameObjectPropertyProvider);
@@ -32,7 +32,7 @@ public class GameObjectPropertyHolder extends PropertyWrapperProviders.ObjectPro
     }
 
     @Override
-    public String getName () {
+    public String getName() {
         return gameObject.getName();
     }
 }

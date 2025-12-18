@@ -3,12 +3,14 @@ package com.talosvfx.talos.editor.dialogs.preference.widgets;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
@@ -20,16 +22,22 @@ import com.talosvfx.talos.editor.dialogs.preference.widgets.blocks.KeyboardCombi
 import com.talosvfx.talos.editor.dialogs.preference.widgets.blocks.MouseCombinationTypeWidget;
 import com.talosvfx.talos.editor.nodes.widgets.TextValueWidget;
 import com.talosvfx.talos.editor.nodes.widgets.ValueWidget;
-import com.talosvfx.talos.editor.notifications.commands.*;
-import com.talosvfx.talos.editor.notifications.commands.enums.Commands;
+import com.talosvfx.talos.editor.notifications.commands.AbstractCombinationWithModifier;
+import com.talosvfx.talos.editor.notifications.commands.Combination;
+import com.talosvfx.talos.editor.notifications.commands.CombinationType;
+import com.talosvfx.talos.editor.notifications.commands.ICommand;
+import com.talosvfx.talos.editor.notifications.commands.KeyboardCombination;
+import com.talosvfx.talos.editor.notifications.commands.ModifierKey;
+import com.talosvfx.talos.editor.notifications.commands.MouseCombination;
 import com.talosvfx.talos.editor.project2.SharedResources;
+import com.talosvfx.talos.editor.widgets.ui.Styles;
+import com.talosvfx.talos.editor.widgets.ui.common.ArrowButton;
+import com.talosvfx.talos.editor.widgets.ui.common.CollapsableWidget;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
 import com.talosvfx.talos.editor.widgets.ui.common.FileOpenField;
-import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.LabelWithZoom;
-import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.SelectBoxWithZoom;
-import com.talosvfx.talos.editor.widgets.ui.Styles;
-import com.talosvfx.talos.editor.widgets.ui.common.*;
 import com.talosvfx.talos.editor.widgets.ui.common.ImageButton;
+import com.talosvfx.talos.editor.widgets.ui.common.SquareButton;
+import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.LabelWithZoom;
 
 public class PrefWidgetFactory {
 
@@ -38,23 +46,23 @@ public class PrefWidgetFactory {
 
         APrefWidget widget = null;
 
-        if(item.getName().equals("boolean")) {
+        if (item.getName().equals("boolean")) {
             widget = new BooleanWidget(parentPath, item);
         }
-        if(item.getName().equals("number")) {
+        if (item.getName().equals("number")) {
             widget = new NumberWidget(parentPath, item);
         }
-        if(item.getName().equals("string")) {
+        if (item.getName().equals("string")) {
             widget = new StringWidget(parentPath, item);
         }
-        if(item.getName().equals("path")) {
+        if (item.getName().equals("path")) {
             widget = new PathWidget(parentPath, item);
         }
         if (item.getName().equals("color")) {
             widget = new ColorWidget(parentPath, item);
         }
 
-        if(widget != null) {
+        if (widget != null) {
 
             APrefWidget finalWidget = widget;
             widget.addListener(new ChangeListener() {
@@ -135,9 +143,9 @@ public class PrefWidgetFactory {
                     // only showing visual combination (cant be changed directly)
                     finalCombination.setTouchable(Touchable.disabled);
 
-                    resetToDefaultsButton = new ImageButton(ColorLibrary.obtainBackground(ColorLibrary.SHAPE_SQUIRCLE_2,  ColorLibrary.BackgroundColor.LIGHT_GRAY), SharedResources.skin.getDrawable("icon-arrow-left"));
+                    resetToDefaultsButton = new ImageButton(ColorLibrary.obtainBackground(ColorLibrary.SHAPE_SQUIRCLE_2, ColorLibrary.BackgroundColor.LIGHT_GRAY), SharedResources.skin.getDrawable("icon-arrow-left"));
                     resetToDefaultsButton.getIconCell().pad(1);
-                    resetToDefaultsButton.addListener(new ClickListener(){
+                    resetToDefaultsButton.addListener(new ClickListener() {
                         @Override
                         public void clicked(InputEvent event, float x, float y) {
                             super.clicked(event, x, y);
@@ -186,7 +194,7 @@ public class PrefWidgetFactory {
             });
         }
 
-        private void setInputCombinationType (CombinationType combinationType) {
+        private void setInputCombinationType(CombinationType combinationType) {
             if (combinationType == CombinationType.MOUSE) inputCombinationTypeWidget = new MouseCombinationTypeWidget();
             if (combinationType == CombinationType.KEYBOARD) inputCombinationTypeWidget = new KeyboardCombinationTypeWidget();
             combinationTypeCell.setActor(inputCombinationTypeWidget);
@@ -201,7 +209,7 @@ public class PrefWidgetFactory {
             finalCombination.setText(activeCombination.toString());
         }
 
-        private Table constructModifierButtonsRow () {
+        private Table constructModifierButtonsRow() {
             buttonLabelsMap = new ObjectMap<>();
 
             final Table modifierButtonsRow = new Table();
@@ -240,7 +248,7 @@ public class PrefWidgetFactory {
         }
 
         // button
-        private void anyPressed () {
+        private void anyPressed() {
             for (ObjectMap.Entry<ModifierKey, Button> modifierKeySquareButtonEntry : buttonLabelsMap) {
                 modifierKeySquareButtonEntry.value.setChecked(anyButton.isChecked());
                 buttonPressed(modifierKeySquareButtonEntry.key, modifierKeySquareButtonEntry.value.isChecked());
@@ -265,7 +273,7 @@ public class PrefWidgetFactory {
             configurationChanged();
         }
 
-        private void createCopyOfCurrent () {
+        private void createCopyOfCurrent() {
             Combination activeCombination = command.getActiveCombination();
             Combination copy = activeCombination.copy();
             command.overrideCombination(copy);
@@ -278,7 +286,7 @@ public class PrefWidgetFactory {
         }
 
         @Override
-        protected String writeString () {
+        protected String writeString() {
             return null;
         }
 
@@ -329,7 +337,7 @@ public class PrefWidgetFactory {
 
         public BooleanWidget(String parentPath, XmlReader.Element xml) {
             super(parentPath, xml);
-            if(xml.hasAttribute("label")) {
+            if (xml.hasAttribute("label")) {
                 Label label = new LabelWithZoom(xml.getAttribute("label"), SharedResources.skin);
                 leftContent.add(label).right().expandX();
             }
@@ -344,7 +352,7 @@ public class PrefWidgetFactory {
         }
 
         @Override
-        protected String writeString () {
+        protected String writeString() {
             return Boolean.toString(checkBoxWidget.isChecked());
         }
     }
@@ -362,17 +370,17 @@ public class PrefWidgetFactory {
 
             float min = 0;
             float max = 9999;
-            if(xml.hasAttribute("min")) {
+            if (xml.hasAttribute("min")) {
                 min = Float.parseFloat(xml.getAttribute("min"));
             }
-            if(xml.hasAttribute("max")) {
+            if (xml.hasAttribute("max")) {
                 max = Float.parseFloat(xml.getAttribute("max"));
             }
-            if(xml.hasAttribute("step")) {
+            if (xml.hasAttribute("step")) {
                 float step = Float.parseFloat(xml.getAttribute("step"));
                 valueWidget.setStep(step);
             }
-            if(xml.hasAttribute("min") || xml.hasAttribute("max")) {
+            if (xml.hasAttribute("min") || xml.hasAttribute("max")) {
                 valueWidget.setRange(min, max);
                 valueWidget.setShowProgress(xml.getBooleanAttribute("progress", true));
             }
@@ -384,7 +392,7 @@ public class PrefWidgetFactory {
         }
 
         @Override
-        protected String writeString () {
+        protected String writeString() {
             return Float.toString(valueWidget.getValue());
         }
     }
@@ -407,7 +415,7 @@ public class PrefWidgetFactory {
         }
 
         @Override
-        protected String writeString () {
+        protected String writeString() {
             return widget.getValue();
         }
     }
@@ -430,14 +438,14 @@ public class PrefWidgetFactory {
 
         @Override
         protected void fromString(String str) {
-            if(str.equals("{usr}")) {
+            if (str.equals("{usr}")) {
                 str = Gdx.files.absolute(System.getProperty("user.home")).file().getAbsolutePath();
             }
             fileOpener.setPath(str);
         }
 
         @Override
-        protected String writeString () {
+        protected String writeString() {
             return fileOpener.getPath();
         }
     }
@@ -462,7 +470,7 @@ public class PrefWidgetFactory {
         }
 
         @Override
-        protected String writeString () {
+        protected String writeString() {
             return widget.getValue().toString();
         }
     }

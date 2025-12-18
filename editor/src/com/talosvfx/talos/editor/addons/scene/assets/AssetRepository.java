@@ -1,47 +1,74 @@
 package com.talosvfx.talos.editor.addons.scene.assets;
 
+import static com.talosvfx.talos.editor.addons.scene.assets.RepositoryOptimizer.getUserHomeTalosDir;
+import static com.talosvfx.talos.editor.layouts.LayoutGrid.LayoutJsonStructure;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.PixmapIO;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.badlogic.gdx.utils.IntIntMap;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonReader;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.JsonWriter;
+import com.badlogic.gdx.utils.Null;
+import com.badlogic.gdx.utils.ObjectIntMap;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.ObjectSet;
+import com.badlogic.gdx.utils.Predicate;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.esotericsoftware.spine.SkeletonBinary;
 import com.esotericsoftware.spine.SkeletonData;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.RoutineEditorApp;
-import com.talosvfx.talos.editor.addons.scene.events.*;
-import com.talosvfx.talos.editor.addons.scene.events.meta.MetaDataReloadedEvent;
+import com.talosvfx.talos.editor.addons.scene.events.AssetColorFillEvent;
+import com.talosvfx.talos.editor.addons.scene.events.AssetPathChanged;
+import com.talosvfx.talos.editor.addons.scene.events.AssetResolutionChanged;
+import com.talosvfx.talos.editor.addons.scene.events.ScriptFileChangedEvent;
+import com.talosvfx.talos.editor.addons.scene.events.SpritePixelPerUnitUpdateEvent;
 import com.talosvfx.talos.editor.addons.scene.events.explorer.DirectoryMovedEvent;
+import com.talosvfx.talos.editor.addons.scene.events.meta.MetaDataReloadedEvent;
+import com.talosvfx.talos.editor.addons.scene.utils.importers.AssetImporter;
+import com.talosvfx.talos.editor.data.RoutineStageData;
 import com.talosvfx.talos.editor.data.ShaderStageData;
 import com.talosvfx.talos.editor.nodes.NodeWidget;
 import com.talosvfx.talos.editor.nodes.widgets.AbstractWidget;
 import com.talosvfx.talos.editor.nodes.widgets.GameAssetWidget;
-import com.talosvfx.talos.editor.notifications.events.ProjectUnloadEvent;
-import com.talosvfx.talos.editor.serialization.EmitterData;
-import com.talosvfx.talos.editor.wrappers.ModuleWrapper;
-import com.talosvfx.talos.runtime.RuntimeContext;
-import com.talosvfx.talos.runtime.assets.AMetadata;
-import com.talosvfx.talos.editor.addons.scene.utils.importers.AssetImporter;
-import com.talosvfx.talos.editor.data.RoutineStageData;
 import com.talosvfx.talos.editor.notifications.EventHandler;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.Observer;
 import com.talosvfx.talos.editor.notifications.events.ProjectLoadedEvent;
+import com.talosvfx.talos.editor.notifications.events.ProjectUnloadEvent;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.project2.apps.ParticleNodeEditorApp;
 import com.talosvfx.talos.editor.project2.savestate.GlobalSaveStateSystem;
+import com.talosvfx.talos.editor.serialization.EmitterData;
 import com.talosvfx.talos.editor.serialization.VFXProjectData;
 import com.talosvfx.talos.editor.serialization.VFXProjectSerializer;
+import com.talosvfx.talos.editor.utils.Toasts;
+import com.talosvfx.talos.editor.wrappers.ModuleWrapper;
+import com.talosvfx.talos.runtime.RuntimeContext;
+import com.talosvfx.talos.runtime.assets.AMetadata;
 import com.talosvfx.talos.runtime.assets.BaseAssetRepository;
 import com.talosvfx.talos.runtime.assets.FlipBookAsset;
+import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.GameAssetExportStructure;
+import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.runtime.assets.GameAssetsExportStructure;
+import com.talosvfx.talos.runtime.assets.GameResourceOwner;
+import com.talosvfx.talos.runtime.assets.RawAsset;
 import com.talosvfx.talos.runtime.assets.meta.DirectoryMetadata;
 import com.talosvfx.talos.runtime.assets.meta.FlipBookMetadata;
 import com.talosvfx.talos.runtime.assets.meta.ScriptMetadata;
@@ -49,32 +76,31 @@ import com.talosvfx.talos.runtime.assets.meta.SpineMetadata;
 import com.talosvfx.talos.runtime.assets.meta.SpriteMetadata;
 import com.talosvfx.talos.runtime.graphics.NineSlice;
 import com.talosvfx.talos.runtime.maps.TilePaletteData;
-import com.talosvfx.talos.runtime.scene.GameObjectContainer;
-import com.talosvfx.talos.runtime.scene.components.AComponent;
-import com.talosvfx.talos.runtime.utils.NamingUtils;
-import com.talosvfx.talos.editor.utils.Toasts;
-import com.talosvfx.talos.runtime.assets.GameAsset;
-import com.talosvfx.talos.runtime.assets.GameAssetType;
-import com.talosvfx.talos.runtime.assets.GameResourceOwner;
-import com.talosvfx.talos.runtime.assets.RawAsset;
 import com.talosvfx.talos.runtime.scene.GameObject;
+import com.talosvfx.talos.runtime.scene.GameObjectContainer;
 import com.talosvfx.talos.runtime.scene.Prefab;
 import com.talosvfx.talos.runtime.scene.Scene;
+import com.talosvfx.talos.runtime.scene.components.AComponent;
 import com.talosvfx.talos.runtime.scene.components.MapComponent;
 import com.talosvfx.talos.runtime.scene.components.ScriptComponent;
+import com.talosvfx.talos.runtime.utils.NamingUtils;
 import com.talosvfx.talos.runtime.utils.Supplier;
 import com.talosvfx.talos.runtime.utils.TempHackUtil;
 import com.talosvfx.talos.runtime.vfx.ParticleEffectDescriptor;
 import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
 import com.talosvfx.talos.runtime.vfx.modules.FlipBookMaterialModule;
 import com.talosvfx.talos.runtime.vfx.serialization.ExportData;
-import lombok.NonNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -84,23 +110,162 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.talosvfx.talos.editor.addons.scene.assets.RepositoryOptimizer.getUserHomeTalosDir;
-import static com.talosvfx.talos.editor.layouts.LayoutGrid.LayoutJsonStructure;
+import lombok.NonNull;
 
 public class AssetRepository extends BaseAssetRepository implements Observer {
 
-    private static final Logger logger = LoggerFactory.getLogger(AssetRepository.class);
     public static final AssetNameFieldFilter ASSET_NAME_FIELD_FILTER = new AssetNameFieldFilter();
-
-    private ObjectMap<GameAssetType, ObjectMap<String, GameAsset<?>>> identifierGameAssetMap = new ObjectMap<>();
-    private ObjectMap<GameAssetType, ObjectMap<UUID, GameAsset<?>>> uniqueIdentifierGameAssetMap = new ObjectMap<>();
-    private ObjectMap<GameAsset<AtlasSprite>, NineSlice> patchCache = new ObjectMap<>();
-    private ObjectSet<FileHandle> newFilesSeen = new ObjectSet<>();
-
-
+    private static final Logger logger = LoggerFactory.getLogger(AssetRepository.class);
     public static boolean dragAndDropping = false;
+    static AssetRepository instance;
+    public TextureRegion brokenTextureRegion;
+    private final ObjectMap<GameAssetType, ObjectMap<String, GameAsset<?>>> identifierGameAssetMap = new ObjectMap<>();
+    private final ObjectMap<GameAssetType, ObjectMap<UUID, GameAsset<?>>> uniqueIdentifierGameAssetMap = new ObjectMap<>();
+    private final ObjectMap<GameAsset<AtlasSprite>, NineSlice> patchCache = new ObjectMap<>();
+    private final ObjectSet<FileHandle> newFilesSeen = new ObjectSet<>();
+    private final DataMaps dataMaps = new DataMaps();
+    private FileHandle assetsRoot;
+    private final Json json;
+    private final ObjectMap<GameAssetType, GameResourceSaveStrategy> saveStrategyObjectMap = new ObjectMap<>();
 
-    public <T> GameAsset<T> getAssetForUniqueIdentifier (UUID uuid, GameAssetType type) {
+    {
+        saveStrategyObjectMap.put(GameAssetType.SCENE, this::serializeScene);
+        saveStrategyObjectMap.put(GameAssetType.PREFAB, this::serializePrefab);
+        saveStrategyObjectMap.put(GameAssetType.ROUTINE, this::serializeRoutine);
+        saveStrategyObjectMap.put(GameAssetType.SHADER, this::serializeShader);
+        saveStrategyObjectMap.put(GameAssetType.VFX, this::serializeVFX);
+    }
+
+    public AssetRepository() {
+        json = new Json();
+        json.setOutputType(JsonWriter.OutputType.json);
+
+        brokenTextureRegion = new TextureRegion(new Texture(Gdx.files.internal("addons/scene/missing/missing.png")));
+    }
+
+    public static AssetRepository getInstance() {
+        if (instance == null)
+            init();
+        return instance;
+    }
+
+    public static void init() {
+        AssetRepository assetRepository = new AssetRepository();
+        Notifications.registerObserver(assetRepository);
+        AssetRepository.instance = assetRepository;
+    }
+
+    public static void collectGameResourcesForGameObject(GameAsset<? extends GameObjectContainer> containerAsset, GameObject selfObject, ObjectMap<String, GameAsset<?>> copiedUUIDMap) {
+        int counter = 1;
+        if (containerAsset.type == GameAssetType.SCENE) {
+            Scene resource = (Scene) containerAsset.getResource();
+            boolean optimized = resource.isOptimized();
+            if (optimized) {
+                counter = 100000;
+            }
+        }
+        for (AComponent component : selfObject.getComponents()) {
+            if (component instanceof GameResourceOwner) {
+                GameResourceOwner gameResourceOwner = (GameResourceOwner) component;
+                GameAsset gameResource = gameResourceOwner.getGameResource();
+                if (gameResource.isBroken()) {
+                    Toasts.getInstance().showErrorToast("GameObject in scene/prefab " + containerAsset.nameIdentifier + " is broken. Broken asset = " + selfObject.getName());
+//					gameAssets.add(missingUUID.toString());
+                } else {
+                    GameAsset copiedAssetThatIsRequiredForGameObject = copiedUUIDMap.get(gameResource.getRootRawAsset().metaData.uuid.toString());
+                    containerAsset.dependentGameAssets.add(copiedAssetThatIsRequiredForGameObject);
+                    copiedAssetThatIsRequiredForGameObject.addDependency(containerAsset, counter);
+                }
+            }
+        }
+        Array<GameObject> gameObjects = selfObject.getGameObjects();
+        for (int i = 0; i < gameObjects.size; i++) {
+            collectGameResourcesForGameObject(containerAsset, gameObjects.get(i), copiedUUIDMap);
+        }
+    }
+
+    public static ObjectSet<String> dependentGameAssetsToUUIDArray(GameAsset<?> gameAsset) {
+        ObjectSet<String> uuids = new ObjectSet<>();
+        for (GameAsset<?> dependentGameAsset : gameAsset.dependentGameAssets) {
+            uuids.add(dependentGameAsset.getRootRawAsset().metaData.uuid.toString());
+        }
+
+        //Are we something that does shit dynamically? Like Scene/Prefab?
+
+        if (gameAsset.type == GameAssetType.PREFAB || gameAsset.type == GameAssetType.SCENE) {
+            GameAsset<GameObjectContainer> castedGameAsset = (GameAsset<GameObjectContainer>) gameAsset;
+            GameObjectContainer container = castedGameAsset.getResource();
+            GameObject selfObject = container.getSelfObject();
+            collectDependentGameResources(selfObject, uuids);
+        }
+
+        if (gameAsset.type == GameAssetType.ROUTINE) {
+            GameAsset<RoutineStageData> routineStageDataGameAsset = (GameAsset<RoutineStageData>) gameAsset;
+            Array<NodeWidget> nodes = routineStageDataGameAsset.getResource().getNodes();
+            if (nodes.size == 0) {
+                RoutineEditorApp routineEditorApp = new RoutineEditorApp();
+                routineEditorApp.updateForGameAsset(routineStageDataGameAsset);
+
+                routineEditorApp.onRemove();
+            }
+            for (NodeWidget node : nodes) {
+                ObjectMap<String, AbstractWidget> widgetMap = node.getWidgetMap();
+                for (ObjectMap.Entry<String, AbstractWidget> stringAbstractWidgetEntry : widgetMap) {
+                    AbstractWidget widget = stringAbstractWidgetEntry.value;
+                    if (widget instanceof GameAssetWidget) {
+                        GameAssetWidget<?> gameAssetWidget = (GameAssetWidget<?>) widget;
+                        GameAsset<?> value = gameAssetWidget.getValue();
+                        uuids.add(value.getRootRawAsset().metaData.uuid.toString());
+                    }
+                }
+            }
+        }
+
+        return uuids;
+    }
+
+    public static void collectDependentGameResources(GameObject selfObject, ObjectSet<String> uuids) {
+        for (AComponent component : selfObject.getComponents()) {
+            if (component instanceof GameResourceOwner) {
+                GameResourceOwner gameResourceOwner = (GameResourceOwner) component;
+                GameAsset gameResource = gameResourceOwner.getGameResource();
+                if (gameResource.isBroken()) {
+                    uuids.add(missingUUID.toString());
+                } else {
+                    uuids.add(gameResource.getRootRawAsset().metaData.uuid.toString());
+                }
+            }
+        }
+        Array<GameObject> gameObjects = selfObject.getGameObjects();
+        for (int i = 0; i < gameObjects.size; i++) {
+            collectDependentGameResources(gameObjects.get(i), uuids);
+        }
+    }
+
+    public static FileHandle getExportedScriptsFolderHandle() {
+        logger.info("Redo scripts folder to not be unique");
+//		String projectPath = SceneEditorWorkspace.getInstance().getProjectPath();
+//		return Gdx.files.absolute(projectPath).parent().child("src").child("scene").child("scripts");
+        return Gdx.files.local(".");
+    }
+
+    public static String relative(String fullPath) {
+        return relative(Gdx.files.absolute(fullPath));
+    }
+
+    public static String relative(FileHandle fileHandle) {
+        logger.info("should be removed, not sure why we need this");
+        String projectPath = SharedResources.currentProject.rootProjectDir().path();
+
+        String path = fileHandle.path();
+        if (path.startsWith(projectPath)) {
+            path = path.substring(projectPath.length());
+        }
+
+        return path;
+    }
+
+    public <T> GameAsset<T> getAssetForUniqueIdentifier(UUID uuid, GameAssetType type) {
         if (uniqueIdentifierGameAssetMap.containsKey(type)) {
             if (uniqueIdentifierGameAssetMap.get(type).containsKey(uuid)) {
                 return (GameAsset<T>) uniqueIdentifierGameAssetMap.get(type).get(uuid);
@@ -112,7 +277,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return brokenAsset;
     }
 
-    public <T> GameAsset<T> getAssetForIdentifier (String identifier, GameAssetType type) {
+    public <T> GameAsset<T> getAssetForIdentifier(String identifier, GameAssetType type) {
         if (identifierGameAssetMap.containsKey(type)) {
             if (identifierGameAssetMap.get(type).containsKey(identifier)) {
                 return (GameAsset<T>) identifierGameAssetMap.get(type).get(identifier);
@@ -125,24 +290,23 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
     }
 
     @Override
-    public boolean isAssetLoadedForIdentifier (String identifier, GameAssetType type) {
+    public boolean isAssetLoadedForIdentifier(String identifier, GameAssetType type) {
         if (identifierGameAssetMap.containsKey(type)) {
-            if (identifierGameAssetMap.get(type).containsKey(identifier)) {
-                return true;
-            }
+            return identifierGameAssetMap.get(type).containsKey(identifier);
         }
         return false;
     }
 
     @Override
-    public void unloadAsset (GameAsset<?> gameAsset) {
+    public void unloadAsset(GameAsset<?> gameAsset) {
         identifierGameAssetMap.get(gameAsset.type).remove(gameAsset.nameIdentifier);
         uniqueIdentifierGameAssetMap.get(gameAsset.type).remove(gameAsset.getRootRawAsset().metaData.uuid);
     }
 
     @Override
-    public NineSlice obtainNinePatch (GameAsset<AtlasSprite> gameAsset) {
-        if (patchCache.containsKey(gameAsset) && false) { //something better, maybe hash on pixel size + texture for this
+    public NineSlice obtainNinePatch(GameAsset<AtlasSprite> gameAsset) {
+        patchCache.containsKey(gameAsset);
+        if (false) { //something better, maybe hash on pixel size + texture for this
             return patchCache.get(gameAsset);
         } else {
             final SpriteMetadata metadata = (SpriteMetadata) gameAsset.getRootRawAsset().metaData;
@@ -154,7 +318,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
     }
 
     @EventHandler
-    public void onSpritePixelPerUnitUpdateEvent (SpritePixelPerUnitUpdateEvent event) {
+    public void onSpritePixelPerUnitUpdateEvent(SpritePixelPerUnitUpdateEvent event) {
         final SpriteMetadata metadata = event.getSpriteMetadata();
         for (ObjectMap.Entry<GameAsset<AtlasSprite>, NineSlice> gameAssetNinePatchEntry : patchCache) {
             if (gameAssetNinePatchEntry.key.getRootRawAsset().metaData.equals(metadata)) {
@@ -167,21 +331,21 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    private <T> void putAssetForIdentifier (String identifier, GameAssetType type, GameAsset<T> asset) {
+    private <T> void putAssetForIdentifier(String identifier, GameAssetType type, GameAsset<T> asset) {
         if (!identifierGameAssetMap.containsKey(type)) {
             identifierGameAssetMap.put(type, new ObjectMap<>());
         }
         identifierGameAssetMap.get(type).put(identifier, asset);
     }
 
-    private <T> void putAssetForUniqueIdentifier (UUID uuid, GameAssetType type, GameAsset<T> asset) {
+    private <T> void putAssetForUniqueIdentifier(UUID uuid, GameAssetType type, GameAsset<T> asset) {
         if (!uniqueIdentifierGameAssetMap.containsKey(type)) {
             uniqueIdentifierGameAssetMap.put(type, new ObjectMap<>());
         }
         uniqueIdentifierGameAssetMap.get(type).put(uuid, asset);
     }
 
-    public void reloadMetaData (AMetadata metadata) {
+    public void reloadMetaData(AMetadata metadata) {
         FileHandle metadataHandleFor = AssetImporter.getMetadataHandleFor(metadata.link.handle);
         JsonValue jsonValue = new JsonReader().parse(metadataHandleFor);
         metadata.read(json, jsonValue);
@@ -191,7 +355,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         Notifications.fireEvent(metaDataReloadedEvent);
     }
 
-    public <T> GameAsset<T> getAssetForResource (T resource) {
+    public <T> GameAsset<T> getAssetForResource(T resource) {
         ObjectMap.Entries<GameAssetType, ObjectMap<UUID, GameAsset<?>>> iterator = uniqueIdentifierGameAssetMap.iterator();
         while (iterator.hasNext()) {
             ObjectMap.Entry<GameAssetType, ObjectMap<UUID, GameAsset<?>>> next = iterator.next();
@@ -209,13 +373,13 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return null;
     }
 
-    public FileHandle copySampleSceneToProject (FileHandle preferredDestination) {
+    public FileHandle copySampleSceneToProject(FileHandle preferredDestination) {
         FileHandle originalScene = Gdx.files.internal("addons/scene/missing/New Scene.scn");
 
         return AssetRepository.getInstance().copyRawAsset(originalScene, preferredDestination);
     }
 
-    public <T> GameAsset<T> findFirstOfType (GameAssetType gameAssetType) {
+    public <T> GameAsset<T> findFirstOfType(GameAssetType gameAssetType) {
         ObjectMap<UUID, GameAsset<?>> entries = uniqueIdentifierGameAssetMap.get(gameAssetType);
         if (entries != null && entries.size > 0) {
             for (ObjectMap.Entry<UUID, GameAsset<?>> entry : entries) {
@@ -225,86 +389,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return null;
     }
 
-    static class DataMaps {
-        private ObjectMap<FileHandle, GameAsset> fileHandleGameAssetObjectMap = new ObjectMap<>();
-        private ObjectMap<UUID, RawAsset> uuidRawAssetMap = new ObjectMap<>();
-        private ObjectMap<FileHandle, RawAsset> fileHandleRawAssetMap = new ObjectMap<>();
-
-        void putFileHandleGameAsset (FileHandle handle, GameAsset<?> gameAsset) {
-            this.fileHandleGameAssetObjectMap.put(handle, gameAsset);
-        }
-
-        void clearFileHandleGameAssets () {
-            fileHandleGameAssetObjectMap.clear();
-            logger.info("Cleared file handles in file handle game asset map.");
-        }
-
-        void putUUIDRawAsset (UUID uuid, RawAsset rawAsset) {
-            uuidRawAssetMap.put(uuid, rawAsset);
-        }
-
-        void clearUUIDRawAssets () {
-            uuidRawAssetMap.clear();
-
-            logger.info("Cleared uuids for raw asset map.");
-        }
-
-        void putFileHandleRawAsset (FileHandle handle, RawAsset rawAsset) {
-            fileHandleRawAssetMap.put(handle, rawAsset);
-        }
-
-        void clearFileHandleRawAssets () {
-            fileHandleRawAssetMap.clear();
-
-            logger.info("Cleared file handle raw assets map.");
-        }
-
-        public GameAsset removeFileHandleGameAssetObjectMap (FileHandle handle) {
-            System.out.println("Removing file handle game asset " + handle.path());
-            return fileHandleGameAssetObjectMap.remove(handle);
-        }
-
-        public RawAsset removeFileHandleRawAsset (FileHandle handle) {
-            System.out.println("Removing file handle raw asset " + handle.path());
-            return fileHandleRawAssetMap.remove(handle);
-        }
-
-        public RawAsset removeUUIDRawAsset (UUID uuid) {
-
-            System.out.println("Removing uuid raw asset " + uuid.toString());
-            return uuidRawAssetMap.remove(uuid);
-        }
-    }
-
-    private DataMaps dataMaps = new DataMaps();
-
-    private FileHandle assetsRoot;
-    private Json json;
-
-    public TextureRegion brokenTextureRegion;
-
-    static AssetRepository instance;
-
-    public static AssetRepository getInstance () {
-        if (instance == null)
-            init();
-        return instance;
-    }
-
-    public static void init () {
-        AssetRepository assetRepository = new AssetRepository();
-        Notifications.registerObserver(assetRepository);
-        AssetRepository.instance = assetRepository;
-    }
-
-    public AssetRepository () {
-        json = new Json();
-        json.setOutputType(JsonWriter.OutputType.json);
-
-        brokenTextureRegion = new TextureRegion(new Texture(Gdx.files.internal("addons/scene/missing/missing.png")));
-    }
-
-    public void loadAssetsForProject (FileHandle assetsRoot) {
+    public void loadAssetsForProject(FileHandle assetsRoot) {
         this.assetsRoot = assetsRoot;
 
         //Go over all files, create raw assets if they don't exist in the map
@@ -318,14 +403,14 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         checkAllGameAssetCreation();
         Gdx.app.postRunnable(new Runnable() {
             @Override
-            public void run () {
+            public void run() {
                 //todo scripts
 //				loadChangesFromScripts(AssetRepository.this::fileVisit);
             }
         });
     }
 
-    public void unloadAssets () {
+    public void unloadAssets() {
         this.assetsRoot = null;
 
         identifierGameAssetMap.clear();
@@ -353,7 +438,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         dataMaps.clearFileHandleRawAssets();
     }
 
-    private void loadChangesFromScripts (Function<Path, FileVisitResult> function) {
+    private void loadChangesFromScripts(Function<Path, FileVisitResult> function) {
 
         FileHandle exportedScriptsFolderHandle = getExportedScriptsFolderHandle();
         if (!exportedScriptsFolderHandle.exists()) {
@@ -363,7 +448,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
             Path exportPath = exportedScriptsFolderHandle.file().toPath();
             Files.walkFileTree(exportPath, new SimpleFileVisitor<Path>() {
                 @Override
-                public FileVisitResult visitFile (Path file, BasicFileAttributes attrs) throws IOException {
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     return function.apply(file);
                 }
             });
@@ -372,7 +457,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    public FileVisitResult fileVisit (Path dir) {
+    public FileVisitResult fileVisit(Path dir) {
         File file = dir.toFile();
         if (file.isDirectory()) {
             return FileVisitResult.CONTINUE;
@@ -389,7 +474,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return FileVisitResult.CONTINUE;
     }
 
-    private void checkAllGameAssetCreation () { //raws
+    private void checkAllGameAssetCreation() { //raws
         checkGameAssetCreation(GameAssetType.SPRITE);
         checkGameAssetCreation(GameAssetType.SCRIPT);
         checkGameAssetCreation(GameAssetType.ROUTINE);
@@ -411,7 +496,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         newFilesSeen.clear();
     }
 
-    private void checkGameAssetCreation (GameAssetType type) {
+    private void checkGameAssetCreation(GameAssetType type) {
         //We need to do multiple passes here for dependent assets
 
         for (ObjectMap.Entry<FileHandle, RawAsset> entry : dataMaps.fileHandleRawAssetMap) {
@@ -438,7 +523,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    public void reloadGameAssetForRawFile (RawAsset link) {
+    public void reloadGameAssetForRawFile(RawAsset link) {
         Array<GameAsset> gameAssetReferences = new Array<>();
         gameAssetReferences.addAll(link.gameAssetReferences);
 
@@ -447,7 +532,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    public void reloadGameAsset (GameAsset gameAssetReference) {
+    public void reloadGameAsset(GameAsset gameAssetReference) {
         RawAsset rootRawAsset = gameAssetReference.getRootRawAsset();
         String gameAssetIdentifier = getGameAssetIdentifierFromRawAsset(rootRawAsset);
 
@@ -457,14 +542,12 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
             GameAsset gameAsset = createOrUpdateGameAssetForType(assetTypeFromExtension, gameAssetIdentifier, rootRawAsset, false, gameAssetReference);
             gameAssetReference.setResourcePayload(gameAsset.getResource());
             gameAssetReference.setUpdated();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
-    public void reloadGameAssetFromString (GameAsset gameAssetReference, String asSTring) {
+    public void reloadGameAssetFromString(GameAsset gameAssetReference, String asSTring) {
         RawAsset rootRawAsset = gameAssetReference.getRootRawAsset();
         String gameAssetIdentifier = getGameAssetIdentifierFromRawAsset(rootRawAsset);
 
@@ -485,7 +568,6 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
             GameAsset gameAsset = createOrUpdateGameAssetForType(assetTypeFromExtension, gameAssetIdentifier, rawAsset, false, gameAssetReference);
             gameAssetReference.setResourcePayload(gameAsset.getResource());
             gameAssetReference.setUpdated();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -493,32 +575,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         temp.delete();
     }
 
-    static class TypeIdentifierPair {
-        GameAssetType type;
-        String identifier;
-
-        public TypeIdentifierPair (GameAssetType type, String gameResourceIdentifier) {
-            this.type = type;
-            this.identifier = gameResourceIdentifier;
-        }
-
-        @Override
-        public boolean equals (Object o) {
-            if (this == o)
-                return true;
-            if (o == null || getClass() != o.getClass())
-                return false;
-            TypeIdentifierPair that = (TypeIdentifierPair) o;
-            return type == that.type && identifier.equals(that.identifier);
-        }
-
-        @Override
-        public int hashCode () {
-            return Objects.hash(type, identifier);
-        }
-    }
-
-    private void collectExportedAssetsArrayGameObjects (JsonValue gameObjects, ObjectSet<TypeIdentifierPair> pairs) {
+    private void collectExportedAssetsArrayGameObjects(JsonValue gameObjects, ObjectSet<TypeIdentifierPair> pairs) {
         if (gameObjects != null) {
             for (JsonValue gameObject : gameObjects) {
                 //Grab each component
@@ -527,7 +584,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    private void collectGameObjectExportedAssets (ObjectSet<TypeIdentifierPair> pairs, JsonValue gameObject) {
+    private void collectGameObjectExportedAssets(ObjectSet<TypeIdentifierPair> pairs, JsonValue gameObject) {
         if (gameObject.has("components")) {
             JsonValue components = gameObject.get("components");
             for (JsonValue component : components) {
@@ -548,7 +605,6 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                         String gameResourceIdentifier = GameResourceOwner.readGameResourceFromComponent(layer);
                         pairs.add(new TypeIdentifierPair(GameAssetType.TILE_PALETTE, gameResourceIdentifier));
                     }
-
                 }
             }
         }
@@ -558,46 +614,8 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    public static void collectGameResourcesForGameObject (GameAsset<? extends GameObjectContainer> containerAsset, GameObject selfObject, ObjectMap<String, GameAsset<?>> copiedUUIDMap) {
-        int counter = 1;
-        if (containerAsset.type == GameAssetType.SCENE) {
-            Scene resource = (Scene) containerAsset.getResource();
-            boolean optimized = resource.isOptimized();
-            if (optimized) {
-                counter = 100000;
-            }
-
-        }
-        for (AComponent component : selfObject.getComponents()) {
-            if (component instanceof GameResourceOwner) {
-                GameResourceOwner gameResourceOwner = (GameResourceOwner) component;
-                GameAsset gameResource = gameResourceOwner.getGameResource();
-                if (gameResource.isBroken()) {
-                    Toasts.getInstance().showErrorToast("GameObject in scene/prefab " + containerAsset.nameIdentifier + " is broken. Broken asset = " + selfObject.getName());
-//					gameAssets.add(missingUUID.toString());
-                } else {
-                    GameAsset copiedAssetThatIsRequiredForGameObject = copiedUUIDMap.get(gameResource.getRootRawAsset().metaData.uuid.toString());
-                    containerAsset.dependentGameAssets.add(copiedAssetThatIsRequiredForGameObject);
-                    copiedAssetThatIsRequiredForGameObject.addDependency(containerAsset, counter);
-                }
-            }
-        }
-        Array<GameObject> gameObjects = selfObject.getGameObjects();
-        for (int i = 0; i < gameObjects.size; i++) {
-            collectGameResourcesForGameObject(containerAsset, gameObjects.get(i), copiedUUIDMap);
-        }
-    }
-
-
-
-    static class FlipBookModuleAsset {
-        FlipBookMaterialModule module;
-        GameAsset<VFXProjectData> vfxAsset;
-        GameAsset<AtlasSprite> flipBookAsset;
-    }
-
     //Export formats
-    public void exportToFile (AssetRepositoryCatalogueExportOptions settings, boolean isOptimized) { //todo
+    public void exportToFile(AssetRepositoryCatalogueExportOptions settings, boolean isOptimized) { //todo
         //Go over all entities, go over all components. If component has a game resource, we mark it for export
 
         ObjectSet<GameAsset<?>> gameAssetsToExport = new ObjectSet<>();
@@ -623,7 +641,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
 
             Predicate<GameAsset<?>> forceAllPredicate = new Predicate<GameAsset<?>>() {
                 @Override
-                public boolean evaluate (GameAsset<?> gameAsset) {
+                public boolean evaluate(GameAsset<?> gameAsset) {
                     return true;
                 }
             };
@@ -691,11 +709,10 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                                 try {
                                     copiedUUIDMap.get(value.getRootRawAsset().metaData.uuid.toString()).addDependency(copiedAsset);
                                 } catch (Exception e) {
-                                    Toasts.getInstance().showErrorToast("Error exporting routine: " + copiedAsset.nameIdentifier +" for rotuine ");
+                                    Toasts.getInstance().showErrorToast("Error exporting routine: " + copiedAsset.nameIdentifier + " for rotuine ");
                                     throw e;
                                 }
                             }
-
                         }
                     }
                 }
@@ -707,7 +724,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         //Force vfx exports
         for (GameAsset<?> copiedAsset : copiedAssets) {
             if (copiedAsset.type == GameAssetType.VFX) {
-                GameAsset<VFXProjectData> vfxGameAsset = (GameAsset<VFXProjectData>)copiedAsset;
+                GameAsset<VFXProjectData> vfxGameAsset = (GameAsset<VFXProjectData>) copiedAsset;
 
 
                 VFXProjectData resource = vfxGameAsset.getResource();
@@ -715,9 +732,9 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                     for (ModuleWrapper<?> module : emitter.modules) {
                         AbstractModule mod = module.getModule();
                         if (mod instanceof FlipBookMaterialModule) {
-                            GameAsset<AtlasSprite> asset = ((FlipBookMaterialModule)mod).asset;
+                            GameAsset<AtlasSprite> asset = ((FlipBookMaterialModule) mod).asset;
                             FlipBookModuleAsset flipBookModuleAsset = new FlipBookModuleAsset();
-                            flipBookModuleAsset.module = (FlipBookMaterialModule)mod;
+                            flipBookModuleAsset.module = (FlipBookMaterialModule) mod;
                             flipBookModuleAsset.vfxAsset = vfxGameAsset;
                             flipBookModuleAsset.flipBookAsset = asset;
                             flipBookSprites.put(asset, flipBookModuleAsset);
@@ -726,7 +743,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                 }
 
                 for (GameAsset<?> dependentGameAsset : vfxGameAsset.dependentGameAssets) {
-                    if (flipBookSprites.containsKey((GameAsset)dependentGameAsset)) {
+                    if (flipBookSprites.containsKey((GameAsset) dependentGameAsset)) {
 
                     } else {
                         //add vfx as a dependnecy of the sprite asset
@@ -832,32 +849,24 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         if (isOptimized) {
             startOptimizedExport(gameAssetsToExport, settings, gameAssetExportStructure, new Runnable() {
                 @Override
-                public void run () {
+                public void run() {
                     exportToTargetDir(gameAssetsToExport, settings, gameAssetExportStructure);
 
                     FileHandle assetRepoExportFile = settings.getExportPathHandle().child("assetExport.json");
                     assetRepoExportFile.writeString(json.toJson(gameAssetExportStructure), false);
 
                     Toasts.getInstance().showInfoToast("Optimized export completed");
-
                 }
             });
-
         } else {
             exportToTargetDir(gameAssetsToExport, settings, gameAssetExportStructure);
 
             FileHandle assetRepoExportFile = settings.getExportPathHandle().child("assetExport.json");
             assetRepoExportFile.writeString(json.toJson(gameAssetExportStructure), false);
         }
-
-
     }
 
-    public static class FlipBookConversionData {
-        GameAsset<FlipBookAsset> flipBookAssetGameAsset;
-        Array<GameAsset<AtlasSprite>> generatedSprites = new Array<>();
-    }
-    private FlipBookConversionData convertFlipBooksToSprites (GameAsset<AtlasSprite> key, FileHandle flipbooks, Pixmap pixmap, int rowsDefaultValue, int columnsDefaultValue, int splitCountDefaultValue) {
+    private FlipBookConversionData convertFlipBooksToSprites(GameAsset<AtlasSprite> key, FileHandle flipbooks, Pixmap pixmap, int rowsDefaultValue, int columnsDefaultValue, int splitCountDefaultValue) {
         FlipBookConversionData data = new FlipBookConversionData();
 
         String flipBookIdentifier = key.nameIdentifier;
@@ -910,7 +919,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return data;
     }
 
-    private void passDependency (GameAsset<?> copiedAsset, GameAsset<?> parent, ObjectMap<String, GameAsset<?>> copiedUUIDMap) {
+    private void passDependency(GameAsset<?> copiedAsset, GameAsset<?> parent, ObjectMap<String, GameAsset<?>> copiedUUIDMap) {
 
         for (int i = 0; i < parent.dependentGameAssets.size; i++) {
 
@@ -924,7 +933,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    private void debug (ObjectSet<GameAsset<?>> copiedAssets) {
+    private void debug(ObjectSet<GameAsset<?>> copiedAssets) {
 
         IntIntMap countersBigBois = new IntIntMap();
 
@@ -955,20 +964,19 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    private void startOptimizedExport (ObjectSet<GameAsset<?>> gameAssetsToExport, AssetRepositoryCatalogueExportOptions settings, GameAssetsExportStructure gameAssetExportStructure, Runnable runnable) {
+    private void startOptimizedExport(ObjectSet<GameAsset<?>> gameAssetsToExport, AssetRepositoryCatalogueExportOptions settings, GameAssetsExportStructure gameAssetExportStructure, Runnable runnable) {
         Toasts.getInstance().showInfoToast("Starting optimized export in background");
 
         Thread thread = new Thread(new Runnable() {
             @Override
-            public void run () {
+            public void run() {
                 RepositoryOptimizer.startProcess(gameAssetsToExport, gameAssetExportStructure, settings, runnable);
             }
         });
         thread.start();
     }
 
-
-    private void exportToTargetDir (ObjectSet<GameAsset<?>> gameAssetsToExport, AssetRepositoryCatalogueExportOptions settings, GameAssetsExportStructure gameAssetExportStructure) {
+    private void exportToTargetDir(ObjectSet<GameAsset<?>> gameAssetsToExport, AssetRepositoryCatalogueExportOptions settings, GameAssetsExportStructure gameAssetExportStructure) {
         FileHandle exportPathHandle = settings.getExportPathHandle();
         if (exportPathHandle.exists()) {
             exportPathHandle.deleteDirectory();
@@ -1039,7 +1047,6 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
             }
 
             gameAssetExportStructure.gameAssets.add(assetExportStructure);
-
         }
 
         GameAssetExportStructure value = new GameAssetExportStructure();
@@ -1049,65 +1056,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         gameAssetExportStructure.gameAssets.add(value);
     }
 
-    public static ObjectSet<String> dependentGameAssetsToUUIDArray (GameAsset<?> gameAsset) {
-        ObjectSet<String> uuids = new ObjectSet<>();
-        for (GameAsset<?> dependentGameAsset : gameAsset.dependentGameAssets) {
-            uuids.add(dependentGameAsset.getRootRawAsset().metaData.uuid.toString());
-        }
-
-        //Are we something that does shit dynamically? Like Scene/Prefab?
-
-        if (gameAsset.type == GameAssetType.PREFAB || gameAsset.type == GameAssetType.SCENE) {
-            GameAsset<GameObjectContainer> castedGameAsset = (GameAsset<GameObjectContainer>) gameAsset;
-            GameObjectContainer container = castedGameAsset.getResource();
-            GameObject selfObject = container.getSelfObject();
-            collectDependentGameResources(selfObject, uuids);
-        }
-
-        if (gameAsset.type == GameAssetType.ROUTINE) {
-            GameAsset<RoutineStageData> routineStageDataGameAsset = (GameAsset<RoutineStageData>) gameAsset;
-            Array<NodeWidget> nodes = routineStageDataGameAsset.getResource().getNodes();
-            if (nodes.size == 0) {
-                RoutineEditorApp routineEditorApp = new RoutineEditorApp();
-                routineEditorApp.updateForGameAsset(routineStageDataGameAsset);
-
-                routineEditorApp.onRemove();
-            }
-            for (NodeWidget node : nodes) {
-                ObjectMap<String, AbstractWidget> widgetMap = node.getWidgetMap();
-                for (ObjectMap.Entry<String, AbstractWidget> stringAbstractWidgetEntry : widgetMap) {
-                    AbstractWidget widget = stringAbstractWidgetEntry.value;
-                    if (widget instanceof GameAssetWidget) {
-                        GameAssetWidget<?> gameAssetWidget = (GameAssetWidget<?>) widget;
-                        GameAsset<?> value = gameAssetWidget.getValue();
-                        uuids.add(value.getRootRawAsset().metaData.uuid.toString());
-                    }
-                }
-            }
-        }
-
-        return uuids;
-    }
-
-    public static void collectDependentGameResources (GameObject selfObject, ObjectSet<String> uuids) {
-        for (AComponent component : selfObject.getComponents()) {
-            if (component instanceof GameResourceOwner) {
-                GameResourceOwner gameResourceOwner = (GameResourceOwner) component;
-                GameAsset gameResource = gameResourceOwner.getGameResource();
-                if (gameResource.isBroken()) {
-                    uuids.add(missingUUID.toString());
-                } else {
-                    uuids.add(gameResource.getRootRawAsset().metaData.uuid.toString());
-                }
-            }
-        }
-        Array<GameObject> gameObjects = selfObject.getGameObjects();
-        for (int i = 0; i < gameObjects.size; i++) {
-            collectDependentGameResources(gameObjects.get(i), uuids);
-        }
-    }
-
-    private boolean copyMetaIfExists (FileHandle handle, FileHandle dirToCopyInto) {
+    private boolean copyMetaIfExists(FileHandle handle, FileHandle dirToCopyInto) {
         FileHandle meta = handle.parent().child(handle.name() + ".meta");
         if (meta.exists()) {
             meta.copyTo(dirToCopyInto);
@@ -1116,7 +1065,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return false;
     }
 
-    private String getRelativePathFromRoot (FileHandle projectDir, FileHandle pathInsideProjectDir) {
+    private String getRelativePathFromRoot(FileHandle projectDir, FileHandle pathInsideProjectDir) {
         String path = projectDir.path();
         String childPath = pathInsideProjectDir.parent().path();
         String[] splits = childPath.split(path);
@@ -1130,7 +1079,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return relativePath;
     }
 
-    private void exportGameAsset (AssetRepositoryCatalogueExportOptions settings, GameAssetType gameAssetType, Predicate<GameAsset<?>> acceptancePredicate, ObjectSet<GameAsset<?>> assetsToExportSet) {
+    private void exportGameAsset(AssetRepositoryCatalogueExportOptions settings, GameAssetType gameAssetType, Predicate<GameAsset<?>> acceptancePredicate, ObjectSet<GameAsset<?>> assetsToExportSet) {
         Array<GameAsset<Object>> assetsForType = getAssetsForType(gameAssetType);
         for (GameAsset<?> objectGameAsset : assetsForType) {
             if (gameAssetType == GameAssetType.VFX) {
@@ -1147,7 +1096,6 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                         }
                     }
                 }
-
             }
 
             if (acceptancePredicate.evaluate(objectGameAsset)) {
@@ -1168,10 +1116,9 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                 }
             }
         }
-
     }
 
-    private void findAllPrefabs (FileHandle assets, ObjectSet<TypeIdentifierPair> identifiersBeingUsedByComponents) {
+    private void findAllPrefabs(FileHandle assets, ObjectSet<TypeIdentifierPair> identifiersBeingUsedByComponents) {
         FileHandle[] list = assets.list();
         for (FileHandle handle : list) {
             if (handle.isDirectory()) {
@@ -1194,7 +1141,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    private GameAssetType getGameAssetTypeFromClazz (String componentClazz) {
+    private GameAssetType getGameAssetTypeFromClazz(String componentClazz) {
         try {
             Class<? extends GameResourceOwner> aClass = ClassReflection.forName(componentClazz);
             return GameAssetType.getAssetTypeFromGameResourceOwner(aClass);
@@ -1203,7 +1150,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    private boolean componentIsResourceOwner (String componentClazz) {
+    private boolean componentIsResourceOwner(String componentClazz) {
         try {
             Class aClass = ClassReflection.forName(componentClazz);
 
@@ -1214,15 +1161,15 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    private String getGameAssetIdentifierFromRawAsset (RawAsset asset) {
+    private String getGameAssetIdentifierFromRawAsset(RawAsset asset) {
         return asset.handle.nameWithoutExtension();
     }
 
-    private UUID getGameAssetUniqueIdentifierFromRawAsset (RawAsset asset) {
+    private UUID getGameAssetUniqueIdentifierFromRawAsset(RawAsset asset) {
         return asset.metaData.uuid;
     }
 
-    private void createGameAsset (FileHandle key, RawAsset value) {
+    private void createGameAsset(FileHandle key, RawAsset value) {
         String gameAssetIdentifier = getGameAssetIdentifierFromRawAsset(value);
         UUID gameAssetUniqueIdentifier = getGameAssetUniqueIdentifierFromRawAsset(value);
 
@@ -1252,7 +1199,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         dataMaps.putFileHandleGameAsset(key, gameAsset);
     }
 
-    public FileHandle copySampleParticleToProject (FileHandle preferredDestination) {
+    public FileHandle copySampleParticleToProject(FileHandle preferredDestination) {
         FileHandle originalTls = Gdx.files.internal("addons/scene/missing/sample.tls");
         FileHandle imageRequired = Gdx.files.internal("addons/scene/missing/white.png");
 
@@ -1265,11 +1212,11 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return AssetRepository.getInstance().copyRawAsset(originalTls, preferredDestination);
     }
 
-    public GameAsset<?> createOrUpdateGameAssetForType (GameAssetType assetTypeFromExtension, String gameAssetIdentifier, RawAsset value, boolean createLinks) {
+    public GameAsset<?> createOrUpdateGameAssetForType(GameAssetType assetTypeFromExtension, String gameAssetIdentifier, RawAsset value, boolean createLinks) {
         return createOrUpdateGameAssetForType(assetTypeFromExtension, gameAssetIdentifier, value, createLinks, null);
     }
 
-    public GameAsset<?> createOrUpdateGameAssetForType (GameAssetType assetTypeFromExtension, String gameAssetIdentifier, RawAsset value, boolean createLinks, @Null GameAsset<?> in) {
+    public GameAsset<?> createOrUpdateGameAssetForType(GameAssetType assetTypeFromExtension, String gameAssetIdentifier, RawAsset value, boolean createLinks, @Null GameAsset<?> in) {
         if (!assetTypeFromExtension.isRootGameAsset()) {
             throw new GdxRuntimeException("Trying to load a game asset from a non root asset");
         }
@@ -1419,7 +1366,6 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                         }
 
                         assetToUpdate.setResourcePayload(particleEffectDescriptor);
-
                     }
 
                     break;
@@ -1445,8 +1391,8 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
 
                     ((GameAsset<VFXProjectData>) gameAssetOut).setResourcePayload(projectData);
 
-                   if (dragAndDropping) {
-                        Toasts.getInstance().showInfoToast("Auto saved imported VFX " + value.handle.name());;
+                    if (dragAndDropping) {
+                        Toasts.getInstance().showInfoToast("Auto saved imported VFX " + value.handle.name());
                         AssetRepository.getInstance().saveGameAssetResourceJsonToFile(gameAssetOut);
                     }
 
@@ -1474,7 +1420,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                     if (gameAssetOut == null) {
                         GameAsset<RoutineStageData> asset = new GameAsset<RoutineStageData>(gameAssetIdentifier, assetTypeFromExtension) {
                             @Override
-                            public void setUpdated () {
+                            public void setUpdated() {
                                 getResource().setName(getRootRawAsset().handle.nameWithoutExtension());
                                 super.setUpdated();
                             }
@@ -1503,7 +1449,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                     if (gameAssetOut == null) {
                         GameAsset<ShaderStageData> asset = new GameAsset<ShaderStageData>(gameAssetIdentifier, assetTypeFromExtension) {
                             @Override
-                            public void setUpdated () {
+                            public void setUpdated() {
                                 getResource().setName(getRootRawAsset().handle.nameWithoutExtension());
                                 super.setUpdated();
                             }
@@ -1530,7 +1476,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
 
                         GameAsset<Prefab> prefabGameAsset = new GameAsset<Prefab>(gameAssetIdentifier, assetTypeFromExtension) {
                             @Override
-                            public void setUpdated () {
+                            public void setUpdated() {
                                 getResource().setName(getRootRawAsset().handle.nameWithoutExtension());
                                 super.setUpdated();
                             }
@@ -1553,7 +1499,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                     if (gameAssetOut == null) {
                         GameAsset<Scene> sceneGameAsset = new GameAsset<Scene>(gameAssetIdentifier, assetTypeFromExtension) {
                             @Override
-                            public void setUpdated () {
+                            public void setUpdated() {
                                 getResource().setName(getRootRawAsset().handle.nameWithoutExtension());
                                 super.setUpdated();
                             }
@@ -1633,7 +1579,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return gameAssetOut;
     }
 
-    public void disposeGameAssetForType (@NonNull GameAsset<?> gameAsset) {
+    public void disposeGameAssetForType(@NonNull GameAsset<?> gameAsset) {
         GameAssetType assetTypeFromExtension = gameAsset.type;
 
         if (!assetTypeFromExtension.isRootGameAsset()) {
@@ -1691,7 +1637,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    public void saveMetaData (AMetadata metaData, boolean useGlobalState) {
+    public void saveMetaData(AMetadata metaData, boolean useGlobalState) {
         if (useGlobalState) {
             GlobalSaveStateSystem.MetaDataUpdateStateObject metaDataUpdateStateObject = new GlobalSaveStateSystem.MetaDataUpdateStateObject(metaData);
             SharedResources.globalSaveStateSystem.pushItem(metaDataUpdateStateObject);
@@ -1699,20 +1645,20 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         saveMetaDataToFile(metaData);
     }
 
-    public void saveMetaDataToFile (AMetadata metadata) {
+    public void saveMetaDataToFile(AMetadata metadata) {
         RawAsset link = metadata.link;
         FileHandle metadataHandleFor = AssetImporter.getMetadataHandleFor(link.handle);
         metadataHandleFor.writeString(json.prettyPrint(metadata), false);
     }
 
-    public void assetChanged (GameAsset<?> gameAsset) {
+    public void assetChanged(GameAsset<?> gameAsset) {
         Toasts.getInstance().showInfoToast("Marked changes " + gameAsset.nameIdentifier);
 
         GlobalSaveStateSystem.GameAssetUpdateStateObject gameAssetUpdateStateObject = new GlobalSaveStateSystem.GameAssetUpdateStateObject(gameAsset);
         SharedResources.globalSaveStateSystem.pushItem(gameAssetUpdateStateObject);
     }
 
-    public void saveGameAssetResourceJsonToFile (GameAsset<?> gameAsset, boolean useGlobalState) {
+    public void saveGameAssetResourceJsonToFile(GameAsset<?> gameAsset, boolean useGlobalState) {
         if (useGlobalState) {
             GlobalSaveStateSystem.GameAssetUpdateStateObject gameAssetUpdateStateObject = new GlobalSaveStateSystem.GameAssetUpdateStateObject(gameAsset);
             SharedResources.globalSaveStateSystem.pushItem(gameAssetUpdateStateObject);
@@ -1721,35 +1667,22 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         saveGameAssetResourceJsonToFile(gameAsset);
     }
 
-    private interface GameResourceSaveStrategy<T> {
-        String serializeToJson (GameAsset<T> gameAsset, Json json);
-    }
-
-    private ObjectMap<GameAssetType, GameResourceSaveStrategy> saveStrategyObjectMap = new ObjectMap<>();
-
-    {
-        saveStrategyObjectMap.put(GameAssetType.SCENE, this::serializeScene);
-        saveStrategyObjectMap.put(GameAssetType.PREFAB, this::serializePrefab);
-        saveStrategyObjectMap.put(GameAssetType.ROUTINE, this::serializeRoutine);
-        saveStrategyObjectMap.put(GameAssetType.SHADER, this::serializeShader);
-        saveStrategyObjectMap.put(GameAssetType.VFX, this::serializeVFX);
-    }
-
-    private String serializeRoutine (GameAsset<RoutineStageData> gameAsset, Json json) {
+    private String serializeRoutine(GameAsset<RoutineStageData> gameAsset, Json json) {
         RoutineStageData resource = gameAsset.getResource();
         return json.prettyPrint(resource);
     }
-    private String serializeShader (GameAsset<ShaderStageData> gameAsset, Json json) {
+
+    private String serializeShader(GameAsset<ShaderStageData> gameAsset, Json json) {
         ShaderStageData resource = gameAsset.getResource();
         return json.prettyPrint(resource);
     }
 
-    private String serializeVFX (GameAsset<VFXProjectData> gameAsset, Json json) {
+    private String serializeVFX(GameAsset<VFXProjectData> gameAsset, Json json) {
         VFXProjectData resource = gameAsset.getResource();
         return json.prettyPrint(resource);
     }
 
-    private String serializeScene (GameAsset<Scene> gameAsset, Json json) {
+    private String serializeScene(GameAsset<Scene> gameAsset, Json json) {
 
         Scene resource = gameAsset.getResource();
         String asString = resource.getAsString();
@@ -1757,7 +1690,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return asString;
     }
 
-    private String serializePrefab (GameAsset<Prefab> gameAsset, Json json) {
+    private String serializePrefab(GameAsset<Prefab> gameAsset, Json json) {
 
         Prefab resource = gameAsset.getResource();
         String asString = resource.getAsString();
@@ -1765,7 +1698,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return asString;
     }
 
-    public <T> String saveGameAssetCurrentStateToJsonString (GameAsset<T> gameAsset) {
+    public <T> String saveGameAssetCurrentStateToJsonString(GameAsset<T> gameAsset) {
         GameResourceSaveStrategy<T> gameResourceSaveStrategy = saveStrategyObjectMap.get(gameAsset.type);
         if (gameResourceSaveStrategy != null) {
 
@@ -1778,7 +1711,6 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
             }
 
             return jsonString;
-
         } else {
             Toasts.getInstance().showErrorToast("Trying to save an asset that doesn't have a save strategy " + gameAsset);
             logger.error("Trying to save an asset that doesn't have a save strategy");
@@ -1787,7 +1719,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return null;
     }
 
-    public <T> void saveGameAssetResourceJsonToFile (GameAsset<T> gameAsset) {
+    public <T> void saveGameAssetResourceJsonToFile(GameAsset<T> gameAsset) {
         Toasts.getInstance().showInfoToast("Saved to file " + gameAsset.nameIdentifier);
         RawAsset rootRawAsset = gameAsset.getRootRawAsset();
 
@@ -1800,17 +1732,16 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
 
         rootRawAsset.handle.writeString(jsonString, false);
         SharedResources.globalSaveStateSystem.markSaved(gameAsset);
-
     }
 
-    public GameObject copyGameObject (GameObject gameObject) {
+    public GameObject copyGameObject(GameObject gameObject) {
         String serialized = json.toJson(gameObject);
         GameObject newObject = json.fromJson(GameObject.class, serialized);
         newObject.uuid = UUID.randomUUID();
         return newObject;
     }
 
-    private void collectRawResourceFromDirectory (FileHandle dir, boolean checkGameResources) {
+    private void collectRawResourceFromDirectory(FileHandle dir, boolean checkGameResources) {
 
         if (!dir.isDirectory()) {
             rawAssetCreated(dir, checkGameResources);
@@ -1829,22 +1760,19 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    private boolean shouldIgnoreAsset (FileHandle fileHandle) {
+    private boolean shouldIgnoreAsset(FileHandle fileHandle) {
         String extension = fileHandle.extension();
 
         if (fileHandle.name().equals(".DS_Store"))
             return true;
-        if (extension.equals("meta"))
-            return true;
-
-        return false;
+        return extension.equals("meta");
     }
 
-    public void registerFileWatching () {
+    public void registerFileWatching() {
 
     }
 
-    public void createPForTLSIfNotExist (RawAsset tlsRawAsset, boolean checkGameResources) {
+    public void createPForTLSIfNotExist(RawAsset tlsRawAsset, boolean checkGameResources) {
         if (checkGameResources) {
             VFXProjectData projectData = VFXProjectSerializer.readTalosTLSProject(tlsRawAsset.handle, getTalosContext().getIdentifier());
             ExportData exportData = VFXProjectSerializer.exportTLSDataToP(projectData);
@@ -1857,7 +1785,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    public void rawAssetCreated (FileHandle fileHandle, boolean checkGameResources) {
+    public void rawAssetCreated(FileHandle fileHandle, boolean checkGameResources) {
         newFilesSeen.add(fileHandle);
         try {
             GameAssetType assetTypeFromExtension = GameAssetType.getAssetTypeFromExtension(fileHandle.extension());
@@ -1892,17 +1820,17 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
     }
 
     @EventHandler
-    public void onProjectLoad (ProjectLoadedEvent projectLoadedEvent) {
+    public void onProjectLoad(ProjectLoadedEvent projectLoadedEvent) {
         loadAssetsForProject(projectLoadedEvent.getProjectData().rootProjectDir());
     }
 
     @EventHandler
-    public void onProjectUnload (ProjectUnloadEvent projectUnloadEvent) {
+    public void onProjectUnload(ProjectUnloadEvent projectUnloadEvent) {
         unloadAssets();
     }
 
     @EventHandler
-    public void onScriptFileChanged (ScriptFileChangedEvent event) {
+    public void onScriptFileChanged(ScriptFileChangedEvent event) {
         FileHandle realScriptHandle = event.file;
         String proxyMetaPath = realScriptHandle.path() + ".meta";
         FileHandle proxyMetaFileHandle = new FileHandle(proxyMetaPath);
@@ -1946,7 +1874,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    private void updateScriptComponentsForNewMeta (GameObject gameObject, ScriptMetadata metaData, Array<ScriptComponent> updatedComponents) {
+    private void updateScriptComponentsForNewMeta(GameObject gameObject, ScriptMetadata metaData, Array<ScriptComponent> updatedComponents) {
         if (gameObject.hasComponent(ScriptComponent.class)) {
             ScriptComponent component = gameObject.getComponent(ScriptComponent.class);
             AMetadata componentMeta = component.getGameResource().getRootRawAsset().metaData;
@@ -1965,7 +1893,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    private <T extends AMetadata> T createMetaDataForAsset (RawAsset rawAsset) {
+    private <T extends AMetadata> T createMetaDataForAsset(RawAsset rawAsset) {
         if (rawAsset.handle.isDirectory()) {
             return (T) new DirectoryMetadata();
         } else {
@@ -1995,14 +1923,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    public static FileHandle getExportedScriptsFolderHandle () {
-        logger.info("Redo scripts folder to not be unique");
-//		String projectPath = SceneEditorWorkspace.getInstance().getProjectPath();
-//		return Gdx.files.absolute(projectPath).parent().child("src").child("scene").child("scripts");
-        return Gdx.files.local(".");
-    }
-
-    public GameAsset<?> getAssetForPath (FileHandle file, boolean ignoreBroken) {
+    public GameAsset<?> getAssetForPath(FileHandle file, boolean ignoreBroken) {
         if (dataMaps.fileHandleGameAssetObjectMap.containsKey(file)) {
             GameAsset<?> gameAsset = dataMaps.fileHandleGameAssetObjectMap.get(file);
             if (ignoreBroken) {
@@ -2018,7 +1939,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return null;
     }
 
-    public <T> Array<GameAsset<T>> getAssetsForType (GameAssetType type) {
+    public <T> Array<GameAsset<T>> getAssetsForType(GameAssetType type) {
         Array<GameAsset<T>> assets = new Array<>();
         for (GameAsset value : dataMaps.fileHandleGameAssetObjectMap.values()) {
             if (value.type == type) {
@@ -2028,7 +1949,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return assets;
     }
 
-    private void deleteFileImpl (FileHandle handle) {
+    private void deleteFileImpl(FileHandle handle) {
         FileHandle metadataHandleFor = AssetImporter.getMetadataHandleFor(handle);
         if (metadataHandleFor.exists()) {
             metadataHandleFor.delete();
@@ -2057,7 +1978,6 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                     identifierGameAssetMap.get(gameAsset.type).remove(gameAsset.nameIdentifier);
                     uniqueIdentifierGameAssetMap.get(gameAsset.type).remove(rawAsset.metaData.uuid);
                 }
-
             }
 
             dataMaps.removeFileHandleRawAsset(handle);
@@ -2065,17 +1985,16 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    public void deleteRawAsset (FileHandle handle) {
+    public void deleteRawAsset(FileHandle handle) {
         if (handle.isDirectory()) {
             for (FileHandle fileHandle : handle.list()) {
                 deleteRawAsset(fileHandle);
             }
         }
         deleteFileImpl(handle);
-
     }
 
-    public FileHandle copyRawAsset (FileHandle file, FileHandle directory) {
+    public FileHandle copyRawAsset(FileHandle file, FileHandle directory) {
         return copyRawAsset(file, directory, false);
     }
 
@@ -2089,7 +2008,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
      * @param replace
      * @return FileHandle of newly copied file.
      */
-    public FileHandle copyRawAsset (FileHandle file, FileHandle directory, boolean replace) {
+    public FileHandle copyRawAsset(FileHandle file, FileHandle directory, boolean replace) {
         // TODO: 11.01.23 rename arguments
         String fileName = directory.isDirectory() ? file.name() : directory.name();
         final FileHandle destinationDirectory = directory.isDirectory() ? directory : directory.parent();
@@ -2099,7 +2018,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
 
             fileName = NamingUtils.getNewName(baseName, new Supplier<Collection<String>>() {
                 @Override
-                public Collection<String> get () {
+                public Collection<String> get() {
                     ArrayList<String> fileNames = new ArrayList<>();
                     for (FileHandle fileHandle : destinationDirectory.list()) {
                         fileNames.add(fileHandle.nameWithoutExtension());
@@ -2107,7 +2026,6 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                     return fileNames;
                 }
             }) + "." + file.extension();
-
         }
         // do not allow stupid characters
         Pattern pattern = Pattern.compile("[/?<>\\\\:*|\"]");
@@ -2133,14 +2051,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return dest;
     }
 
-    static class MovingDirNode {
-        FileHandle oldHandle;
-        FileHandle newHandle;
-
-        Array<MovingDirNode> children = new Array<>();
-    }
-
-    private void updateChildReferences (MovingDirNode parent) {
+    private void updateChildReferences(MovingDirNode parent) {
         for (MovingDirNode child : parent.children) {
 
             FileHandle oldHandle = child.oldHandle;
@@ -2175,11 +2086,10 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                 Notifications.fireEvent(assetPathChanged);
             }
             updateChildReferences(child);
-
         }
     }
 
-    private void populateChildren (FileHandle fileHandle, MovingDirNode fileNode) {
+    private void populateChildren(FileHandle fileHandle, MovingDirNode fileNode) {
         FileHandle[] children = fileHandle.list();
         for (FileHandle handle : children) {
             if (handle.extension().equals("meta"))
@@ -2197,11 +2107,11 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
     }
 
     //Could be a rename or a move
-    public void moveFile (FileHandle file, FileHandle destination, boolean rename) {
+    public void moveFile(FileHandle file, FileHandle destination, boolean rename) {
         AssetImporter.moveFile(file, destination, true, rename);
     }
 
-    public void moveFile (FileHandle file, FileHandle destination, boolean checkGameAssets, boolean rename) {
+    public void moveFile(FileHandle file, FileHandle destination, boolean checkGameAssets, boolean rename) {
 
         if (file.isDirectory()) {
             //Moving a folder
@@ -2223,7 +2133,6 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
             Notifications.fireEvent(Notifications.obtainEvent(DirectoryMovedEvent.class).set(file, destination));
 
             updateChildReferences(rootNode);
-
         } else {
             //Moving a file
             if (destination.isDirectory()) {
@@ -2290,7 +2199,6 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                 for (GameAsset gameAssetReference : rawAsset.gameAssetReferences) {
                     gameAssetReference.setUpdated();
                 }
-
             } else {
                 //Its a rename
                 if (dataMaps.fileHandleRawAssetMap.containsKey(file)) {
@@ -2352,7 +2260,6 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                     assetPathChanged.oldHandle = file;
                     assetPathChanged.newHandle = destination;
                     Notifications.fireEvent(assetPathChanged);
-
                 } else {
                     //Just move it
                     file.moveTo(destination);
@@ -2360,7 +2267,6 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
                     collectRawResourceFromDirectory(file, true);
                 }
             }
-
         }
 
         if (checkGameAssets) {
@@ -2368,7 +2274,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    private void handleRootGameResourceRename (RawAsset rawAsset, FileHandle newHandle) {
+    private void handleRootGameResourceRename(RawAsset rawAsset, FileHandle newHandle) {
         UUID gameAssetUniqueIdentifierFromRawAsset = getGameAssetUniqueIdentifierFromRawAsset(rawAsset);
         GameAssetType typeFromExtension = null;
         try {
@@ -2394,7 +2300,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         }
     }
 
-    public void resizeAsset (GameAsset<AtlasSprite> gameAsset, int width, int height) {
+    public void resizeAsset(GameAsset<AtlasSprite> gameAsset, int width, int height) {
         final FileHandle fileHandle = gameAsset.getRootRawAsset().handle;
         final Pixmap oldPixmap = new Pixmap(fileHandle);
         final Pixmap newPixmap = new Pixmap(width, height, oldPixmap.getFormat());
@@ -2415,7 +2321,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         Notifications.fireEvent(event);
     }
 
-    public void fillAssetColor (GameAsset<AtlasSprite> gameAsset, Color color) {
+    public void fillAssetColor(GameAsset<AtlasSprite> gameAsset, Color color) {
         final FileHandle fileHandle = gameAsset.getRootRawAsset().handle;
         final Pixmap pixmap = new Pixmap(fileHandle);
 
@@ -2442,23 +2348,7 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         Notifications.fireEvent(event);
     }
 
-    public static String relative (String fullPath) {
-        return relative(Gdx.files.absolute(fullPath));
-    }
-
-    public static String relative (FileHandle fileHandle) {
-        logger.info("should be removed, not sure why we need this");
-        String projectPath = SharedResources.currentProject.rootProjectDir().path();
-
-        String path = fileHandle.path();
-        if (path.startsWith(projectPath)) {
-            path = path.substring(projectPath.length());
-        }
-
-        return path;
-    }
-
-    private boolean isRootGameResource (RawAsset rawAsset) {
+    private boolean isRootGameResource(RawAsset rawAsset) {
         GameAssetType assetTypeFromExtension = null;
         try {
             assetTypeFromExtension = GameAssetType.getAssetTypeFromExtension(rawAsset.handle.extension());
@@ -2468,15 +2358,113 @@ public class AssetRepository extends BaseAssetRepository implements Observer {
         return assetTypeFromExtension.isRootGameAsset();
     }
 
-    private static class AssetNameFieldFilter implements TextField.TextFieldFilter {
+    private interface GameResourceSaveStrategy<T> {
+        String serializeToJson(GameAsset<T> gameAsset, Json json);
+    }
 
-        @Override
-        public boolean acceptChar (TextField textField, char c) {
-            return isLatinLetterOrDigit(c) || Character.isWhitespace(c) || c == '-' || c == '_' || c == '.';
+    static class DataMaps {
+        private final ObjectMap<FileHandle, GameAsset> fileHandleGameAssetObjectMap = new ObjectMap<>();
+        private final ObjectMap<UUID, RawAsset> uuidRawAssetMap = new ObjectMap<>();
+        private final ObjectMap<FileHandle, RawAsset> fileHandleRawAssetMap = new ObjectMap<>();
+
+        void putFileHandleGameAsset(FileHandle handle, GameAsset<?> gameAsset) {
+            this.fileHandleGameAssetObjectMap.put(handle, gameAsset);
         }
 
-        private static boolean isLatinLetterOrDigit (char c) {
+        void clearFileHandleGameAssets() {
+            fileHandleGameAssetObjectMap.clear();
+            logger.info("Cleared file handles in file handle game asset map.");
+        }
+
+        void putUUIDRawAsset(UUID uuid, RawAsset rawAsset) {
+            uuidRawAssetMap.put(uuid, rawAsset);
+        }
+
+        void clearUUIDRawAssets() {
+            uuidRawAssetMap.clear();
+
+            logger.info("Cleared uuids for raw asset map.");
+        }
+
+        void putFileHandleRawAsset(FileHandle handle, RawAsset rawAsset) {
+            fileHandleRawAssetMap.put(handle, rawAsset);
+        }
+
+        void clearFileHandleRawAssets() {
+            fileHandleRawAssetMap.clear();
+
+            logger.info("Cleared file handle raw assets map.");
+        }
+
+        public GameAsset removeFileHandleGameAssetObjectMap(FileHandle handle) {
+            System.out.println("Removing file handle game asset " + handle.path());
+            return fileHandleGameAssetObjectMap.remove(handle);
+        }
+
+        public RawAsset removeFileHandleRawAsset(FileHandle handle) {
+            System.out.println("Removing file handle raw asset " + handle.path());
+            return fileHandleRawAssetMap.remove(handle);
+        }
+
+        public RawAsset removeUUIDRawAsset(UUID uuid) {
+
+            System.out.println("Removing uuid raw asset " + uuid.toString());
+            return uuidRawAssetMap.remove(uuid);
+        }
+    }
+
+    static class TypeIdentifierPair {
+        GameAssetType type;
+        String identifier;
+
+        public TypeIdentifierPair(GameAssetType type, String gameResourceIdentifier) {
+            this.type = type;
+            this.identifier = gameResourceIdentifier;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+            TypeIdentifierPair that = (TypeIdentifierPair) o;
+            return type == that.type && identifier.equals(that.identifier);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(type, identifier);
+        }
+    }
+
+    static class FlipBookModuleAsset {
+        FlipBookMaterialModule module;
+        GameAsset<VFXProjectData> vfxAsset;
+        GameAsset<AtlasSprite> flipBookAsset;
+    }
+
+    public static class FlipBookConversionData {
+        GameAsset<FlipBookAsset> flipBookAssetGameAsset;
+        Array<GameAsset<AtlasSprite>> generatedSprites = new Array<>();
+    }
+
+    static class MovingDirNode {
+        FileHandle oldHandle;
+        FileHandle newHandle;
+
+        Array<MovingDirNode> children = new Array<>();
+    }
+
+    private static class AssetNameFieldFilter implements TextField.TextFieldFilter {
+
+        private static boolean isLatinLetterOrDigit(char c) {
             return (48 <= c && c <= 57) || (65 <= c && c <= 90) || (97 <= c && c <= 122); // check digit, upper case and lowercase
+        }
+
+        @Override
+        public boolean acceptChar(TextField textField, char c) {
+            return isLatinLetterOrDigit(c) || Character.isWhitespace(c) || c == '-' || c == '_' || c == '.';
         }
     }
 }

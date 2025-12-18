@@ -23,8 +23,8 @@ import com.talosvfx.talos.runtime.vfx.ParticleEmitterDescriptor;
 
 public class ParticleEmitterWrapper implements TimelineItemDataProvider<ParticleEmitterWrapper> {
 
-    private String emitterName = "";
     public boolean isMuted;
+    private String emitterName = "";
     private boolean isSolo;
     private float position;
 
@@ -84,17 +84,17 @@ public class ParticleEmitterWrapper implements TimelineItemDataProvider<Particle
     }
 
     @Override
-    public boolean isFull () {
-        if(getEmitter().getParticleModule() == null || getEmitter().getEmitterModule() == null) return false;
+    public boolean isFull() {
+        if (getEmitter().getParticleModule() == null || getEmitter().getEmitterModule() == null) return false;
 
         return getEmitter().isContinuous();
     }
 
     @Override
-    public float getDurationOne () {
-        if(getEmitter().getParticleModule() == null || getEmitter().getEmitterModule() == null) return 0;
+    public float getDurationOne() {
+        if (getEmitter().getParticleModule() == null || getEmitter().getEmitterModule() == null) return 0;
 
-        if(getEmitter().getEffectDescriptor().isContinuous() && !getEmitter().isContinuous()) {
+        if (getEmitter().getEffectDescriptor().isContinuous() && !getEmitter().isContinuous()) {
             // apparently if effect is continuous, non continuous effect currently don't play
             return 0;
         }
@@ -103,15 +103,15 @@ public class ParticleEmitterWrapper implements TimelineItemDataProvider<Particle
     }
 
     @Override
-    public float getDurationTwo () {
-        if(getEmitter().getParticleModule() == null || getEmitter().getEmitterModule() == null) return 0;
+    public float getDurationTwo() {
+        if (getEmitter().getParticleModule() == null || getEmitter().getEmitterModule() == null) return 0;
 
-        if(getEmitter().getEffectDescriptor().isContinuous() && !getEmitter().isContinuous()) {
+        if (getEmitter().getEffectDescriptor().isContinuous() && !getEmitter().isContinuous()) {
             // apparently if effect is continuous, non continuous effect currently don't play
             return 0;
         }
 
-        if(getEmitter().isContinuous()) {
+        if (getEmitter().isContinuous()) {
             return 0;
         }
 
@@ -119,19 +119,19 @@ public class ParticleEmitterWrapper implements TimelineItemDataProvider<Particle
     }
 
     @Override
-    public float getTimePosition () {
-        if(getEmitter().getParticleModule() == null || getEmitter().getEmitterModule() == null) return 0;
+    public float getTimePosition() {
+        if (getEmitter().getParticleModule() == null || getEmitter().getEmitterModule() == null) return 0;
 
         return getEmitter().getEmitterModule().getDelay();
     }
 
     @Override
-    public boolean isItemVisible () {
-        return !isMuted;
+    public void setTimePosition(float time) {
+
     }
 
     @Override
-    public void setTimePosition (float time) {
-
+    public boolean isItemVisible() {
+        return !isMuted;
     }
 }

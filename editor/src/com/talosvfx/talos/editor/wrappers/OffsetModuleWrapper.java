@@ -39,8 +39,8 @@ public class OffsetModuleWrapper extends ModuleWrapper<OffsetModule> implements 
 
     private CurveWidget curveWidget;
 
-    private Vector2 pos = new Vector2();
-    private Vector2 size = new Vector2();
+    private final Vector2 pos = new Vector2();
+    private final Vector2 size = new Vector2();
 
     private boolean lockUpdate = false;
 
@@ -82,7 +82,7 @@ public class OffsetModuleWrapper extends ModuleWrapper<OffsetModule> implements 
         leftWrapper.add(new Table()).expandY();
         rightWrapper.add(new Table()).expandY();
 
-        if(module != null) {
+        if (module != null) {
             updateModuleDataFromWidgets();
         }
 
@@ -91,7 +91,7 @@ public class OffsetModuleWrapper extends ModuleWrapper<OffsetModule> implements 
             public void changed(ChangeEvent event, Actor actor) {
                 lowShape.getShapePos(pos);
                 lowShape.getShapeSize(size);
-                if(equalsButton.isChecked()) {
+                if (equalsButton.isChecked()) {
                     highShape.setScaleVal(lowShape.getScale());
                     highShape.setPos(pos);
                     highShape.setShapeSize(size);
@@ -104,7 +104,7 @@ public class OffsetModuleWrapper extends ModuleWrapper<OffsetModule> implements 
             public void changed(ChangeEvent event, Actor actor) {
                 lowShape.getShapePos(pos);
                 lowShape.getShapeSize(size);
-                if(equalsButton.isChecked()) {
+                if (equalsButton.isChecked()) {
                     highShape.setScaleVal(lowShape.getScale());
                     highShape.setPos(pos);
                     highShape.setShapeSize(size);
@@ -119,7 +119,7 @@ public class OffsetModuleWrapper extends ModuleWrapper<OffsetModule> implements 
             public void changed(ChangeEvent event, Actor actor) {
                 highShape.getShapePos(pos);
                 highShape.getShapeSize(size);
-                if(equalsButton.isChecked()) {
+                if (equalsButton.isChecked()) {
                     lowShape.setScaleVal(highShape.getScale());
                     lowShape.setPos(pos);
                     lowShape.setShapeSize(size);
@@ -131,7 +131,7 @@ public class OffsetModuleWrapper extends ModuleWrapper<OffsetModule> implements 
     }
 
     private void updateModuleDataFromWidgets() {
-        if(!lockUpdate) {
+        if (!lockUpdate) {
             lowShape.getShapePos(pos);
             module.setLowPos(pos);
             lowShape.getShapeSize(size);
@@ -179,6 +179,10 @@ public class OffsetModuleWrapper extends ModuleWrapper<OffsetModule> implements 
         return module.getPoints();
     }
 
+    public void setPoints(Array<Vector2> points) {
+        module.setPoints(points);
+    }
+
     @Override
     public void removePoint(int index) {
         module.removePoint(index);
@@ -191,10 +195,6 @@ public class OffsetModuleWrapper extends ModuleWrapper<OffsetModule> implements 
 
     public void setEquals(boolean eequals) {
         equalsButton.setChecked(eequals);
-    }
-
-    public void setPoints(Array<Vector2> points) {
-        module.setPoints(points);
     }
 
     @Override

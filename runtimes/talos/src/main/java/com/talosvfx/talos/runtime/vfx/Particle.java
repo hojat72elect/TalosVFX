@@ -28,32 +28,23 @@ import com.talosvfx.talos.runtime.vfx.modules.ParticlePointDataGeneratorModule;
 
 public class Particle implements Pool.Poolable {
 
-    private IEmitter emitterReference;
-
     public Vector3 spawnPosition = new Vector3();
-
     public Vector3 localPosition = new Vector3();
     public Vector3 worldPosition = new Vector3();
     public Vector3 velocity = new Vector3();
     public Vector3 spinVelocity = new Vector3();
     public Vector3 acceleration = new Vector3();
-
     public float life;
-
     public Vector3 rotation = new Vector3();
     public Vector3 rotationChanged = new Vector3();
     public Vector2 size = new Vector2();
-
     public Vector2 pivot = new Vector2();
-
     public Color color = new Color();
-
     public float alpha; // alpha position from 0 to 1 in it's lifetime cycle
-
     public float seed;
     public int requesterID;
-
     public float durationAtInit;
+    private IEmitter emitterReference;
     private float initialWorldRotation;
 
 
@@ -111,19 +102,19 @@ public class Particle implements Pool.Poolable {
         durationAtInit = emitterReference.getAlpha();
     }
 
-    public void update (ParticleEmitterInstance particleEmitterInstance, float delta) {
-        if(alpha == 1f) return;
+    public void update(ParticleEmitterInstance particleEmitterInstance, float delta) {
+        if (alpha == 1f) return;
 
-        if(emitterReference == null) return;
+        if (emitterReference == null) return;
 
         //scope data
         ParticleModule particleModule = emitterReference.getParticleModule();
-        if(particleModule == null) return;
+        if (particleModule == null) return;
 
         life = particleModule.getLife(); // maybe should remove this
 
-        alpha += delta/life;
-        if(alpha > 1f) alpha = 1f;
+        alpha += delta / life;
+        if (alpha > 1f) alpha = 1f;
 
         applyAlpha(alpha, delta);
 
@@ -146,9 +137,9 @@ public class Particle implements Pool.Poolable {
         }
     }
 
-    public void applyAlpha (float alpha, float delta) {
+    public void applyAlpha(float alpha, float delta) {
         ParticleModule particleModule = emitterReference.getParticleModule();
-        if(particleModule == null) return;
+        if (particleModule == null) return;
 
         particleModule.updateScopeData(this);
 
@@ -233,11 +224,9 @@ public class Particle implements Pool.Poolable {
                     vx = vx - (Math.signum(vx) * (dragComponentX * delta));
                     vy = vy - (Math.signum(vy) * (dragComponentY * delta));
                     vz = vz - (Math.signum(vz) * (dragComponentZ * delta));
-
                 }
 
                 velocity.set(vx, vy, vz);
-
             }
 
             float posX = localPosition.x;
@@ -275,7 +264,6 @@ public class Particle implements Pool.Poolable {
             rotation.set(particleModule.getSpawnRotation());
             rotation.add(worldRotation);
             rotation.add(rotationChanged);
-
         }
 
         if (emitterReference.getEmitterModule().isAligned()) {
@@ -283,25 +271,23 @@ public class Particle implements Pool.Poolable {
         }
 
         pivot.set(particleModule.getPivot());
-
-
     }
 
 
-    public float getAttachedPositionX () {
+    public float getAttachedPositionX() {
         return emitterReference.getEffectPosition().x + worldPosition.x;
     }
 
-    public float getAttachedPositionY () {
+    public float getAttachedPositionY() {
         return emitterReference.getEffectPosition().y + worldPosition.y;
     }
 
-    public float getAttachedPositionZ () {
+    public float getAttachedPositionZ() {
         return emitterReference.getEffectPosition().z + worldPosition.z;
     }
 
     public float getX() {
-        if(emitterReference.getEmitterModule().isAttached()) {
+        if (emitterReference.getEmitterModule().isAttached()) {
             return getAttachedPositionX();
         } else {
             return spawnPosition.x + worldPosition.x;
@@ -309,7 +295,7 @@ public class Particle implements Pool.Poolable {
     }
 
     public float getY() {
-        if(emitterReference.getEmitterModule().isAttached()) {
+        if (emitterReference.getEmitterModule().isAttached()) {
             return getAttachedPositionY();
         } else {
             return spawnPosition.y + worldPosition.y;
@@ -317,7 +303,7 @@ public class Particle implements Pool.Poolable {
     }
 
     public float getZ() {
-        if(emitterReference.getEmitterModule().isAttached()) {
+        if (emitterReference.getEmitterModule().isAttached()) {
             return getAttachedPositionZ();
         } else {
             return spawnPosition.z + worldPosition.z;
@@ -331,25 +317,25 @@ public class Particle implements Pool.Poolable {
         requesterID = -1;
     }
 
-    public float getEmitterAlpha () {
+    public float getEmitterAlpha() {
         return emitterReference.getAlpha();
     }
 
-    public IEmitter getEmitter () {
+    public IEmitter getEmitter() {
         return emitterReference;
     }
 
     public void notifyKill() {
         ParticleModule particleModule = emitterReference.getParticleModule();
-        if(particleModule == null) return;
+        if (particleModule == null) return;
         particleModule.updateScopeData(this);
         ParticlePointDataGeneratorModule pointDataGenerator = emitterReference.getDrawableModule().getPointDataGenerator();
         if (pointDataGenerator instanceof HistoryParticlePointDataGeneratorModule) {
-            ((HistoryParticlePointDataGeneratorModule)pointDataGenerator).onParticleKilled(this);
+            ((HistoryParticlePointDataGeneratorModule) pointDataGenerator).onParticleKilled(this);
         }
     }
 
-    public int getRequesterIDUniqueToGlobalScope () {
+    public int getRequesterIDUniqueToGlobalScope() {
         int x = requesterID;
         int y = emitterReference.getEffectUniqueID();
         return ((x + y) * (x + y + 1)) / 2 + y;

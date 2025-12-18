@@ -32,21 +32,15 @@ import com.talosvfx.talos.runtime.vfx.values.ColorPoint;
 
 public class GradientImage extends Actor {
 
-    ShaderProgram gradientShader;
-
-    Skin skin;
-
-    private Array<ColorPoint> points = new Array<>();
-
-    Texture white;
-
-    CharArray stringBuilder = new CharArray();
-
     private final String U_POINT_COUNT = "u_pointCount";
     private final String U_ARR_NAME = "u_gradientPoints[";
-
     private final String U_PARAM_COLOR = "].color";
     private final String U_PARAM_ALPHA = "].alpha";
+    ShaderProgram gradientShader;
+    Skin skin;
+    Texture white;
+    CharArray stringBuilder = new CharArray();
+    private final Array<ColorPoint> points = new Array<>();
 
     public GradientImage(Skin skin) {
         white = new Texture(Gdx.files.internal("white.png")); //TODO: not cool
@@ -56,25 +50,24 @@ public class GradientImage extends Actor {
         final FileHandle fragmentSource = ShaderSourceProvider.resolveFragment("ui/gradient");
 
         gradientShader = SpriteShaderCompiler.getOrCreateShader("ui/gradient", vertexSource, fragmentSource, new ShaderFlags());
-
     }
 
     public void setPoints(Array<ColorPoint> points) {
         this.points.clear();
 
-        if(points.get(0).pos > 0) {
+        if (points.get(0).pos > 0) {
             this.points.add(new ColorPoint(points.get(0).color, 0f));
         }
 
-        for(int i = 0; i < points.size; i++) {
+        for (int i = 0; i < points.size; i++) {
             ColorPoint point = points.get(i);
             ColorPoint newPoint = new ColorPoint();
             newPoint.set(point);
             this.points.add(newPoint);
         }
 
-        if(points.get(points.size-1).pos < 1) {
-            this.points.add(new ColorPoint(points.get(points.size-1).color, 1f));
+        if (points.get(points.size - 1).pos < 1) {
+            this.points.add(new ColorPoint(points.get(points.size - 1).color, 1f));
         }
     }
 
@@ -86,7 +79,7 @@ public class GradientImage extends Actor {
 
         gradientShader.setUniformi(U_POINT_COUNT, points.size);
 
-        for(int i = 0; i < points.size; i++){
+        for (int i = 0; i < points.size; i++) {
             ColorPoint point = points.get(i);
 
             stringBuilder.clear();
@@ -103,5 +96,4 @@ public class GradientImage extends Actor {
 
         batch.setShader(prevShader);
     }
-
 }

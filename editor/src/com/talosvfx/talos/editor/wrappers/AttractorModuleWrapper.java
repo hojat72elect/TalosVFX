@@ -1,8 +1,11 @@
 package com.talosvfx.talos.editor.wrappers;
 
-import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.runtime.vfx.Slot;
-import com.talosvfx.talos.runtime.vfx.modules.*;
+import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
+import com.talosvfx.talos.runtime.vfx.modules.AttractorModule;
+import com.talosvfx.talos.runtime.vfx.modules.InterpolationModule;
+import com.talosvfx.talos.runtime.vfx.modules.RandomRangeModule;
+import com.talosvfx.talos.runtime.vfx.modules.Vector3Module;
 
 public class AttractorModuleWrapper extends ModuleWrapper<AttractorModule> {
 
@@ -19,17 +22,17 @@ public class AttractorModuleWrapper extends ModuleWrapper<AttractorModule> {
 
 
     @Override
-    public Class<? extends AbstractModule>  getSlotsPreferredModule(Slot slot) {
+    public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
 
-        if(slot.getIndex() == AttractorModule.INITIAL_ANGLE) return RandomRangeModule.class;
-        if(slot.getIndex() == AttractorModule.INITIAL_VELOCITY) return RandomRangeModule.class;
-        if(slot.getIndex() == AttractorModule.ATTRACTOR_POSITION) return Vector3Module.class;
-        if(slot.getIndex() == AttractorModule.ALPHA) return InterpolationModule.class;
+        if (slot.getIndex() == AttractorModule.INITIAL_ANGLE) return RandomRangeModule.class;
+        if (slot.getIndex() == AttractorModule.INITIAL_VELOCITY) return RandomRangeModule.class;
+        if (slot.getIndex() == AttractorModule.ATTRACTOR_POSITION) return Vector3Module.class;
+        if (slot.getIndex() == AttractorModule.ALPHA) return InterpolationModule.class;
         return null;
     }
 
     @Override
-    protected float reportPrefWidth () {
+    protected float reportPrefWidth() {
         return 200;
     }
 }

@@ -3,20 +3,19 @@ package com.talosvfx.talos.editor.widgets.propertyWidgets;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Array;
 import com.esotericsoftware.spine.Bone;
-import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.addons.bvb.AttachmentPoint;
 import com.talosvfx.talos.editor.project2.SharedResources;
-
 import com.talosvfx.talos.runtime.utils.Supplier;
 
 public class GlobalValuePointsWidget extends PropertyWidget<Array<AttachmentPoint>> {
 
+    public Supplier<Array<Bone>> boneListSuppler;
     GlobalValueListContainer listContainer;
 
-    public Supplier<Array<Bone>> boneListSuppler;
-    protected GlobalValuePointsWidget () {}
+    protected GlobalValuePointsWidget() {
+    }
 
-    public GlobalValuePointsWidget (String name, Supplier<Array<AttachmentPoint>> supplier, ValueChanged<Array<AttachmentPoint>> valueChanged, Object parent) {
+    public GlobalValuePointsWidget(String name, Supplier<Array<AttachmentPoint>> supplier, ValueChanged<Array<AttachmentPoint>> valueChanged, Object parent) {
         super(name, supplier, valueChanged, parent);
     }
 

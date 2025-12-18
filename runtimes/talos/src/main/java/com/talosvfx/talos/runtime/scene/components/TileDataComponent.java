@@ -10,21 +10,18 @@ import com.talosvfx.talos.runtime.maps.GridPosition;
 public class TileDataComponent extends AComponent implements Json.Serializable {
 
     /**
-     * Used in depth sorting for top down ortho maps
-     */
-    private float fakeZ = 0;
-
-    /**
-     * The visual offset relative to the bottom left most parent tile
-     */
-    private Vector2 visualOffset = new Vector2();
-
-    /**
      * Set of 2d tiles that represent the parent tiles. Should be at least 1 tile always, but can be any with no shape restrictions
      * This is 'footprint' of the game asset in world space. Ignoring sprite/skeleton bounds, but the tiles this object takes up in world space
      */
     public ObjectSet<GridPosition> parentTiles = new ObjectSet<>();
-
+    /**
+     * Used in depth sorting for top down ortho maps
+     */
+    private float fakeZ = 0;
+    /**
+     * The visual offset relative to the bottom left most parent tile
+     */
+    private final Vector2 visualOffset = new Vector2();
 
     public ObjectSet<GridPosition> getParentTiles() {
         return parentTiles;
@@ -35,7 +32,7 @@ public class TileDataComponent extends AComponent implements Json.Serializable {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         json.writeValue("fakeZ", fakeZ);
         json.writeValue("visualOffsetX", visualOffset.x);
         json.writeValue("visualOffsetY", visualOffset.y);
@@ -45,11 +42,10 @@ public class TileDataComponent extends AComponent implements Json.Serializable {
             json.writeValue(parentTile);
         }
         json.writeArrayEnd();
-
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         fakeZ = jsonData.getFloat("fakeZ", fakeZ);
         visualOffset.x = jsonData.getFloat("visualOffsetX", visualOffset.x);
         visualOffset.y = jsonData.getFloat("visualOffsetY", visualOffset.y);
@@ -62,7 +58,7 @@ public class TileDataComponent extends AComponent implements Json.Serializable {
         }
     }
 
-    public float getFakeZ () {
+    public float getFakeZ() {
         return fakeZ;
     }
 
@@ -70,11 +66,11 @@ public class TileDataComponent extends AComponent implements Json.Serializable {
         this.fakeZ = fakeZ;
     }
 
-    public Vector2 getVisualOffset () {
+    public Vector2 getVisualOffset() {
         return visualOffset;
     }
 
-    public GridPosition getBottomLeftParentTile () {
+    public GridPosition getBottomLeftParentTile() {
         GridPosition bottomLeft = null;
         for (GridPosition parentTile : parentTiles) {
             if (bottomLeft == null) {
@@ -91,11 +87,11 @@ public class TileDataComponent extends AComponent implements Json.Serializable {
         return bottomLeft;
     }
 
-    public void translateToWorldPosition (Vector2 worldFromLocal) {
+    public void translateToWorldPosition(Vector2 worldFromLocal) {
         GridPosition bottomLeftParentTile = getBottomLeftParentTile();
 
-        int newX = MathUtils.floor((worldFromLocal.x + 0.5f)/1) * 1;
-        int newY = MathUtils.floor((worldFromLocal.y + 0.5f)/1) * 1; //todo implement tile size
+        int newX = MathUtils.floor((worldFromLocal.x + 0.5f));
+        int newY = MathUtils.floor((worldFromLocal.y + 0.5f)); //todo implement tile size
 
         System.out.println(worldFromLocal.x);
 
@@ -107,13 +103,12 @@ public class TileDataComponent extends AComponent implements Json.Serializable {
                 tmp.add(parentTile);
             }
             parentTiles.clear();
-            for (GridPosition parentTile: tmp) {
+            for (GridPosition parentTile : tmp) {
                 parentTile.x += deltaX;
                 parentTile.y += deltaY;
                 parentTiles.add(parentTile);
             }
         }
-
     }
 
     @Override

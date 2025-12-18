@@ -4,35 +4,33 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.XmlReader;
-import com.talosvfx.talos.runtime.vfx.shaders.ShaderBuilder;
 import com.talosvfx.talos.editor.nodes.widgets.ColorWidget;
+import com.talosvfx.talos.runtime.vfx.shaders.ShaderBuilder;
 
 public class ColorNode extends AbstractShaderNode {
-
-    Color color = new Color(Color.CORAL);
 
     public final String OUTPUT_RGBA = "outputRGBA";
     public final String OUTPUT_R = "outputR";
     public final String OUTPUT_G = "outputG";
     public final String OUTPUT_B = "outputB";
     public final String OUTPUT_A = "outputA";
-
     public final String INPUT_COLOR = "color";
+    Color color = new Color(Color.CORAL);
 
     @Override
-    public void constructNode (XmlReader.Element module) {
+    public void constructNode(XmlReader.Element module) {
         super.constructNode(module);
 
         widgetMap.get(INPUT_COLOR).addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent changeEvent, Actor actor) {
-                color.set(((ColorWidget)(widgetMap.get(INPUT_COLOR))).getValue());
+            public void changed(ChangeEvent changeEvent, Actor actor) {
+                color.set(((ColorWidget) (widgetMap.get(INPUT_COLOR))).getValue());
             }
         });
     }
 
     @Override
-    protected String getPreviewOutputName () {
+    protected String getPreviewOutputName() {
         return OUTPUT_RGBA;
     }
 
@@ -42,30 +40,30 @@ public class ColorNode extends AbstractShaderNode {
 
         expression = "(" + expression + ")";
 
-        if(slotId.equals(OUTPUT_RGBA)) {
+        if (slotId.equals(OUTPUT_RGBA)) {
             return expression;
         }
 
-        if(slotId.equals(OUTPUT_R)) {
+        if (slotId.equals(OUTPUT_R)) {
             return expression + ".r";
         }
 
-        if(slotId.equals(OUTPUT_G)) {
+        if (slotId.equals(OUTPUT_G)) {
             return expression + ".g";
         }
 
-        if(slotId.equals(OUTPUT_B)) {
+        if (slotId.equals(OUTPUT_B)) {
             return expression + ".b";
         }
 
-        if(slotId.equals(OUTPUT_A)) {
+        if (slotId.equals(OUTPUT_A)) {
             return expression + ".a";
         }
 
         return null;
     }
 
-    public void prepareDeclarations (ShaderBuilder shaderBuilder) {
+    public void prepareDeclarations(ShaderBuilder shaderBuilder) {
 
     }
 

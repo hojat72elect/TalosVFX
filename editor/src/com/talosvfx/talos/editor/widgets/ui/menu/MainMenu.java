@@ -21,15 +21,15 @@ import com.talosvfx.talos.editor.project2.SharedResources;
 
 public class MainMenu extends Table implements Observer {
 
-    private Array<MenuTab> tabs = new Array<>();
+    private final Array<MenuTab> tabs = new Array<>();
 
     private MenuTab currentlyActive = null;
-    private ObjectMap<String, MenuPopup> popupMap = new ObjectMap<>();
+    private final ObjectMap<String, MenuPopup> popupMap = new ObjectMap<>();
 
-    private Array<MenuPopup> openStack = new Array<>();
-    private ObjectMap<String, Table> injectableContainerMap = new ObjectMap<>();
-    private ObjectMap<Table, Table> containerPopupMap = new ObjectMap<>();
-    private ObjectMap<String, Array<IMenuProvider>> menuProviderMap = new ObjectMap<>();
+    private final Array<MenuPopup> openStack = new Array<>();
+    private final ObjectMap<String, Table> injectableContainerMap = new ObjectMap<>();
+    private final ObjectMap<Table, Table> containerPopupMap = new ObjectMap<>();
+    private final ObjectMap<String, Array<IMenuProvider>> menuProviderMap = new ObjectMap<>();
 
     public MainMenu() {
         Notifications.registerObserver(this);
@@ -46,7 +46,7 @@ public class MainMenu extends Table implements Observer {
         clearChildren();
 
         int count = root.getChildCount();
-        for(int i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             XmlReader.Element item = root.getChild(i);
 
             MenuTab menuTab = new MenuTab(this);
@@ -61,7 +61,7 @@ public class MainMenu extends Table implements Observer {
                 @Override
                 public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
 
-                    if(menuTab == currentlyActive) {
+                    if (menuTab == currentlyActive) {
                         collapseAll();
                     } else {
                         openMenu(menuTab);
@@ -75,8 +75,8 @@ public class MainMenu extends Table implements Observer {
                 public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
                     super.enter(event, x, y, pointer, fromActor);
 
-                    if(currentlyActive != null) {
-                        if(currentlyActive != menuTab) {
+                    if (currentlyActive != null) {
+                        if (currentlyActive != menuTab) {
                             openMenu(menuTab);
                         }
                     }
@@ -88,7 +88,7 @@ public class MainMenu extends Table implements Observer {
     }
 
     private void processHierarchy(XmlReader.Element parent, String path, boolean isPrimary) {
-        if(parent.getName().equals("menu")) {
+        if (parent.getName().equals("menu")) {
             String newPath = path + parent.getAttribute("name");
             MenuPopup menuPopup = new MenuPopup(this, newPath);
             menuPopup.buildFrom(parent, isPrimary);
@@ -105,8 +105,8 @@ public class MainMenu extends Table implements Observer {
     }
 
     public void openMenu(MenuTab menuTab) {
-        if(currentlyActive != null) {
-            if(currentlyActive != menuTab) {
+        if (currentlyActive != null) {
+            if (currentlyActive != menuTab) {
                 currentlyActive.collapse();
             }
         }
@@ -133,9 +133,9 @@ public class MainMenu extends Table implements Observer {
     }
 
     public void collapseUnrelatedHierarchies(String path) {
-        for(int i = openStack.size - 1; i >= 0; i--) {
+        for (int i = openStack.size - 1; i >= 0; i--) {
             MenuPopup popup = openStack.get(i);
-            if(!path.startsWith(popup.getId())) {
+            if (!path.startsWith(popup.getId())) {
                 popup.remove();
                 openStack.removeIndex(i);
             }
@@ -144,9 +144,9 @@ public class MainMenu extends Table implements Observer {
 
     public void collapseHierarchyOf(String id) {
 
-        for(int i = openStack.size - 1; i >= 0; i--) {
+        for (int i = openStack.size - 1; i >= 0; i--) {
             MenuPopup popup = openStack.get(i);
-            if(popup.getId().startsWith(id)) {
+            if (popup.getId().startsWith(id)) {
                 popup.remove();
                 openStack.removeIndex(i);
             }
@@ -154,8 +154,8 @@ public class MainMenu extends Table implements Observer {
     }
 
     public boolean isPathOpen(String id) {
-        for(MenuPopup popup : openStack) {
-            if(popup.getId().equals(id)) {
+        for (MenuPopup popup : openStack) {
+            if (popup.getId().equals(id)) {
                 return true;
             }
         }
@@ -164,12 +164,12 @@ public class MainMenu extends Table implements Observer {
     }
 
     public void collapseAll() {
-        if(currentlyActive != null) {
+        if (currentlyActive != null) {
             currentlyActive.collapse();
         } else {
             return;
         }
-        for(MenuPopup popup : openStack) {
+        for (MenuPopup popup : openStack) {
             popup.remove();
         }
         openStack.clear();
@@ -180,7 +180,7 @@ public class MainMenu extends Table implements Observer {
     protected void setStage(Stage stage) {
         super.setStage(stage);
 
-        if(stage == null) return;
+        if (stage == null) return;
 
         final Vector2 tmp = new Vector2();
 
@@ -189,11 +189,11 @@ public class MainMenu extends Table implements Observer {
             @Override
             public boolean mouseMoved(InputEvent event, float x, float y) {
 
-                if(currentlyActive == null) super.mouseMoved(event, x, y);
+                if (currentlyActive == null) super.mouseMoved(event, x, y);
 
                 float distance = findDistanceFromClosestPopup(x, y);
 
-                if(distance > 80) {
+                if (distance > 80) {
                     collapseAll();
                 }
 
@@ -204,25 +204,25 @@ public class MainMenu extends Table implements Observer {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
 
                 boolean anyOfOurs = false;
-                for(MenuPopup popup : openStack) {
+                for (MenuPopup popup : openStack) {
                     tmp.set(x, y);
                     popup.stageToLocalCoordinates(tmp);
-                    if(popup.hit(tmp.x, tmp.y, true) != null) {
+                    if (popup.hit(tmp.x, tmp.y, true) != null) {
                         anyOfOurs = true;
                         break;
                     }
                 }
 
-                for(MenuTab tab : tabs) {
+                for (MenuTab tab : tabs) {
                     tmp.set(x, y);
                     tab.stageToLocalCoordinates(tmp);
-                    if(tab.hit(tmp.x, tmp.y, true) != null) {
+                    if (tab.hit(tmp.x, tmp.y, true) != null) {
                         anyOfOurs = true;
                         break;
                     }
                 }
 
-                if(!anyOfOurs) {
+                if (!anyOfOurs) {
                     collapseAll();
                 }
 
@@ -233,30 +233,30 @@ public class MainMenu extends Table implements Observer {
 
     private float findDistanceFromClosestPopup(float x, float y) {
         float min = Float.MAX_VALUE;
-        for(MenuPopup popup : openStack) {
+        for (MenuPopup popup : openStack) {
             Rectangle rectangle = Pools.obtain(Rectangle.class);
 
             rectangle.set(popup.getX(), popup.getY(), popup.getWidth(), popup.getHeight());
 
-            if(rectangle.contains(x, y)) return 0;
+            if (rectangle.contains(x, y)) return 0;
 
             float dx = Float.MAX_VALUE;
             float dy = Float.MAX_VALUE;
-            if(x < rectangle.x) {
+            if (x < rectangle.x) {
                 dx = rectangle.x - x;
-            } else if(x > rectangle.x + rectangle.width) {
+            } else if (x > rectangle.x + rectangle.width) {
                 dx = x - (rectangle.x + rectangle.width);
             }
 
-            if(y < rectangle.y) {
+            if (y < rectangle.y) {
                 dy = rectangle.y - y;
-            } else if(y > rectangle.y + rectangle.height) {
+            } else if (y > rectangle.y + rectangle.height) {
                 dy = y - (rectangle.y + rectangle.height);
             }
 
             float diff = Math.min(dy, dx);
 
-            if(min > diff) {
+            if (min > diff) {
                 min = diff;
             }
 
@@ -291,12 +291,8 @@ public class MainMenu extends Table implements Observer {
         setVisible(false);
     }
 
-    public interface IMenuProvider {
-        void inject(String path, MainMenu menu);
-    }
-
     public void registerMenuProvider(IMenuProvider menuProvider, String path) {
-        if(injectableContainerMap.containsKey(path)) {
+        if (injectableContainerMap.containsKey(path)) {
             if (!menuProviderMap.containsKey(path)) {
                 menuProviderMap.put(path, new Array<>());
             }
@@ -316,5 +312,9 @@ public class MainMenu extends Table implements Observer {
     @EventHandler
     public void onProjectLoadedEvent(ProjectLoadedEvent event) {
         setVisible(true);
+    }
+
+    public interface IMenuProvider {
+        void inject(String path, MainMenu menu);
     }
 }

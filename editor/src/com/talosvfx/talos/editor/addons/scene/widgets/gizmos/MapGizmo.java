@@ -1,14 +1,15 @@
 package com.talosvfx.talos.editor.addons.scene.widgets.gizmos;
 
 import com.talosvfx.talos.runtime.scene.GameObject;
+
 public class MapGizmo extends Gizmo {
 
-    public MapGizmo () {
+    public MapGizmo() {
         super();
     }
 
     @Override
-    public void setSelected (boolean selected) {
+    public void setSelected(boolean selected) {
         super.setSelected(selected);
         if (isSelected()) {
             setupForCustomGrid(gameObject);
@@ -16,7 +17,7 @@ public class MapGizmo extends Gizmo {
         }
     }
 
-    private void setupForCustomGrid (GameObject gameObject) {
+    private void setupForCustomGrid(GameObject gameObject) {
 
 
     }

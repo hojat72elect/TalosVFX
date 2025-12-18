@@ -33,27 +33,27 @@ public class InputModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
         NumericalValue value = getScope().get(scopeKey);
         outputValue.set(value);
-    }
-
-    public void setInput(int scopeKey) {
-        this.scopeKey = scopeKey;
     }
 
     public int getInput() {
         return this.scopeKey;
     }
 
+    public void setInput(int scopeKey) {
+        this.scopeKey = scopeKey;
+    }
+
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("scopeKey", getInput(), int.class);
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         setInput(jsonData.getInt("scopeKey"));
     }

@@ -15,7 +15,7 @@ public class ForceApplierModuleWrapper extends ModuleWrapper<ForceApplierModule>
 
 
     @Override
-    protected float reportPrefWidth () {
+    protected float reportPrefWidth() {
         return 210;
     }
 }

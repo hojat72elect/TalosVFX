@@ -99,7 +99,6 @@ public class ParticleModule extends AbstractModule {
         drag = createInputSlot(DRAG);
 
 
-
         color = createInputSlot(COLOR);
         transparency = createInputSlot(TRANSPARENCY);
 
@@ -107,7 +106,7 @@ public class ParticleModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
         // nothing to process, it's all cool as cucumber
     }
 
@@ -125,11 +124,11 @@ public class ParticleModule extends AbstractModule {
 
     public float getTransparency() {
         fetchInputSlotValue(TRANSPARENCY);
-        if(transparency.isEmpty()) return 1; // defaults
+        if (transparency.isEmpty()) return 1; // defaults
         return transparency.getFloat();
     }
 
-    public Vector3 getInitialVelocity () {
+    public Vector3 getInitialVelocity() {
         fetchInputSlotValue(INITIAL_VELOCITY);
         if (initialVelocity.isEmpty()) {
             return tmp3Vec.setZero();
@@ -137,7 +136,7 @@ public class ParticleModule extends AbstractModule {
         return tmp3Vec.set(initialVelocity.get(0), initialVelocity.get(1), initialVelocity.get(2));
     }
 
-    public Vector3 getInitialSpinVelocity () {
+    public Vector3 getInitialSpinVelocity() {
         fetchInputSlotValue(INITIAL_SPIN_VELOCITY);
         if (initialSpinVelocity.isEmpty()) {
             return tmp3Vec.setZero();
@@ -145,7 +144,7 @@ public class ParticleModule extends AbstractModule {
         return tmp3Vec.set(initialSpinVelocity.get(0), initialSpinVelocity.get(1), initialSpinVelocity.get(2));
     }
 
-    public Vector3 getForces () {
+    public Vector3 getForces() {
         fetchInputSlotValue(FORCES);
         if (forces.isEmpty()) {
             return tmp3Vec.setZero();
@@ -154,11 +153,11 @@ public class ParticleModule extends AbstractModule {
     }
 
 
-    public boolean hasDrag () {
+    public boolean hasDrag() {
         return !drag.isEmpty();
     }
 
-    public Vector3 getDrag () {
+    public Vector3 getDrag() {
         fetchInputSlotValue(DRAG);
         if (drag.isEmpty()) {
             return tmp3Vec.setZero();
@@ -166,7 +165,7 @@ public class ParticleModule extends AbstractModule {
         return tmp3Vec.set(drag.get(0), drag.get(1), drag.get(2));
     }
 
-    public Vector3 getGravity () {
+    public Vector3 getGravity() {
         fetchInputSlotValue(GRAVITY);
         if (gravity.isEmpty()) {
             return tmp3Vec.setZero();
@@ -174,7 +173,7 @@ public class ParticleModule extends AbstractModule {
         return tmp3Vec.set(gravity.get(0), gravity.get(1), gravity.get(2));
     }
 
-    public Vector3 getSpawnPosition () {
+    public Vector3 getSpawnPosition() {
         fetchInputSlotValue(SPAWN_POSITION);
         if (spawnPosition.isEmpty()) {
             return tmp3Vec.setZero();
@@ -182,7 +181,7 @@ public class ParticleModule extends AbstractModule {
         return tmp3Vec.set(spawnPosition.get(0), spawnPosition.get(1), spawnPosition.get(2));
     }
 
-    public Vector3 getSpawnRotation () {
+    public Vector3 getSpawnRotation() {
         fetchInputSlotValue(SPAWN_ROTATION);
         if (spawnRotation.isEmpty()) {
             return tmp3Vec.setZero();
@@ -191,7 +190,7 @@ public class ParticleModule extends AbstractModule {
     }
 
 
-    public Vector3 getVelocityOverTime () {
+    public Vector3 getVelocityOverTime() {
         fetchInputSlotValue(VELOCITY_OVER_TIME);
         if (velocityOverTime.isEmpty()) {
             return tmp3Vec.setZero();
@@ -199,7 +198,7 @@ public class ParticleModule extends AbstractModule {
         return tmp3Vec.set(velocityOverTime.get(0), velocityOverTime.get(1), velocityOverTime.get(2));
     }
 
-    public Vector3 getSpinVelocityOverTime () {
+    public Vector3 getSpinVelocityOverTime() {
         fetchInputSlotValue(SPIN_OVER_TIME);
         if (spinVelocityOverTime.isEmpty()) {
             return tmp3Vec.setZero();
@@ -207,28 +206,28 @@ public class ParticleModule extends AbstractModule {
         return tmp3Vec.set(spinVelocityOverTime.get(0), spinVelocityOverTime.get(1), spinVelocityOverTime.get(2));
     }
 
-    public boolean hasVelocityOverTime () {
+    public boolean hasVelocityOverTime() {
         fetchInputSlotValue(VELOCITY_OVER_TIME);
         return !velocityOverTime.isEmpty();
     }
 
-    public boolean hasSpinVelocityOverTime () {
+    public boolean hasSpinVelocityOverTime() {
         fetchInputSlotValue(SPIN_OVER_TIME);
         return !spinVelocityOverTime.isEmpty();
     }
 
     public float getLife() {
         fetchInputSlotValue(LIFE);
-        if(life.isEmpty()) return 1; // defaults
+        if (life.isEmpty()) return 1; // defaults
         return life.getFloat();
     }
 
-    public boolean hasPositionOverride () {
+    public boolean hasPositionOverride() {
         fetchInputSlotValue(POSITION_OVERRIDE);
         return !positionOverride.isEmpty();
     }
 
-    public Vector3 getPositionOverride () {
+    public Vector3 getPositionOverride() {
         fetchInputSlotValue(POSITION_OVERRIDE);
         if (positionOverride.isEmpty()) {
             return tmp3Vec.setZero();
@@ -236,12 +235,12 @@ public class ParticleModule extends AbstractModule {
         return tmp3Vec.set(positionOverride.get(0), positionOverride.get(1), positionOverride.get(2));
     }
 
-    public boolean hasRotationOverride () {
+    public boolean hasRotationOverride() {
         fetchInputSlotValue(ROTATION_OVERRIDE);
         return !rotationOverride.isEmpty();
     }
 
-    public Vector3 getRotationOverride () {
+    public Vector3 getRotationOverride() {
         fetchInputSlotValue(ROTATION_OVERRIDE);
         if (rotationOverride.isEmpty()) {
             return tmp3Vec.setZero();
@@ -251,11 +250,12 @@ public class ParticleModule extends AbstractModule {
 
     /**
      * allowed values are from 0 to 1 where 0.5 is default center
+     *
      * @return
      */
     public Vector2 getPivot() {
         fetchInputSlotValue(PIVOT);
-        if(pivot.isEmpty()) {
+        if (pivot.isEmpty()) {
             pivot.set(0f, 0f);
         }
         tmpVec.set(pivot.get(0), pivot.get(1));
@@ -270,21 +270,19 @@ public class ParticleModule extends AbstractModule {
 
     public Color getColor() {
         fetchInputSlotValue(COLOR);
-        if(color.isEmpty()) return Color.WHITE; // defaults
+        if (color.isEmpty()) return Color.WHITE; // defaults
         tmpColor.set(color.get(0), color.get(1), color.get(2), 1f);
         return tmpColor;
     }
 
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
     }
-
-
 }

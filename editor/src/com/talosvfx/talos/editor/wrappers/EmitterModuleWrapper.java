@@ -22,7 +22,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
-import com.kotcrab.vis.ui.widget.VisTextField;
 import com.talosvfx.talos.runtime.vfx.Slot;
 import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
 import com.talosvfx.talos.runtime.vfx.modules.EmConfigModule;
@@ -52,29 +51,29 @@ public class EmitterModuleWrapper extends ModuleWrapper<EmitterModule> {
 
         delayField.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
-                 module.defaultDelay = floatFromText(delayField);
+            public void changed(ChangeEvent event, Actor actor) {
+                module.defaultDelay = floatFromText(delayField);
             }
         });
 
         durationField.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 module.defaultDuration = floatFromText(durationField);
             }
         });
 
         emissionField.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 module.defaultRate = floatFromText(emissionField);
             }
         });
 
         maxField.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
-                module.defaultMaxParticles = (int)floatFromText(maxField);
+            public void changed(ChangeEvent event, Actor actor) {
+                module.defaultMaxParticles = (int) floatFromText(maxField);
             }
         });
 
@@ -82,17 +81,17 @@ public class EmitterModuleWrapper extends ModuleWrapper<EmitterModule> {
     }
 
     @Override
-    public Class<? extends AbstractModule>  getSlotsPreferredModule(Slot slot) {
-        if(slot.getIndex() == EmitterModule.RATE) {
+    public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
+        if (slot.getIndex() == EmitterModule.RATE) {
             return StaticValueModule.class;
         }
-        if(slot.getIndex() == EmitterModule.CONFIG) {
+        if (slot.getIndex() == EmitterModule.CONFIG) {
             return EmConfigModule.class;
         }
-        if(slot.getIndex() == EmitterModule.DURATION) {
+        if (slot.getIndex() == EmitterModule.DURATION) {
             return StaticValueModule.class;
         }
-        if(slot.getIndex() == EmitterModule.DELAY) {
+        if (slot.getIndex() == EmitterModule.DELAY) {
             return StaticValueModule.class;
         }
 
@@ -109,12 +108,11 @@ public class EmitterModuleWrapper extends ModuleWrapper<EmitterModule> {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         delayField.setText(module.defaultDelay + "");
         durationField.setText(module.defaultDuration + "");
         emissionField.setText(module.defaultRate + "");
         maxField.setText(module.defaultMaxParticles + "");
     }
-
 }

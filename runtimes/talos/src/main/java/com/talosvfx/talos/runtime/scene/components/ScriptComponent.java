@@ -3,16 +3,13 @@ package com.talosvfx.talos.runtime.scene.components;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
-import com.talosvfx.talos.runtime.RuntimeContext;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.runtime.assets.GameResourceOwner;
 import com.talosvfx.talos.runtime.assets.meta.ScriptMetadata;
-import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
-import lombok.Getter;
 
-import java.util.UUID;
+import lombok.Getter;
 
 public class ScriptComponent extends AComponent implements Json.Serializable, GameResourceOwner<String> {
 
@@ -20,41 +17,40 @@ public class ScriptComponent extends AComponent implements Json.Serializable, Ga
     private GameAsset<String> scriptResource;
 
     @Getter
-    private Array<PropertyWrapper<?>> scriptProperties = new Array<>();
+    private final Array<PropertyWrapper<?>> scriptProperties = new Array<>();
 
     @Override
-    public GameAssetType getGameAssetType () {
+    public GameAssetType getGameAssetType() {
         return GameAssetType.SCRIPT;
     }
 
     @Override
-    public GameAsset<String> getGameResource () {
+    public GameAsset<String> getGameResource() {
         return scriptResource;
     }
 
     @Override
-    public void setGameAsset (GameAsset<String> gameAsset) {
+    public void setGameAsset(GameAsset<String> gameAsset) {
         this.scriptResource = gameAsset;
         scriptProperties.clear();
         importScriptPropertiesFromMeta(false);
     }
 
     @Override
-    public void clearResource () {
+    public void clearResource() {
         if (scriptResource != null) {
             scriptResource = null;
         }
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         GameResourceOwner.writeGameAsset(json, this);
         json.writeValue("properties", scriptProperties);
-
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         GameAsset<String> objectGameAsset = GameResourceOwner.readAsset(json, jsonData);
         setGameAsset(objectGameAsset);
 
@@ -68,8 +64,7 @@ public class ScriptComponent extends AComponent implements Json.Serializable, Ga
     }
 
 
-
-    public void importScriptPropertiesFromMeta (boolean tryToMerge) {
+    public void importScriptPropertiesFromMeta(boolean tryToMerge) {
         Array<PropertyWrapper<?>> copyWrappers = new Array<>();
         copyWrappers.addAll(scriptProperties);
 
@@ -96,7 +91,6 @@ public class ScriptComponent extends AComponent implements Json.Serializable, Ga
                     scriptProperty.setDefault();
                 }
             }
-
         } else {
             for (PropertyWrapper<?> scriptProperty : scriptProperties) {
                 scriptProperty.setDefault();
@@ -105,7 +99,7 @@ public class ScriptComponent extends AComponent implements Json.Serializable, Ga
     }
 
     @Override
-    public boolean allowsMultipleOfTypeOnGameObject () {
+    public boolean allowsMultipleOfTypeOnGameObject() {
         return true;
     }
 }

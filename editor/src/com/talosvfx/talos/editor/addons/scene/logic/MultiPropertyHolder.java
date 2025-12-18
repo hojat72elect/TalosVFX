@@ -6,13 +6,12 @@ import com.badlogic.gdx.utils.ObjectSet;
 import com.talosvfx.talos.editor.addons.scene.logic.componentwrappers.SpriteRendererComponentProvider;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.IPropertyProvider;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.PropertyWidget;
-
 import com.talosvfx.talos.runtime.utils.Supplier;
 
 public class MultiPropertyHolder<T extends IPropertyHolder> implements IPropertyHolder {
 
     ObjectSet<T> holderArray = new ObjectSet<>();
-    private ObjectMap<Class<? extends IPropertyProvider>, MultiPropertyProvider>  mainMap;
+    private ObjectMap<Class<? extends IPropertyProvider>, MultiPropertyProvider> mainMap;
 
     public MultiPropertyHolder(ObjectSet<T> holderArray) {
         this.holderArray.addAll(holderArray);
@@ -29,11 +28,11 @@ public class MultiPropertyHolder<T extends IPropertyHolder> implements IProperty
 
         Array<Class<? extends IPropertyProvider>> allowList = new Array<>();
         Iterable<IPropertyProvider> firstProviders = holderArray.first().getPropertyProviders();
-        for(IPropertyProvider provider: firstProviders) {
+        for (IPropertyProvider provider : firstProviders) {
             allowList.add(provider.getClass());
         }
 
-        for(IPropertyHolder holder: holderArray) {
+        for (IPropertyHolder holder : holderArray) {
             Iterable<IPropertyProvider> propertyProviders = holder.getPropertyProviders();
             for (IPropertyProvider provider : propertyProviders) {
                 if (allowList.contains(provider.getClass(), true)) {
@@ -45,7 +44,7 @@ public class MultiPropertyHolder<T extends IPropertyHolder> implements IProperty
             }
         }
 
-        for(MultiPropertyProvider provider : mainMap.values()) {
+        for (MultiPropertyProvider provider : mainMap.values()) {
             provider.initWidgets();
         }
     }
@@ -53,7 +52,7 @@ public class MultiPropertyHolder<T extends IPropertyHolder> implements IProperty
     @Override
     public Iterable<IPropertyProvider> getPropertyProviders() {
         Array<IPropertyProvider> list = new Array<>();
-        for(IPropertyProvider provider : mainMap.values()) {
+        for (IPropertyProvider provider : mainMap.values()) {
             list.add(provider);
         }
         return list;
@@ -66,25 +65,25 @@ public class MultiPropertyHolder<T extends IPropertyHolder> implements IProperty
 
     public static class MultiPropertyProvider implements IPropertyProvider {
 
-        private Array<IPropertyProvider> providers = new Array<>();
-        private ObjectMap<Integer, Array<PropertyWidget>> map = new ObjectMap<>();
+        private final Array<IPropertyProvider> providers = new Array<>();
+        private final ObjectMap<Integer, Array<PropertyWidget>> map = new ObjectMap<>();
 
-        private Array<PropertyWidget> widgets = new Array<>();
+        private final Array<PropertyWidget> widgets = new Array<>();
 
         public void initWidgets() {
 
-            for(IPropertyProvider provider: providers) {
+            for (IPropertyProvider provider : providers) {
                 Array<PropertyWidget> properties = provider.getListOfProperties();
-                for(int i = 0; i < properties.size;  i++) {
+                for (int i = 0; i < properties.size; i++) {
                     PropertyWidget childWidget = properties.get(i);
-                    if(map.get(i) == null) {
+                    if (map.get(i) == null) {
                         map.put(i, new Array<>());
                     }
                     map.get(i).add(childWidget);
                 }
             }
 
-            for(int i = 0; i < map.size; i++) {
+            for (int i = 0; i < map.size; i++) {
                 Array<PropertyWidget> children = map.get(i);
                 PropertyWidget wrapper = children.first().clone();
 
@@ -93,22 +92,22 @@ public class MultiPropertyHolder<T extends IPropertyHolder> implements IProperty
                     public Object get() {
                         Object first = children.first().getValue();
                         boolean ambiguous = false;
-                        for(PropertyWidget child: children) {
+                        for (PropertyWidget child : children) {
                             Object childValue = child.getValue();
-                            if(first != null && childValue != null) {
-                                if(!childValue.equals(first)) {
+                            if (first != null && childValue != null) {
+                                if (!childValue.equals(first)) {
                                     ambiguous = true;
                                     break;
                                 }
                             } else {
-                                if(first != childValue) {
+                                if (first != childValue) {
                                     ambiguous = true;
                                     break;
                                 }
                             }
                         }
 
-                        if(ambiguous) {
+                        if (ambiguous) {
                             return null;
                         } else {
                             return children.first().getValue();
@@ -117,7 +116,7 @@ public class MultiPropertyHolder<T extends IPropertyHolder> implements IProperty
                 }, new PropertyWidget.ValueChanged() {
                     @Override
                     public void report(Object value) {
-                        for(PropertyWidget child: children) {
+                        for (PropertyWidget child : children) {
                             child.report(value);
                         }
                     }

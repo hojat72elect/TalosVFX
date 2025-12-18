@@ -5,19 +5,20 @@ import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.ObjectSet;
 import com.talosvfx.talos.editor.addons.scene.assets.AssetRepository;
 import com.talosvfx.talos.editor.addons.scene.events.LayerListUpdatedEvent;
+import com.talosvfx.talos.editor.addons.scene.utils.importers.AssetImporter;
 import com.talosvfx.talos.editor.notifications.CommandEventHandler;
 import com.talosvfx.talos.editor.notifications.EventHandler;
+import com.talosvfx.talos.editor.notifications.Notifications;
+import com.talosvfx.talos.editor.notifications.Observer;
 import com.talosvfx.talos.editor.notifications.commands.enums.Commands;
 import com.talosvfx.talos.editor.notifications.events.ProjectUnloadEvent;
 import com.talosvfx.talos.editor.notifications.events.commands.CommandEvent;
-import com.talosvfx.talos.runtime.assets.GameAsset;
-import com.talosvfx.talos.runtime.assets.RawAsset;
-import com.talosvfx.talos.runtime.assets.AMetadata;
-import com.talosvfx.talos.editor.addons.scene.utils.importers.AssetImporter;
-import com.talosvfx.talos.editor.notifications.Notifications;
-import com.talosvfx.talos.editor.notifications.Observer;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.utils.Toasts;
+import com.talosvfx.talos.runtime.assets.AMetadata;
+import com.talosvfx.talos.runtime.assets.GameAsset;
+import com.talosvfx.talos.runtime.assets.RawAsset;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,201 +26,203 @@ import java.util.Stack;
 
 public class GlobalSaveStateSystem implements Observer {
 
-	private static final Logger logger = LoggerFactory.getLogger(GlobalSaveStateSystem.class);
+    private static final Logger logger = LoggerFactory.getLogger(GlobalSaveStateSystem.class);
+    private final Stack<StateObject> undoStateObjects = new Stack<>();
+    private final Stack<StateObject> redoStateObjects = new Stack<>();
+    private final ObjectSet<GameAsset<?>> hasChanges = new ObjectSet<>();
+    private final ObjectMap<GameAsset<?>, String> rawStringHistoryMap = new ObjectMap<>();
+    public GlobalSaveStateSystem() {
+        Notifications.registerObserver(this);
+    }
 
-	public static abstract class StateObject {
+    public <T> boolean isItemChangedAndUnsaved(GameAsset<T> gameAsset) {
+        return hasChanges.contains(gameAsset);
+    }
 
-		private long counter = 0;
-		private static long globalCounter = 1;
+    private String getAndIncrementLatestGameAssetAsString(GameAsset<?> gameAsset) {
+        RawAsset rootRawAsset = gameAsset.getRootRawAsset();
 
-		private boolean persisted;
+        String returnString;
 
-		StateObject() {
-			counter = globalCounter++;
-		}
+        if (rawStringHistoryMap.containsKey(gameAsset)) {
+            //We use this latest one, return it, and then put in the current state as the string in cache
+            returnString = rawStringHistoryMap.get(gameAsset);
+        } else {
+            //Use from file
+            returnString = rootRawAsset.handle.readString();
+        }
 
-		/** Restore to snapshot state. */
-		abstract void applyState();
+        //Put the current in memory representation for the next time
+        String memoryRepresentation = AssetRepository.getInstance().saveGameAssetCurrentStateToJsonString(gameAsset);
+        rawStringHistoryMap.put(gameAsset, memoryRepresentation);
 
-		/** Provides snapshot of current state in scene. */
-		abstract StateObject currentState();
-	}
+        return returnString;
+    }
 
-	public static class MetaDataUpdateStateObject extends StateObject {
-		private AMetadata metadata;
-		private String asString;
+    public void pushItem(StateObject assetUpdateStateObject) {
+        redoStateObjects.clear();
 
-		public MetaDataUpdateStateObject (AMetadata metadata) {
-			super();
-			this.metadata = metadata;
+        undoStateObjects.push(assetUpdateStateObject);
+        if (assetUpdateStateObject instanceof GameAssetUpdateStateObject) {
+            addToGameAssetStates((GameAssetUpdateStateObject) assetUpdateStateObject);
+        }
+    }
 
-			FileHandle metaHandle = AssetImporter.getMetadataHandleFor(metadata.link.handle);
-			asString = metaHandle.readString();
-		}
+    private void addToGameAssetStates(GameAssetUpdateStateObject gameAssetUpdateStateObject) {
+        hasChanges.add(gameAssetUpdateStateObject.gameAsset);
+    }
 
-		private MetaDataUpdateStateObject (AMetadata metadata, String data) {
-			super();
-			this.metadata = metadata;
-			asString = data;
-		}
+    private void removeFromGameAssetStates(GameAssetUpdateStateObject gameAssetUpdateStateObject) {
+        hasChanges.remove(gameAssetUpdateStateObject.gameAsset);
+    }
 
-		@Override
-		void applyState() {
+    public void markSaved(GameAsset<?> gameAsset) {
+        hasChanges.remove(gameAsset);
+    }
 
-			FileHandle metaHandle = AssetImporter.getMetadataHandleFor(metadata.link.handle);
+    public void onUndoRequest() {
+        if (undoStateObjects.isEmpty()) {
+            Toasts.getInstance().showErrorToast("Nothing left to undo");
+        } else {
+            StateObject pop = undoStateObjects.pop();
+            // keep current state, before undo, so you can `redo` to it
+            StateObject before = pop.currentState();
+            redoStateObjects.push(before);
+            pop.applyState();
+        }
+    }
 
-			metaHandle.writeString(asString, false);
+    public void onRedoRequest() {
+        if (redoStateObjects.isEmpty()) {
+            Toasts.getInstance().showErrorToast("Nothing left to redo");
+        } else {
+            StateObject pop = redoStateObjects.pop();
+            // keep current state, before redo, so you can `undo` to it
+            StateObject before = pop.currentState();
+            undoStateObjects.push(before);
+            pop.applyState();
+        }
+    }
 
-			AssetRepository.getInstance().reloadMetaData(metadata);
+    @CommandEventHandler(commandType = Commands.CommandType.UNDO)
+    public void onUndoAction(CommandEvent actionEvent) {
+        SharedResources.globalSaveStateSystem.onUndoRequest();
+    }
 
-			Toasts.getInstance().showInfoToast("Undone " + metadata.getClass().getSimpleName() + " state");
-		}
+    @CommandEventHandler(commandType = Commands.CommandType.REDO)
+    public void onRedoAction(CommandEvent actionEvent) {
+        SharedResources.globalSaveStateSystem.onRedoRequest();
+    }
 
-		@Override
-		StateObject currentState() {
-			FileHandle metaHandle = AssetImporter.getMetadataHandleFor(metadata.link.handle);
-			String before = metaHandle.readString();
-			GlobalSaveStateSystem.MetaDataUpdateStateObject stateBeforeRestore = new GlobalSaveStateSystem.MetaDataUpdateStateObject(metadata, before);
-			return stateBeforeRestore;
-		}
-	}
-	public static class GameAssetUpdateStateObject extends StateObject {
+    @EventHandler
+    public void onProjectUnload(ProjectUnloadEvent projectUnloadEvent) {
+        clearGlobalState();
+    }
 
-		private GameAsset<?> gameAsset;
-		private String asString;
+    // clear everything, when layer data is updated
+    @EventHandler
+    public void onLayerListUpdated(LayerListUpdatedEvent layerListUpdatedEvent) {
+        clearGlobalState();
+    }
 
-		public GameAssetUpdateStateObject (GameAsset<?> gameAsset) {
-			super();
-			this.gameAsset = gameAsset;
-			asString = SharedResources.globalSaveStateSystem.getAndIncrementLatestGameAssetAsString(gameAsset);
-		}
+    private void clearGlobalState() {
+        redoStateObjects.clear();
+        undoStateObjects.clear();
+        hasChanges.clear();
+        rawStringHistoryMap.clear();
+    }
 
-		private GameAssetUpdateStateObject (GameAsset<?> gameAsset, String data) {
-			super();
-			this.gameAsset = gameAsset;
-			asString = data;
-		}
+    public static abstract class StateObject {
 
-		@Override
-		void applyState() {
-			SharedResources.globalSaveStateSystem.rawStringHistoryMap.put(gameAsset, asString);
+        private static long globalCounter = 1;
+        private long counter = 0;
+        private boolean persisted;
 
-			AssetRepository.getInstance().reloadGameAssetFromString(gameAsset, asString);
+        StateObject() {
+            counter = globalCounter++;
+        }
 
-			Toasts.getInstance().showInfoToast("Undone " + gameAsset.getResource().getClass().getSimpleName() + " [" + gameAsset.type + "] state");
-		}
+        /**
+         * Restore to snapshot state.
+         */
+        abstract void applyState();
 
-		@Override
-		StateObject currentState() {
-			String before = SharedResources.globalSaveStateSystem.rawStringHistoryMap.get(gameAsset);
-			GlobalSaveStateSystem.GameAssetUpdateStateObject stateBeforeRestore = new GlobalSaveStateSystem.GameAssetUpdateStateObject(gameAsset, before);
-			return stateBeforeRestore;
-		}
-	}
+        /**
+         * Provides snapshot of current state in scene.
+         */
+        abstract StateObject currentState();
+    }
 
+    public static class MetaDataUpdateStateObject extends StateObject {
+        private final AMetadata metadata;
+        private final String asString;
 
-	private Stack<StateObject> undoStateObjects = new Stack<>();
-	private Stack<StateObject> redoStateObjects = new Stack<>();
-	private ObjectSet<GameAsset<?>> hasChanges = new ObjectSet<>();
-	private ObjectMap<GameAsset<?>, String> rawStringHistoryMap = new ObjectMap<>();
+        public MetaDataUpdateStateObject(AMetadata metadata) {
+            super();
+            this.metadata = metadata;
 
-	public GlobalSaveStateSystem () {
-		Notifications.registerObserver(this);
-	}
+            FileHandle metaHandle = AssetImporter.getMetadataHandleFor(metadata.link.handle);
+            asString = metaHandle.readString();
+        }
 
-	public <T> boolean isItemChangedAndUnsaved (GameAsset<T> gameAsset) {
-		return hasChanges.contains(gameAsset);
-	}
+        private MetaDataUpdateStateObject(AMetadata metadata, String data) {
+            super();
+            this.metadata = metadata;
+            asString = data;
+        }
 
-	private String getAndIncrementLatestGameAssetAsString (GameAsset<?> gameAsset) {
-		RawAsset rootRawAsset = gameAsset.getRootRawAsset();
+        @Override
+        void applyState() {
 
-		String returnString;
+            FileHandle metaHandle = AssetImporter.getMetadataHandleFor(metadata.link.handle);
 
-		if (rawStringHistoryMap.containsKey(gameAsset)) {
-			//We use this latest one, return it, and then put in the current state as the string in cache
-			returnString = rawStringHistoryMap.get(gameAsset);
-		} else {
-			//Use from file
-			returnString = rootRawAsset.handle.readString();
-		}
+            metaHandle.writeString(asString, false);
 
-		//Put the current in memory representation for the next time
-		String memoryRepresentation = AssetRepository.getInstance().saveGameAssetCurrentStateToJsonString(gameAsset);
-		rawStringHistoryMap.put(gameAsset, memoryRepresentation);
+            AssetRepository.getInstance().reloadMetaData(metadata);
 
-		return returnString;
-	}
+            Toasts.getInstance().showInfoToast("Undone " + metadata.getClass().getSimpleName() + " state");
+        }
 
-	public void pushItem (StateObject assetUpdateStateObject) {
-		redoStateObjects.clear();
+        @Override
+        StateObject currentState() {
+            FileHandle metaHandle = AssetImporter.getMetadataHandleFor(metadata.link.handle);
+            String before = metaHandle.readString();
+            GlobalSaveStateSystem.MetaDataUpdateStateObject stateBeforeRestore = new GlobalSaveStateSystem.MetaDataUpdateStateObject(metadata, before);
+            return stateBeforeRestore;
+        }
+    }
 
-		undoStateObjects.push(assetUpdateStateObject);
-		if (assetUpdateStateObject instanceof GameAssetUpdateStateObject) {
-			addToGameAssetStates((GameAssetUpdateStateObject) assetUpdateStateObject);
-		}
-	}
+    public static class GameAssetUpdateStateObject extends StateObject {
 
-	private void addToGameAssetStates (GameAssetUpdateStateObject gameAssetUpdateStateObject) {
-		hasChanges.add(gameAssetUpdateStateObject.gameAsset);
-	}
-	private void removeFromGameAssetStates (GameAssetUpdateStateObject gameAssetUpdateStateObject) {
-		hasChanges.remove(gameAssetUpdateStateObject.gameAsset);
-	}
+        private final GameAsset<?> gameAsset;
+        private final String asString;
 
-	public void markSaved (GameAsset<?> gameAsset) {
-		hasChanges.remove(gameAsset);
-	}
+        public GameAssetUpdateStateObject(GameAsset<?> gameAsset) {
+            super();
+            this.gameAsset = gameAsset;
+            asString = SharedResources.globalSaveStateSystem.getAndIncrementLatestGameAssetAsString(gameAsset);
+        }
 
-	public void onUndoRequest () {
-		if (undoStateObjects.isEmpty()) {
-			Toasts.getInstance().showErrorToast("Nothing left to undo");
-		} else {
-			StateObject pop = undoStateObjects.pop();
-			// keep current state, before undo, so you can `redo` to it
-			StateObject before = pop.currentState();
-			redoStateObjects.push(before);
-			pop.applyState();
-		}
-	}
+        private GameAssetUpdateStateObject(GameAsset<?> gameAsset, String data) {
+            super();
+            this.gameAsset = gameAsset;
+            asString = data;
+        }
 
-	public void onRedoRequest () {
-		if (redoStateObjects.isEmpty()) {
-			Toasts.getInstance().showErrorToast("Nothing left to redo");
-		} else {
-			StateObject pop = redoStateObjects.pop();
-			// keep current state, before redo, so you can `undo` to it
-			StateObject before = pop.currentState();
-			undoStateObjects.push(before);
-			pop.applyState();
-		}
-	}
+        @Override
+        void applyState() {
+            SharedResources.globalSaveStateSystem.rawStringHistoryMap.put(gameAsset, asString);
 
-	@CommandEventHandler(commandType = Commands.CommandType.UNDO)
-	public void onUndoAction (CommandEvent actionEvent) {
-		SharedResources.globalSaveStateSystem.onUndoRequest();
-	}
+            AssetRepository.getInstance().reloadGameAssetFromString(gameAsset, asString);
 
-	@CommandEventHandler(commandType = Commands.CommandType.REDO)
-	public void onRedoAction (CommandEvent actionEvent) {
-		SharedResources.globalSaveStateSystem.onRedoRequest();
-	}
+            Toasts.getInstance().showInfoToast("Undone " + gameAsset.getResource().getClass().getSimpleName() + " [" + gameAsset.type + "] state");
+        }
 
-	@EventHandler
-	public void onProjectUnload(ProjectUnloadEvent projectUnloadEvent) {
-		clearGlobalState();
-	}
-
-	// clear everything, when layer data is updated
-	@EventHandler
-	public void onLayerListUpdated(LayerListUpdatedEvent layerListUpdatedEvent) {
-		clearGlobalState();
-	}
-
-	private void clearGlobalState () {
-		redoStateObjects.clear();
-		undoStateObjects.clear();
-		hasChanges.clear();
-		rawStringHistoryMap.clear();
-	}
+        @Override
+        StateObject currentState() {
+            String before = SharedResources.globalSaveStateSystem.rawStringHistoryMap.get(gameAsset);
+            GlobalSaveStateSystem.GameAssetUpdateStateObject stateBeforeRestore = new GlobalSaveStateSystem.GameAssetUpdateStateObject(gameAsset, before);
+            return stateBeforeRestore;
+        }
+    }
 }

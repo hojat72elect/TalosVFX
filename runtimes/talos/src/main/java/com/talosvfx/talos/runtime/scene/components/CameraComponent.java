@@ -8,7 +8,7 @@ public class CameraComponent extends AComponent {
 
     public Color backgroundColor = new Color(Color.valueOf("1e3357ff"));
 
-    @ValueProperty(min=0.01f, max=10f, step=0.01f)
+    @ValueProperty(min = 0.01f, max = 10f, step = 0.01f)
     public float zoom = 1f;
 
     @ValueProperty(prefix = {"W", "H"})
@@ -18,7 +18,7 @@ public class CameraComponent extends AComponent {
     public void reset() {
         super.reset();
         zoom = 1;
-        size.set(6,6);
+        size.set(6, 6);
         backgroundColor.set(Color.valueOf("1e3357ff"));
     }
 }

@@ -5,7 +5,6 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.talosvfx.talos.runtime.RuntimeContext;
 import com.talosvfx.talos.runtime.scene.GameObject;
-import com.talosvfx.talos.runtime.scene.SceneData;
 import com.talosvfx.talos.runtime.scene.SceneLayer;
 
 
@@ -18,27 +17,26 @@ public abstract class RendererComponent extends AComponent implements Json.Seria
     public boolean visible = true;
     public boolean childrenVisible = true;
 
-    public SceneLayer getSortingLayer () {
+    public SceneLayer getSortingLayer() {
         return sortingLayer;
     }
 
-    public void setSortingLayer (SceneLayer name) {
+    public void setSortingLayer(SceneLayer name) {
         sortingLayer = name;
     }
 
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         json.writeValue("sortingSceneLayer", (sortingLayer != null) ? sortingLayer : RuntimeContext.getInstance().sceneData.getPreferredSceneLayer());
         json.writeValue("orderingInLayer", orderingInLayer);
         json.writeValue("visible", visible);
         json.writeValue("childrenVisible", childrenVisible);
         json.writeValue("fakeOffsetY", fakeOffsetY);
-
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         sortingLayer = json.readValue("sortingSceneLayer", SceneLayer.class, jsonData);
         if (RuntimeContext.getInstance().sceneData != null) {
             sortingLayer = RuntimeContext.getInstance().sceneData.getSceneLayerByName(sortingLayer.getName()); //connect it
@@ -49,7 +47,7 @@ public abstract class RendererComponent extends AComponent implements Json.Seria
         fakeOffsetY = jsonData.getFloat("fakeOffsetY", 0);
     }
 
-    public abstract void minMaxBounds (GameObject parentEntity, BoundingBox rectangle);
+    public abstract void minMaxBounds(GameObject parentEntity, BoundingBox rectangle);
 
     @Override
     public void reset() {

@@ -35,58 +35,62 @@ public class OffsetModule extends AbstractModule {
     public static final int ALPHA = 0;
 
     public static final int OUTPUT = 0;
-
-    NumericalValue alpha;
-    NumericalValue output;
-
-    NumericalValue lowPos;
-    NumericalValue lowSize;
-    NumericalValue highPos;
-    NumericalValue highSize;
-
-    private int lowShape;
-    private int highShape;
-
-    private boolean lowEdge = true;
-    private boolean highEdge = true;
-
-    private float tolerance = 0;
-
     public static final int TYPE_SQUARE = 0;
     public static final int TYPE_ELLIPSE = 1;
     public static final int TYPE_LINE = 2;
-
     public static final int SIDE_ALL = 0;
     public static final int SIDE_TOP = 1;
     public static final int SIDE_BOTTOM = 2;
     public static final int SIDE_LEFT = 3;
     public static final int SIDE_RIGHT = 4;
-
-    private int lowSide = SIDE_BOTTOM;
-    private int highSide = SIDE_RIGHT;
-
-    private Vector2 randLow = new Vector2();
-    private Vector2 randHigh = new Vector2();
-
-    private Random random = new Random();
-
-    private Rectangle rect = new Rectangle();
-    private Vector2 tmp = new Vector2();
-
-    private Array<Vector2> points;
-
+    NumericalValue alpha;
+    NumericalValue output;
+    NumericalValue lowPos;
+    NumericalValue lowSize;
+    NumericalValue highPos;
+    NumericalValue highSize;
     Comparator<Vector2> comparator = new Comparator<Vector2>() {
         @Override
         public int compare(Vector2 o1, Vector2 o2) {
-            if(o1.x < o2.x) return -1;
-            if(o1.x > o2.x) return 1;
+            if (o1.x < o2.x) return -1;
+            if (o1.x > o2.x) return 1;
 
             return 0;
         }
     };
+    private int lowShape;
+    private int highShape;
+    private boolean lowEdge = true;
+    private boolean highEdge = true;
+    private final float tolerance = 0;
+    private int lowSide = SIDE_BOTTOM;
+    private int highSide = SIDE_RIGHT;
+    private final Vector2 randLow = new Vector2();
+    private final Vector2 randHigh = new Vector2();
+    private final Random random = new Random();
+    private final Rectangle rect = new Rectangle();
+    private final Vector2 tmp = new Vector2();
+    private Array<Vector2> points;
+
+    public static boolean intersectSegmentRectangle(float startX, float startY, float endX, float endY, Rectangle rectangle, Vector2 intersection) {
+        float rectangleEndX = rectangle.x + rectangle.width;
+        float rectangleEndY = rectangle.y + rectangle.height;
+
+        if (Intersector.intersectSegments(startX, startY, endX, endY, rectangle.x, rectangle.y, rectangle.x, rectangleEndY, intersection)) return true;
+
+        if (Intersector.intersectSegments(startX, startY, endX, endY, rectangle.x, rectangle.y, rectangleEndX, rectangle.y, intersection)) return true;
+
+        if (Intersector.intersectSegments(startX, startY, endX, endY, rectangleEndX, rectangle.y, rectangleEndX, rectangleEndY, intersection))
+            return true;
+
+        if (Intersector.intersectSegments(startX, startY, endX, endY, rectangle.x, rectangleEndY, rectangleEndX, rectangleEndY, intersection))
+            return true;
+
+        return rectangle.contains(startX, startY);
+    }
 
     @Override
-    public void init () {
+    public void init() {
         super.init();
         resetPoints();
     }
@@ -103,7 +107,7 @@ public class OffsetModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
 
         float alpha = this.alpha.getFloat();
 
@@ -123,16 +127,16 @@ public class OffsetModule extends AbstractModule {
         random.setSeed((long) ((getScope().getFloat(ScopePayload.PARTICLE_SEED) * 10000 * index * 1000)));
         float angle = random.nextFloat();
 
-        if(side == SIDE_TOP) angle = angle/2f;
-        if(side == SIDE_BOTTOM) angle = angle/2f + 0.5f;
-        if(side == SIDE_LEFT) angle = angle/2f + 0.25f;
-        if(side == SIDE_RIGHT) angle = angle/2f - 0.25f;
+        if (side == SIDE_TOP) angle = angle / 2f;
+        if (side == SIDE_BOTTOM) angle = angle / 2f + 0.5f;
+        if (side == SIDE_LEFT) angle = angle / 2f + 0.25f;
+        if (side == SIDE_RIGHT) angle = angle / 2f - 0.25f;
 
-        if(shape == TYPE_SQUARE) {
+        if (shape == TYPE_SQUARE) {
             findRandomSquarePos(angle, pos, size, result);
         } else if (shape == TYPE_ELLIPSE) {
             findRandomEllipsePos(angle, pos, size, result);
-        } else if (shape == TYPE_LINE){
+        } else if (shape == TYPE_LINE) {
             findRandomLinePos(angle, pos, size, result);
         }
 
@@ -140,7 +144,7 @@ public class OffsetModule extends AbstractModule {
         float endY = result.y + tolerance;
         float startX = result.x - tolerance;
         float startY = result.y - tolerance;
-        if(!edge) {
+        if (!edge) {
             startX = pos.get(0);
             startY = pos.get(1);
         }
@@ -154,25 +158,25 @@ public class OffsetModule extends AbstractModule {
     private void findRandomEllipsePos(float angle, NumericalValue pos, NumericalValue size, Vector2 result) {
         angle = angle * 360;
 
-        float x = MathUtils.cosDeg(angle) * size.get(0)/2f + pos.get(0);
-        float y = MathUtils.sinDeg(angle) * size.get(1)/2f + pos.get(1);
+        float x = MathUtils.cosDeg(angle) * size.get(0) / 2f + pos.get(0);
+        float y = MathUtils.sinDeg(angle) * size.get(1) / 2f + pos.get(1);
 
         result.set(x, y);
     }
 
     private void findRandomSquarePos(float angle, NumericalValue pos, NumericalValue size, Vector2 result) {
         angle = angle * 360;
-        rect.set(pos.get(0) - size.get(0)/2f, pos.get(1) - size.get(1)/2f, size.get(0), size.get(1));
+        rect.set(pos.get(0) - size.get(0) / 2f, pos.get(1) - size.get(1) / 2f, size.get(0), size.get(1));
         intersectSegmentRectangle(pos.get(0), pos.get(1), pos.get(0) + rect.width * MathUtils.cosDeg(angle), pos.get(1) + rect.height * MathUtils.sinDeg(angle), rect, result);
     }
 
     private void findRandomLinePos(float angle, NumericalValue pos, NumericalValue size, Vector2 result) {
         angle = angle * 360;
-        rect.set(pos.get(0) - size.get(0)/2f, pos.get(1) - size.get(1)/2f, size.get(0), size.get(1));
+        rect.set(pos.get(0) - size.get(0) / 2f, pos.get(1) - size.get(1) / 2f, size.get(0), size.get(1));
         tmp.set(rect.width, rect.height); // initial segment vector; for alpha
         float alpha = tmp.angle();
         float beta = angle - alpha;
-        float r3 = tmp.set(MathUtils.cosDeg(angle) * rect.width/2f, MathUtils.sinDeg(angle) * rect.height/2f).len();
+        float r3 = tmp.set(MathUtils.cosDeg(angle) * rect.width / 2f, MathUtils.sinDeg(angle) * rect.height / 2f).len();
         float r4 = MathUtils.cosDeg(beta) * r3;
         float posX = r4 * MathUtils.cosDeg(alpha) + pos.get(0);
         float posY = r4 * MathUtils.sinDeg(alpha) + pos.get(1);
@@ -180,52 +184,35 @@ public class OffsetModule extends AbstractModule {
         result.set(posX, posY);
     }
 
-    public static boolean intersectSegmentRectangle (float startX, float startY, float endX, float endY, Rectangle rectangle, Vector2 intersection) {
-        float rectangleEndX = rectangle.x + rectangle.width;
-        float rectangleEndY = rectangle.y + rectangle.height;
-
-        if (Intersector.intersectSegments(startX, startY, endX, endY, rectangle.x, rectangle.y, rectangle.x, rectangleEndY, intersection)) return true;
-
-        if (Intersector.intersectSegments(startX, startY, endX, endY, rectangle.x, rectangle.y, rectangleEndX, rectangle.y, intersection)) return true;
-
-        if (Intersector.intersectSegments(startX, startY, endX, endY, rectangleEndX, rectangle.y, rectangleEndX, rectangleEndY, intersection))
-            return true;
-
-        if (Intersector.intersectSegments(startX, startY, endX, endY, rectangle.x, rectangleEndY, rectangleEndX, rectangleEndY, intersection))
-            return true;
-
-        return rectangle.contains(startX, startY);
-    }
-
     private float interpolate(float alpha) {
         // interpolate alpha in this point space
 
-        if(points.get(0).x >= 0 && alpha <= points.get(0).x) {
+        if (points.get(0).x >= 0 && alpha <= points.get(0).x) {
             return points.get(0).y;
         }
 
-        for(int i = 0; i < points.size-1; i++) {
+        for (int i = 0; i < points.size - 1; i++) {
             Vector2 from = points.get(i);
-            Vector2 to = points.get(i+1);
-            if(alpha > from.x && alpha <= to.x) {
+            Vector2 to = points.get(i + 1);
+            if (alpha > from.x && alpha <= to.x) {
                 float localAlpha = 1f;
-                if(from.x != to.x) {
+                if (from.x != to.x) {
                     localAlpha = (alpha - from.x) / (to.x - from.x);
                 }
                 return interpolate(localAlpha, from.x, from.y, to.x, to.y);
             }
         }
 
-        if(points.get(points.size-1).x <= 1f && alpha >= points.get(points.size-1).x) {
-            return points.get(points.size-1).y;
+        if (points.get(points.size - 1).x <= 1f && alpha >= points.get(points.size - 1).x) {
+            return points.get(points.size - 1).y;
         }
 
         return 0;
     }
 
     private float interpolate(float alpha, float x1, float y1, float x2, float y2) {
-        if(y1 == y2) return y1;
-        if(x1 == x2) return y1;
+        if (y1 == y2) return y1;
+        if (x1 == x2) return y1;
 
         tmp.set(x2, y2);
         tmp.sub(x1, y1);
@@ -242,12 +229,15 @@ public class OffsetModule extends AbstractModule {
     public void getLowPos(Vector2 result) {
         result.set(lowPos.get(0), lowPos.get(1));
     }
+
     public void getHighPos(Vector2 result) {
         result.set(highPos.get(0), highPos.get(1));
     }
+
     public void getLowSize(Vector2 result) {
         result.set(lowSize.get(0), lowSize.get(1));
     }
+
     public void getHighSize(Vector2 result) {
         result.set(highSize.get(0), highSize.get(1));
     }
@@ -264,14 +254,6 @@ public class OffsetModule extends AbstractModule {
         highSize.set(size.x, size.y);
     }
 
-    public void setLowShape(int shape) {
-        lowShape = shape;
-    }
-
-    public void setHighShape(int shape) {
-        highShape = shape;
-    }
-
     private void resetPoints() {
         // need to guarantee at least one point
         points = new Array<>();
@@ -279,25 +261,24 @@ public class OffsetModule extends AbstractModule {
         points.add(point);
     }
 
+    public Array<Vector2> getPoints() {
+        return points;
+    }
+
     public void setPoints(Array<Vector2> newPoints) {
         points.clear();
-        for(Vector2 point : newPoints) {
+        for (Vector2 point : newPoints) {
             Vector2 newPoint = new Vector2(point);
             points.add(newPoint);
         }
     }
 
-    public Array<Vector2> getPoints() {
-        return points;
-    }
-
-
     public int createPoint(float x, float y) {
 
-        if(x < 0) x = 0;
-        if(x > 1) x = 1;
-        if(y < 0) y = 0;
-        if(y > 1) y = 1;
+        if (x < 0) x = 0;
+        if (x > 1) x = 1;
+        if (y < 0) y = 0;
+        if (y > 1) y = 1;
 
         Vector2 point = new Vector2(x, y);
         points.add(point);
@@ -312,49 +293,57 @@ public class OffsetModule extends AbstractModule {
     }
 
     public void removePoint(int i) {
-        if(points.size > 1) {
+        if (points.size > 1) {
             points.removeIndex(i);
         }
-    }
-
-    public void setLowEdge(boolean edge) {
-        lowEdge = edge;
-    }
-
-    public void setHighEdge(boolean edge) {
-        highEdge = edge;
-    }
-
-    public void setLowSide(int side) {
-        lowSide = side;
-    }
-
-    public void setHighSide(int side) {
-        highSide = side;
     }
 
     public int getLowShape() {
         return lowShape;
     }
 
+    public void setLowShape(int shape) {
+        lowShape = shape;
+    }
+
     public int getHighShape() {
         return highShape;
+    }
+
+    public void setHighShape(int shape) {
+        highShape = shape;
     }
 
     public boolean getLowEdge() {
         return lowEdge;
     }
 
+    public void setLowEdge(boolean edge) {
+        lowEdge = edge;
+    }
+
     public boolean getHighEdge() {
         return highEdge;
+    }
+
+    public void setHighEdge(boolean edge) {
+        highEdge = edge;
     }
 
     public int getLowSide() {
         return lowSide;
     }
 
+    public void setLowSide(int side) {
+        lowSide = side;
+    }
+
     public int getHighSide() {
         return highSide;
+    }
+
+    public void setHighSide(int side) {
+        highSide = side;
     }
 
     @Override

@@ -1,11 +1,7 @@
 package com.talosvfx.talos.runtime.vfx.modules;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
@@ -20,265 +16,257 @@ import com.talosvfx.talos.runtime.vfx.values.NumericalValue;
 
 public class StripMeshGeneratorModule extends MeshGeneratorModule {
 
-	public static final int UVS = 1;
-	public static final int COLOUR = 2;
-	public static final int TRANSPARENCY = 3;
-	public static final int OFFSET = 4;
-	public static final int THICKNESS = 5;
-
-	ModuleValue<StripMeshGeneratorModule> outModule;
-
-	NumericalValue thickness;
-
-	NumericalValue uvs;
-	NumericalValue colour;
-	NumericalValue transparency;
-	NumericalValue offset;
-
-	//x,y,z,colour,u,v
-	private int quadVertexSize3D = 3 + 1 + 2;
-
-	//x,y,z,colour,u,v
-	private int quadVertexSize2D = 2 + 1 + 2;
-	private int quadVertCount = 4;
-
-	private float[] verts = new float[10000];
-
-	private boolean render3D;
-	private Vector3 left = new Vector3();
-	private Vector3 temp = new Vector3();
-	private Vector3 forward = new Vector3();
+    public static final int UVS = 1;
+    public static final int COLOUR = 2;
+    public static final int TRANSPARENCY = 3;
+    public static final int OFFSET = 4;
+    public static final int THICKNESS = 5;
+
+    ModuleValue<StripMeshGeneratorModule> outModule;
+
+    NumericalValue thickness;
+
+    NumericalValue uvs;
+    NumericalValue colour;
+    NumericalValue transparency;
+    NumericalValue offset;
+    Array<Vertex> vertices = new Array<>();
+    ShortArray tris = new ShortArray();
+    //x,y,z,colour,u,v
+    private final int quadVertexSize3D = 3 + 1 + 2;
+    //x,y,z,colour,u,v
+    private final int quadVertexSize2D = 2 + 1 + 2;
+    private final int quadVertCount = 4;
+    private final float[] verts = new float[10000];
+    private boolean render3D;
+    private final Vector3 left = new Vector3();
+    private final Vector3 temp = new Vector3();
+    private final Vector3 forward = new Vector3();
+    private final Color fromColour = new Color();
+    private final Color toColour = new Color();
+    private final Color tempColour = new Color();
 
-	@Override
-	protected void defineSlots () {
-		outModule = new ModuleValue<>();
-		outModule.setModule(this);
-		createOutputSlot(MeshGeneratorModule.MODULE, outModule);
+    private float fromTransparency;
+    private float toTransparency;
 
-		thickness = createInputSlot(THICKNESS);
-		thickness.set(1);
+    private final Vector3 fromOffset = new Vector3();
+    private final Vector3 toOffset = new Vector3();
 
-		uvs = createInputSlot(UVS);
-		uvs.set(1, 1);
+    private final Pool<Vertex> vertexPool = new Pool<Vertex>() {
+        @Override
+        protected Vertex newObject() {
+            return new Vertex();
+        }
+    };
 
-		offset = createInputSlot(OFFSET);
-		colour = createInputSlot(COLOUR);
-		transparency = createInputSlot(TRANSPARENCY);
+    @Override
+    protected void defineSlots() {
+        outModule = new ModuleValue<>();
+        outModule.setModule(this);
+        createOutputSlot(MeshGeneratorModule.MODULE, outModule);
 
-	}
+        thickness = createInputSlot(THICKNESS);
+        thickness.set(1);
 
-	@Override
-	public void processCustomValues () {
-	}
+        uvs = createInputSlot(UVS);
+        uvs.set(1, 1);
 
-	private Color fromColour = new Color();
-	private Color toColour = new Color();
-	private Color tempColour = new Color();
+        offset = createInputSlot(OFFSET);
+        colour = createInputSlot(COLOUR);
+        transparency = createInputSlot(TRANSPARENCY);
+    }
 
-	private float fromTransparency;
-	private float toTransparency;
+    @Override
+    public void processCustomValues() {
+    }
 
-	private Vector3 fromOffset = new Vector3();
-	private Vector3 toOffset = new Vector3();
+    void constructMesh() {
 
-	private Pool<Vertex> vertexPool = new Pool<Vertex>() {
-		@Override
-		protected Vertex newObject () {
-			return new Vertex();
-		}
-	};
+    }
 
-	void constructMesh () {
+    @Override
+    public void setRenderMode(boolean is3D) {
+        if (this.render3D != is3D) {
+            this.render3D = is3D;
+            constructMesh();
+        }
+    }
 
-	}
+    @Override
+    public void render(ParticleRenderer particleRenderer, MaterialModule materialModule, Array<ParticlePointGroup> groupData) {
 
-	@Override
-	public void setRenderMode (boolean is3D) {
-		if (this.render3D != is3D) {
-			this.render3D = is3D;
-			constructMesh();
-		}
-	}
+        float BASEU = 0;
+        float BASEU2 = 1f;
+        float BASEV = 0f;
+        float BASEV2 = 1f;
 
-	private static class Vertex {
-		float x, y, z;
-		float colour;
-		float u, v;
+        if (materialModule instanceof SpriteMaterialModule) {
+            TextureRegion textureRegion = ((SpriteMaterialModule) materialModule).getTextureRegion();
+            BASEU = textureRegion.getU();
+            BASEU2 = textureRegion.getU2();
+            BASEV = textureRegion.getV();
+            BASEV2 = textureRegion.getV2();
+        }
 
-		public void set (ParticlePointData particlePointData, Vector3 offset, float u, float v, float colourBits) {
-			this.x = particlePointData.x + offset.x;
-			this.y = particlePointData.y + offset.y;
-			this.z = particlePointData.z + offset.z;
-			this.colour = colourBits;
-			this.u = u;
-			this.v = v;
-		}
-	}
+        float UVWIDTH = BASEU2 - BASEU;
+        float VHEIGHT = BASEV2 - BASEV;
 
-	Array<Vertex> vertices = new Array<>();
-	ShortArray tris = new ShortArray();
+        float HALFU = UVWIDTH / 2f;
+        float HALFV = VHEIGHT / 2f;
 
-	@Override
-	public void render (ParticleRenderer particleRenderer, MaterialModule materialModule, Array<ParticlePointGroup> groupData) {
 
-		float BASEU = 0;
-		float BASEU2 = 1f;
-		float BASEV = 0f;
-		float BASEV2 = 1f;
+        for (int i = 0; i < groupData.size; i++) {
+            ParticlePointGroup particlePointGroup = groupData.get(i);
 
-		if (materialModule instanceof SpriteMaterialModule) {
-			TextureRegion textureRegion = ((SpriteMaterialModule)materialModule).getTextureRegion();
-			BASEU = textureRegion.getU();
-			BASEU2 = textureRegion.getU2();
-			BASEV = textureRegion.getV();
-			BASEV2 = textureRegion.getV2();
-		}
+            Array<ParticlePointData> pointData = particlePointGroup.pointDataArray;
 
-		float UVWIDTH = BASEU2 - BASEU;
-		float VHEIGHT = BASEV2 - BASEV;
 
-		float HALFU = UVWIDTH/2f;
-		float HALFV = VHEIGHT/2f;
+            if (pointData.size < 2)
+                continue; //Nothing to render
 
+            int vertIndex = 0;
+            int triIndex = 0;
 
-		for (int i = 0; i < groupData.size; i++) {
-			ParticlePointGroup particlePointGroup = groupData.get(i);
+            for (int j = 0; j < pointData.size; j++) {
+                float progression = j / (float) (pointData.size - 1);
 
-			Array<ParticlePointData> pointData = particlePointGroup.pointDataArray;
+                ParticlePointData particlePointData = pointData.get(j);
 
+                Particle fromReference = particlePointData.reference;
 
-			if (pointData.size < 2)
-				continue; //Nothing to render
+                float particleTransparency = fromReference.getEmitter().getParticleModule().getTransparency();
 
-			int vertIndex = 0;
-			int triIndex = 0;
+                getScope().set(ScopePayload.SUB_PARTICLE_ALPHA, particlePointData.alpha);
+                getScope().set(ScopePayload.PARTICLE_SEED, fromReference.seed);
+                getScope().set(ScopePayload.PARTICLE_ALPHA, fromReference.alpha);
+                getScope().setCurrentRequesterID(getScope().newParticleRequester());
 
-			for (int j = 0; j < pointData.size; j++) {
-				float progression = j / (float)(pointData.size - 1);
 
-				ParticlePointData particlePointData = pointData.get(j);
+                fetchAllInputSlotValues();
 
-				Particle fromReference = particlePointData.reference;
+                float width = thickness.getFloat();
 
-				float particleTransparency = fromReference.getEmitter().getParticleModule().getTransparency();
+                float scaleU = uvs.get(0);
+                float scaleV = uvs.get(1);
 
-				getScope().set(ScopePayload.SUB_PARTICLE_ALPHA, particlePointData.alpha);
-				getScope().set(ScopePayload.PARTICLE_SEED, fromReference.seed);
-				getScope().set(ScopePayload.PARTICLE_ALPHA, fromReference.alpha);
-				getScope().setCurrentRequesterID(getScope().newParticleRequester());
+                fromOffset.set(offset.get(0), offset.get(1), offset.get(2));
+                fromColour.set(colour.get(0), colour.get(1), colour.get(2), 1f);
+                fromTransparency = this.transparency.isEmpty() ? 1 : this.transparency.getFloat(); //default
 
+                fromColour.a = fromTransparency * particleTransparency;
 
-				fetchAllInputSlotValues();
+                float fromColourBits = fromColour.toFloatBits();
 
-				float width = thickness.getFloat();
+                //get uvs from material
 
-				float scaleU = uvs.get(0);
-				float scaleV = uvs.get(1);
+                float U = BASEU + (UVWIDTH * scaleU * progression);
 
-				fromOffset.set(offset.get(0), offset.get(1), offset.get(2));
-				fromColour.set(colour.get(0), colour.get(1), colour.get(2), 1f);
-				fromTransparency = this.transparency.isEmpty() ? 1 : this.transparency.getFloat(); //default
+                float MIDV = BASEV + VHEIGHT * 0.5f;
+                float leftBaseV = MIDV + (HALFV * scaleV);
+                float rightBaseV = MIDV - (HALFV * scaleV);
 
-				fromColour.a = fromTransparency * particleTransparency;
+                forward.setZero();
+                if (j < pointData.size - 1) {
+                    //We are not at the end
 
-				float fromColourBits = fromColour.toFloatBits();
+                    ParticlePointData nextParticlePointData = pointData.get(j + 1);
 
-				//get uvs from material
+                    temp.set(nextParticlePointData.x, nextParticlePointData.y, nextParticlePointData.z);
+                    temp.sub(particlePointData.x, particlePointData.y, particlePointData.z);
 
-				float U = BASEU + (UVWIDTH * scaleU * progression);
+                    forward.add(temp);
+                }
+                if (j > 0) {
+                    ParticlePointData prevParticlePointData = pointData.get(j - 1);
 
-				float MIDV = BASEV + VHEIGHT * 0.5f;
-				float leftBaseV = MIDV + (HALFV * scaleV);
-				float rightBaseV = MIDV - (HALFV * scaleV);
+                    temp.set(particlePointData.x, particlePointData.y, particlePointData.z);
+                    temp.sub(prevParticlePointData.x, prevParticlePointData.y, prevParticlePointData.z);
 
-				forward.setZero();
-				if (j < pointData.size - 1) {
-					//We are not at the end
+                    forward.add(temp);
+                }
+                forward.nor();
 
-					ParticlePointData nextParticlePointData = pointData.get(j + 1);
+                //2d hack,
+                left.set(-forward.y, forward.x, forward.z);
 
-					temp.set(nextParticlePointData.x, nextParticlePointData.y, nextParticlePointData.z);
-					temp.sub(particlePointData.x, particlePointData.y, particlePointData.z);
+                Vertex vertexL = vertexPool.obtain();
+                Vertex vertexR = vertexPool.obtain();
 
-					forward.add(temp);
-				}
-				if (j > 0) {
-					ParticlePointData prevParticlePointData = pointData.get(j - 1);
+                vertexL.set(particlePointData, temp.set(left).scl(width * 0.5f), U, leftBaseV, fromColourBits);
+                vertexR.set(particlePointData, temp.set(left).scl(width * 0.5f).scl(-1), U, rightBaseV, fromColourBits);
 
-					temp.set(particlePointData.x, particlePointData.y, particlePointData.z);
-					temp.sub(prevParticlePointData.x, prevParticlePointData.y, prevParticlePointData.z);
+                vertices.add(vertexL);
+                vertices.add(vertexR);
 
-					forward.add(temp);
-				}
-				forward.nor();
+                vertexL.x += fromOffset.x;
+                vertexL.y += fromOffset.y;
+                vertexL.z += fromOffset.z;
 
-				//2d hack,
-				left.set(-forward.y, forward.x, forward.z);
+                vertexR.x += fromOffset.x;
+                vertexR.y += fromOffset.y;
+                vertexR.z += fromOffset.z;
 
-				Vertex vertexL = vertexPool.obtain();
-				Vertex vertexR = vertexPool.obtain();
+                if (j < (pointData.size - 1)) {
+                    tris.add(vertIndex);
+                    tris.add(vertIndex + 2);
+                    tris.add(vertIndex + 1);
 
-				vertexL.set(particlePointData, temp.set(left).scl(width * 0.5f), U, leftBaseV, fromColourBits);
-				vertexR.set(particlePointData, temp.set(left).scl(width * 0.5f).scl(-1), U, rightBaseV, fromColourBits);
+                    tris.add(vertIndex + 1);
+                    tris.add(vertIndex + 2);
+                    tris.add(vertIndex + 3);
+                }
 
-				vertices.add(vertexL);
-				vertices.add(vertexR);
+                vertIndex += 2;
+                triIndex += 6;
+            }
 
-				vertexL.x += fromOffset.x;
-				vertexL.y += fromOffset.y;
-				vertexL.z += fromOffset.z;
 
-				vertexR.x += fromOffset.x;
-				vertexR.y += fromOffset.y;
-				vertexR.z += fromOffset.z;
+            int idx = 0;
+            for (int tri = 0; tri < tris.size; tri++) {
+                final short vertI = tris.get(tri);
 
-				if (j < (pointData.size - 1)) {
-					tris.add(vertIndex);
-					tris.add(vertIndex + 2);
-					tris.add(vertIndex + 1);
+                final Vertex vertex = vertices.get(vertI);
 
-					tris.add(vertIndex + 1);
-					tris.add(vertIndex + 2);
-					tris.add(vertIndex + 3);
-				}
+                verts[idx++] = vertex.x;
+                verts[idx++] = vertex.y;
+                if (render3D) {
+                    verts[idx++] = vertex.z;
+                }
+                verts[idx++] = vertex.colour;
+                verts[idx++] = vertex.u;
+                verts[idx++] = vertex.v;
+            }
 
-				vertIndex += 2;
-				triIndex += 6;
-			}
+            final int triSize = tris.size;
 
+            vertexPool.freeAll(vertices);
+            vertices.clear();
+            tris.clear();
 
-			int idx = 0;
-			for (int tri = 0; tri < tris.size; tri++) {
-				final short vertI = tris.get(tri);
 
-				final Vertex vertex = vertices.get(vertI);
+            //Fake it
+            for (int triI = 0; triI < triSize; triI++) {
+                tris.add(triI);
+            }
 
-				verts[idx++] = vertex.x;
-				verts[idx++] = vertex.y;
-				if (render3D) {
-					verts[idx++] = vertex.z;
-				}
-				verts[idx++] = vertex.colour;
-				verts[idx++] = vertex.u;
-				verts[idx++] = vertex.v;
-			}
+            particleRenderer.render(verts, idx, tris.items, tris.size, materialModule);
 
-			final int triSize = tris.size;
+            tris.clear();
+        }
+    }
 
-			vertexPool.freeAll(vertices);
-			vertices.clear();
-			tris.clear();
+    private static class Vertex {
+        float x, y, z;
+        float colour;
+        float u, v;
 
-
-			//Fake it
-			for (int triI = 0; triI < triSize; triI++) {
-				tris.add(triI);
-			}
-
-			particleRenderer.render(verts, idx, tris.items, tris.size, materialModule);
-
-			tris.clear();
-
-		}
-	}
+        public void set(ParticlePointData particlePointData, Vector3 offset, float u, float v, float colourBits) {
+            this.x = particlePointData.x + offset.x;
+            this.y = particlePointData.y + offset.y;
+            this.z = particlePointData.z + offset.z;
+            this.colour = colourBits;
+            this.u = u;
+            this.v = v;
+        }
+    }
 }

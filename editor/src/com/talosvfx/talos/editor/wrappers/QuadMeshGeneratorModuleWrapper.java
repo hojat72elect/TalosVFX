@@ -21,18 +21,17 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.kotcrab.vis.ui.VisUI;
-import com.kotcrab.vis.ui.widget.VisCheckBox;
+import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.CheckboxWithZoom;
 import com.talosvfx.talos.runtime.vfx.Slot;
 import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
 import com.talosvfx.talos.runtime.vfx.modules.QuadMeshGeneratorModule;
 import com.talosvfx.talos.runtime.vfx.modules.Vector2Module;
-import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.CheckboxWithZoom;
 
 public class QuadMeshGeneratorModuleWrapper extends ModuleWrapper<QuadMeshGeneratorModule> {
 
     private CheckboxWithZoom billboard;
 
-    public QuadMeshGeneratorModuleWrapper () {
+    public QuadMeshGeneratorModuleWrapper() {
         super();
     }
 
@@ -54,31 +53,28 @@ public class QuadMeshGeneratorModuleWrapper extends ModuleWrapper<QuadMeshGenera
         billboard = new CheckboxWithZoom("billboard", VisUI.getSkin());
         billboard.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 module.setBillboard(billboard.isChecked());
             }
         });
 
         leftWrapper.add(billboard).left().expandX().padLeft(3).row();
-
-
     }
 
     @Override
-    public Class<? extends AbstractModule> getSlotsPreferredModule (Slot slot) {
+    public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
         if (slot.getIndex() == QuadMeshGeneratorModule.SIZE) return Vector2Module.class;
 
         return null;
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
-
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
     }
 }

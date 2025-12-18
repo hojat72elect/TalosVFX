@@ -4,7 +4,7 @@ import com.badlogic.gdx.utils.Array;
 
 
 public interface ShaderControlProvider {
-	Array<BaseSceneShader.ShaderControl> getShaderControls ();
+    Array<BaseSceneShader.ShaderControl> getShaderControls();
 
-	String getShaderDisplayName ();
+    String getShaderDisplayName();
 }

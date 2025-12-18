@@ -7,9 +7,10 @@ import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.project2.TalosProjectData;
 import com.talosvfx.talos.editor.project2.localprefs.TalosLocalPrefs;
-import lombok.Getter;
 
 import java.lang.reflect.Field;
+
+import lombok.Getter;
 
 public abstract class APrefWidget extends Table {
 
@@ -28,7 +29,7 @@ public abstract class APrefWidget extends Table {
 
     public APrefWidget(String parentPath, XmlReader.Element xml) {
 
-        if(xml != null) {
+        if (xml != null) {
             id = xml.getAttribute("name");
             isProject = xml.getBooleanAttribute("project", false);
             isGlobalProject = xml.getBooleanAttribute("shared-project", false);
@@ -36,10 +37,9 @@ public abstract class APrefWidget extends Table {
         path = parentPath + "." + id;
 
         this.xml = xml;
-
     }
 
-    public void changed () {
+    public void changed() {
         PrefChangedEvent prefChangedEvent = Notifications.obtainEvent(PrefChangedEvent.class);
         prefChangedEvent.setId(id);
         Notifications.fireEvent(prefChangedEvent);
@@ -53,7 +53,7 @@ public abstract class APrefWidget extends Table {
             return;
         }
 
-        if(!isProject) {
+        if (!isProject) {
             TalosLocalPrefs.Instance().setGlobalData(path, val);
             TalosLocalPrefs.Instance().save(); // TODO: this needs changing, too many write operations
         } else {
@@ -63,7 +63,6 @@ public abstract class APrefWidget extends Table {
 
         changed();
     }
-
 
 
     public void read() {
@@ -77,7 +76,7 @@ public abstract class APrefWidget extends Table {
         if (!isProject) {
             str = TalosLocalPrefs.Instance().getGlobalData(path);
         }
-        if((str == null || str.isEmpty()) && xml != null) {
+        if ((str == null || str.isEmpty()) && xml != null) {
             str = xml.getAttribute("default", "0");
         }
         fromString(str);
@@ -86,13 +85,13 @@ public abstract class APrefWidget extends Table {
     public void readLocal() {
         String str = null;
         str = TalosLocalPrefs.Instance().getProjectPrefs().getString(path);
-        if((str == null || str.isEmpty()) && xml != null) {
+        if ((str == null || str.isEmpty()) && xml != null) {
             str = xml.getAttribute("default", "0");
         }
         fromString(str);
     }
 
-    private void writeGlobalProject () {
+    private void writeGlobalProject() {
         try {
             String val = writeString();
 
@@ -104,13 +103,14 @@ public abstract class APrefWidget extends Table {
             e.printStackTrace();
         }
     }
-    public void readGlobalProject () {
+
+    public void readGlobalProject() {
         try {
             TalosProjectData currentProject = SharedResources.currentProject;
             Field field = TalosProjectData.class.getDeclaredField(id);
             field.setAccessible(true);
-            Object res =  field.get(currentProject);
-            fromString((String)res);
+            Object res = field.get(currentProject);
+            fromString((String) res);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -118,7 +118,5 @@ public abstract class APrefWidget extends Table {
 
     protected abstract void fromString(String str);
 
-    protected abstract String writeString ();
-
-
+    protected abstract String writeString();
 }

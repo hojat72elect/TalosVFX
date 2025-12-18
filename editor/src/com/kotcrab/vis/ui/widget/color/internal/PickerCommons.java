@@ -29,110 +29,110 @@ import com.kotcrab.vis.ui.widget.color.ColorPickerWidgetStyle;
 import com.rockbite.bongo.engine.render.ShaderFlags;
 import com.rockbite.bongo.engine.render.SpriteShaderCompiler;
 
-/** @author Kotcrab */
+/**
+ * @author Kotcrab
+ */
 public class PickerCommons implements Disposable {
-	final ColorPickerWidgetStyle style;
-	final Sizes sizes;
+    final ColorPickerWidgetStyle style;
+    final Sizes sizes;
+    ShaderProgram paletteShader;
+    ShaderProgram verticalChannelShader;
+    ShaderProgram hsvShader;
+    ShaderProgram rgbShader;
+    ShaderProgram gridShader;
+    Texture whiteTexture;
+    private final boolean loadExtendedShaders;
 
-	private boolean loadExtendedShaders;
-	ShaderProgram paletteShader;
-	ShaderProgram verticalChannelShader;
-	ShaderProgram hsvShader;
-	ShaderProgram rgbShader;
-	ShaderProgram gridShader;
+    public PickerCommons(ColorPickerWidgetStyle style, Sizes sizes, boolean loadExtendedShaders) {
+        this.style = style;
+        this.sizes = sizes;
+        this.loadExtendedShaders = loadExtendedShaders;
 
-	Texture whiteTexture;
+        createPixmap();
+        loadShaders();
+    }
 
-	public PickerCommons (ColorPickerWidgetStyle style, Sizes sizes, boolean loadExtendedShaders) {
-		this.style = style;
-		this.sizes = sizes;
-		this.loadExtendedShaders = loadExtendedShaders;
+    private void createPixmap() {
+        Pixmap whitePixmap = new Pixmap(2, 2, Format.RGB888);
+        whitePixmap.setColor(Color.WHITE);
+        whitePixmap.drawRectangle(0, 0, 2, 2);
+        whiteTexture = new Texture(whitePixmap);
+        whiteTexture.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
+        whitePixmap.dispose();
+    }
 
-		createPixmap();
-		loadShaders();
-	}
+    private void loadShaders() {
+        paletteShader = SpriteShaderCompiler.getOrCreateShader("vis/palette",
+                Gdx.files.internal("shaders/gl2/vis/default.vert.glsl"),
+                Gdx.files.internal("shaders/gl2/vis/palette.frag.glsl"),
+                new ShaderFlags()
+        );
+        verticalChannelShader = SpriteShaderCompiler.getOrCreateShader("vis/verticalChannelShader",
+                Gdx.files.internal("shaders/gl2/vis/default.vert.glsl"),
+                Gdx.files.internal("shaders/gl2/vis/verticalBar.frag.glsl"),
+                new ShaderFlags()
+        );
 
-	private void createPixmap () {
-		Pixmap whitePixmap = new Pixmap(2, 2, Format.RGB888);
-		whitePixmap.setColor(Color.WHITE);
-		whitePixmap.drawRectangle(0, 0, 2, 2);
-		whiteTexture = new Texture(whitePixmap);
-		whiteTexture.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
-		whitePixmap.dispose();
-	}
+        gridShader = SpriteShaderCompiler.getOrCreateShader("vis/grid",
+                Gdx.files.internal("shaders/gl2/vis/default.vert.glsl"),
+                Gdx.files.internal("shaders/gl2/vis/checkerboard.frag.glsl"),
+                new ShaderFlags()
+        );
 
-	private void loadShaders () {
-		paletteShader = SpriteShaderCompiler.getOrCreateShader("vis/palette",
-			Gdx.files.internal("shaders/gl2/vis/default.vert.glsl"),
-			Gdx.files.internal("shaders/gl2/vis/palette.frag.glsl"),
-			new ShaderFlags()
-		);
-		verticalChannelShader = SpriteShaderCompiler.getOrCreateShader("vis/verticalChannelShader",
-			Gdx.files.internal("shaders/gl2/vis/default.vert.glsl"),
-			Gdx.files.internal("shaders/gl2/vis/verticalBar.frag.glsl"),
-			new ShaderFlags()
-		);
+        if (loadExtendedShaders) {
+            hsvShader = SpriteShaderCompiler.getOrCreateShader("vis/hsv",
+                    Gdx.files.internal("shaders/gl2/vis/default.vert.glsl"),
+                    Gdx.files.internal("shaders/gl2/vis/hsv.frag.glsl"),
+                    new ShaderFlags()
+            );
 
-		gridShader = SpriteShaderCompiler.getOrCreateShader("vis/grid",
-			Gdx.files.internal("shaders/gl2/vis/default.vert.glsl"),
-			Gdx.files.internal("shaders/gl2/vis/checkerboard.frag.glsl"),
-			new ShaderFlags()
-		);
+            rgbShader = SpriteShaderCompiler.getOrCreateShader("vis/rgb",
+                    Gdx.files.internal("shaders/gl2/vis/default.vert.glsl"),
+                    Gdx.files.internal("shaders/gl2/vis/rgb.frag.glsl"),
+                    new ShaderFlags()
+            );
+        }
+    }
 
-		if (loadExtendedShaders) {
-			hsvShader = SpriteShaderCompiler.getOrCreateShader("vis/hsv",
-				Gdx.files.internal("shaders/gl2/vis/default.vert.glsl"),
-				Gdx.files.internal("shaders/gl2/vis/hsv.frag.glsl"),
-				new ShaderFlags()
-			);
+    private ShaderProgram loadShader(String vertFile, String fragFile) {
+        ShaderProgram program = new ShaderProgram(
+                Gdx.files.classpath("com/kotcrab/vis/ui/widget/color/internal/" + vertFile),
+                Gdx.files.classpath("com/kotcrab/vis/ui/widget/color/internal/" + fragFile));
 
-			rgbShader = SpriteShaderCompiler.getOrCreateShader("vis/rgb",
-				Gdx.files.internal("shaders/gl2/vis/default.vert.glsl"),
-				Gdx.files.internal("shaders/gl2/vis/rgb.frag.glsl"),
-				new ShaderFlags()
-			);
-		}
-	}
+        if (!program.isCompiled()) {
+            throw new IllegalStateException("ColorPicker shader compilation failed. Shader: " + vertFile + ", " + fragFile + ": " + program.getLog());
+        }
 
-	private ShaderProgram loadShader (String vertFile, String fragFile) {
-		ShaderProgram program = new ShaderProgram(
-				Gdx.files.classpath("com/kotcrab/vis/ui/widget/color/internal/" + vertFile),
-				Gdx.files.classpath("com/kotcrab/vis/ui/widget/color/internal/" + fragFile));
+        return program;
+    }
 
-		if (program.isCompiled() == false) {
-			throw new IllegalStateException("ColorPicker shader compilation failed. Shader: " + vertFile + ", " + fragFile + ": " + program.getLog());
-		}
+    ShaderProgram getBarShader(int mode) {
+        switch (mode) {
+            case ChannelBar.MODE_ALPHA:
+            case ChannelBar.MODE_R:
+            case ChannelBar.MODE_G:
+            case ChannelBar.MODE_B:
+                return rgbShader;
+            case ChannelBar.MODE_H:
+            case ChannelBar.MODE_S:
+            case ChannelBar.MODE_V:
+                return hsvShader;
+            default:
+                throw new IllegalStateException("Unsupported mode: " + mode);
+        }
+    }
 
-		return program;
-	}
+    @Override
+    public void dispose() {
+        whiteTexture.dispose();
 
-	ShaderProgram getBarShader (int mode) {
-		switch (mode) {
-			case ChannelBar.MODE_ALPHA:
-			case ChannelBar.MODE_R:
-			case ChannelBar.MODE_G:
-			case ChannelBar.MODE_B:
-				return rgbShader;
-			case ChannelBar.MODE_H:
-			case ChannelBar.MODE_S:
-			case ChannelBar.MODE_V:
-				return hsvShader;
-			default:
-				throw new IllegalStateException("Unsupported mode: " + mode);
-		}
-	}
+        paletteShader.dispose();
+        verticalChannelShader.dispose();
+        gridShader.dispose();
 
-	@Override
-	public void dispose () {
-		whiteTexture.dispose();
-
-		paletteShader.dispose();
-		verticalChannelShader.dispose();
-		gridShader.dispose();
-
-		if (loadExtendedShaders) {
-			hsvShader.dispose();
-			rgbShader.dispose();
-		}
-	}
+        if (loadExtendedShaders) {
+            hsvShader.dispose();
+            rgbShader.dispose();
+        }
+    }
 }

@@ -4,7 +4,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Predicate;
 import com.talosvfx.talos.editor.addons.scene.SceneUtils;
 import com.talosvfx.talos.editor.addons.scene.widgets.DataComponentFieldPopup;
-import com.talosvfx.talos.editor.addons.scene.widgets.GenericListPopup;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.ButtonPropertyWidget;
 import com.talosvfx.talos.editor.widgets.ui.FilteredTree;
 import com.talosvfx.talos.runtime.scene.components.DataComponent;
@@ -12,7 +11,7 @@ import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.DataPropertiesUti
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
 
 public class PropertyPanelFieldWidget extends ButtonPropertyWidget<String> {
-    private DataComponentFieldPopup<String> typeListPopUp;
+    private final DataComponentFieldPopup<String> typeListPopUp;
 
     public PropertyPanelFieldWidget() {
         super("Add field");

@@ -20,14 +20,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.Cell;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
-import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.events.deprecatedparticles.RegisterDragPoints;
 import com.talosvfx.talos.editor.notifications.events.deprecatedparticles.UnRegisterDragPoints;
 import com.talosvfx.talos.editor.widgets.ui.DragPoint;
-import com.talosvfx.talos.editor.widgets.ui.PreviewWidget;
 import com.talosvfx.talos.runtime.vfx.Slot;
-
 import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
 import com.talosvfx.talos.runtime.vfx.modules.FromToModule;
 import com.talosvfx.talos.runtime.vfx.modules.Vector3Module;
@@ -69,7 +66,7 @@ public class FromToModuleWrapper extends ModuleWrapper<FromToModule> implements 
 
         dragFrom = new DragPoint(-1, 0);
         dragTo = new DragPoint(1, 0);
-        if(module != null) {
+        if (module != null) {
             module.setDefaults(dragFrom.position, dragTo.position);
         }
     }
@@ -83,13 +80,13 @@ public class FromToModuleWrapper extends ModuleWrapper<FromToModule> implements 
     @Override
     public void setModule(FromToModule module) {
         super.setModule(module);
-        if(!lock) {
+        if (!lock) {
             module.setDefaults(dragFrom.position, dragTo.position);
         }
     }
 
     @Override
-    protected float reportPrefWidth () {
+    protected float reportPrefWidth() {
         return 150;
     }
 
@@ -100,12 +97,12 @@ public class FromToModuleWrapper extends ModuleWrapper<FromToModule> implements 
 
     @Override
     public void dragPointChanged(DragPoint point) {
-        if(point == dragFrom) {
+        if (point == dragFrom) {
             module.setDefaults(dragFrom.position, dragTo.position);
             markLabelAsHilighted(fromLabel);
         }
 
-        if(point == dragTo) {
+        if (point == dragTo) {
             module.setDefaults(dragFrom.position, dragTo.position);
             markLabelAsHilighted(toLabel);
         }
@@ -121,10 +118,10 @@ public class FromToModuleWrapper extends ModuleWrapper<FromToModule> implements 
     }
 
     @Override
-    public Class<? extends AbstractModule>  getSlotsPreferredModule(Slot slot) {
+    public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
 
-        if(slot.getIndex() == FromToModule.FROM) return Vector3Module.class;
-        if(slot.getIndex() == FromToModule.TO) return Vector3Module.class;
+        if (slot.getIndex() == FromToModule.FROM) return Vector3Module.class;
+        if (slot.getIndex() == FromToModule.TO) return Vector3Module.class;
 
         return null;
     }

@@ -20,7 +20,7 @@ public interface IProject {
 
     FileHandle findFileInDefaultPaths(String fileName);
 
-    Array<String> getSavedResourcePaths ();
+    Array<String> getSavedResourcePaths();
 
     String exportProject();
 
@@ -28,5 +28,5 @@ public interface IProject {
 
     boolean requiresWorkspaceLocation();
 
-    void createWorkspaceEnvironment (String path, String name);
+    void createWorkspaceEnvironment(String path, String name);
 }

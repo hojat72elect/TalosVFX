@@ -7,11 +7,11 @@ import com.artemis.utils.Bag;
 
 public interface IMGUIPlatform {
 
-	void init ();
+    void init();
 
-	void newFrame ();
+    void newFrame();
 
-	void renderDrawData (World world);
+    void renderDrawData(World world);
 
-	boolean renderDebug (World world, EntitySubscription allEntities, Bag<Component> singletons);
+    boolean renderDebug(World world, EntitySubscription allEntities, Bag<Component> singletons);
 }

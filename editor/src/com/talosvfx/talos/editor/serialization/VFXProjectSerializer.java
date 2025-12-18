@@ -17,8 +17,11 @@
 package com.talosvfx.talos.editor.serialization;
 
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.utils.*;
-import com.talosvfx.talos.editor.project2.TalosVFXUtils;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonReader;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.JsonWriter;
 import com.talosvfx.talos.editor.wrappers.ModuleWrapper;
 import com.talosvfx.talos.editor.wrappers.WrapperRegistry;
 import com.talosvfx.talos.runtime.utils.TempHackUtil;
@@ -29,27 +32,28 @@ import com.talosvfx.talos.runtime.vfx.serialization.ExportData;
 
 public class VFXProjectSerializer {
 
-    public VFXProjectSerializer () {
+    public VFXProjectSerializer() {
     }
 
     /**
      * Very naughty
+     *
      * @param data
      */
 
-    public static VFXProjectData readTalosTLSProject (FileHandle fileHandle, String talosIdentifier) {
-        if(!fileHandle.exists()) return null;
+    public static VFXProjectData readTalosTLSProject(FileHandle fileHandle, String talosIdentifier) {
+        if (!fileHandle.exists()) return null;
         return readTalosTLSProject(TempHackUtil.hackIt(fileHandle.readString()), talosIdentifier);
     }
 
-    public static VFXProjectData readTalosTLSProject (String data, String talosIdentifier) {
+    public static VFXProjectData readTalosTLSProject(String data, String talosIdentifier) {
         Json json = new Json();
         json.setIgnoreUnknownFields(true);
         ParticleEmitterDescriptor.registerModules();
-        for (Class clazz: WrapperRegistry.map.values()) {
+        for (Class clazz : WrapperRegistry.map.values()) {
             json.addClassTag(clazz.getSimpleName(), clazz);
         }
-        for (Class clazz: ParticleEmitterDescriptor.registeredModules) {
+        for (Class clazz : ParticleEmitterDescriptor.registeredModules) {
             json.addClassTag(clazz.getSimpleName(), clazz);
         }
         JsonReader reader = new JsonReader();
@@ -58,29 +62,10 @@ public class VFXProjectSerializer {
         return json.readValue(VFXProjectData.class, parse);
     }
 
-    public void write (FileHandle fileHandle, VFXProjectData VFXProjectData) {
-        fileHandle.writeString(write(VFXProjectData), false);
-    }
-
-    public String write (VFXProjectData VFXProjectData) {
+    public static String writeTalosPExport(ExportData exportData) {
         Json json = new Json();
         ParticleEmitterDescriptor.registerModules();
-        for (Class clazz: WrapperRegistry.map.values()) {
-            json.addClassTag(clazz.getSimpleName(), clazz);
-        }
-        for (Class clazz: ParticleEmitterDescriptor.registeredModules) {
-            json.addClassTag(clazz.getSimpleName(), clazz);
-        }
-        json.setOutputType(JsonWriter.OutputType.json);
-        String data = json.prettyPrint(VFXProjectData);
-
-        return data;
-    }
-
-    public static String writeTalosPExport (ExportData exportData) {
-        Json json = new Json();
-        ParticleEmitterDescriptor.registerModules();
-        for (Class clazz: ParticleEmitterDescriptor.registeredModules) {
+        for (Class clazz : ParticleEmitterDescriptor.registeredModules) {
             json.addClassTag(clazz.getSimpleName(), clazz);
         }
 
@@ -90,7 +75,7 @@ public class VFXProjectSerializer {
         return data;
     }
 
-    public static ExportData exportTLSDataToP (VFXProjectData projectDataToConvert) {
+    public static ExportData exportTLSDataToP(VFXProjectData projectDataToConvert) {
         Array<EmitterData> emitters = projectDataToConvert.getEmitters();
 
         ExportData data = new ExportData();
@@ -126,4 +111,22 @@ public class VFXProjectSerializer {
         return data;
     }
 
+    public void write(FileHandle fileHandle, VFXProjectData VFXProjectData) {
+        fileHandle.writeString(write(VFXProjectData), false);
+    }
+
+    public String write(VFXProjectData VFXProjectData) {
+        Json json = new Json();
+        ParticleEmitterDescriptor.registerModules();
+        for (Class clazz : WrapperRegistry.map.values()) {
+            json.addClassTag(clazz.getSimpleName(), clazz);
+        }
+        for (Class clazz : ParticleEmitterDescriptor.registeredModules) {
+            json.addClassTag(clazz.getSimpleName(), clazz);
+        }
+        json.setOutputType(JsonWriter.OutputType.json);
+        String data = json.prettyPrint(VFXProjectData);
+
+        return data;
+    }
 }

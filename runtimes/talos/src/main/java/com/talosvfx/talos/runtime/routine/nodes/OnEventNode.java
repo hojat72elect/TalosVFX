@@ -5,15 +5,14 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
-import com.talosvfx.talos.runtime.RuntimeContext;
 import com.talosvfx.talos.runtime.routine.RoutineNode;
-import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyType;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import lombok.Getter;
 
 public class OnEventNode extends RoutineNode {
     private static final Logger logger = LoggerFactory.getLogger(OnEventNode.class);
@@ -22,15 +21,14 @@ public class OnEventNode extends RoutineNode {
     private String eventName;
 
 
-
-    private Array<PropertyWrapper<?>> propertyWrappers = new Array<>();
+    private final Array<PropertyWrapper<?>> propertyWrappers = new Array<>();
 
     @Override
     public void receiveSignal(String portName) {
 
     }
 
-    public void fireEvent (Array<PropertyWrapper<?>> dataFromEvent) {
+    public void fireEvent(Array<PropertyWrapper<?>> dataFromEvent) {
 
         for (PropertyWrapper<?> dynamicWrapper : dataFromEvent) {
             for (PropertyWrapper<?> eventWrapper : propertyWrappers) {

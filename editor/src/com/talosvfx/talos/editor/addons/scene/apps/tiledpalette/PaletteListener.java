@@ -2,7 +2,8 @@ package com.talosvfx.talos.editor.addons.scene.apps.tiledpalette;
 
 import com.badlogic.gdx.scenes.scene2d.Event;
 import com.badlogic.gdx.scenes.scene2d.EventListener;
-import com.talosvfx.talos.runtime.scene.GameObject;import com.talosvfx.talos.runtime.maps.StaticTile;
+import com.talosvfx.talos.runtime.maps.StaticTile;
+import com.talosvfx.talos.runtime.scene.GameObject;
 
 public class PaletteListener implements EventListener {
 
@@ -17,7 +18,7 @@ public class PaletteListener implements EventListener {
                     gameObject = event.getSelectedGameObjects()[0];
                 }
                 StaticTile staticTile = null;
-                if (gameObject == null &&  event.getSelectedTiles() != null && event.getSelectedTiles().length > 0) {
+                if (gameObject == null && event.getSelectedTiles() != null && event.getSelectedTiles().length > 0) {
                     staticTile = event.getSelectedTiles()[0];
                 }
                 return selected(event, gameObject, staticTile); // handle selection
@@ -54,11 +55,9 @@ public class PaletteListener implements EventListener {
     }
 
     public void startTranslate(PaletteEvent e) { // game assets of selected items
-        return;
     }
 
     public void startGizmoEdit(PaletteEvent e) { // game assets of selected items
-        return;
     }
 
     public boolean imported(PaletteEvent e) {

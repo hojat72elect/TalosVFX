@@ -6,45 +6,44 @@ import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.rockbite.bongo.engine.fileutil.ReloadUtils;
 import com.rockbite.bongo.engine.platform.IMGUIPlatform;
-import com.rockbite.bongo.engine.render.ShaderSourceProvider;
 import com.rockbite.bongo.engine.threadutil.ThreadUtils;
 
 public class Bongo {
 
-	public static Boolean DEBUG = false;
-	public static Boolean CORE_SHADER_DEBUG = false;
+    public static Boolean DEBUG = false;
+    public static Boolean CORE_SHADER_DEBUG = false;
 
-	public static IMGUIPlatform imguiPlatform;
+    public static IMGUIPlatform imguiPlatform;
 
 
-	public static void init () {
-		ThreadUtils.init();
+    public static void init() {
+        ThreadUtils.init();
 
-		Gdx.app.addLifecycleListener(new LifecycleListener() {
-			@Override
-			public void pause () {
+        Gdx.app.addLifecycleListener(new LifecycleListener() {
+            @Override
+            public void pause() {
 
-			}
+            }
 
-			@Override
-			public void resume () {
+            @Override
+            public void resume() {
 
-			}
+            }
 
-			@Override
-			public void dispose () {
-				ReloadUtils.dispose();
-			}
-		});
+            @Override
+            public void dispose() {
+                ReloadUtils.dispose();
+            }
+        });
 
-		initPlatform();
-	}
+        initPlatform();
+    }
 
-	private static void initPlatform () {
-		try {
-			imguiPlatform = (IMGUIPlatform)ClassReflection.newInstance(ClassReflection.forName("com.rockbite.bongo.engine.platform.IMGUIPlatformImpl"));
-		} catch (ReflectionException e) {
-			e.printStackTrace();
-		}
-	}
+    private static void initPlatform() {
+        try {
+            imguiPlatform = (IMGUIPlatform) ClassReflection.newInstance(ClassReflection.forName("com.rockbite.bongo.engine.platform.IMGUIPlatformImpl"));
+        } catch (ReflectionException e) {
+            e.printStackTrace();
+        }
+    }
 }

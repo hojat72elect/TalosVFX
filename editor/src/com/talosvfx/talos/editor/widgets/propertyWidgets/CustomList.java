@@ -30,7 +30,7 @@ public class CustomList<T extends Actor> extends Table {
     public void rebuild() {
         clearChildren();
         containers.clear();
-        for(T item: items) {
+        for (T item : items) {
             Table container = new Table();
             container.add(item).growX().pad(2f).padLeft(4f).padRight(4f);
             add(container).growX().row();
@@ -46,7 +46,7 @@ public class CustomList<T extends Actor> extends Table {
 
     public void clearItems(boolean rebuild) {
         items.clear();
-        if(rebuild) {
+        if (rebuild) {
             rebuild();
         }
     }

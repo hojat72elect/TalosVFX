@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.JsonWriter;
 import com.talosvfx.talos.runtime.scene.components.AComponent;
 import com.talosvfx.talos.runtime.utils.Supplier;
 import com.talosvfx.talos.runtime.utils.TempHackUtil;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,254 +20,252 @@ import java.util.UUID;
 
 public abstract class SavableContainer implements GameObjectContainer, Json.Serializable {
 
-	private static final Logger logger = LoggerFactory.getLogger(SavableContainer.class);
+    private static final Logger logger = LoggerFactory.getLogger(SavableContainer.class);
 
-	public GameObject root;
+    public GameObject root;
+    private final ArrayList<String> goNames = new ArrayList<>();
 
-	public SavableContainer () {
-		root = new GameObject();
-		root.setGameObjectContainer(this);
-	}
+    public SavableContainer() {
+        root = new GameObject();
+        root.setGameObjectContainer(this);
+    }
 
-	@Override
-	public void write (Json json) {
-		root.write(json);
-	}
+    @Override
+    public void write(Json json) {
+        root.write(json);
+    }
 
-	@Override
-	public void read (Json json, JsonValue jsonData) {
-		root.read(json, jsonData);
-	}
+    @Override
+    public void read(Json json, JsonValue jsonData) {
+        root.read(json, jsonData);
+    }
 
-	@Override
-	public String getName () {
-		return root.getName();
-	}
+    @Override
+    public String getName() {
+        return root.getName();
+    }
 
-	@Override
-	public void setName (String name) {
-		root.setName(name);
-	}
+    @Override
+    public void setName(String name) {
+        root.setName(name);
+    }
 
-	@Override
-	public Array<GameObject> getGameObjects () {
-		return root.getGameObjects();
-	}
+    @Override
+    public Array<GameObject> getGameObjects() {
+        return root.getGameObjects();
+    }
 
-	@Override
-	public Iterable<AComponent> getComponents () {
-		return null;
-	}
+    @Override
+    public Iterable<AComponent> getComponents() {
+        return null;
+    }
 
-	@Override
-	public void addGameObject (GameObject gameObject) {
-		root.addGameObject(gameObject);
-		gameObject.setParent(root);
-	}
+    @Override
+    public void addGameObject(GameObject gameObject) {
+        root.addGameObject(gameObject);
+        gameObject.setParent(root);
+    }
 
-	@Override
-	public Array<GameObject> deleteGameObject (GameObject gameObject) {
-		return root.deleteGameObject(gameObject);
-	}
+    @Override
+    public Array<GameObject> deleteGameObject(GameObject gameObject) {
+        return root.deleteGameObject(gameObject);
+    }
 
-	@Override
-	public void removeObject (GameObject gameObject) {
-		root.removeObject(gameObject);
-	}
+    @Override
+    public void removeObject(GameObject gameObject) {
+        root.removeObject(gameObject);
+    }
 
-	@Override
-	public void addComponent (AComponent component) {
+    @Override
+    public void addComponent(AComponent component) {
 
-	}
+    }
 
-	@Override
-	public void removeComponent (AComponent component) {
+    @Override
+    public void removeComponent(AComponent component) {
 
-	}
+    }
 
-	@Override
-	public boolean hasGOWithName (String name) {
-		return root.hasGOWithName(name);
-	}
+    @Override
+    public boolean hasGOWithName(String name) {
+        return root.hasGOWithName(name);
+    }
 
-	@Override
-	public void clearChildren (Array<GameObject> tmp) {
-		root.clearChildren(tmp);
-	}
+    @Override
+    public void clearChildren(Array<GameObject> tmp) {
+        root.clearChildren(tmp);
+    }
 
-	@Override
-	public GameObject getParent () {
-		return null;
-	}
+    @Override
+    public GameObject getParent() {
+        return null;
+    }
 
-	@Override
-	public GameObject getSelfObject () {
-		return root;
-	}
+    @Override
+    public void setParent(GameObject gameObject) {
+        // do nothing
+    }
 
-	@Override
-	public void setParent (GameObject gameObject) {
-		// do nothing
-	}
+    @Override
+    public GameObject getSelfObject() {
+        return root;
+    }
 
-	private ArrayList<String> goNames = new ArrayList<>();
+    @Override
+    public Supplier<Collection<String>> getAllGONames() {
+        goNames.clear();
+        addNamesToList(goNames, root);
+        return new Supplier<Collection<String>>() {
+            @Override
+            public Collection<String> get() {
+                return goNames;
+            }
+        };
+    }
 
-	@Override
-	public Supplier<Collection<String>> getAllGONames () {
-		goNames.clear();
-		addNamesToList(goNames, root);
-		return new Supplier<Collection<String>>() {
-			@Override
-			public Collection<String> get () {
-				return goNames;
-			}
-		};
-	}
+    private void addNamesToList(ArrayList<String> goNames, GameObject gameObject) {
+        goNames.add(gameObject.getName());
+        if (gameObject.getGameObjects() != null) {
+            Array<GameObject> gameObjects = gameObject.getGameObjects();
+            for (int i = 0; i < gameObjects.size; i++) {
+                GameObject child = gameObjects.get(i);
+                addNamesToList(goNames, child);
+            }
+        }
+    }
 
-	private void addNamesToList (ArrayList<String> goNames, GameObject gameObject) {
-		goNames.add(gameObject.getName());
-		if (gameObject.getGameObjects() != null) {
-			Array<GameObject> gameObjects = gameObject.getGameObjects();
-			for (int i = 0; i < gameObjects.size; i++) {
-				GameObject child = gameObjects.get(i);
-				addNamesToList(goNames, child);
+    protected void writeData(Json json) {
+        json.writeArrayStart("gameObjects");
+        Array<GameObject> gameObjects = getGameObjects();
+        if (gameObjects != null) {
+            for (GameObject gameObject : gameObjects) {
+                json.writeValue(gameObject);
+            }
+        }
+        json.writeArrayEnd();
+    }
 
-			}
-		}
-	}
+    public String getAsString() {
+        try {
 
-	protected void writeData (Json json) {
-		json.writeArrayStart("gameObjects");
-		Array<GameObject> gameObjects = getGameObjects();
-		if (gameObjects != null) {
-			for (GameObject gameObject : gameObjects) {
-				json.writeValue(gameObject);
-			}
-		}
-		json.writeArrayEnd();
-	}
+            StringWriter stringWriter = new StringWriter();
+            Json json = new Json();
+            json.setOutputType(JsonWriter.OutputType.json);
+            json.setWriter(stringWriter);
+            json.getWriter().object();
 
-	public String getAsString () {
-		try {
+            writeData(json);
 
-			StringWriter stringWriter = new StringWriter();
-			Json json = new Json();
-			json.setOutputType(JsonWriter.OutputType.json);
-			json.setWriter(stringWriter);
-			json.getWriter().object();
+            String finalString = stringWriter + "}";
 
-			writeData(json);
+            return finalString;
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("Error saving scene", e);
+            return null;
+        }
+    }
 
-			String finalString = stringWriter.toString() + "}";
+    public void load(String data) {
+        JsonValue jsonValue = new JsonReader().parse(data);
+        Json json = new Json();
+        json.setIgnoreUnknownFields(true);
+        JsonValue gameObjectsJson = jsonValue.get("gameObjects");
+        root = new GameObject();
+        root.setGameObjectContainer(this);
+        for (JsonValue gameObjectJson : gameObjectsJson) {
+            try {
+                gameObjectJson.addChild("talosIdentifier", new JsonValue(getTalosIdentifier()));
+                GameObject gameObject = json.readValue(GameObject.class, gameObjectJson);
+                if (gameObject.getName() == null) {
+                    logger.error("Game object was null for json value {}", gameObjectJson);
+                    continue;
+                }
+                root.addGameObject(gameObject);
+            } catch (NullPointerException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-			return finalString;
-		} catch (Exception e) {
-			e.printStackTrace();
-			logger.error("Error saving scene", e);
-			return null;
-		}
-	}
+    public void loadFromHandle(FileHandle handle) {
+        loadFromString(handle.readString());
+    }
 
-	public void load (String data) {
-		JsonValue jsonValue = new JsonReader().parse(data);
-		Json json = new Json();
-		json.setIgnoreUnknownFields(true);
-		JsonValue gameObjectsJson = jsonValue.get("gameObjects");
-		root = new GameObject();
-		root.setGameObjectContainer(this);
-		for (JsonValue gameObjectJson : gameObjectsJson) {
-			try {
-				gameObjectJson.addChild("talosIdentifier", new JsonValue(getTalosIdentifier()));
-				GameObject gameObject = json.readValue(GameObject.class, gameObjectJson);
-				if (gameObject.getName() == null) {
-					logger.error("Game object was null for json value {}", gameObjectJson);
-					continue;
-				};
-				root.addGameObject(gameObject);
-			} catch (NullPointerException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public void loadFromHandle (FileHandle handle) {
-		loadFromString(handle.readString());
-	}
-
-	void loadFromString (String jsonString) {
-		load(TempHackUtil.hackIt(jsonString));
-	}
+    void loadFromString(String jsonString) {
+        load(TempHackUtil.hackIt(jsonString));
+    }
 
 
-	public GameObject getGameObject(UUID uuid) {
-		Array<GameObject> gameObjects = getGameObjects();
-		for (GameObject gameObject : gameObjects) {
-			if (gameObject.uuid.equals(uuid)) {
-				return gameObject;
-			}
-		}
-		return null;
-	}
+    public GameObject getGameObject(UUID uuid) {
+        Array<GameObject> gameObjects = getGameObjects();
+        for (GameObject gameObject : gameObjects) {
+            if (gameObject.uuid.equals(uuid)) {
+                return gameObject;
+            }
+        }
+        return null;
+    }
 
-	public Array<GameObject> findGameObjects(String targetString) {
-		Array<GameObject> list = new Array<>();
+    public Array<GameObject> findGameObjects(String targetString) {
+        Array<GameObject> list = new Array<>();
 
-		if(targetString.isEmpty()) {
-			list.add(root);
-			return list;
-		}
+        if (targetString.isEmpty()) {
+            list.add(root);
+            return list;
+        }
 
-		findGameObjects(list, root, targetString);
+        findGameObjects(list, root, targetString);
 
-		return list;
-	}
+        return list;
+    }
 
-	public void findGameObjects(Array<GameObject> list, GameObject parent, String targetString) {
+    public void findGameObjects(Array<GameObject> list, GameObject parent, String targetString) {
 
-		int dotIndex = targetString.indexOf(".");
-		String lastPart = "";
+        int dotIndex = targetString.indexOf(".");
+        String lastPart = "";
 
-		String levelName = targetString;
-		if(dotIndex >= 0) {
-			levelName = targetString.substring(0, targetString.indexOf("."));
+        String levelName = targetString;
+        if (dotIndex >= 0) {
+            levelName = targetString.substring(0, targetString.indexOf("."));
 
-			if(targetString.length() > dotIndex + 1) {
-				lastPart = targetString.substring(targetString.indexOf(".") + 1);
-			} else {
-				//irrelevant dot
-				lastPart = "";
-			}
-		}
+            if (targetString.length() > dotIndex + 1) {
+                lastPart = targetString.substring(targetString.indexOf(".") + 1);
+            } else {
+                //irrelevant dot
+                lastPart = "";
+            }
+        }
 
-		Array<GameObject> gameObjects = parent.getGameObjects();
+        Array<GameObject> gameObjects = parent.getGameObjects();
 
-		if(gameObjects == null) return;
+        if (gameObjects == null) return;
 
-		for(GameObject gameObject : gameObjects) {
+        for (GameObject gameObject : gameObjects) {
 
-			boolean matchCriteria = false;
-			if(levelName.contains("*")) {
-				String expression = levelName.replaceAll("\\*", ".*");
-				matchCriteria = gameObject.getName().matches(expression);
-			} else {
-				matchCriteria = gameObject.getName().equals(levelName);
-			}
+            boolean matchCriteria = false;
+            if (levelName.contains("*")) {
+                String expression = levelName.replaceAll("\\*", ".*");
+                matchCriteria = gameObject.getName().matches(expression);
+            } else {
+                matchCriteria = gameObject.getName().equals(levelName);
+            }
 
-			if(matchCriteria) {
-				if(lastPart.length() == 0) {
-					list.add(gameObject);
-				} else {
-					findGameObjects(list, gameObject, lastPart);
-				}
-			}
-		}
-	}
+            if (matchCriteria) {
+                if (lastPart.length() == 0) {
+                    list.add(gameObject);
+                } else {
+                    findGameObjects(list, gameObject, lastPart);
+                }
+            }
+        }
+    }
 
-	@Override
-	public void dispose () {
-		if (root != null) {
-			root.dispose();
-			root = null;
-		}
-	}
+    @Override
+    public void dispose() {
+        if (root != null) {
+            root.dispose();
+            root = null;
+        }
+    }
 }

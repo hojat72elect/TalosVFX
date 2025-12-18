@@ -16,15 +16,26 @@
 
 package com.talosvfx.talos.editor.widgets;
 
+import static com.talosvfx.talos.runtime.vfx.modules.OffsetModule.SIDE_ALL;
+import static com.talosvfx.talos.runtime.vfx.modules.OffsetModule.SIDE_BOTTOM;
+import static com.talosvfx.talos.runtime.vfx.modules.OffsetModule.SIDE_LEFT;
+import static com.talosvfx.talos.runtime.vfx.modules.OffsetModule.SIDE_RIGHT;
+import static com.talosvfx.talos.runtime.vfx.modules.OffsetModule.SIDE_TOP;
+import static com.talosvfx.talos.runtime.vfx.modules.OffsetModule.TYPE_ELLIPSE;
+import static com.talosvfx.talos.runtime.vfx.modules.OffsetModule.TYPE_LINE;
+import static com.talosvfx.talos.runtime.vfx.modules.OffsetModule.TYPE_SQUARE;
+
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
+import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.SelectBoxWithZoom;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.TextFieldWithZoom;
-
-import static com.talosvfx.talos.runtime.vfx.modules.OffsetModule.*;
 
 public class ShapeInputWidget extends Table {
 
@@ -77,14 +88,14 @@ public class ShapeInputWidget extends Table {
             public void changed(ChangeEvent event, Actor actor) {
                 shapeWidget.setType(getShape());
 
-                if(changeListener != null &&!lockListeners) changeListener.changed(new ChangeListener.ChangeEvent(), ShapeInputWidget.this);
+                if (changeListener != null && !lockListeners) changeListener.changed(new ChangeListener.ChangeEvent(), ShapeInputWidget.this);
             }
         });
 
         shapeWidget.setListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                if(changeListener != null &&!lockListeners) changeListener.changed(new ChangeListener.ChangeEvent(), ShapeInputWidget.this);
+                if (changeListener != null && !lockListeners) changeListener.changed(new ChangeListener.ChangeEvent(), ShapeInputWidget.this);
             }
         });
 
@@ -92,21 +103,21 @@ public class ShapeInputWidget extends Table {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 updateScale();
-                if(changeListener != null &&!lockListeners) changeListener.changed(new ChangeListener.ChangeEvent(), ShapeInputWidget.this);
+                if (changeListener != null && !lockListeners) changeListener.changed(new ChangeListener.ChangeEvent(), ShapeInputWidget.this);
             }
         });
 
         edgeBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                if(changeListener != null &&!lockListeners) changeListener.changed(new ChangeListener.ChangeEvent(), ShapeInputWidget.this);
+                if (changeListener != null && !lockListeners) changeListener.changed(new ChangeListener.ChangeEvent(), ShapeInputWidget.this);
             }
         });
 
         sideBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                if(changeListener != null &&!lockListeners) changeListener.changed(new ChangeListener.ChangeEvent(), ShapeInputWidget.this);
+                if (changeListener != null && !lockListeners) changeListener.changed(new ChangeListener.ChangeEvent(), ShapeInputWidget.this);
             }
         });
     }
@@ -149,7 +160,6 @@ public class ShapeInputWidget extends Table {
         try {
             float scl = Float.parseFloat(scaleField.getText());
             prevScale = scl;
-
         } catch (Exception e) {
 
         }
@@ -170,40 +180,40 @@ public class ShapeInputWidget extends Table {
         int res = 0;
         String type = shapeType.getSelected();
 
-        if(type.equals("SQUARE")) res =  TYPE_SQUARE;
-        if(type.equals("ELLIPSE")) res = TYPE_ELLIPSE;
-        if(type.equals("LINE")) res = TYPE_LINE;
+        if (type.equals("SQUARE")) res = TYPE_SQUARE;
+        if (type.equals("ELLIPSE")) res = TYPE_ELLIPSE;
+        if (type.equals("LINE")) res = TYPE_LINE;
 
         return res;
-    }
-
-    public int getSide() {
-        int res = 0;
-        String type = sideBox.getSelected();
-
-        if(type.equals("ALL")) res = SIDE_ALL;
-        if(type.equals("TOP")) res = SIDE_TOP;
-        if(type.equals("BOTTOM")) res = SIDE_BOTTOM;
-        if(type.equals("LEFT")) res = SIDE_LEFT;
-        if(type.equals("RIGHT")) res = SIDE_RIGHT;
-
-        return res;
-    }
-
-    public boolean isEdge() {
-        return edgeBox.isChecked();
     }
 
     public void setShape(int shape) {
         shapeType.setSelected(shapeTypes.get(shape));
     }
 
-    public void setEdge(boolean edge) {
-        edgeBox.setChecked(edge);
+    public int getSide() {
+        int res = 0;
+        String type = sideBox.getSelected();
+
+        if (type.equals("ALL")) res = SIDE_ALL;
+        if (type.equals("TOP")) res = SIDE_TOP;
+        if (type.equals("BOTTOM")) res = SIDE_BOTTOM;
+        if (type.equals("LEFT")) res = SIDE_LEFT;
+        if (type.equals("RIGHT")) res = SIDE_RIGHT;
+
+        return res;
     }
 
     public void setSide(int side) {
         sideBox.setSelected(sideTypes.get(side));
+    }
+
+    public boolean isEdge() {
+        return edgeBox.isChecked();
+    }
+
+    public void setEdge(boolean edge) {
+        edgeBox.setChecked(edge);
     }
 
     public float getScale() {
@@ -221,7 +231,7 @@ public class ShapeInputWidget extends Table {
         ChangeListener tmp = changeListener;
         changeListener = null;
 
-        scaleField.setText(scale+"");
+        scaleField.setText(scale + "");
 
         changeListener = tmp;
     }

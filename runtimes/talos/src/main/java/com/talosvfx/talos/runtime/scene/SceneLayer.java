@@ -4,9 +4,10 @@ package com.talosvfx.talos.runtime.scene;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.talosvfx.talos.runtime.scene.render.RenderStrategy;
-import lombok.Data;
 
 import java.util.UUID;
+
+import lombok.Data;
 
 @Data
 public class SceneLayer implements Json.Serializable {
@@ -33,14 +34,14 @@ public class SceneLayer implements Json.Serializable {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         json.writeValue("name", name);
         json.writeValue("uuid", uniqueID.toString());
         json.writeValue("renderStrategy", renderStrategy);
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         name = jsonData.getString("name");
         renderStrategy = json.readValue("renderStrategy", RenderStrategy.class, RenderStrategy.SCENE, jsonData);
         if (jsonData.has("uuid")) {

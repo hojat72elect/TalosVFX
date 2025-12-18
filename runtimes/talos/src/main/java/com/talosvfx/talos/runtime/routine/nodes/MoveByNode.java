@@ -5,17 +5,11 @@ import com.badlogic.gdx.utils.Pools;
 import com.talosvfx.talos.runtime.routine.AsyncRoutineNodeState;
 import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
+
 import lombok.Getter;
 
 public class MoveByNode extends AsyncRoutineNode<GameObject, MoveByNode.PositionTargetState> {
 
-
-    public static class PositionTargetState extends AsyncRoutineNodeState<GameObject> {
-        @Getter
-        private Vector2 originalPosition = new Vector2();
-        @Getter
-        private Vector2 offset = new Vector2();
-    }
 
     @Override
     protected PositionTargetState obtainState() {
@@ -27,7 +21,7 @@ public class MoveByNode extends AsyncRoutineNode<GameObject, MoveByNode.Position
     protected boolean targetAdded(PositionTargetState state) {
         GameObject target = state.getTarget();
         TransformComponent component = target.getComponent(TransformComponent.class);
-        if(component == null) return false;
+        if (component == null) return false;
         state.getOriginalPosition().set(component.position);
 
         float x = fetchFloatValue("X");
@@ -42,11 +36,18 @@ public class MoveByNode extends AsyncRoutineNode<GameObject, MoveByNode.Position
     protected void stateTick(PositionTargetState state, float delta) {
         GameObject target = state.getTarget();
         TransformComponent component = target.getComponent(TransformComponent.class);
-        if(state.getOffset().x != 0) {
+        if (state.getOffset().x != 0) {
             component.position.x = state.getOriginalPosition().x + state.getOffset().x * state.interpolatedAlpha;
         }
-        if(state.getOffset().y != 0) {
+        if (state.getOffset().y != 0) {
             component.position.y = state.getOriginalPosition().y + state.getOffset().y * state.interpolatedAlpha;
         }
+    }
+
+    public static class PositionTargetState extends AsyncRoutineNodeState<GameObject> {
+        @Getter
+        private final Vector2 originalPosition = new Vector2();
+        @Getter
+        private final Vector2 offset = new Vector2();
     }
 }

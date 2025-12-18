@@ -11,12 +11,7 @@ public class CustomVector2Widget extends ATypeWidget<Vector2> {
     private final ValueWidget xWidget;
     private final ValueWidget yWidget;
 
-    private Vector2 vec = new Vector2();
-
-    @Override
-    public boolean isFastChange() {
-        return xWidget.isFastChange() || yWidget.isFastChange();
-    }
+    private final Vector2 vec = new Vector2();
 
     public CustomVector2Widget() {
         xWidget = new ValueWidget();
@@ -35,6 +30,11 @@ public class CustomVector2Widget extends ATypeWidget<Vector2> {
         row();
 
         add().padBottom(10);
+    }
+
+    @Override
+    public boolean isFastChange() {
+        return xWidget.isFastChange() || yWidget.isFastChange();
     }
 
     @Override

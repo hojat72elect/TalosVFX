@@ -1,8 +1,8 @@
 package com.talosvfx.talos.editor.addons.scene.events.vfx;
 
-import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.editor.notifications.TalosEvent;
 import com.talosvfx.talos.editor.serialization.VFXProjectData;
+import com.talosvfx.talos.runtime.assets.GameAsset;
 
 public class VFXEditorActivated implements TalosEvent {
 

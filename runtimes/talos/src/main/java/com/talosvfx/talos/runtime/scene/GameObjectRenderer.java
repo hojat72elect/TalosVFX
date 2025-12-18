@@ -14,36 +14,48 @@ import com.badlogic.gdx.utils.CharArray;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.esotericsoftware.spine.Bone;
-import com.talosvfx.talos.runtime.scene.components.*;
-import com.talosvfx.talos.runtime.scene.render.*;
 import com.talosvfx.talos.runtime.RuntimeContext;
-import lombok.Getter;
+import com.talosvfx.talos.runtime.scene.components.BoneComponent;
+import com.talosvfx.talos.runtime.scene.components.MapComponent;
+import com.talosvfx.talos.runtime.scene.components.ParticleComponent;
+import com.talosvfx.talos.runtime.scene.components.PathRendererComponent;
+import com.talosvfx.talos.runtime.scene.components.RendererComponent;
+import com.talosvfx.talos.runtime.scene.components.RoutineRendererComponent;
+import com.talosvfx.talos.runtime.scene.components.SpineRendererComponent;
+import com.talosvfx.talos.runtime.scene.components.SpriteRendererComponent;
+import com.talosvfx.talos.runtime.scene.components.TransformComponent;
+import com.talosvfx.talos.runtime.scene.render.ComponentRenderer;
+import com.talosvfx.talos.runtime.scene.render.MapComponentRenderer;
+import com.talosvfx.talos.runtime.scene.render.PathComponentRenderer;
+import com.talosvfx.talos.runtime.scene.render.RenderState;
+import com.talosvfx.talos.runtime.scene.render.RenderStrategy;
+import com.talosvfx.talos.runtime.scene.render.RoutineComponentRenderer;
+import com.talosvfx.talos.runtime.scene.render.SimpleParticleComponentRenderer;
+import com.talosvfx.talos.runtime.scene.render.SkeletonComponentRenderer;
+import com.talosvfx.talos.runtime.scene.render.SpriteComponentRenderer;
 
 import java.util.Comparator;
 
-public class GameObjectRenderer implements Disposable {
-    private ComponentRenderer<SpriteRendererComponent> spriteRenderer;
-    private ComponentRenderer<MapComponent> mapRenderer;
-    private ComponentRenderer<ParticleComponent<?>> particleRenderer;
-    private ComponentRenderer<RoutineRendererComponent<?>> routineRenderer;
-    private ComponentRenderer<SpineRendererComponent> spineRenderer;
-    private ComponentRenderer<PathRendererComponent> pathRenderer;
+import lombok.Getter;
 
+public class GameObjectRenderer implements Disposable {
+    private static TextureRegion brokenRegion;
+    private static Texture brokenTexture;
     public final Comparator<GameObject> layerAndDrawOrderComparator;
     public final Comparator<GameObject> yDownDrawOrderComparator;
-
     public final Comparator<GameObject> parentSorter;
-
+    Array<GameObject> temp = new Array<>();
+    private final ComponentRenderer<SpriteRendererComponent> spriteRenderer;
+    private final ComponentRenderer<MapComponent> mapRenderer;
+    private final ComponentRenderer<ParticleComponent<?>> particleRenderer;
+    private final ComponentRenderer<RoutineRendererComponent<?>> routineRenderer;
+    private final ComponentRenderer<SpineRendererComponent> spineRenderer;
+    private final ComponentRenderer<PathRendererComponent> pathRenderer;
     private Camera camera;
-
     @Getter
     private boolean skipUpdates;
 
-
-    private static TextureRegion brokenRegion;
-    private static Texture brokenTexture;
-
-    public GameObjectRenderer () {
+    public GameObjectRenderer() {
         if (brokenRegion == null) {
             brokenTexture = new Texture(Gdx.files.classpath("missing.png"));
             brokenRegion = new TextureRegion(brokenTexture);
@@ -58,7 +70,7 @@ public class GameObjectRenderer implements Disposable {
 
         layerAndDrawOrderComparator = new Comparator<GameObject>() {
             @Override
-            public int compare (GameObject o1, GameObject o2) {
+            public int compare(GameObject o1, GameObject o2) {
                 float aSort = GameObjectRenderer.getDrawOrderSafe(o1);
                 float bSort = GameObjectRenderer.getDrawOrderSafe(o2);
                 return Float.compare(aSort, bSort);
@@ -67,7 +79,7 @@ public class GameObjectRenderer implements Disposable {
 
         yDownDrawOrderComparator = new Comparator<GameObject>() {
             @Override
-            public int compare (GameObject o1, GameObject o2) {
+            public int compare(GameObject o1, GameObject o2) {
                 float aSort = GameObjectRenderer.getBottomY(o1);
                 float bSort = GameObjectRenderer.getBottomY(o2);
                 return -Float.compare(aSort, bSort);
@@ -76,7 +88,7 @@ public class GameObjectRenderer implements Disposable {
 
         parentSorter = new Comparator<GameObject>() {
             @Override
-            public int compare (GameObject o1, GameObject o2) {
+            public int compare(GameObject o1, GameObject o2) {
                 SceneLayer o1Layer = GameObjectRenderer.getLayerSafe(o1);
                 SceneLayer o2Layer = GameObjectRenderer.getLayerSafe(o2);
 
@@ -93,21 +105,9 @@ public class GameObjectRenderer implements Disposable {
                 }
             }
         };
-
     }
 
-    private Comparator<GameObject> getSorter (RenderStrategy renderMode) {
-        switch (renderMode) {
-            case SCENE:
-                return layerAndDrawOrderComparator;
-            case YDOWN:
-                return yDownDrawOrderComparator;
-        }
-
-        throw new GdxRuntimeException("No sorter found for render mode: " + renderMode);
-    }
-
-    private static float getBottomY (GameObject gameObject) {
+    private static float getBottomY(GameObject gameObject) {
         if (gameObject.hasComponentType(RendererComponent.class)) {
             RendererComponent componentAssignableFrom = gameObject.getComponentAssignableFrom(RendererComponent.class);
             TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
@@ -129,7 +129,6 @@ public class GameObjectRenderer implements Disposable {
             }
 
             return y;
-
         } else {
             if (gameObject.hasTransformComponent()) {
                 TransformComponent component = gameObject.getTransformComponent();
@@ -140,7 +139,7 @@ public class GameObjectRenderer implements Disposable {
         return 0;
     }
 
-    private static SceneLayer getLayerSafe (GameObject gameObject) {
+    private static SceneLayer getLayerSafe(GameObject gameObject) {
         if (gameObject.hasComponentType(RendererComponent.class)) {
             RendererComponent rendererComponent = gameObject.getComponentAssignableFrom(RendererComponent.class);
             return rendererComponent.sortingLayer;
@@ -149,7 +148,7 @@ public class GameObjectRenderer implements Disposable {
         return RuntimeContext.getInstance().sceneData.getPreferredSceneLayer();
     }
 
-    public static float getDrawOrderSafe (GameObject gameObject) {
+    public static float getDrawOrderSafe(GameObject gameObject) {
         if (gameObject.hasComponentType(RendererComponent.class)) {
             RendererComponent rendererComponent = gameObject.getComponentAssignableFrom(RendererComponent.class);
             return rendererComponent.orderingInLayer;
@@ -158,36 +157,7 @@ public class GameObjectRenderer implements Disposable {
         return -55;
     }
 
-
-    protected ComponentRenderer<MapComponent> createMapRenderer () {
-        return new MapComponentRenderer(this);
-    }
-
-    protected ComponentRenderer<RoutineRendererComponent<?>> createRoutineRenderer () {
-        return new RoutineComponentRenderer(this);
-    }
-
-    protected ComponentRenderer<SpineRendererComponent> createSpineRenderer () {
-        return new SkeletonComponentRenderer(this);
-    }
-
-    protected ComponentRenderer<ParticleComponent<?>> createParticleRenderer () {
-        return new SimpleParticleComponentRenderer(this);
-    }
-
-    protected ComponentRenderer<SpriteRendererComponent> createSpriteRenderer () {
-        return new SpriteComponentRenderer(this);
-    }
-
-    protected ComponentRenderer<PathRendererComponent> createPathRenderer () {
-        return new PathComponentRenderer(this);
-    }
-
-    protected void sort (Array<GameObject> list) {
-        list.sort(parentSorter);
-    }
-
-    public static void debugTransforms (GameObject gameObject, int indent) {
+    public static void debugTransforms(GameObject gameObject, int indent) {
         if (gameObject.hasComponent(TransformComponent.class)) {
             TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
             CharArray builder = new CharArray();
@@ -240,20 +210,73 @@ public class GameObjectRenderer implements Disposable {
                     builder.append(worldScale);
                     builder.append(", [Rotation]: ");
                     builder.append(worldRotation);
-
-
                 }
-
             }
-             System.out.println(builder);
-
+            System.out.println(builder);
         }
         for (GameObject object : gameObject.getGameObjects()) {
             debugTransforms(object, indent + 1);
         }
     }
 
-    public void update (GameObject gameObject, float delta) {
+    public static void renderBrokenComponent(Batch batch, GameObject gameObject, TransformComponent transformComponent) {
+
+        float width = 1f;
+        float height = 1f;
+        if (gameObject.hasComponent(SpriteRendererComponent.class)) {
+            SpriteRendererComponent component = gameObject.getComponent(SpriteRendererComponent.class);
+            width = component.size.x;
+            height = component.size.y;
+        }
+
+        batch.draw(brokenRegion,
+                transformComponent.worldPosition.x - 0.5f, transformComponent.worldPosition.y - 0.5f,
+                0.5f, 0.5f,
+                1f, 1f,
+                width * transformComponent.worldScale.x, height * transformComponent.worldScale.y,
+                transformComponent.worldRotation);
+    }
+
+    private Comparator<GameObject> getSorter(RenderStrategy renderMode) {
+        switch (renderMode) {
+            case SCENE:
+                return layerAndDrawOrderComparator;
+            case YDOWN:
+                return yDownDrawOrderComparator;
+        }
+
+        throw new GdxRuntimeException("No sorter found for render mode: " + renderMode);
+    }
+
+    protected ComponentRenderer<MapComponent> createMapRenderer() {
+        return new MapComponentRenderer(this);
+    }
+
+    protected ComponentRenderer<RoutineRendererComponent<?>> createRoutineRenderer() {
+        return new RoutineComponentRenderer(this);
+    }
+
+    protected ComponentRenderer<SpineRendererComponent> createSpineRenderer() {
+        return new SkeletonComponentRenderer(this);
+    }
+
+    protected ComponentRenderer<ParticleComponent<?>> createParticleRenderer() {
+        return new SimpleParticleComponentRenderer(this);
+    }
+
+    protected ComponentRenderer<SpriteRendererComponent> createSpriteRenderer() {
+        return new SpriteComponentRenderer(this);
+    }
+
+    protected ComponentRenderer<PathRendererComponent> createPathRenderer() {
+        return new PathComponentRenderer(this);
+    }
+
+    protected void sort(Array<GameObject> list) {
+        list.sort(parentSorter);
+    }
+
+    public void update(GameObject gameObject, float delta) {
         if (!gameObject.active || !gameObject.isEditorVisible())
             return;
 
@@ -347,7 +370,7 @@ public class GameObjectRenderer implements Disposable {
         }
     }
 
-    protected void fillRenderableEntities (Array<GameObject> rootObjects, Array<GameObject> list) {
+    protected void fillRenderableEntities(Array<GameObject> rootObjects, Array<GameObject> list) {
         for (GameObject root : rootObjects) {
             if (!root.active || !root.isEditorVisible()) continue;
 
@@ -365,33 +388,9 @@ public class GameObjectRenderer implements Disposable {
                 }
             }
         }
-
     }
 
-
-    public static void renderBrokenComponent (Batch batch, GameObject gameObject, TransformComponent transformComponent) {
-
-        float width = 1f;
-        float height = 1f;
-        if (gameObject.hasComponent(SpriteRendererComponent.class)) {
-            SpriteRendererComponent component = gameObject.getComponent(SpriteRendererComponent.class);
-            width = component.size.x;
-            height = component.size.y;
-        }
-
-        batch.draw(brokenRegion,
-                transformComponent.worldPosition.x - 0.5f, transformComponent.worldPosition.y - 0.5f,
-                0.5f, 0.5f,
-                1f, 1f,
-                width * transformComponent.worldScale.x, height * transformComponent.worldScale.y,
-                transformComponent.worldRotation);
-    }
-
-
-    Array<GameObject> temp = new Array<>();
-
-
-    public void buildRenderState (PolygonBatch batch, RenderState state, Array<GameObject> rootObjects) {
+    public void buildRenderState(PolygonBatch batch, RenderState state, Array<GameObject> rootObjects) {
         boolean hiearchyDirty = false;
         for (GameObject rootObject : rootObjects) {
             if (rootObject.hierarchyDirty) {
@@ -409,7 +408,7 @@ public class GameObjectRenderer implements Disposable {
     }
 
 
-    public void renderObject (Batch batch, GameObject gameObject) {
+    public void renderObject(Batch batch, GameObject gameObject) {
         if (gameObject.hasRoutineRendererComponent()) {
             routineRenderer.render(batch, camera, gameObject, gameObject.getRoutineRendererComponent());
         }
@@ -425,16 +424,15 @@ public class GameObjectRenderer implements Disposable {
         } else if (gameObject.hasComponent(PathRendererComponent.class)) {
             pathRenderer.render(batch, camera, gameObject, gameObject.getComponent(PathRendererComponent.class));
         }
-
     }
 
-    public void buildRenderStateAndRender (PolygonBatch batch, Camera camera, RenderState state, GameObject root) {
+    public void buildRenderStateAndRender(PolygonBatch batch, Camera camera, RenderState state, GameObject root) {
         temp.clear();
         temp.add(root);
         buildRenderStateAndRender(batch, camera, state, temp);
     }
 
-    public void buildRenderStateAndRender (PolygonBatch batch, Camera camera, RenderState state, Array<GameObject> rootObjects) {
+    public void buildRenderStateAndRender(PolygonBatch batch, Camera camera, RenderState state, Array<GameObject> rootObjects) {
         setCamera(camera);
 
         buildRenderState(batch, state, rootObjects);
@@ -445,7 +443,7 @@ public class GameObjectRenderer implements Disposable {
         batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
     }
 
-    public void setCamera (Camera camera) {
+    public void setCamera(Camera camera) {
         this.camera = camera;
     }
 
@@ -454,16 +452,16 @@ public class GameObjectRenderer implements Disposable {
      *
      * @param skipUpdates
      */
-    public void setSkipUpdates (boolean skipUpdates) {
+    public void setSkipUpdates(boolean skipUpdates) {
         this.skipUpdates = skipUpdates;
     }
 
     @Override
-    public void dispose () {
-		if (brokenRegion != null) {
+    public void dispose() {
+        if (brokenRegion != null) {
             brokenTexture.dispose();
-			brokenRegion = null;
+            brokenRegion = null;
             brokenTexture = null;
-		}
+        }
     }
 }

@@ -6,20 +6,21 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.talosvfx.talos.editor.project2.SharedResources;
+
 import lombok.Getter;
 
 public class ArrowButton extends Table {
     private final ClickListener clickListener;
     @Getter
     private final Image arrowIcon;
-
+    public boolean hasBackground;
     @Getter
     private boolean isCollapsed = true;
-    public boolean hasBackground;
 
-    public ArrowButton () {
+    public ArrowButton() {
         this(true);
     }
+
     public ArrowButton(boolean hasBackground) {
         this.hasBackground = hasBackground;
         arrowIcon = new Image();
@@ -43,7 +44,7 @@ public class ArrowButton extends Table {
     public void setCollapsed(boolean isCollapsed) {
         this.isCollapsed = isCollapsed;
 
-        if(isCollapsed) {
+        if (isCollapsed) {
             arrowIcon.setDrawable(SharedResources.skin.getDrawable("mini-arrow-right"));
         } else {
             arrowIcon.setDrawable(SharedResources.skin.getDrawable("mini-arrow-down"));
@@ -61,7 +62,7 @@ public class ArrowButton extends Table {
         if (hasBackground) {
             // change background if mouse is over
             ColorLibrary.BackgroundColor color = ColorLibrary.BackgroundColor.BRIGHT_GRAY;
-            if(!clickListener.isOver()) {
+            if (!clickListener.isOver()) {
                 color = ColorLibrary.BackgroundColor.LIGHT_GRAY;
             }
             setBackground(ColorLibrary.obtainBackground(SharedResources.skin, ColorLibrary.SHAPE_SQUARE, color));

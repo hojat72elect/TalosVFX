@@ -1,6 +1,9 @@
 package com.talosvfx.talos.editor.nodes.widgets;
 
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
@@ -12,10 +15,9 @@ public abstract class AbstractWidget<T> extends Table {
 
     protected Table content;
     protected Table portContainer;
-
+    protected Image portBorder;
     private boolean isInput;
     private Table portBody;
-    protected Image portBorder;
 
     public AbstractWidget() {
         content = new Table();
@@ -49,13 +51,13 @@ public abstract class AbstractWidget<T> extends Table {
         portContainer.addActor(portBody);
 
 
-        if(isInput) {
+        if (isInput) {
             portBody.setX(-24);
         } else {
             portBody.setX(getWidth() + 9);
         }
 
-        portBody.setY(getHeight()/2f - portBody.getHeight()/2f);
+        portBody.setY(getHeight() / 2f - portBody.getHeight() / 2f);
 
         return portBody;
     }
@@ -63,7 +65,7 @@ public abstract class AbstractWidget<T> extends Table {
     @Override
     public void act(float delta) {
         super.act(delta);
-        if(portBody != null) {
+        if (portBody != null) {
             if (isInput) {
                 portBody.setX(-24);
             } else {
@@ -94,14 +96,15 @@ public abstract class AbstractWidget<T> extends Table {
 
     public abstract T getValue();
 
-    public boolean isChanged (T newValue) {
+    public boolean isChanged(T newValue) {
         T value = getValue();
         if (value == null) {
             return newValue == null;
         }
         return !value.equals(newValue);
-    };
+    }
 
-    public abstract void read (Json json, JsonValue jsonValue);
-    public abstract void write (Json json, String name);
+    public abstract void read(Json json, JsonValue jsonValue);
+
+    public abstract void write(Json json, String name);
 }

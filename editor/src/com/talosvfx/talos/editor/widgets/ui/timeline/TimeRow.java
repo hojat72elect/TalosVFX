@@ -5,11 +5,14 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 
 public class TimeRow<U> extends BasicRow<U> {
 
-    private AreaWidget areaWidget;
+    private final AreaWidget areaWidget;
 
     private TimelineItemDataProvider<U> dataProviderRef;
 
@@ -19,7 +22,7 @@ public class TimeRow<U> extends BasicRow<U> {
         areaWidget = new AreaWidget(getSkin());
         areaWidget.setWidth(100);
         areaWidget.setHeight(18);
-        areaWidget.setPosition(0,2);
+        areaWidget.setPosition(0, 2);
 
         addActor(areaWidget);
 
@@ -27,11 +30,11 @@ public class TimeRow<U> extends BasicRow<U> {
 
         areaWidget.addListener(new InputListener() {
 
-            private Vector2 vec2 = new Vector2();
             float prevTime;
+            private final Vector2 vec2 = new Vector2();
 
             @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 vec2.set(x, y);
                 areaWidget.localToStageCoordinates(vec2);
                 prevTime = timeline.stageToTime(vec2);
@@ -40,13 +43,13 @@ public class TimeRow<U> extends BasicRow<U> {
             }
 
             @Override
-            public void touchDragged (InputEvent event, float x, float y, int pointer) {
+            public void touchDragged(InputEvent event, float x, float y, int pointer) {
                 vec2.set(x, y);
                 areaWidget.localToStageCoordinates(vec2);
                 float currTime = timeline.stageToTime(vec2);
 
-                float timeDiff = currTime-prevTime;
-                prevTime= currTime;
+                float timeDiff = currTime - prevTime;
+                prevTime = currTime;
 
                 float timePos = dataProviderRef.getTimePosition();
                 dataProviderRef.setTimePosition(timePos + timeDiff); // might be denied
@@ -55,11 +58,11 @@ public class TimeRow<U> extends BasicRow<U> {
     }
 
     public void updateTimeWindow(float timeWindowPosition, float timeWindowSize) {
-        if(dataProviderRef == null) return;
+        if (dataProviderRef == null) return;
 
         float timePosition = dataProviderRef.getTimePosition();
 
-        if(dataProviderRef.isFull()) {
+        if (dataProviderRef.isFull()) {
             float durationOne = dataProviderRef.getDurationOne();
             areaWidget.setFull(durationOne, timePosition);
         } else {
@@ -68,17 +71,20 @@ public class TimeRow<U> extends BasicRow<U> {
             areaWidget.set(durationOne, durationTwo, timePosition);
         }
 
-        float widgetWidth = (areaWidget.getTimeSize()/timeWindowSize) * getWidth();
+        float widgetWidth = (areaWidget.getTimeSize() / timeWindowSize) * getWidth();
 
         areaWidget.setWidth(widgetWidth);
 
-        if(areaWidget.getTimeSize() == 0) {
-            areaWidget.setVisible(false);
-        } else {
-            areaWidget.setVisible(true);
-        }
+        areaWidget.setVisible(areaWidget.getTimeSize() != 0);
 
-        areaWidget.setPosition((timePosition/timeWindowSize) * getWidth(),2);
+        areaWidget.setPosition((timePosition / timeWindowSize) * getWidth(), 2);
+    }
+
+    @Override
+    public void setFrom(TimelineItemDataProvider<U> dataProvider) {
+        super.setFrom(dataProvider);
+
+        dataProviderRef = dataProvider;
     }
 
     private class AreaWidget extends Table {
@@ -122,7 +128,7 @@ public class TimeRow<U> extends BasicRow<U> {
             add(stack).expand().grow();
         }
 
-        public void set (float durationOne, float durationTwo, float timePosition) {
+        public void set(float durationOne, float durationTwo, float timePosition) {
             leftDuration = durationOne;
             rightDuration = durationTwo;
             this.timePosition = timePosition;
@@ -132,17 +138,17 @@ public class TimeRow<U> extends BasicRow<U> {
         }
 
         @Override
-        public void setWidth (float width) {
+        public void setWidth(float width) {
             super.setWidth(width);
 
-            if(rightDuration > 0) {
+            if (rightDuration > 0) {
                 left.setWidth((width * leftDuration) / getTimeSize());
                 right.setWidth((width * rightDuration) / getTimeSize());
                 right.setX(left.getWidth());
             }
         }
 
-        public float getTimeSize () {
+        public float getTimeSize() {
             return leftDuration + rightDuration;
         }
 
@@ -150,7 +156,7 @@ public class TimeRow<U> extends BasicRow<U> {
             return timePosition;
         }
 
-        public void setFull (float durationOne, float timePosition) {
+        public void setFull(float durationOne, float timePosition) {
             partTable.setVisible(false);
             fullTable.setVisible(true);
 
@@ -159,12 +165,5 @@ public class TimeRow<U> extends BasicRow<U> {
 
             this.timePosition = timePosition;
         }
-    }
-
-    @Override
-    public void setFrom(TimelineItemDataProvider<U> dataProvider) {
-        super.setFrom(dataProvider);
-
-        dataProviderRef = dataProvider;
     }
 }

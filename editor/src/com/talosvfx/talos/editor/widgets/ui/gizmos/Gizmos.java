@@ -2,11 +2,11 @@ package com.talosvfx.talos.editor.widgets.ui.gizmos;
 
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
-import com.talosvfx.talos.runtime.scene.GameObject;import com.talosvfx.talos.editor.addons.scene.widgets.gizmos.Gizmo;
+import com.talosvfx.talos.editor.addons.scene.widgets.gizmos.Gizmo;
+import com.talosvfx.talos.runtime.scene.GameObject;
 
 public class Gizmos {
 
-	public Array<Gizmo> gizmoList = new Array<>();
-	public ObjectMap<GameObject, Array<Gizmo>> gizmoMap = new ObjectMap<>();
-
+    public Array<Gizmo> gizmoList = new Array<>();
+    public ObjectMap<GameObject, Array<Gizmo>> gizmoMap = new ObjectMap<>();
 }

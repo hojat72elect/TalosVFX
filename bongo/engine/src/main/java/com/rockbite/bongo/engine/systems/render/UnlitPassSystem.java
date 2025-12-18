@@ -11,32 +11,31 @@ import com.rockbite.bongo.engine.systems.RenderPassSystem;
 
 public class UnlitPassSystem extends RenderPassSystem {
 
-	public UnlitPassSystem () {
-		this(UnlitLayer.class);
-	}
+    public UnlitPassSystem() {
+        this(UnlitLayer.class);
+    }
 
-	public UnlitPassSystem (Class<? extends Component> componentClazz) {
-		this(
-			new DefaultSceneShaderProvider(ShaderSourceProvider.resolveVertex("core/unlit", Files.FileType.Classpath), ShaderSourceProvider.resolveFragment("core/unlit", Files.FileType.Classpath), UnlitShader.class),
-			componentClazz
-		);
-	}
+    public UnlitPassSystem(Class<? extends Component> componentClazz) {
+        this(
+                new DefaultSceneShaderProvider(ShaderSourceProvider.resolveVertex("core/unlit", Files.FileType.Classpath), ShaderSourceProvider.resolveFragment("core/unlit", Files.FileType.Classpath), UnlitShader.class),
+                componentClazz
+        );
+    }
 
-	public UnlitPassSystem (SceneShaderProvider sceneShaderProvider, Class<? extends Component>... componentsToGather) {
-		super(sceneShaderProvider, componentsToGather);
-	}
+    public UnlitPassSystem(SceneShaderProvider sceneShaderProvider, Class<? extends Component>... componentsToGather) {
+        super(sceneShaderProvider, componentsToGather);
+    }
 
-	@Override
-	protected void initialize () {
-		super.initialize();
+    @Override
+    protected void initialize() {
+        super.initialize();
+    }
 
-	}
-
-	/**
-	 * Process the system.
-	 */
-	@Override
-	protected void processSystem () {
-		renderAllCollectedRenderables();
-	}
+    /**
+     * Process the system.
+     */
+    @Override
+    protected void processSystem() {
+        renderAllCollectedRenderables();
+    }
 }

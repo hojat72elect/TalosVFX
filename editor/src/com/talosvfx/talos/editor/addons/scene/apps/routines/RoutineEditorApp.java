@@ -8,11 +8,10 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Stack;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.ui.RoutineControlWindow;
-import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.editor.data.RoutineStageData;
 import com.talosvfx.talos.editor.layouts.DummyLayoutApp;
-import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.CommandEventHandler;
+import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.Observer;
 import com.talosvfx.talos.editor.notifications.commands.enums.Commands;
 import com.talosvfx.talos.editor.notifications.events.commands.CommandContextEvent;
@@ -23,20 +22,19 @@ import com.talosvfx.talos.editor.project2.apps.preferences.ViewportPreferences;
 import com.talosvfx.talos.editor.project2.localprefs.TalosLocalPrefs;
 import com.talosvfx.talos.editor.project2.vfxui.GenericStageWrappedViewportWidget;
 import com.talosvfx.talos.editor.project2.vfxui.GenericStageWrappedWidget;
+import com.talosvfx.talos.runtime.assets.GameAsset;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RoutineEditorApp extends AppManager.BaseApp<RoutineStageData> implements ContainerOfPrefs<ViewportPreferences>, GameAsset.GameAssetUpdateListener, Observer {
+    private static final Logger logger = LoggerFactory.getLogger(RoutineEditorApp.class);
     public final RoutineControlWindow controlWindow;
     public RoutineStage routineStage;
     public VariableCreationWindow variableCreationWindow;
-
     public GenericStageWrappedViewportWidget routineStageWrapper;
     public GenericStageWrappedWidget routineUIStageWrapper;
-
     public Table uiContent;
-
-    private static final Logger logger = LoggerFactory.getLogger(RoutineEditorApp.class);
 
     public RoutineEditorApp() {
         Notifications.registerObserver(this);
@@ -44,16 +42,14 @@ public class RoutineEditorApp extends AppManager.BaseApp<RoutineStageData> imple
         routineStageWrapper = new GenericStageWrappedViewportWidget(routineStage.getRootActor()) {
             private static final float AUTO_SCROLL_RANGE = 45.0f;
             private static final float AUTO_SCROLL_SPEED = 200.0f;
+            private static final float DELAY_BEFORE_MOVE = 0.3f;
+            private final Vector2 tmp = new Vector2();
+            private float delayBeforeMove = DELAY_BEFORE_MOVE;
 
             @Override
             protected boolean canMoveAround() {
                 return true;
             }
-
-            private Vector2 tmp = new Vector2();
-
-            private static final float DELAY_BEFORE_MOVE = 0.3f;
-            private float delayBeforeMove = DELAY_BEFORE_MOVE;
 
             @Override
             public void act(float delta) {
@@ -141,7 +137,7 @@ public class RoutineEditorApp extends AppManager.BaseApp<RoutineStageData> imple
             }
 
             @Override
-            public void onInputProcessorAdded () {
+            public void onInputProcessorAdded() {
                 super.onInputProcessorAdded();
                 routineStageWrapper.restoreListeners();
                 SharedResources.stage.setScrollFocus(routineStageWrapper);
@@ -151,7 +147,7 @@ public class RoutineEditorApp extends AppManager.BaseApp<RoutineStageData> imple
             }
 
             @Override
-            public void onInputProcessorRemoved () {
+            public void onInputProcessorRemoved() {
                 super.onInputProcessorRemoved();
                 routineStageWrapper.disableListeners();
                 SharedResources.inputHandling.removePriorityInputProcessor(routineUIStageWrapper.getStage());
@@ -160,7 +156,7 @@ public class RoutineEditorApp extends AppManager.BaseApp<RoutineStageData> imple
             }
 
             @Override
-            protected void onTouchFocused () {
+            protected void onTouchFocused() {
                 SharedResources.stage.setKeyboardFocus(routineStageWrapper);
             }
 
@@ -175,37 +171,37 @@ public class RoutineEditorApp extends AppManager.BaseApp<RoutineStageData> imple
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.COPY)
-    public void onCopyCommand (CommandContextEvent event) {
+    public void onCopyCommand(CommandContextEvent event) {
         routineStage.getNodeBoard().copySelectedModules();
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.PASTE)
-    public void onPasteCommand (CommandContextEvent event) {
+    public void onPasteCommand(CommandContextEvent event) {
         routineStage.getNodeBoard().pasteFromClipboard();
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.SELECT_ALL)
-    public void onSelectAllCommand (CommandContextEvent event) {
+    public void onSelectAllCommand(CommandContextEvent event) {
         routineStage.getNodeBoard().selectAllNodes();
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.GROUP)
-    public void onGroupCommand (CommandContextEvent event) {
+    public void onGroupCommand(CommandContextEvent event) {
         routineStage.getNodeBoard().createGroupFromSelectedNodes();
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.UNGROUP)
-    public void onUngroupCommand (CommandContextEvent event) {
+    public void onUngroupCommand(CommandContextEvent event) {
         routineStage.getNodeBoard().ungroupSelectedNodes();
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.DELETE)
-    public void onDeleteCommand (CommandContextEvent event) {
+    public void onDeleteCommand(CommandContextEvent event) {
         routineStage.getNodeBoard().deleteSelectedNodes();
     }
 
     @Override
-    public void updateForGameAsset (GameAsset<RoutineStageData> gameAsset) {
+    public void updateForGameAsset(GameAsset<RoutineStageData> gameAsset) {
         if (this.gameAsset != null) {
             this.gameAsset.listeners.removeValue(this, true);
         }
@@ -232,7 +228,7 @@ public class RoutineEditorApp extends AppManager.BaseApp<RoutineStageData> imple
 
     @Override
     public String getAppName() {
-        if(gameAsset == null) {
+        if (gameAsset == null) {
             return "Routine"; // lol wtf
         }
         return "Routine - " + gameAsset.nameIdentifier;
@@ -251,7 +247,6 @@ public class RoutineEditorApp extends AppManager.BaseApp<RoutineStageData> imple
         if (this.gameAsset != null) {
             this.gameAsset.listeners.removeValue(this, true);
         }
-
     }
 
     @Override

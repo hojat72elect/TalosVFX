@@ -27,11 +27,9 @@ import java.util.Random;
 
 public class RandomInputModule extends AbstractModule {
 
-    Class valueType = null;
-
-    private Random random = new Random();
-
     public int slotCount = 0;
+    Class valueType = null;
+    private final Random random = new Random();
 
     @Override
     protected void defineSlots() {
@@ -50,11 +48,11 @@ public class RandomInputModule extends AbstractModule {
         super.attachModuleToMyInput(module, mySlot, targetSlot);
 
         // let's figure out the type
-        if(valueType == null) {
+        if (valueType == null) {
             valueType = module.getOutputSlot(targetSlot).getValue().getClass();
         } else {
             Class newValueType = module.getOutputSlot(targetSlot).getValue().getClass();
-            if(valueType != newValueType) {
+            if (valueType != newValueType) {
                 // changing value detaching all previous values
                 // detach code goes here
                 valueType = newValueType;
@@ -62,7 +60,7 @@ public class RandomInputModule extends AbstractModule {
         }
         // re init all previous values
         try {
-            for(Slot slot : getInputSlots().values()) {
+            for (Slot slot : getInputSlots().values()) {
                 slot.setValue((Value) ClassReflection.newInstance(valueType));
             }
             getOutputSlot(0).setValue((Value) ClassReflection.newInstance(valueType));
@@ -72,15 +70,15 @@ public class RandomInputModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
 
         Value output = outputSlots.get(0).getValue();
-        if(output != null) {
-            random.setSeed((long) ((getScope().getFloat(ScopePayload.EMITTER_ALPHA_AT_P_INIT) * 10000 * (index+1) * 1000)));
+        if (output != null) {
+            random.setSeed((long) ((getScope().getFloat(ScopePayload.EMITTER_ALPHA_AT_P_INIT) * 10000 * (index + 1) * 1000)));
             int index = MathUtils.round(random.nextFloat() * (inputSlots.size - 1));
 
             Value input = inputSlots.get(index).getValue();
-            if(input != null && !input.isEmpty()) {
+            if (input != null && !input.isEmpty()) {
                 output.set(input);
             }
         }

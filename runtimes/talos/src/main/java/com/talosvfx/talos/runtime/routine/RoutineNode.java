@@ -3,92 +3,56 @@ package com.talosvfx.talos.runtime.routine;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.Pool;
+import com.badlogic.gdx.utils.XmlReader;
 import com.talosvfx.talos.runtime.RuntimeContext;
-import com.talosvfx.talos.runtime.assets.*;
+import com.talosvfx.talos.runtime.assets.BaseAssetRepository;
+import com.talosvfx.talos.runtime.assets.GameAsset;
+import com.talosvfx.talos.runtime.assets.GameAssetType;
+import com.talosvfx.talos.runtime.assets.GameResourceOwner;
+import com.talosvfx.talos.runtime.assets.TalosContextProvider;
 import com.talosvfx.talos.runtime.scene.GameObject;
-import lombok.Getter;
 
 import java.util.UUID;
 
+import lombok.Getter;
+
 public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider {
 
-    protected RoutineInstance routineInstanceRef;
-
-    GameAsset.GameAssetUpdateListener updateListener;
-
-    private GameAsset<?> cachedGameAsset;
     public int uniqueId;
-
+    protected RoutineInstance routineInstanceRef;
     protected boolean nodeDirty = false;
     protected JsonValue propertiesJson;
     @Getter
     protected boolean configured = false;
-    private int configureDepth = 0;
-
-    public enum DataType {
-        NUMBER,
-        VECTOR2,
-        VECTOR3,
-        COLOR,
-        ASSET,
-        STRING,
-        BOOLEAN,
-        FLUID,
-        GAMEOBJECT
-    }
-
-    public enum PortType {
-        INPUT,
-        OUTPUT,
-        NONE
-    }
-
-    public enum ConnectionType {
-        SIGNAL,
-        DATA
-    }
-
-    public class Connection {
-        public Port fromPort;
-        public Port toPort;
-    }
-
-    public class Port {
-        public String name;
-        public RoutineNode nodeRef;
-        public PortType portType = PortType.NONE;
-        public ConnectionType connectionType;
-        public DataType dataType;
-        public Array<Connection> connections = new Array<>();
-        public Object valueOverride;
-
-        public void setValueFromString(String val) {
-            if(dataType == DataType.FLUID) {
-                valueOverride = Float.parseFloat(val);
-            } else if (dataType == DataType.NUMBER) {
-                valueOverride = Float.parseFloat(val);
-            } else {
-                valueOverride = val;
-            }
-        }
-
-        public void setValue(Object object) {
-            valueOverride = object;
-        }
-    }
-
     protected ObjectMap<String, Port> inputs = new ObjectMap<>();
     protected ObjectMap<String, Port> outputs = new ObjectMap<>();
+    protected transient String talosIdentifier;
+    GameAsset.GameAssetUpdateListener updateListener;
+    private GameAsset<?> cachedGameAsset;
+    private int configureDepth = 0;
 
     public RoutineNode() {
         updateListener = new GameAsset.GameAssetUpdateListener() {
             @Override
-            public void onUpdate () {
+            public void onUpdate() {
                 RoutineNode.this.routineInstanceRef.setDirty();
                 RoutineNode.this.nodeDirty = true;
             }
         };
+    }
+
+    static UUID readUUIDFromData(JsonValue jsonValue) {
+        String uuidString = jsonValue.getString("uuid", null);
+        if (uuidString == null) {
+            return null;
+        } else {
+            return UUID.fromString(uuidString);
+        }
     }
 
     public void loadFrom(RoutineInstance routineInstance, JsonValue nodeData) {
@@ -109,11 +73,11 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
     private void scheduleConfiguring() {
         configureDepth++;
         configureNode(propertiesJson);
-        if(!configured) {
+        if (!configured) {
             Gdx.app.postRunnable(new Runnable() {
                 @Override
                 public void run() {
-                    if(configureDepth < 5) {
+                    if (configureDepth < 5) {
                         scheduleConfiguring(); // try again next time
                     }
                 }
@@ -132,7 +96,7 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
     private void processRow(XmlReader.Element row) {
 
 
-        if(row.getName().equals("group")) {
+        if (row.getName().equals("group")) {
             int rowCount = row.getChildCount();
             for (int i = 0; i < rowCount; i++) {
                 processRow(row.getChild(i));
@@ -150,39 +114,39 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
         String portType = row.getAttribute("port", "");
 
         String type = row.getAttribute("type", "text");
-        if(type.equals("signal")) {
+        if (type.equals("signal")) {
             port.connectionType = ConnectionType.SIGNAL;
         } else {
             port.connectionType = ConnectionType.DATA;
 
-            if(type.equals("int")) port.dataType = DataType.NUMBER;
-            if(type.equals("float")) port.dataType = DataType.NUMBER;
-            if(type.equals("vec2")) port.dataType = DataType.VECTOR2;
-            if(type.equals("vec3")) port.dataType = DataType.VECTOR3;
-            if(type.equals("color")) port.dataType = DataType.COLOR;
-            if(type.equals("asset")) port.dataType = DataType.ASSET;
-            if(type.equals("SKELETON")) port.dataType = DataType.ASSET;
-            if(type.equals("ROUTINE")) port.dataType = DataType.ASSET;
-            if(type.equals("SOUND")) port.dataType = DataType.ASSET;
-            if(type.equals("SCENE")) port.dataType = DataType.ASSET;
-            if(type.equals("PREFAB")) port.dataType = DataType.ASSET;
-            if(type.equals("VFX")) port.dataType = DataType.ASSET;
-            if(type.equals("SPRITE")) port.dataType = DataType.ASSET;
-            if(type.equals("text")) port.dataType = DataType.STRING;
-            if(type.equals("fluid")) port.dataType = DataType.FLUID;
-            if(type.equals("gameobject")) port.dataType = DataType.GAMEOBJECT;
-            if(name.equals("asset")) port.dataType = DataType.ASSET;
+            if (type.equals("int")) port.dataType = DataType.NUMBER;
+            if (type.equals("float")) port.dataType = DataType.NUMBER;
+            if (type.equals("vec2")) port.dataType = DataType.VECTOR2;
+            if (type.equals("vec3")) port.dataType = DataType.VECTOR3;
+            if (type.equals("color")) port.dataType = DataType.COLOR;
+            if (type.equals("asset")) port.dataType = DataType.ASSET;
+            if (type.equals("SKELETON")) port.dataType = DataType.ASSET;
+            if (type.equals("ROUTINE")) port.dataType = DataType.ASSET;
+            if (type.equals("SOUND")) port.dataType = DataType.ASSET;
+            if (type.equals("SCENE")) port.dataType = DataType.ASSET;
+            if (type.equals("PREFAB")) port.dataType = DataType.ASSET;
+            if (type.equals("VFX")) port.dataType = DataType.ASSET;
+            if (type.equals("SPRITE")) port.dataType = DataType.ASSET;
+            if (type.equals("text")) port.dataType = DataType.STRING;
+            if (type.equals("fluid")) port.dataType = DataType.FLUID;
+            if (type.equals("gameobject")) port.dataType = DataType.GAMEOBJECT;
+            if (name.equals("asset")) port.dataType = DataType.ASSET;
 
 
-            if(row.getName().equals("checkbox")) {
+            if (row.getName().equals("checkbox")) {
                 port.valueOverride = row.getBooleanAttribute("default", false);
             }
         }
 
-        if(portType.equals("input")) {
+        if (portType.equals("input")) {
             port.portType = PortType.INPUT;
             inputs.put(name, port);
-        } else if(portType.equals("output")) {
+        } else if (portType.equals("output")) {
             port.portType = PortType.OUTPUT;
             outputs.put(name, port);
         } else {
@@ -191,25 +155,25 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
     }
 
     protected void configureNode(JsonValue properties) {
-        for(JsonValue item: properties) {
+        for (JsonValue item : properties) {
             String name = item.name;
 
             Port port = inputs.get(name);
-            if(port == null) {
+            if (port == null) {
                 configured = false;
                 return;
             }
             JsonValue jsonValue = properties.get(name);
-            if(port.dataType == DataType.COLOR) {
+            if (port.dataType == DataType.COLOR) {
                 Json json = new Json();
                 Color color = json.readValue(Color.class, jsonValue);
                 port.setValue(color);
-            } else if(port.dataType == DataType.VECTOR2) {
+            } else if (port.dataType == DataType.VECTOR2) {
                 float x = jsonValue.getFloat("x");
                 float y = jsonValue.getFloat("y");
                 Vector2 vec = new Vector2(x, y);
                 port.valueOverride = vec;
-            } else if(port.dataType == DataType.ASSET) {
+            } else if (port.dataType == DataType.ASSET) {
                 Json json = new Json();
                 try {
                     jsonValue.addChild("talosIdentifier", new JsonValue(talosIdentifier));
@@ -234,18 +198,17 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
                     }
                     port.setValue(gameAsset);
 
-                    if(gameAsset.isBroken()) {
+                    if (gameAsset.isBroken()) {
                         configured = false;
                         return;
                     }
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             } else {
                 try {
                     String str = properties.getString(name);
-                    if(str == null || str.isEmpty()) {
+                    if (str == null || str.isEmpty()) {
                         // we keep value override
                     } else {
                         port.setValueFromString(str);
@@ -258,7 +221,6 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
 
         configured = true;
     }
-
 
     public void addConnection(RoutineNode toNode, String fromSlot, String toSlot) {
         Port fromPort = outputs.get(fromSlot);
@@ -283,6 +245,7 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
 
     /**
      * I just got signal to one of my ports
+     *
      * @param portName
      */
     public void receiveSignal(String portName) {
@@ -291,13 +254,14 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
 
     /**
      * Send signal to all connections from particular output port
+     *
      * @param portName
      */
     public void sendSignal(String portName) {
         Port port = outputs.get(portName);
-        if(port != null) {
-            if(port.connectionType == ConnectionType.SIGNAL) {
-                for(Connection connection: port.connections) {
+        if (port != null) {
+            if (port.connectionType == ConnectionType.SIGNAL) {
+                for (Connection connection : port.connections) {
                     RoutineNode targetNode = connection.toPort.nodeRef;
                     String targetName = connection.toPort.name;
 
@@ -351,18 +315,16 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
     protected String fetchStringValue(String key) {
         Port port = inputs.get(key);
 
-        if(port == null) return "";
+        if (port == null) return "";
 
         return (String) port.valueOverride;
     }
 
     protected boolean isPortConnected(String key) {
         Port port = inputs.get(key);
-        if(port == null) return false;
-        if(port.connectionType == ConnectionType.DATA) {
-            if (!port.connections.isEmpty()) {
-                return true;
-            }
+        if (port == null) return false;
+        if (port.connectionType == ConnectionType.DATA) {
+            return !port.connections.isEmpty();
         }
 
         return false;
@@ -371,7 +333,7 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
     protected float fetchFloatValue(String key) {
         Object object = fetchValue(key);
 
-        if(object instanceof Integer) {
+        if (object instanceof Integer) {
             int result = (int) object;
             return (float) result;
         }
@@ -380,7 +342,7 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
             return 0;
         }
 
-        return (float)object;
+        return (float) object;
     }
 
     protected Color fetchColorValue(String key) {
@@ -389,34 +351,35 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
             return Color.WHITE;
         }
 
-        return (Color)object;
+        return (Color) object;
     }
 
     protected boolean fetchBooleanValue(String key) {
         Object object = fetchValue(key);
-        if(object == null) {
+        if (object == null) {
             return false;
         }
 
-        if(object instanceof String) {
+        if (object instanceof String) {
             boolean result = Boolean.parseBoolean((String) object);
             return result;
         }
 
-        return (boolean)object;
+        return (boolean) object;
     }
 
     protected int fetchIntValue(String key) {
         Object object = fetchValue(key);
 
-        if(object instanceof Float) {
+        if (object instanceof Float) {
             float result = (float) object;
             return (int) Math.floor(result);
         }
 
-        return (int)object;
+        return (int) object;
     }
-    protected GameObject fetchGameObjectValue (String key) {
+
+    protected GameObject fetchGameObjectValue(String key) {
         Object object = fetchValue(key);
 
         if (object instanceof GameObject) {
@@ -428,21 +391,21 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
     protected Vector2 fetchVector2Value(String key) {
         Object object = fetchValue(key);
 
-        return (Vector2)object;
+        return (Vector2) object;
     }
 
-    protected boolean isInputAndConnected (String key) {
+    protected boolean isInputAndConnected(String key) {
         routineInstanceRef.setRequester(uniqueId);
 
         Port port = inputs.get(key);
-        if(port == null) return false;
+        if (port == null) return false;
 
-        if (port.connections.isEmpty()) return false;
-        return true;
+        return !port.connections.isEmpty();
     }
 
     /**
      * Ask my input port for it's value
+     *
      * @param key
      * @return
      */
@@ -452,10 +415,10 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
 
         Port port = inputs.get(key);
 
-        if(port == null) return null;
+        if (port == null) return null;
 
-        if(port.connectionType == ConnectionType.DATA) {
-            if(!port.connections.isEmpty()) {
+        if (port.connectionType == ConnectionType.DATA) {
+            if (!port.connections.isEmpty()) {
                 Connection connection = port.connections.first();
                 RoutineNode targetNode = connection.toPort.nodeRef;
                 String targetPortName = connection.toPort.name;
@@ -464,7 +427,7 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
 
                 return targetNode.queryValue(targetPortName);
             } else {
-                if(port.valueOverride == null && port.dataType == DataType.NUMBER) {
+                if (port.valueOverride == null && port.dataType == DataType.NUMBER) {
                     return 0f;
                 }
                 return port.valueOverride;
@@ -476,6 +439,7 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
 
     /**
      * I have been asked from my output port to provide its value
+     *
      * @param targetPortName
      */
     public Object queryValue(String targetPortName) {
@@ -484,7 +448,7 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
     }
 
     public void setProperty(String key, Object value) {
-        if(inputs.containsKey(key)) {
+        if (inputs.containsKey(key)) {
             inputs.get(key).valueOverride = value;
         }
     }
@@ -494,29 +458,69 @@ public abstract class RoutineNode implements Pool.Poolable, TalosContextProvider
 
     }
 
-    static UUID readUUIDFromData (JsonValue jsonValue) {
-        String uuidString = jsonValue.getString("uuid", null);
-        if (uuidString == null) {
-            return null;
-        } else {
-            return UUID.fromString(uuidString);
-        }
+    @Override
+    public String getTalosIdentifier() {
+        return talosIdentifier;
     }
 
-    protected transient String talosIdentifier;
-
     @Override
-    public void setTalosIdentifier (String identifier) {
+    public void setTalosIdentifier(String identifier) {
         this.talosIdentifier = identifier;
     }
 
-    @Override
-    public String getTalosIdentifier () {
-       return talosIdentifier;
-    }
-
-    public RoutineEventInterface getRoutineEventInterface () {
+    public RoutineEventInterface getRoutineEventInterface() {
         return RuntimeContext.getInstance().getTalosContext(talosIdentifier).getRoutineDefaultEventInterface();
     }
 
+    public enum DataType {
+        NUMBER,
+        VECTOR2,
+        VECTOR3,
+        COLOR,
+        ASSET,
+        STRING,
+        BOOLEAN,
+        FLUID,
+        GAMEOBJECT
+    }
+
+    public enum PortType {
+        INPUT,
+        OUTPUT,
+        NONE
+    }
+
+    public enum ConnectionType {
+        SIGNAL,
+        DATA
+    }
+
+    public class Connection {
+        public Port fromPort;
+        public Port toPort;
+    }
+
+    public class Port {
+        public String name;
+        public RoutineNode nodeRef;
+        public PortType portType = PortType.NONE;
+        public ConnectionType connectionType;
+        public DataType dataType;
+        public Array<Connection> connections = new Array<>();
+        public Object valueOverride;
+
+        public void setValueFromString(String val) {
+            if (dataType == DataType.FLUID) {
+                valueOverride = Float.parseFloat(val);
+            } else if (dataType == DataType.NUMBER) {
+                valueOverride = Float.parseFloat(val);
+            } else {
+                valueOverride = val;
+            }
+        }
+
+        public void setValue(Object object) {
+            valueOverride = object;
+        }
+    }
 }

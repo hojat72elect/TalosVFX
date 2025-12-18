@@ -12,82 +12,82 @@ import com.talosvfx.talos.editor.utils.CursorUtil;
 
 public class LayoutResizeWidget extends Table {
 
-	private final Skin skin;
-	private final LayoutGrid layoutGrid;
+    private final Skin skin;
+    private final LayoutGrid layoutGrid;
 
 
-	private LayoutItem responder;
-	private boolean entered;
-	private boolean touchDragging;
+    private final LayoutItem responder;
+    private boolean entered;
+    private boolean touchDragging;
 
-	private Drawable noFocus;
-	private Drawable focus;
+    private final Drawable noFocus;
+    private final Drawable focus;
 
-	public LayoutResizeWidget (Skin skin, LayoutGrid layoutGrid, LayoutItem responder) {
-		this.skin = skin;
-		this.layoutGrid = layoutGrid;
-		this.responder = responder;
+    public LayoutResizeWidget(Skin skin, LayoutGrid layoutGrid, LayoutItem responder) {
+        this.skin = skin;
+        this.layoutGrid = layoutGrid;
+        this.responder = responder;
 
-		noFocus = skin.newDrawable("white", Color.valueOf("333333ff"));
-		focus = skin.newDrawable("white", Color.valueOf("666666ff"));
+        noFocus = skin.newDrawable("white", Color.valueOf("333333ff"));
+        focus = skin.newDrawable("white", Color.valueOf("666666ff"));
 
-		setBackground(noFocus);
+        setBackground(noFocus);
 
-		ClickListener listener = new ClickListener() {
+        ClickListener listener = new ClickListener() {
 
-			@Override
-			public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-				entered = true;
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                entered = true;
 
-				setBackground(focus);
-				super.enter(event, x, y, pointer, fromActor);
-			}
+                setBackground(focus);
+                super.enter(event, x, y, pointer, fromActor);
+            }
 
-			@Override
-			public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-				entered = false;
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                entered = false;
 
-				setBackground(noFocus);
-				super.exit(event, x, y, pointer, toActor);
-			}
+                setBackground(noFocus);
+                super.exit(event, x, y, pointer, toActor);
+            }
 
-			@Override
-			public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-				responder.touchedTownResizeWidget(LayoutResizeWidget.this, event, x, y, pointer);
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                responder.touchedTownResizeWidget(LayoutResizeWidget.this, event, x, y, pointer);
 
-				return super.touchDown(event, x, y, pointer, button);
-			}
+                return super.touchDown(event, x, y, pointer, button);
+            }
 
-			@Override
-			public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-				touchDragging = false;
-				
-				super.touchUp(event, x, y, pointer, button);
-			}
+            @Override
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+                touchDragging = false;
 
-			@Override
-			public void touchDragged (InputEvent event, float x, float y, int pointer) {
-				touchDragging = true;
+                super.touchUp(event, x, y, pointer, button);
+            }
 
-				responder.draggedResizeWidget(LayoutResizeWidget.this, event, x, y, pointer);
-				super.touchDragged(event, x, y, pointer);
-			}
-		};
-		addListener(listener);
+            @Override
+            public void touchDragged(InputEvent event, float x, float y, int pointer) {
+                touchDragging = true;
 
-		setTouchable(Touchable.enabled);
-	}
+                responder.draggedResizeWidget(LayoutResizeWidget.this, event, x, y, pointer);
+                super.touchDragged(event, x, y, pointer);
+            }
+        };
+        addListener(listener);
+
+        setTouchable(Touchable.enabled);
+    }
 
 
-	@Override
-	public void act(float delta) {
-		super.act(delta);
-		if (entered || touchDragging) {
-			if (responder instanceof LayoutColumn) {
-				CursorUtil.setDynamicModeCursor(CursorUtil.CursorType.MOVE_VERTICALLY);
-			} else if (responder instanceof LayoutRow) {
-				CursorUtil.setDynamicModeCursor(CursorUtil.CursorType.MOVE_HORIZONTALLY);
-			}
-		}
-	}
+    @Override
+    public void act(float delta) {
+        super.act(delta);
+        if (entered || touchDragging) {
+            if (responder instanceof LayoutColumn) {
+                CursorUtil.setDynamicModeCursor(CursorUtil.CursorType.MOVE_VERTICALLY);
+            } else if (responder instanceof LayoutRow) {
+                CursorUtil.setDynamicModeCursor(CursorUtil.CursorType.MOVE_HORIZONTALLY);
+            }
+        }
+    }
 }

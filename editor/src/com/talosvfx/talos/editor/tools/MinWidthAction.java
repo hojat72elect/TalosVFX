@@ -27,24 +27,24 @@ public class MinWidthAction<T extends Cell> extends TemporalAction {
 
     private T iconCell;
 
-    public void setTarget (float targetMinWidth) {
+    public void setTarget(float targetMinWidth) {
         this.targetMinWidth = targetMinWidth;
     }
 
     @Override
-    protected void begin () {
+    protected void begin() {
         this.startMinWidth = iconCell.getMinWidth();
     }
 
 
     @Override
-    protected void update (float percent) {
+    protected void update(float percent) {
         minWidth = startMinWidth + (targetMinWidth - startMinWidth) * percent;
         iconCell.minWidth(minWidth);
         iconCell.getTable().invalidateHierarchy();
     }
 
-    public void setTarget (T iconCell) {
+    public void setTarget(T iconCell) {
         this.iconCell = iconCell;
     }
 }

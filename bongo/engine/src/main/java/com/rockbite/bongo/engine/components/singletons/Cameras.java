@@ -8,44 +8,46 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+
+import net.mostlyoriginal.api.Singleton;
+
 import lombok.Getter;
 import lombok.Setter;
-import net.mostlyoriginal.api.Singleton;
 
 @Getter
 @Singleton
 @Transient
 public class Cameras extends Component {
 
-	@Setter
-	private Camera gameCamera;
-	private OrthographicCamera screenspaceCamera;
+    private static final Vector3 temp3 = new Vector3();
+    @Setter
+    private Camera gameCamera;
+    private final OrthographicCamera screenspaceCamera;
 
-	public Cameras () {
-		gameCamera = new PerspectiveCamera(60, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		gameCamera.far = 20f;
+    public Cameras() {
+        gameCamera = new PerspectiveCamera(60, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        gameCamera.far = 20f;
 
-		screenspaceCamera = new OrthographicCamera();
-	}
+        screenspaceCamera = new OrthographicCamera();
+    }
 
-	private static Vector3 temp3 = new Vector3();
-	public void touchToWorldSpace (Vector2 temp) {
-		touchToWorldSpace(temp3.set(temp.x, temp.y, 0));
-		temp.set(temp3.x, temp3.y);
-	}
+    public void touchToWorldSpace(Vector2 temp) {
+        touchToWorldSpace(temp3.set(temp.x, temp.y, 0));
+        temp.set(temp3.x, temp3.y);
+    }
 
-	public void touchToWorldSpace (Vector3 temp) {
-		//should probably be viewport
-		gameCamera.unproject(temp);
-	}
+    public void touchToWorldSpace(Vector3 temp) {
+        //should probably be viewport
+        gameCamera.unproject(temp);
+    }
 
-	public boolean isInGameViewport (Vector3 position) {
-		float x = position.x;
-		float y = position.y;
+    public boolean isInGameViewport(Vector3 position) {
+        float x = position.x;
+        float y = position.y;
 
-		//Size of 5
-		float halfWidth = 2.5f;
+        //Size of 5
+        float halfWidth = 2.5f;
 
-		return gameCamera.frustum.boundsInFrustum(x, y, 0, halfWidth, halfWidth, 0);
-	}
+        return gameCamera.frustum.boundsInFrustum(x, y, 0, halfWidth, halfWidth, 0);
+    }
 }

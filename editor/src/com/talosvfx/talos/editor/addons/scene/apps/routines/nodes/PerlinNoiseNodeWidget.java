@@ -41,9 +41,9 @@ public class PerlinNoiseNodeWidget extends RoutineNodeWidget {
         float scale = getWidgetFloatValue("scale");
 
         Pixmap pixmap = new Pixmap(256, 256, Pixmap.Format.RGBA8888);
-        for(int x = 0; x < pixmap.getWidth(); x++) {
-            for(int y = 0; y < pixmap.getHeight(); y++) {
-                float val = (noise.query(x/256f, y/256f, scale) + 1f)/2f;
+        for (int x = 0; x < pixmap.getWidth(); x++) {
+            for (int y = 0; y < pixmap.getHeight(); y++) {
+                float val = (noise.query(x / 256f, y / 256f, scale) + 1f) / 2f;
 
                 color.set(val, val, val, 1f);
                 pixmap.setColor(color);
@@ -55,6 +55,4 @@ public class PerlinNoiseNodeWidget extends RoutineNodeWidget {
 
         return texture;
     }
-
-
 }

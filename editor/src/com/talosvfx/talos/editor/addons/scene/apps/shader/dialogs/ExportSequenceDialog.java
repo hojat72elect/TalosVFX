@@ -3,7 +3,10 @@ package com.talosvfx.talos.editor.addons.scene.apps.shader.dialogs;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.kotcrab.vis.ui.widget.VisWindow;
@@ -93,7 +96,7 @@ public class ExportSequenceDialog extends VisWindow {
 
                 FileSystemInteraction.instance().showFolderChooser(new FileChooserListener() {
                     @Override
-                    public void selected (Array<FileHandle> files) {
+                    public void selected(Array<FileHandle> files) {
                         inputPathField.setText(files.get(0).path());
                     }
                 });

@@ -7,9 +7,9 @@ import com.talosvfx.talos.runtime.assets.GameAsset;
  * App preferences per asset
  */
 public class AppPrefs {
-    private ObjectMap<String, AppPreference> preferences;
+    private final ObjectMap<String, AppPreference> preferences;
 
-    public AppPrefs () {
+    public AppPrefs() {
         preferences = new ObjectMap<>();
     }
 
@@ -26,13 +26,14 @@ public class AppPrefs {
         preferences.put(getUUID(gameAsset), appPref);
     }
 
-    private String getUUID (GameAsset<?> gameAsset) {
+    private String getUUID(GameAsset<?> gameAsset) {
         return gameAsset.getRootRawAsset().metaData.uuid.toString();
     }
 
     /**
      * Tag interface.
      */
-    public interface AppPreference {}
+    public interface AppPreference {
+    }
 }
 

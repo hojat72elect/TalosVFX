@@ -1,13 +1,8 @@
 package com.talosvfx.talos.runtime.scene.utils.propertyWrappers;
 
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ObjectMap;
-import com.badlogic.gdx.utils.reflect.ClassReflection;
-import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.talosvfx.talos.runtime.assets.meta.ScriptMetadata;
-import com.talosvfx.talos.runtime.scene.GameObject;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -16,9 +11,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ScriptMetadataParser {
-    private PropertyWrappers scriptPropertyWrappers = new PropertyWrappers();
-
     BufferedReader reader;
+    private final PropertyWrappers scriptPropertyWrappers = new PropertyWrappers();
 
     public void processHandle(FileHandle handle, ScriptMetadata metadata) {
         try {
@@ -89,5 +83,4 @@ public class ScriptMetadataParser {
             super(message);
         }
     }
-
 }

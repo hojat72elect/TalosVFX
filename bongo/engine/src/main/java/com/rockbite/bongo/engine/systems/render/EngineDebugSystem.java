@@ -23,95 +23,94 @@ import com.rockbite.bongo.engine.render.ShaderFlags;
 import com.rockbite.bongo.engine.render.ShaderSourceProvider;
 import com.rockbite.bongo.engine.render.SpriteShaderCompiler;
 import com.rockbite.bongo.engine.systems.RenderPassSystem;
+
 import lombok.Getter;
 import lombok.Setter;
 
 public class EngineDebugSystem extends BaseSystem {
 
 
-	private Cameras cameras;
-	private ShapeRenderer shapeRenderer;
-	private PolygonSpriteBatchMultiTextureMULTIBIND spriteBatch;
+    private Cameras cameras;
+    private final ShapeRenderer shapeRenderer;
+    private final PolygonSpriteBatchMultiTextureMULTIBIND spriteBatch;
 
-	private Plane plane = new Plane(new Vector3(0, 1, 0), 0f);
-	private Vector3 intersectionOut = new Vector3();
+    private final Plane plane = new Plane(new Vector3(0, 1, 0), 0f);
+    private final Vector3 intersectionOut = new Vector3();
 
-	@AspectDescriptor(all = ShaderControlResource.class)
-	private EntitySubscription shaderResourceSubscription;
+    @AspectDescriptor(all = ShaderControlResource.class)
+    private EntitySubscription shaderResourceSubscription;
 
-	private ComponentMapper<ShaderControlResource> shaderResourceMapper;
-
-
-	@Setter
-	private boolean drawAxis = true;
-	@Setter
-	private boolean drawUnitSquare = true;
-
-	@Getter
-	private Array<ShaderControlResource> liveShaderResources = new Array<>();
+    private ComponentMapper<ShaderControlResource> shaderResourceMapper;
 
 
-	public EngineDebugSystem () {
+    @Setter
+    private boolean drawAxis = true;
+    @Setter
+    private boolean drawUnitSquare = true;
 
-		String shapeVertexSource = ShaderSourceProvider.resolveVertex("core/shape", Files.FileType.Classpath).readString();
-		String shapeFragmentSource = ShaderSourceProvider.resolveFragment("core/shape", Files.FileType.Classpath).readString();
+    @Getter
+    private final Array<ShaderControlResource> liveShaderResources = new Array<>();
 
-		shapeRenderer = new ShapeRenderer(5000,
-			SpriteShaderCompiler.getOrCreateShader("core/shape", shapeVertexSource, shapeFragmentSource, new ShaderFlags())
-		);
 
-		spriteBatch = new PolygonSpriteBatchMultiTextureMULTIBIND(1000);
+    public EngineDebugSystem() {
 
-	}
+        String shapeVertexSource = ShaderSourceProvider.resolveVertex("core/shape", Files.FileType.Classpath).readString();
+        String shapeFragmentSource = ShaderSourceProvider.resolveFragment("core/shape", Files.FileType.Classpath).readString();
 
-	@Override
-	protected void initialize () {
-		super.initialize();
-	}
+        shapeRenderer = new ShapeRenderer(5000,
+                SpriteShaderCompiler.getOrCreateShader("core/shape", shapeVertexSource, shapeFragmentSource, new ShaderFlags())
+        );
 
-	/**
-	 * Process the system.
-	 */
-	@Override
-	protected void processSystem () {
-		liveShaderResources.clear();
-		final IntBag entities = shaderResourceSubscription.getEntities();
-		for (int i = 0; i < entities.size(); i++) {
-			final int e = entities.get(i);
-			liveShaderResources.add(shaderResourceMapper.get(e));
-		}
+        spriteBatch = new PolygonSpriteBatchMultiTextureMULTIBIND(1000);
+    }
 
-		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+    @Override
+    protected void initialize() {
+        super.initialize();
+    }
 
-		shapeRenderer.setProjectionMatrix(cameras.getGameCamera().combined);
+    /**
+     * Process the system.
+     */
+    @Override
+    protected void processSystem() {
+        liveShaderResources.clear();
+        final IntBag entities = shaderResourceSubscription.getEntities();
+        for (int i = 0; i < entities.size(); i++) {
+            final int e = entities.get(i);
+            liveShaderResources.add(shaderResourceMapper.get(e));
+        }
 
-		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-		shapeRenderer.setColor(0.5f, 0.5f, 0.5f, 1f);
+        Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 
-		if (drawAxis) {
+        shapeRenderer.setProjectionMatrix(cameras.getGameCamera().combined);
 
-			float length = 100;
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(0.5f, 0.5f, 0.5f, 1f);
 
-			shapeRenderer.setColor(Color.GREEN);
-			shapeRenderer.line(0, 0, 0, length, 0, 0);
-			shapeRenderer.setColor(Color.RED);
-			shapeRenderer.line(0, 0, 0, 0, length, 0);
-			shapeRenderer.setColor(Color.BLUE);
-			shapeRenderer.line(0, 0, 0, 0, 0, length);
-		}
+        if (drawAxis) {
 
-		if (drawUnitSquare) {
-			final Ray pickRay = cameras.getGameCamera().getPickRay(Gdx.input.getX(), Gdx.input.getY(), RenderPassSystem.glViewport.x, RenderPassSystem.glViewport.y, RenderPassSystem.glViewport.width, RenderPassSystem.glViewport.height);
-			Intersector.intersectRayPlane(pickRay, plane, intersectionOut);
-			int selectedX = MathUtils.floor(intersectionOut.x);
-			int selectedZ = MathUtils.floor(intersectionOut.z);
+            float length = 100;
 
-			shapeRenderer.box(selectedX, 0, selectedZ + 1, 1f, 0.1f, 1f);
-		}
+            shapeRenderer.setColor(Color.GREEN);
+            shapeRenderer.line(0, 0, 0, length, 0, 0);
+            shapeRenderer.setColor(Color.RED);
+            shapeRenderer.line(0, 0, 0, 0, length, 0);
+            shapeRenderer.setColor(Color.BLUE);
+            shapeRenderer.line(0, 0, 0, 0, 0, length);
+        }
 
-		shapeRenderer.end();
+        if (drawUnitSquare) {
+            final Ray pickRay = cameras.getGameCamera().getPickRay(Gdx.input.getX(), Gdx.input.getY(), RenderPassSystem.glViewport.x, RenderPassSystem.glViewport.y, RenderPassSystem.glViewport.width, RenderPassSystem.glViewport.height);
+            Intersector.intersectRayPlane(pickRay, plane, intersectionOut);
+            int selectedX = MathUtils.floor(intersectionOut.x);
+            int selectedZ = MathUtils.floor(intersectionOut.z);
 
-		Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
+            shapeRenderer.box(selectedX, 0, selectedZ + 1, 1f, 0.1f, 1f);
+        }
 
-	}
+        shapeRenderer.end();
+
+        Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
+    }
 }

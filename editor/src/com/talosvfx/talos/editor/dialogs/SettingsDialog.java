@@ -18,7 +18,10 @@ package com.talosvfx.talos.editor.dialogs;
 
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
@@ -31,7 +34,7 @@ public class SettingsDialog extends VisWindow {
 
     public static final String ASSET_PATH = "assetPath";
 
-    private ObjectMap<String, TextField> textFieldMap;
+    private final ObjectMap<String, TextField> textFieldMap;
 
     public SettingsDialog() {
         super("Talos Preferences");
@@ -52,10 +55,9 @@ public class SettingsDialog extends VisWindow {
 
         centerWindow();
 
-        for(String key: textFieldMap.keys()) {
+        for (String key : textFieldMap.keys()) {
             textFieldMap.get(key).setText(TalosMain.Instance().Prefs().getString(key));
         }
-
     }
 
     public void addPathSetting(String name, final String id) {
@@ -101,15 +103,14 @@ public class SettingsDialog extends VisWindow {
     private void showFolderSelect(final String id) {
         FileSystemInteraction.instance().showFolderChooser(new FileChooserListener() {
             @Override
-            public void selected (Array<FileHandle> files) {
+            public void selected(Array<FileHandle> files) {
                 textFieldMap.get(id).setText(files.get(0).path());
             }
         });
-
     }
 
     private void save() {
-        for(String key: textFieldMap.keys()) {
+        for (String key : textFieldMap.keys()) {
             TalosMain.Instance().Prefs().putString(key, textFieldMap.get(key).getText());
         }
         TalosMain.Instance().Prefs().flush();

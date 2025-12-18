@@ -4,6 +4,8 @@ import com.badlogic.gdx.graphics.Color;
 
 public interface IColorHolder {
     boolean shouldInheritParentColor();
-    Color getColor ();
+
+    Color getColor();
+
     Color getFinalColor();
 }

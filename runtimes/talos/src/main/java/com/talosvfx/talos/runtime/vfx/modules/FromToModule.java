@@ -35,15 +35,12 @@ public class FromToModule extends AbstractModule {
 
     public NumericalValue from;
     public NumericalValue to;
-
+    public Vector3 defaultFrom = new Vector3();
+    public Vector3 defaultTo = new Vector3();
     NumericalValue position;
     NumericalValue rotation;
     NumericalValue length;
-
     Vector3 tmpVec = new Vector3();
-
-    public Vector3 defaultFrom = new Vector3();
-    public Vector3 defaultTo = new Vector3();
 
     @Override
     protected void defineSlots() {
@@ -56,14 +53,14 @@ public class FromToModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
-        if(from.isEmpty()) from.set(defaultFrom.x, defaultFrom.y);
-        if(to.isEmpty()) to.set(defaultTo.x, defaultTo.y);
+    public void processCustomValues() {
+        if (from.isEmpty()) from.set(defaultFrom.x, defaultFrom.y);
+        if (to.isEmpty()) to.set(defaultTo.x, defaultTo.y);
 
         tmpVec.set(to.get(0), to.get(1), to.get(2));
         tmpVec.sub(from.get(0), from.get(1), from.get(2));
 
-        position.set(from.get(0) + tmpVec.x/2f, from.get(1) + tmpVec.y/2f);
+        position.set(from.get(0) + tmpVec.x / 2f, from.get(1) + tmpVec.y / 2f);
 
 
         //Legacy
@@ -72,7 +69,7 @@ public class FromToModule extends AbstractModule {
         length.set(tmpVec.len());
     }
 
-    public void setDefaults (Vector3 dFrom, Vector3 dTo) {
+    public void setDefaults(Vector3 dFrom, Vector3 dTo) {
         defaultFrom.set(dFrom);
         defaultTo.set(dTo);
     }

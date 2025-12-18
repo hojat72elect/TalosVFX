@@ -25,17 +25,13 @@ import com.talosvfx.talos.runtime.vfx.values.NumericalValue;
 
 public class FloatRangeInputWidget extends Table {
 
+    Table midTable;
     private FloatInputWidget minInput;
     private FloatInputWidget maxInput;
-
     private ImageButton equalsButton;
     private ImageButton mirrorButton;
-
     private Skin skin;
-
     private ChangeListener listener;
-
-    Table midTable;
 
     public FloatRangeInputWidget(String textMin, String textMax, Skin skin) {
         build(textMin, textMax, skin, false);
@@ -61,7 +57,7 @@ public class FloatRangeInputWidget extends Table {
         equalsButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                if(equalsButton.isChecked()) {
+                if (equalsButton.isChecked()) {
                     mirrorButton.setChecked(false);
                 }
                 checkStatus();
@@ -71,7 +67,7 @@ public class FloatRangeInputWidget extends Table {
         mirrorButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                if(mirrorButton.isChecked()) {
+                if (mirrorButton.isChecked()) {
                     equalsButton.setChecked(false);
                 }
                 checkStatus();
@@ -81,15 +77,15 @@ public class FloatRangeInputWidget extends Table {
         minInput.setListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                if(mirrorButton.isChecked()) {
+                if (mirrorButton.isChecked()) {
                     float angle = 180f - minInput.getValue();
-                    if(angle < 0) angle = 360 + angle;
+                    if (angle < 0) angle = 360 + angle;
                     maxInput.setValue(angle);
-                } else if(equalsButton.isChecked()) {
+                } else if (equalsButton.isChecked()) {
                     maxInput.setValue(minInput.getValue());
                 }
 
-                if(listener != null) {
+                if (listener != null) {
                     listener.changed(event, FloatRangeInputWidget.this);
                 }
             }
@@ -98,15 +94,15 @@ public class FloatRangeInputWidget extends Table {
         maxInput.setListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                if(mirrorButton.isChecked()) {
+                if (mirrorButton.isChecked()) {
                     float angle = 180f - maxInput.getValue();
-                    if(angle < 0) angle = 360 + angle;
+                    if (angle < 0) angle = 360 + angle;
                     minInput.setValue(angle);
-                } else if(equalsButton.isChecked()) {
+                } else if (equalsButton.isChecked()) {
                     minInput.setValue(maxInput.getValue());
                 }
 
-                if(listener != null) {
+                if (listener != null) {
                     listener.changed(event, FloatRangeInputWidget.this);
                 }
             }
@@ -114,7 +110,7 @@ public class FloatRangeInputWidget extends Table {
 
         add(minInput);
 
-        if(!isSimple) {
+        if (!isSimple) {
             midTable.add(mirrorButton).row();
             midTable.add().height(8).row();
             midTable.add(equalsButton);
@@ -126,7 +122,6 @@ public class FloatRangeInputWidget extends Table {
         }
 
         add(maxInput);
-
     }
 
     public void setListener(ChangeListener listener) {
@@ -135,14 +130,14 @@ public class FloatRangeInputWidget extends Table {
 
 
     private void checkStatus() {
-       if(mirrorButton.isChecked()) {
-           maxInput.setValue(180f - minInput.getValue());
-       } else if(equalsButton.isChecked()) {
-           maxInput.setValue(minInput.getValue());
-       }
+        if (mirrorButton.isChecked()) {
+            maxInput.setValue(180f - minInput.getValue());
+        } else if (equalsButton.isChecked()) {
+            maxInput.setValue(minInput.getValue());
+        }
     }
 
-    public Skin getSkin () {
+    public Skin getSkin() {
         return skin;
     }
 
@@ -150,7 +145,7 @@ public class FloatRangeInputWidget extends Table {
         minInput.setFlavour(flavour);
         maxInput.setFlavour(flavour);
 
-        if(flavour == NumericalValue.Flavour.ANGLE) {
+        if (flavour == NumericalValue.Flavour.ANGLE) {
             mirrorButton.setVisible(true);
         } else {
             mirrorButton.setVisible(false);

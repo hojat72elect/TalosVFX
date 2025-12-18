@@ -23,7 +23,7 @@ public class WrapperRegistry<T extends AbstractModule, U extends ModuleWrapper<T
 
     public static ObjectMap<Class, Class> map = new ObjectMap<>();
 
-    public static <T extends AbstractModule, U extends ModuleWrapper<T>> Class<U> get (Class<T> moduleClass) {
+    public static <T extends AbstractModule, U extends ModuleWrapper<T>> Class<U> get(Class<T> moduleClass) {
         return map.get(moduleClass);
     }
 

@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.talosvfx.talos.editor.utils.grid.GridLine;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +16,7 @@ public class StaticBoundedGridPropertyProvider extends StaticGridPropertyProvide
     private static final Logger logger = LoggerFactory.getLogger(StaticBoundedGridPropertyProvider.class);
 
     @Override
-    public void update (OrthographicCamera camera, float alpha) {
+    public void update(OrthographicCamera camera, float alpha) {
         this.camera = camera;
         gridLines.clear();
         float gridSizeX = getUnitX();
@@ -49,7 +50,7 @@ public class StaticBoundedGridPropertyProvider extends StaticGridPropertyProvide
     }
 
     @Override
-    public float getWorldHeight () {
+    public float getWorldHeight() {
 
         logger.info("redo world height");
 //        if (SceneEditorWorkspace.getInstance().mapEditorState.isEditing()) {
@@ -65,7 +66,7 @@ public class StaticBoundedGridPropertyProvider extends StaticGridPropertyProvide
     }
 
     @Override
-    public float getWorldWidth () {
+    public float getWorldWidth() {
         logger.info("redo world width");
 //        if (SceneEditorWorkspace.getInstance().mapEditorState.isEditing()) {
 //            TalosLayer selectedLayer = SceneEditorWorkspace.getInstance().mapEditorState.getLayerSelected();

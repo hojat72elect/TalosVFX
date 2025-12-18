@@ -18,7 +18,10 @@ package com.talosvfx.talos.editor.widgets;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
@@ -52,14 +55,14 @@ public class IntegerInputWidget extends Table {
         regularCarrier.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
 
         Cell labelCell = table.add(regularLabel);
-        if(align == Align.left) {
+        if (align == Align.left) {
             labelCell.left();
         } else {
             labelCell.right();
         }
         labelCell.row();
         Cell carrierCell = table.add(regularCarrier);
-        if(align == Align.left) {
+        if (align == Align.left) {
             carrierCell.left();
         } else {
             carrierCell.right();
@@ -70,7 +73,7 @@ public class IntegerInputWidget extends Table {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 getValue();
-                if(listener != null) {
+                if (listener != null) {
                     listener.changed(event, actor);
                 }
             }
@@ -81,7 +84,7 @@ public class IntegerInputWidget extends Table {
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
 
-                if(regularCarrier.getSelection().length() == 0) {
+                if (regularCarrier.getSelection().length() == 0) {
                     regularCarrier.selectAll();
                 }
             }

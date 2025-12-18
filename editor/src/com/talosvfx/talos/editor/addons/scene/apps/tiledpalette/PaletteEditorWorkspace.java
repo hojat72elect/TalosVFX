@@ -1,5 +1,7 @@
 package com.talosvfx.talos.editor.addons.scene.apps.tiledpalette;
 
+import static com.talosvfx.talos.editor.utils.InputUtils.ctrlPressed;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
@@ -8,23 +10,26 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.PolygonBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.*;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.ObjectSet;
+import com.badlogic.gdx.utils.OrderedMap;
+import com.badlogic.gdx.utils.Pool;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.kotcrab.vis.ui.FocusManager;
 import com.talosvfx.talos.editor.addons.scene.MainRenderer;
 import com.talosvfx.talos.editor.addons.scene.assets.AssetRepository;
-import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.editor.addons.scene.events.GameObjectSelectionChanged;
-import com.talosvfx.talos.runtime.maps.TileGameObjectProxy;
-import com.talosvfx.talos.runtime.maps.TilePaletteData;
-import com.talosvfx.talos.runtime.scene.GameObject;
-import com.talosvfx.talos.runtime.maps.GridPosition;
-import com.talosvfx.talos.runtime.maps.StaticTile;
 import com.talosvfx.talos.editor.addons.scene.utils.PolygonSpriteBatchMultiTexture;
 import com.talosvfx.talos.editor.notifications.EventContextProvider;
 import com.talosvfx.talos.editor.notifications.EventHandler;
@@ -34,45 +39,53 @@ import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.utils.grid.property_providers.StaticGridPropertyProvider;
 import com.talosvfx.talos.editor.widgets.ui.ViewportWidget;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
+import com.talosvfx.talos.runtime.assets.GameAsset;
+import com.talosvfx.talos.runtime.maps.GridPosition;
+import com.talosvfx.talos.runtime.maps.StaticTile;
+import com.talosvfx.talos.runtime.maps.TileGameObjectProxy;
+import com.talosvfx.talos.runtime.maps.TilePaletteData;
+import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.GameObjectRenderer;
 import com.talosvfx.talos.runtime.scene.components.SpriteRendererComponent;
 import com.talosvfx.talos.runtime.scene.components.TileDataComponent;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 import com.talosvfx.talos.runtime.scene.render.RenderState;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
-import java.util.Comparator;
 import com.talosvfx.talos.runtime.utils.Supplier;
 
-import static com.talosvfx.talos.editor.utils.InputUtils.ctrlPressed;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Comparator;
 
 
 public class PaletteEditorWorkspace extends ViewportWidget implements Observer, EventContextProvider<PaletteEditorWorkspace> {
 
     private static final Logger logger = LoggerFactory.getLogger(PaletteEditorWorkspace.class);
-    private PaletteEditor paletteEditor;
+    private static final Color parentTilesColorBlue = Color.valueOf("#436787");
+    private static final Color parentTilesBorderColorBlue = Color.valueOf("#6f9ac1");
+    private static final Color parentTilesColorRed = Color.valueOf("#874343");
+    private static final Color parentTilesBorderColorRed = Color.valueOf("#cc6a6a");
+    private static final Color parentTilesProxyColor = ColorLibrary.ORANGE;
+    private static final Color parentTileColorGray = Color.valueOf("#ffffff33");
     GameAsset<TilePaletteData> paletteData;
-    private Image selectionRect;
-
-    private MainRenderer mainRenderer;
-
-    private Pool<PaletteEvent> paletteEventPool;
-
+    Vector3 lb = new Vector3();
+    Vector3 lt = new Vector3();
+    Vector3 rb = new Vector3();
+    Vector3 rt = new Vector3();
+    private final PaletteEditor paletteEditor;
+    private final Image selectionRect;
+    private final MainRenderer mainRenderer;
+    private final Pool<PaletteEvent> paletteEventPool;
     private float tmpHeightOffset;
-
-    private boolean translatingMode = true;
-    private ObjectMap<GameObject, Vector2> parentTileOffsetsForTranslate = new ObjectMap<>();
-
+    private final boolean translatingMode = true;
+    private final ObjectMap<GameObject, Vector2> parentTileOffsetsForTranslate = new ObjectMap<>();
     private InputListener currentGizmoListener;
-
     // info for parent tile edit mode
-    private Vector2 parentTileDragStart = new Vector2();
+    private final Vector2 parentTileDragStart = new Vector2();
     private boolean parentTileIsDragging;
-
-    private Comparator<GameObject> orthoTopDownSorter = new Comparator<GameObject>() {
+    private final Comparator<GameObject> orthoTopDownSorter = new Comparator<GameObject>() {
         @Override
-        public int compare (GameObject a, GameObject b) {
+        public int compare(GameObject a, GameObject b) {
 
             GameObject rootDummy = paletteData.getResource().rootDummy;
 
@@ -99,12 +112,11 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
 
                 return Float.compare(aSort, bSort);
             }
-
         }
     };
-    private Comparator<GameAsset<?>> gameObjectRenderOrderComparator = new Comparator<GameAsset<?>>() {
+    private final Comparator<GameAsset<?>> gameObjectRenderOrderComparator = new Comparator<GameAsset<?>>() {
         @Override
-        public int compare (GameAsset<?> o1, GameAsset<?> o2) {
+        public int compare(GameAsset<?> o1, GameAsset<?> o2) {
 
             OrderedMap<GameAsset<?>, GameObject> gameObjects = paletteData.getResource().gameObjects;
 
@@ -121,13 +133,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
             return orthoTopDownSorter.compare(a, b);
         }
     };
-
-    private static final Color parentTilesColorBlue = Color.valueOf("#436787");
-    private static final Color parentTilesBorderColorBlue = Color.valueOf("#6f9ac1");
-    private static final Color parentTilesColorRed = Color.valueOf("#874343");
-    private static final Color parentTilesBorderColorRed = Color.valueOf("#cc6a6a");
-    private static final Color parentTilesProxyColor = ColorLibrary.ORANGE;
-    private static final Color parentTileColorGray = Color.valueOf("#ffffff33");
+    private ObjectSet<GridPosition> parentTilesReserve;
 
     public PaletteEditorWorkspace(PaletteEditor paletteEditor) {
         super();
@@ -158,24 +164,25 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
         initListeners();
     }
 
-    private void initListeners () {
+    private void initListeners() {
         inputListener = new InputListener() {
             // selection stuff
-            Vector2 startPos = new Vector2();
-            Vector2 vec = new Vector2();
-            Rectangle rectangle = new Rectangle();
+            final Vector2 startPos = new Vector2();
+            final Vector2 vec = new Vector2();
+            final Rectangle rectangle = new Rectangle();
             boolean upWillClear = true;
             private boolean isSelectingWithDrag = false;
 
             // locals for registering click
-            private long tapCountInterval = (long)(0.4f * 1000000000l);
+            private final long tapCountInterval = (long) (0.4f * 1000000000L);
             private int tapCount;
             private long lastTapTime;
 
             private boolean touchedDownOnEntityForParentDrag = false;
+            private GameObject entityClicked;
 
             @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 if (canMoveAround()) {
                     return false;
                 }
@@ -235,7 +242,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
             }
 
             @Override
-            public void touchDragged (InputEvent event, float x, float y, int pointer) {
+            public void touchDragged(InputEvent event, float x, float y, int pointer) {
                 if (paletteEditor.isParentTileEditMode() || paletteEditor.isFakeHeightEditMode()) {
                     return;
                 }
@@ -256,10 +263,10 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
 
 
                         if (topParent instanceof TileGameObjectProxy) {
-                            GridPosition bottomLeftParentTile = ((TileGameObjectProxy)topParent).staticTile.getGridPosition();
+                            GridPosition bottomLeftParentTile = ((TileGameObjectProxy) topParent).staticTile.getGridPosition();
 
-                            int newX = MathUtils.floor(worldFromLocal.x/1) * 1;
-                            int newY = MathUtils.floor(worldFromLocal.y/1) * 1; //todo implement tile size
+                            int newX = MathUtils.floor(worldFromLocal.x);
+                            int newY = MathUtils.floor(worldFromLocal.y); //todo implement tile size
 
                             if (bottomLeftParentTile.x != newX || bottomLeftParentTile.y != newY) {
                                 int deltaX = newX - bottomLeftParentTile.getIntX();
@@ -273,22 +280,21 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
                             TileDataComponent tileDataComponent = topParent.getComponent(TileDataComponent.class);
                             tileDataComponent.translateToWorldPosition(worldFromLocal);
                         }
-
                     }
 
 
                     return;
                 }
 
-                if(selectionRect.isVisible()) {
+                if (selectionRect.isVisible()) {
                     vec.set(x, y);
                     vec.sub(startPos);
-                    if(vec.x < 0) {
+                    if (vec.x < 0) {
                         rectangle.setX(x);
                     } else {
                         rectangle.setX(startPos.x);
                     }
-                    if(vec.y < 0) {
+                    if (vec.y < 0) {
                         rectangle.setY(y);
                     } else {
                         rectangle.setY(startPos.y);
@@ -301,12 +307,10 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
 
                     event.handle();
                 }
-
             }
 
-            private GameObject entityClicked;
             @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 if (touchedDownOnEntityForParentDrag) {
                     touchedDownOnEntityForParentDrag = false;
                 }
@@ -337,7 +341,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
                 isSelectingWithDrag = false;
             }
 
-            public void clicked (InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 if (tapCount == 1 && entityUnderMouse != null) {
                     PaletteEvent evn = paletteEventPool.obtain();
                     evn.setType(PaletteEvent.Type.startTranslate);
@@ -351,7 +355,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
                 if (selectionRect.isVisible()) {
                     upWillClear = false;
                     selectByRect(rectangle);
-                } else if(upWillClear) {
+                } else if (upWillClear) {
                     FocusManager.resetFocus(getStage());
                 } else {
                     if (!Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
@@ -365,11 +369,9 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
         };
 
         addListener(new InputListener() {
+            final Vector2 dragStartPosition = new Vector2();
             private boolean isDragging = false;
             private boolean overLine = false;
-
-            final Vector2 dragStartPosition = new Vector2();
-
             private TileDataComponent tileDataComponent;
 
             @Override
@@ -452,7 +454,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
             }
 
             @Override
-            public void touchDragged (InputEvent event, float x, float y, int pointer) {
+            public void touchDragged(InputEvent event, float x, float y, int pointer) {
                 if (!(paletteEditor.isFakeHeightEditMode() || paletteEditor.isParentTileEditMode())) {
                     return;
                 }
@@ -552,7 +554,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
         addListener(inputListener);
     }
 
-    private void setupSelectionForParentTileTranslation (float localX, float localY) {
+    private void setupSelectionForParentTileTranslation(float localX, float localY) {
         Vector2 worldFromLocal = getWorldFromLocal(localX, localY);
 
         for (GameObject gameObject : selection) {
@@ -563,7 +565,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
             vector2.set(worldFromLocal);
 
             if (gameObject instanceof TileGameObjectProxy) {
-                StaticTile staticTile = ((TileGameObjectProxy)gameObject).staticTile;
+                StaticTile staticTile = ((TileGameObjectProxy) gameObject).staticTile;
                 GridPosition gridPosition = staticTile.getGridPosition();
                 vector2.sub(gridPosition.x, gridPosition.y);
             } else {
@@ -572,13 +574,10 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
             }
 
             parentTileOffsetsForTranslate.put(topParent, vector2);
-
         }
     }
 
-    private ObjectSet<GridPosition> parentTilesReserve;
-
-    public void revertEditChanges () {
+    public void revertEditChanges() {
         final TileDataComponent tileDataComponent = getSelectedGameObject().getComponent(TileDataComponent.class);
         tileDataComponent.setParentTiles(parentTilesReserve);
     }
@@ -591,7 +590,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
         gridPropertyProvider.setLineThickness(pixelToWorld(1.2f));
 
         if (camera instanceof OrthographicCamera) {
-            gridPropertyProvider.update((OrthographicCamera)camera, parentAlpha);
+            gridPropertyProvider.update((OrthographicCamera) camera, parentAlpha);
         }
         gridRenderer.drawGrid(batch, shapeRenderer);
 
@@ -691,7 +690,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
             }
             for (int i = lowestX; i <= highestX; i++) {
                 for (int j = lowestY; j <= highestY; j++) {
-                    icon.draw(batch,i + 0.5f - icWidth / 2f, j  + 0.5f - icHeight / 2f, icWidth, icHeight);
+                    icon.draw(batch, i + 0.5f - icWidth / 2f, j + 0.5f - icHeight / 2f, icWidth, icHeight);
                 }
             }
             batch.end();
@@ -751,7 +750,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
 
         if (paletteEditor.isFakeHeightEditMode()) {
             // draw the fake height lines
-            if (getSelectedGameObject()!= null) {
+            if (getSelectedGameObject() != null) {
                 final TransformComponent transformComponent = getSelectedGameObject().getComponent(TransformComponent.class);
                 final TileDataComponent tileDataComponent = getSelectedGameObject().getComponent(TileDataComponent.class);
                 final GridPosition bottomLeftParentTile = tileDataComponent.getBottomLeftParentTile();
@@ -796,7 +795,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
         batch.begin();
     }
 
-    private void renderParentTiles (GameObject gameObject) {
+    private void renderParentTiles(GameObject gameObject) {
         // get tile data component if exists otherwise create
         final TileDataComponent tileDataComponent = gameObject.getComponent(TileDataComponent.class);
 
@@ -812,7 +811,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
 //        }
 
         Gdx.gl.glEnable(GL20.GL_BLEND);
-        Color renderColor =  parentTileColorGray;
+        Color renderColor = parentTileColorGray;
 
         if (selection.contains(gameObject)) {
             renderColor = gameObject instanceof TileGameObjectProxy ? parentTilesProxyColor : parentTilesColorBlue;
@@ -844,7 +843,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
         Gdx.gl.glDisable(GL20.GL_BLEND);
     }
 
-    private void renderParentTilesHighlight (GameObject gameObject) {
+    private void renderParentTilesHighlight(GameObject gameObject) {
         final TileDataComponent tileDataComponent = gameObject.getComponent(TileDataComponent.class);
         final ObjectSet<GridPosition> parentTiles = tileDataComponent.getParentTiles();
 
@@ -884,7 +883,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
     }
 
     @EventHandler
-    public void onGameObjectSelectionChanged (GameObjectSelectionChanged event) {
+    public void onGameObjectSelectionChanged(GameObjectSelectionChanged event) {
         //Check if its this palettes object
         if (event.getContext() != this) return;
 
@@ -901,7 +900,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
         }
     }
 
-    private void selectByPoint (float x, float y) {
+    private void selectByPoint(float x, float y) {
         Vector3 localPoint = new Vector3(x, y, 0);
         getWorldFromLocal(localPoint);
 
@@ -919,7 +918,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
                 if (gameObjectEntry.value instanceof TileGameObjectProxy) {
                     GameObject gameObject = gameObjectEntry.value;
 
-                    if (((TileGameObjectProxy)gameObject).containsPoint(new Vector2(localPoint.x, localPoint.y))) {
+                    if (((TileGameObjectProxy) gameObject).containsPoint(new Vector2(localPoint.x, localPoint.y))) {
                         Array<GameObject> selectionObjects = new Array<>();
                         selectionObjects.add(gameObject);
                         setSelection(selectionObjects);
@@ -946,11 +945,10 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
         } else {
             requestSelectionClear();
         }
-
     }
 
     @Override
-    protected void setSelection (Array<GameObject> gameObjects) {
+    protected void setSelection(Array<GameObject> gameObjects) {
         //Intercept
         Array<GameObject> toppest = new Array<>();
         for (GameObject gameObject : gameObjects) {
@@ -958,11 +956,6 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
         }
         super.setSelection(toppest);
     }
-
-    Vector3 lb = new Vector3();
-    Vector3 lt = new Vector3();
-    Vector3 rb = new Vector3();
-    Vector3 rt = new Vector3();
 
     private void selectByRect(Rectangle rectangle) {
         Rectangle localRect = new Rectangle();
@@ -987,21 +980,19 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
 
             if (isGameObjectInsideRect(localRect, gameObject)) {
                 addToSelection(gameObject);
-
             }
-
         }
     }
 
     @Override
-    protected boolean canMoveAround () {
-        if(entityUnderMouse != null) return false;
+    protected boolean canMoveAround() {
+        if (entityUnderMouse != null) return false;
         return isDragging;
     }
 
-    private boolean isPointOverGameObject (Vector2 worldPos, GameObject gameObject) {
+    private boolean isPointOverGameObject(Vector2 worldPos, GameObject gameObject) {
         if (gameObject instanceof TileGameObjectProxy) {
-            return ((TileGameObjectProxy)gameObject).containsPoint(worldPos);
+            return ((TileGameObjectProxy) gameObject).containsPoint(worldPos);
         }
 
 
@@ -1033,17 +1024,15 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
             float transformY = offsetY + transformComponent.position.y;
 
             Vector2 size = spriteRendererComponent.size;
-            tempVec.set(transformX - size.x/2, transformY - size.y/2, size.x, size.y);
-            if (tempVec.contains(worldPos)) {
-                return true;
-            }
+            tempVec.set(transformX - size.x / 2, transformY - size.y / 2, size.x, size.y);
+            return tempVec.contains(worldPos);
         }
         return false;
     }
 
-    private boolean isGameObjectInsideRect (Rectangle localRect, GameObject gameObject) {
+    private boolean isGameObjectInsideRect(Rectangle localRect, GameObject gameObject) {
         if (gameObject instanceof TileGameObjectProxy) {
-            StaticTile staticTile = ((TileGameObjectProxy)gameObject).staticTile;
+            StaticTile staticTile = ((TileGameObjectProxy) gameObject).staticTile;
             GridPosition gridPosition = staticTile.getGridPosition();
             return localRect.contains(gridPosition.x, gridPosition.getIntY());
         }
@@ -1077,18 +1066,16 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
             SpriteRendererComponent spriteRendererComponent = gameObject.getComponent(SpriteRendererComponent.class);
             Vector2 size = spriteRendererComponent.size;
 
-            if (localRect.contains(transformX - size.x/2, transformY - size.y/2)) {
+            if (localRect.contains(transformX - size.x / 2, transformY - size.y / 2)) {
                 return true;
             }
-            if (localRect.contains(transformX - size.x/2, transformY + size.y/2)) {
+            if (localRect.contains(transformX - size.x / 2, transformY + size.y / 2)) {
                 return true;
             }
-            if (localRect.contains(transformX + size.x/2, transformY - size.y/2)) {
+            if (localRect.contains(transformX + size.x / 2, transformY - size.y / 2)) {
                 return true;
             }
-            if (localRect.contains(transformX + size.x/2, transformY + size.y/2)) {
-                return true;
-            }
+            return localRect.contains(transformX + size.x / 2, transformY + size.y / 2);
         }
         return false;
     }
@@ -1098,7 +1085,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
         super.act(delta);
     }
 
-    public void startFakeHeightEditMode () {
+    public void startFakeHeightEditMode() {
         TransformComponent transformComponent = getSelectedGameObject().getComponent(TransformComponent.class);
         TileDataComponent tileDataComponent = getSelectedGameObject().getComponent(TileDataComponent.class);
         tmpHeightOffset = tileDataComponent.getBottomLeftParentTile().y + transformComponent.position.y + tileDataComponent.getFakeZ();
@@ -1114,7 +1101,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
 
 
     @Override
-    protected void drawEntitiesForSelection () {
+    protected void drawEntitiesForSelection() {
         Supplier<Camera> currentCameraSupplier = viewportViewSettings.getCurrentCameraSupplier();
         Camera camera = currentCameraSupplier.get();
 
@@ -1141,17 +1128,16 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
 
 
         mainRenderer.setRenderingEntitySelectionBuffer(false);
-
     }
 
     @Override
-    public void initializeGridPropertyProvider () {
+    public void initializeGridPropertyProvider() {
         gridPropertyProvider = new StaticGridPropertyProvider();
-        ((StaticGridPropertyProvider)gridPropertyProvider).hideZero();
+        ((StaticGridPropertyProvider) gridPropertyProvider).hideZero();
         gridPropertyProvider.getBackgroundColor().set(Color.valueOf("#272727"));
     }
 
-    private void drawAllGameObjects (PolygonBatch batch, OrderedMap<GameAsset<?>, GameObject> gameObjects) {
+    private void drawAllGameObjects(PolygonBatch batch, OrderedMap<GameAsset<?>, GameObject> gameObjects) {
         Array<GameAsset<?>> gameAssets = gameObjects.orderedKeys();
         for (GameAsset<?> gameAsset : gameAssets) {
             GameObject gameObject = gameObjects.get(gameAsset);
@@ -1185,7 +1171,7 @@ public class PaletteEditorWorkspace extends ViewportWidget implements Observer, 
     }
 
     @Override
-    protected void getEntityUnderMouse () {
+    protected void getEntityUnderMouse() {
         Vector2 touchSpace = new Vector2(Gdx.input.getX(), Gdx.input.getY());
         Vector2 uiSpace = screenToLocalCoordinates(touchSpace);
 

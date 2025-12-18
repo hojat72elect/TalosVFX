@@ -11,15 +11,12 @@ import java.util.Comparator;
 
 public abstract class TimelineWidget<U> extends Table {
 
+    protected boolean enforceSelection = true;
     TimelineLeft<U> leftList;
     TimelineRight<U> rightList;
-
     Array<U> selector = new Array<>();
-
     private float leftScrollTracker;
     private float rightScrollTracker;
-
-    protected boolean enforceSelection = true;
 
     public TimelineWidget(Skin skin) {
         setSkin(skin);
@@ -39,14 +36,14 @@ public abstract class TimelineWidget<U> extends Table {
     }
 
     public void updateItemData(Array<? extends TimelineItemDataProvider<U>> items) {
-        if(items == null) return;
+        if (items == null) return;
 
         leftList.updateItemData(items);
         rightList.updateItemData(items);
     }
 
-    public void setData (Array<? extends TimelineItemDataProvider<U>> items) {
-        if(items == null) return;
+    public void setData(Array<? extends TimelineItemDataProvider<U>> items) {
+        if (items == null) return;
 
         leftList.setData(items);
         rightList.setData(items);
@@ -83,7 +80,7 @@ public abstract class TimelineWidget<U> extends Table {
     }
 
     public void removeItems(Array<U> identifierList) {
-        for(U identifier: identifierList) {
+        for (U identifier : identifierList) {
             selector.removeValue(identifier, true);
             leftList.removeItem(identifier);
             rightList.removeItem(identifier);
@@ -92,7 +89,7 @@ public abstract class TimelineWidget<U> extends Table {
         if (enforceSelection) {
             if (getSelectedItem() == null) {
                 Array<ActionRow<U>> items = leftList.getItems();
-                if(items.size > 0) {
+                if (items.size > 0) {
                     setSelected(items.first().getIdentifier());
                 }
             }
@@ -107,7 +104,7 @@ public abstract class TimelineWidget<U> extends Table {
         return leftList;
     }
 
-    public boolean isItemVisible (U identifier) {
+    public boolean isItemVisible(U identifier) {
         ActionRow<U> item = leftList.getItem(identifier);
 
         return item.isItemVisible();
@@ -133,7 +130,7 @@ public abstract class TimelineWidget<U> extends Table {
         boolean isChecked = item.isSelectorChecked();
         boolean contains = selector.contains(identifier, true);
 
-        if(isChecked && !contains) {
+        if (isChecked && !contains) {
             selector.add(identifier);
         } else if (!isChecked && contains) {
             selector.removeValue(identifier, true);
@@ -149,7 +146,7 @@ public abstract class TimelineWidget<U> extends Table {
     public void onActionButtonClicked(TimelineListener.Type type) {
         TimelineListener.TimelineEvent event = obtainEvent().as(type);
 
-        if(type == TimelineListener.Type.toggleLoop) {
+        if (type == TimelineListener.Type.toggleLoop) {
             event.payload(leftList.isLoopEnabled());
         }
 
@@ -162,11 +159,11 @@ public abstract class TimelineWidget<U> extends Table {
         super.act(delta);
 
         // do some scroll tracking
-        if(leftScrollTracker != leftList.getScrollPos()) {
+        if (leftScrollTracker != leftList.getScrollPos()) {
             rightList.setScrollPos(leftList.getScrollPos());
         }
 
-        if(rightScrollTracker != rightList.getScrollPos()) {
+        if (rightScrollTracker != rightList.getScrollPos()) {
             leftList.setScrollPos(rightList.getScrollPos());
         }
 
@@ -175,16 +172,16 @@ public abstract class TimelineWidget<U> extends Table {
         rightScrollTracker = rightList.getScrollPos();
     }
 
-    public void setTimeCursor (float time) {
+    public void setTimeCursor(float time) {
         rightList.setTimeCursor(time);
     }
 
-    public float stageToTime (Vector2 vec2) {
+    public float stageToTime(Vector2 vec2) {
         rightList.getTimeBar().stageToLocalCoordinates(vec2);
-        float posPercent = vec2.x/rightList.getTimeBar().getWidth();
+        float posPercent = vec2.x / rightList.getTimeBar().getWidth();
         float time = posPercent * rightList.getTimeWindowSize();
 
-        if(time < 0) return 0;
+        if (time < 0) return 0;
 
         return time;
     }

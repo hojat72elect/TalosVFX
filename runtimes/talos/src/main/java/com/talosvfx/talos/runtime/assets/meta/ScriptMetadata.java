@@ -12,13 +12,13 @@ public class ScriptMetadata extends AMetadata {
 
     public Array<PropertyWrapper<?>> scriptPropertyWrappers;
 
-    public ScriptMetadata () {
+    public ScriptMetadata() {
         super();
         scriptPropertyWrappers = new Array<>();
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         scriptPropertyWrappers.clear();
         JsonValue propertiesJson = jsonData.get("scriptProperties");
@@ -30,13 +30,13 @@ public class ScriptMetadata extends AMetadata {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("scriptProperties", scriptPropertyWrappers);
     }
 
     @Override
-    public void postProcessForHandle (FileHandle handle) {
+    public void postProcessForHandle(FileHandle handle) {
         super.postProcessForHandle(handle);
         scriptPropertyWrappers.clear();
         ScriptMetadataParser scriptMetadataParser = new ScriptMetadataParser();

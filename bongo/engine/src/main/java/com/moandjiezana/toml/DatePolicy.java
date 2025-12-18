@@ -3,19 +3,19 @@ package com.moandjiezana.toml;
 
 class DatePolicy {
 
-  private final FaketimeZone timeZone;
-  private final boolean showFractionalSeconds;
-  
-  DatePolicy(FaketimeZone timeZone, boolean showFractionalSeconds) {
-    this.timeZone = timeZone;
-    this.showFractionalSeconds = showFractionalSeconds;
-  }
+    private final FaketimeZone timeZone;
+    private final boolean showFractionalSeconds;
 
-  FaketimeZone getTimeZone() {
-    return timeZone;
-  }
+    DatePolicy(FaketimeZone timeZone, boolean showFractionalSeconds) {
+        this.timeZone = timeZone;
+        this.showFractionalSeconds = showFractionalSeconds;
+    }
 
-  boolean isShowFractionalSeconds() {
-    return showFractionalSeconds;
-  }
+    FaketimeZone getTimeZone() {
+        return timeZone;
+    }
+
+    boolean isShowFractionalSeconds() {
+        return showFractionalSeconds;
+    }
 }

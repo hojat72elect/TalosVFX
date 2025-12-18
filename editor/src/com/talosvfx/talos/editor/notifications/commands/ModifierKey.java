@@ -7,11 +7,11 @@ public enum ModifierKey {
     SHIFT(Input.Keys.SHIFT_LEFT, Input.Keys.SHIFT_RIGHT), CMD(Input.Keys.SYM);
     public int[] responsibleKeys;
 
-    ModifierKey (int... keys) {
+    ModifierKey(int... keys) {
         responsibleKeys = keys;
     }
 
-    public static ModifierKey getModifierFromKey (int key) {
+    public static ModifierKey getModifierFromKey(int key) {
         ModifierKey[] values = ModifierKey.values();
         for (ModifierKey value : values) {
             for (int responsibleKey : value.responsibleKeys) {

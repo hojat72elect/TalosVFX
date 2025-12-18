@@ -50,7 +50,7 @@ public class CustomFloatWidget extends ATypeWidget<Float> {
         rangeWidget.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                if(isRanged()) {
+                if (isRanged()) {
                     valueWidget.setShowProgress(true);
                     expand();
                 } else {

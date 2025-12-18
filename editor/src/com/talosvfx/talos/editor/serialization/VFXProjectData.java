@@ -28,96 +28,95 @@ import com.talosvfx.talos.runtime.utils.Supplier;
 import com.talosvfx.talos.runtime.vfx.ParticleEffectDescriptor;
 import com.talosvfx.talos.runtime.vfx.serialization.BaseVFXProjectData;
 import com.talosvfx.talos.runtime.vfx.serialization.ConnectionData;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.Comparator;
+
+import lombok.Getter;
+import lombok.Setter;
 
 
 public class VFXProjectData extends BaseVFXProjectData implements Json.Serializable {
 
 
-	private Array<EmitterData> emitters = new Array<>();
+    private final Array<EmitterData> emitters = new Array<>();
 
-	@Getter
-	private transient VFXEditorState editorState = new VFXEditorState();
+    @Getter
+    private final transient VFXEditorState editorState = new VFXEditorState();
+    @Setter
+    private transient ParticleEffectDescriptor descriptor;
+    @Getter
+    private final transient Supplier<ParticleEffectDescriptor> descriptorSupplier = new Supplier<ParticleEffectDescriptor>() {
+        @Override
+        public ParticleEffectDescriptor get() {
+            return descriptor;
+        }
+    };
 
-	@Getter
-	private transient Supplier<ParticleEffectDescriptor> descriptorSupplier = new Supplier<ParticleEffectDescriptor>() {
-		@Override
-		public ParticleEffectDescriptor get () {
-			return descriptor;
-		}
-	};
+    public VFXProjectData() {
 
-	@Setter
-	private transient ParticleEffectDescriptor descriptor;
+    }
 
-	public VFXProjectData () {
+    public void setFrom(ModuleBoardWidget moduleBoardWidget) {
+        final ObjectMap<ParticleEmitterWrapper, Array<ModuleWrapper>> moduleWrappers = moduleBoardWidget.moduleWrappers;
+        final ObjectMap<ParticleEmitterWrapper, Array<ModuleBoardWidget.NodeConnection>> nodeConnections = moduleBoardWidget.nodeConnections;
 
-	}
+        emitters.clear();
 
-	public void setFrom (ModuleBoardWidget moduleBoardWidget) {
-		final ObjectMap<ParticleEmitterWrapper, Array<ModuleWrapper>> moduleWrappers = moduleBoardWidget.moduleWrappers;
-		final ObjectMap<ParticleEmitterWrapper, Array<ModuleBoardWidget.NodeConnection>> nodeConnections = moduleBoardWidget.nodeConnections;
+        for (ParticleEmitterWrapper key : moduleWrappers.keys()) {
+            final EmitterData emitterData = new EmitterData();
+            emitterData.name = key.getName();
+            emitterData.sortPosition = key.getEmitter().getSortPosition();
+            emitterData.modules.addAll(moduleWrappers.get(key));
+            emitterData.isMuted = key.isMuted;
 
-		emitters.clear();
+            final Array<ModuleBoardWidget.NodeConnection> nodeConns = nodeConnections.get(key);
+            if (nodeConns != null) {
+                for (ModuleBoardWidget.NodeConnection nodeConn : nodeConns) {
+                    emitterData.connections.add(new ConnectionData(nodeConn.fromModule.getId(), nodeConn.toModule.getId(), nodeConn.fromSlot, nodeConn.toSlot));
+                }
+            }
 
-		for (ParticleEmitterWrapper key : moduleWrappers.keys()) {
-			final EmitterData emitterData = new EmitterData();
-			emitterData.name = key.getName();
-			emitterData.sortPosition = key.getEmitter().getSortPosition();
-			emitterData.modules.addAll(moduleWrappers.get(key));
-			emitterData.isMuted = key.isMuted;
+            // add groups
+            for (ModuleWrapperGroup group : moduleBoardWidget.getGroups(key)) {
+                GroupData groupData = new GroupData();
+                groupData.text = group.getText();
+                groupData.modules = new Array<>();
+                groupData.color = group.getFrameColor().toFloatBits();
+                for (ModuleWrapper wrapper : group.getModuleWrappers()) {
+                    groupData.modules.add(wrapper.getId());
+                }
+                emitterData.groups.add(groupData);
+            }
 
-			final Array<ModuleBoardWidget.NodeConnection> nodeConns = nodeConnections.get(key);
-			if(nodeConns != null) {
-				for (ModuleBoardWidget.NodeConnection nodeConn : nodeConns) {
-					emitterData.connections.add(new ConnectionData(nodeConn.fromModule.getId(), nodeConn.toModule.getId(), nodeConn.fromSlot, nodeConn.toSlot));
-				}
-			}
+            emitters.add(emitterData);
+        }
+    }
 
-			// add groups
-			for(ModuleWrapperGroup group: moduleBoardWidget.getGroups(key)) {
-				GroupData groupData = new GroupData();
-				groupData.text = group.getText();
-				groupData.modules = new Array<>();
-				groupData.color = group.getFrameColor().toFloatBits();
-				for(ModuleWrapper wrapper: group.getModuleWrappers()) {
-					groupData.modules.add(wrapper.getId());
-				}
-				emitterData.groups.add(groupData);
-			}
+    public Array<EmitterData> getEmitters() {
+        return emitters;
+    }
 
-			emitters.add(emitterData);
-		}
-	}
+    @Override
+    public void write(Json json) {
+        emitters.sort(new Comparator<EmitterData>() {
+            @Override
+            public int compare(EmitterData o1, EmitterData o2) {
+                return o1.sortPosition - o2.sortPosition;
+            }
+        });
+        json.writeValue("emitters", emitters);
+    }
 
-	public Array<EmitterData> getEmitters() {
-		return emitters;
-	}
+    @Override
+    public void read(Json json, JsonValue jsonData) {
+        String talosIdentifier = jsonData.getString("talosIdentifier", "default");
 
-	@Override
-	public void write (Json json) {
-		emitters.sort(new Comparator<EmitterData>() {
-			@Override
-			public int compare (EmitterData o1, EmitterData o2) {
-				return o1.sortPosition - o2.sortPosition;
-			}
-		});
-		json.writeValue("emitters", emitters);
-	}
-
-	@Override
-	public void read (Json json, JsonValue jsonData) {
-		String talosIdentifier = jsonData.getString("talosIdentifier", "default");
-
-		JsonValue emittersJson = jsonData.get("emitters");
-		for (int i = 0; i < emittersJson.size; i++) {
-			JsonValue emitterJsonValue = emittersJson.get(i);
-			emitterJsonValue.addChild("talosIdentifier", new JsonValue(talosIdentifier));
-			EmitterData value = json.readValue(EmitterData.class, emitterJsonValue);
-			emitters.add(value);
-		}
-	}
+        JsonValue emittersJson = jsonData.get("emitters");
+        for (int i = 0; i < emittersJson.size; i++) {
+            JsonValue emitterJsonValue = emittersJson.get(i);
+            emitterJsonValue.addChild("talosIdentifier", new JsonValue(talosIdentifier));
+            EmitterData value = json.readValue(EmitterData.class, emitterJsonValue);
+            emitters.add(value);
+        }
+    }
 }

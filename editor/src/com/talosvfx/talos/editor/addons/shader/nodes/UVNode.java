@@ -7,22 +7,22 @@ public class UVNode extends AbstractShaderNode {
     public final String OUTPUT_UV = "outputUV";
 
     @Override
-    protected String getPreviewOutputName () {
+    protected String getPreviewOutputName() {
         return OUTPUT_UV;
     }
 
     @Override
-    protected void inputStateChanged (boolean isInputDynamic) {
+    protected void inputStateChanged(boolean isInputDynamic) {
         showShaderBox();
     }
 
     @Override
-    protected boolean isInputDynamic () {
+    protected boolean isInputDynamic() {
         return true;
     }
 
     @Override
-    public void prepareDeclarations (ShaderBuilder shaderBuilder) {
+    public void prepareDeclarations(ShaderBuilder shaderBuilder) {
 
     }
 
@@ -31,7 +31,7 @@ public class UVNode extends AbstractShaderNode {
     }
 
     @Override
-    public String writeOutputCode (String slotId) {
+    public String writeOutputCode(String slotId) {
         return "v_texCoords";
     }
 }

@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.talosvfx.talos.runtime.routine.AsyncRoutineNodeState;
 import com.talosvfx.talos.runtime.routine.RoutineInstance;
 import com.talosvfx.talos.runtime.scene.GameObject;
+
 public class PlaybackSpeedToNode extends AsyncRoutineNode<GameObject, AsyncRoutineNodeState<GameObject>> {
 
     private float timeScaleTo;

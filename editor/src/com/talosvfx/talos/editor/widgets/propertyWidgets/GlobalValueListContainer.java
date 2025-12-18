@@ -1,7 +1,10 @@
 package com.talosvfx.talos.editor.widgets.propertyWidgets;
 
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.esotericsoftware.spine.Bone;
@@ -10,9 +13,8 @@ import com.talosvfx.talos.editor.addons.bvb.AttachmentPoint;
 public class GlobalValueListContainer extends Table {
 
     Array<AttachmentPoint> attachmentPoints = new Array<>();
-    private CustomList<AttachmentPointBox> list;
-
     Array<String> boneNameList = new Array<>();
+    private CustomList<AttachmentPointBox> list;
 
     public GlobalValueListContainer(Skin skin) {
         setSkin(skin);
@@ -54,7 +56,7 @@ public class GlobalValueListContainer extends Table {
     private void addNewRow() {
         AttachmentPoint newPoint = new AttachmentPoint();
         AttachmentPointBox attachmentPointBox = createBoxWidget(newPoint, false);
-        if(attachmentPointBox == null) return;
+        if (attachmentPointBox == null) return;
         attachmentPoints.add(newPoint);
         list.addItem(attachmentPointBox);
     }
@@ -65,7 +67,7 @@ public class GlobalValueListContainer extends Table {
 
     public void setData(Array<AttachmentPoint> attachmentPoints) {
         list.clearItems(false);
-        for(AttachmentPoint attachmentPoint: attachmentPoints) {
+        for (AttachmentPoint attachmentPoint : attachmentPoints) {
             AttachmentPointBox attachmentPointBox = createBoxWidget(attachmentPoint, true);
             list.addItem(attachmentPointBox);
         }
@@ -74,7 +76,7 @@ public class GlobalValueListContainer extends Table {
 
     public void setBoneList(Array<Bone> boneList) {
         boneNameList.clear();
-        for(Bone bone: boneList) {
+        for (Bone bone : boneList) {
             boneNameList.add(bone.getData().getName());
         }
     }
@@ -84,17 +86,17 @@ public class GlobalValueListContainer extends Table {
         attachmentPointBox.setBoneList(boneNameList);
         attachmentPointBox.setData(point);
 
-        if(!skipSlotData) {
+        if (!skipSlotData) {
             int index = getAvailableSlotIndex();
-            if(index == -1) return null;
+            if (index == -1) return null;
             attachmentPointBox.setSlotIndex(index);
         }
 
         attachmentPointBox.getSlotWidget().addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-               int index = getAvailableSlotIndex();
-                if(index == -1) return;
+                int index = getAvailableSlotIndex();
+                if (index == -1) return;
                 attachmentPointBox.setSlotIndex(index);
             }
         });
@@ -106,20 +108,20 @@ public class GlobalValueListContainer extends Table {
         int indexToTry = 0;
         boolean found = false;
         // some aids going on here. better implementations from good samaritans are welcome
-        while(!found) {
+        while (!found) {
             boolean contains = false;
             for (AttachmentPoint point : attachmentPoints) {
-                if(point.getSlotId() == indexToTry) {
+                if (point.getSlotId() == indexToTry) {
                     contains = true;
                     break;
                 }
             }
-            if(!contains) {
+            if (!contains) {
                 found = true;
                 return indexToTry;
             } else {
                 indexToTry++;
-                if(indexToTry > 9) {
+                if (indexToTry > 9) {
                     return -1;
                 }
             }

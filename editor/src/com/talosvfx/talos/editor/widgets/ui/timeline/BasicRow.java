@@ -1,7 +1,6 @@
 package com.talosvfx.talos.editor.widgets.ui.timeline;
 
 import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 public abstract class BasicRow<U> extends ListItem<U> {
@@ -35,7 +34,7 @@ public abstract class BasicRow<U> extends ListItem<U> {
     public void setSelected(boolean isSelected) {
         super.setSelected(isSelected);
 
-        if(isSelected) {
+        if (isSelected) {
             setBackground(selectedBackground);
         } else {
             setBackgroundByIndex(getIndex());
@@ -43,7 +42,7 @@ public abstract class BasicRow<U> extends ListItem<U> {
     }
 
     private void setBackgroundByIndex(int index) {
-        if(index == -1) {
+        if (index == -1) {
             setBackground(backgrounds[0]);
         } else {
             int backgroundIndex = index % backgrounds.length;
@@ -52,7 +51,7 @@ public abstract class BasicRow<U> extends ListItem<U> {
         }
     }
 
-    public void setIndex (int index) {
+    public void setIndex(int index) {
         super.setIndex(index);
         setBackgroundByIndex(index);
     }

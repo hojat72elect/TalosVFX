@@ -9,7 +9,9 @@ import com.badlogic.gdx.math.MathUtils;
 
 public class NineSlice extends NinePatch {
     static private final Color tmpDrawColor = new Color();
-
+    private static final float[] VERTICES_BUFF = new float[15000];
+    // re-exposed for subclasses
+    protected final TextureRegion[] patches = new TextureRegion[9];
     private float scaleX = 1.0f;
     private float scaleY = 1.0f;
     private float tileWidth = 1;
@@ -17,25 +19,6 @@ public class NineSlice extends NinePatch {
     private int tiled_idx;
     private RenderMode renderMode = RenderMode.Simple;
 
-    // re-exposed for subclasses
-    protected final TextureRegion[] patches = new TextureRegion[9];
-
-    private static final float[] VERTICES_BUFF = new float[15000];
-
-
-    /**
-     * NineSlice can have two render modes.
-     * Simple mode - corners are preserved, center chunk is scaled in both axis,
-     *  top/bottom-middle chunks are scaled along horizontal axis,
-     *  left/right-middle chunks are scaled along vertical axis.
-     * Tiled mode - corners are preserved, center chunk is repeated in both axis,
-     *  top/bottom-middle chunks are repeated along horizontal axis,
-     *  left/right-middle chunks are repeated along vertical axis.
-     */
-    public enum RenderMode {
-        Simple,
-        Tiled
-    }
 
     public NineSlice(Texture texture, int left, int right, int top, int bottom) {
         this(new TextureRegion(texture), left, right, top, bottom);
@@ -83,7 +66,9 @@ public class NineSlice extends NinePatch {
         }
     }
 
-    /** Construct a degenerate "nine" patch with only a center component. */
+    /**
+     * Construct a degenerate "nine" patch with only a center component.
+     */
     public NineSlice(Texture texture, Color color) {
         this(texture);
         setColor(color);
@@ -93,13 +78,13 @@ public class NineSlice extends NinePatch {
         this(new TextureRegion(texture));
     }
 
-    /** Construct a degenerate "nine" patch with only a center component. */
+    /**
+     * Construct a degenerate "nine" patch with only a center component.
+     */
     public NineSlice(TextureRegion region) {
-        super(new TextureRegion[]{
-                null, null, null,
+        super(null, null, null,
                 null, region, null,
-                null, null, null
-        });
+                null, null, null);
 
         this.patches[BOTTOM_LEFT] = null;
         this.patches[BOTTOM_CENTER] = null;
@@ -112,7 +97,6 @@ public class NineSlice extends NinePatch {
         this.patches[TOP_RIGHT] = null;
     }
 
-
     @Override
     public void draw(Batch batch, float x, float y, float width, float height) {
         if (renderMode == RenderMode.Simple) {
@@ -124,8 +108,8 @@ public class NineSlice extends NinePatch {
     }
 
     @Override
-    public void draw (Batch batch, float x, float y, float originX, float originY, float width, float height, float scaleX,
-                      float scaleY, float rotation) {
+    public void draw(Batch batch, float x, float y, float originX, float originY, float width, float height, float scaleX,
+                     float scaleY, float rotation) {
         if (renderMode == RenderMode.Simple) {
             super.draw(batch, x, y, originX, originY, width, height, scaleX, scaleY, rotation);
         } else if (renderMode == RenderMode.Tiled) {
@@ -148,6 +132,7 @@ public class NineSlice extends NinePatch {
             batch.draw(getTexture(), VERTICES_BUFF, 0, n);
         }
     }
+
     private void prepareVertices(Batch batch, float x, float y, float width, float height) {
         float xSign = Math.signum(width);
         float ySign = Math.signum(height);
@@ -231,7 +216,7 @@ public class NineSlice extends NinePatch {
         int bcCnt = patches[BOTTOM_CENTER] == null ? 0 : (int) Math.ceil(centerWidth / (patches[BOTTOM_CENTER].getRegionWidth() * scaleX * tileWidth));
         int brCnt = patches[BOTTOM_RIGHT] == null ? 0 : 1;
         int mlCnt = patches[MIDDLE_LEFT] == null ? 0 : (int) Math.ceil(centerHeight / (patches[MIDDLE_LEFT].getRegionHeight() * scaleY * tileHeight));
-        int mcCnt = patches[MIDDLE_CENTER] == null ? 0: (int)
+        int mcCnt = patches[MIDDLE_CENTER] == null ? 0 : (int)
                 (Math.ceil(centerWidth / (patches[MIDDLE_CENTER].getRegionWidth() * scaleX * tileWidth))
                         * Math.ceil(centerHeight / (patches[MIDDLE_CENTER].getRegionHeight() * scaleY * tileHeight)));
         int mrCnt = patches[MIDDLE_RIGHT] == null ? 0 : (int) Math.ceil(centerHeight / (patches[MIDDLE_RIGHT].getRegionHeight() * scaleY * tileHeight));
@@ -239,10 +224,10 @@ public class NineSlice extends NinePatch {
         int tcCnt = patches[TOP_CENTER] == null ? 0 : (int) Math.ceil(centerWidth / (patches[TOP_CENTER].getRegionWidth() * scaleX * tileWidth));
         int trCnt = patches[TOP_RIGHT] == null ? 0 : 1;
 
-        return  (blCnt + bcCnt + brCnt + mlCnt + mcCnt + mrCnt + tlCnt + tcCnt + trCnt) * 4 * 5;
+        return (blCnt + bcCnt + brCnt + mlCnt + mcCnt + mrCnt + tlCnt + tcCnt + trCnt) * 4 * 5;
     }
 
-    private void add (TextureRegion region, boolean isTiledX, boolean isTiledY, float color, float x, float y, float width, float height, float signX, float signY) {
+    private void add(TextureRegion region, boolean isTiledX, boolean isTiledY, float color, float x, float y, float width, float height, float signX, float signY) {
 
         float[] vertices = VERTICES_BUFF;
 
@@ -335,18 +320,17 @@ public class NineSlice extends NinePatch {
         this.tileHeight = Math.max(0.00001f, tileHeight);
     }
 
-    public void setTileSize (float tileWidth, float tileHeight) {
+    public void setTileSize(float tileWidth, float tileHeight) {
         setTileWidth(tileWidth);
         setTileHeight(tileHeight);
     }
 
-    public void setRenderMode(RenderMode mode) {
-        this.renderMode = mode;
-    }
-
-
     public RenderMode getRenderMode() {
         return renderMode;
+    }
+
+    public void setRenderMode(RenderMode mode) {
+        this.renderMode = mode;
     }
 
     @Override
@@ -354,5 +338,19 @@ public class NineSlice extends NinePatch {
         super.scale(scaleX, scaleY);
         this.scaleX = scaleX;
         this.scaleY = scaleY;
+    }
+
+    /**
+     * NineSlice can have two render modes.
+     * Simple mode - corners are preserved, center chunk is scaled in both axis,
+     * top/bottom-middle chunks are scaled along horizontal axis,
+     * left/right-middle chunks are scaled along vertical axis.
+     * Tiled mode - corners are preserved, center chunk is repeated in both axis,
+     * top/bottom-middle chunks are repeated along horizontal axis,
+     * left/right-middle chunks are repeated along vertical axis.
+     */
+    public enum RenderMode {
+        Simple,
+        Tiled
     }
 }

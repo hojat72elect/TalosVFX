@@ -1,7 +1,7 @@
 package com.talosvfx.talos.editor.addons.scene.events;
 
-import com.talosvfx.talos.runtime.scene.GameObject;import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.TalosEvent;
+import com.talosvfx.talos.runtime.scene.GameObject;
 
 public class GameObjectNameChanged implements TalosEvent {
 
@@ -10,7 +10,7 @@ public class GameObjectNameChanged implements TalosEvent {
     public String newName;
 
     @Override
-    public void reset () {
+    public void reset() {
         target = null;
     }
 }

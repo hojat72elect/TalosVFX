@@ -13,7 +13,7 @@ public class ProjectSavedEvent implements TalosEvent {
     }
 
     @Override
-    public void reset () {
+    public void reset() {
         projectName = null;
     }
 }

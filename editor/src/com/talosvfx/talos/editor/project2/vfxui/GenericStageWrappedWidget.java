@@ -1,10 +1,8 @@
 package com.talosvfx.talos.editor.project2.vfxui;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.PolygonBatch;
 import com.badlogic.gdx.graphics.glutils.HdpiUtils;
 import com.badlogic.gdx.math.Matrix4;
@@ -20,8 +18,8 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.rockbite.bongo.engine.render.PolygonSpriteBatchMultiTextureMULTIBIND;
-import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.project2.SharedStage;
+
 import lombok.Getter;
 
 
@@ -32,8 +30,8 @@ public class GenericStageWrappedWidget extends Table {
 
     private final OrthographicCamera camera;
     protected Matrix4 emptyTransform = new Matrix4();
-    private Matrix4 prevTransform = new Matrix4();
-    private Matrix4 prevProjection = new Matrix4();
+    private final Matrix4 prevTransform = new Matrix4();
+    private final Matrix4 prevProjection = new Matrix4();
 
     public GenericStageWrappedWidget(Actor actor) {
         camera = new OrthographicCamera();
@@ -53,7 +51,7 @@ public class GenericStageWrappedWidget extends Table {
     }
 
     @Override
-    public void act (float delta) {
+    public void act(float delta) {
         super.act(delta);
 
         Vector2 temp = new Vector2();
@@ -67,10 +65,10 @@ public class GenericStageWrappedWidget extends Table {
         float x2 = temp.x;
         float y2 = Gdx.graphics.getHeight() - temp.y;
 
-        int screenWidth = (int)(x2 - x1);
-        int screenHeight = (int)(y2 - y1);
+        int screenWidth = (int) (x2 - x1);
+        int screenHeight = (int) (y2 - y1);
         stage.getViewport().update(screenWidth, screenHeight, true);
-        stage.getViewport().setScreenBounds((int)x1, (int)y1, screenWidth, screenHeight);
+        stage.getViewport().setScreenBounds((int) x1, (int) y1, screenWidth, screenHeight);
         camera.update();
         stage.act();
         HdpiUtils.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -82,13 +80,13 @@ public class GenericStageWrappedWidget extends Table {
         batch.end();
 
         localToScreenCoordinates(temp.set(0, 0));
-        int x = (int)temp.x;
-        int y = (int)temp.y;
+        int x = (int) temp.x;
+        int y = (int) temp.y;
 
         localToScreenCoordinates(temp.set(getWidth(), getHeight()));
 
-        int x2 = (int)temp.x;
-        int y2 = (int)temp.y;
+        int x2 = (int) temp.x;
+        int y2 = (int) temp.y;
 
         int ssWidth = x2 - x;
         int ssHeight = y - y2;

@@ -6,82 +6,81 @@ import com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.talosvfx.talos.editor.addons.scene.SceneEditorWorkspace;
 import com.talosvfx.talos.editor.widgets.ui.common.SquareButton;
 
 public class MapEditorToolbar extends Table {
 
-	public SquareButton paint;
-	public SquareButton spray;
-	public SquareButton erase;
+    public SquareButton paint;
+    public SquareButton spray;
+    public SquareButton erase;
 
-	public MapEditorToolbar (Skin skin) {
-		super(skin);
+    public MapEditorToolbar(Skin skin) {
+        super(skin);
 
-		setFillParent(true);
-	}
+        setFillParent(true);
+    }
 
-	@Override
-	public void draw (Batch batch, float parentAlpha) {
-		super.draw(batch, parentAlpha);
-	}
+    @Override
+    public void draw(Batch batch, float parentAlpha) {
+        super.draw(batch, parentAlpha);
+    }
 
-	@Override
-	public boolean remove () {
-		return super.remove();
-	}
+    @Override
+    public boolean remove() {
+        return super.remove();
+    }
 
-	public void build () {
+    public void build() {
 
-		clearChildren();
+        clearChildren();
 
-		top();
+        top();
 
-		Table toolbar = new Table();
-		add(toolbar).top().expandX().expandX().padTop(20);
+        Table toolbar = new Table();
+        add(toolbar).top().expandX().expandX().padTop(20);
 
-		toolbar.defaults().pad(5);
+        toolbar.defaults().pad(5);
 
-		toolbar.setBackground(getSkin().newDrawable("button-main-menu"));
+        toolbar.setBackground(getSkin().newDrawable("button-main-menu"));
 
-		paint = new SquareButton(getSkin(), getSkin().getDrawable("brush_icon"), true, "Paintbrush");
-		spray = new SquareButton(getSkin(), getSkin().getDrawable("spray_icon"), true, "Spray");
-		erase = new SquareButton(getSkin(), getSkin().getDrawable("eraser_icon"), true, "Eraser");
+        paint = new SquareButton(getSkin(), getSkin().getDrawable("brush_icon"), true, "Paintbrush");
+        spray = new SquareButton(getSkin(), getSkin().getDrawable("spray_icon"), true, "Spray");
+        erase = new SquareButton(getSkin(), getSkin().getDrawable("eraser_icon"), true, "Eraser");
 
-		ButtonGroup<SquareButton> buttonButtonGroup = new ButtonGroup<>();
-		buttonButtonGroup.setMaxCheckCount(1);
-		buttonButtonGroup.setMinCheckCount(0);
-		buttonButtonGroup.add(paint, spray, erase);
+        ButtonGroup<SquareButton> buttonButtonGroup = new ButtonGroup<>();
+        buttonButtonGroup.setMaxCheckCount(1);
+        buttonButtonGroup.setMinCheckCount(0);
+        buttonButtonGroup.add(paint, spray, erase);
 
 
-		paint.addListener(new ClickListener() {
+        paint.addListener(new ClickListener() {
 
-			@Override
-			public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-				event.cancel();
-				return super.touchDown(event, x, y, pointer, button);
-			}
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                event.cancel();
+                return super.touchDown(event, x, y, pointer, button);
+            }
 
-			@Override
-			public void clicked (InputEvent event, float x, float y) {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
 
-				super.clicked(event, x, y);
+                super.clicked(event, x, y);
 
-				enablePaintMode();
-			}
-		});
+                enablePaintMode();
+            }
+        });
 
-		spray.addListener(new ClickListener() {
-			@Override
-			public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-				event.cancel();
-				return super.touchDown(event, x, y, pointer, button);
-			}
+        spray.addListener(new ClickListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                event.cancel();
+                return super.touchDown(event, x, y, pointer, button);
+            }
 
-			@Override
-			public void clicked (InputEvent event, float x, float y) {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
 
-				super.clicked(event, x, y);
+                super.clicked(event, x, y);
 
 
 //				SceneEditorWorkspace.getInstance().mapEditorState.setErasing(false);
@@ -96,21 +95,21 @@ public class MapEditorToolbar extends Table {
 //				} else {
 //					SceneEditorWorkspace.getInstance().unlockGizmos();
 //				}
-			}
-		});
+            }
+        });
 
-		erase.addListener(new ClickListener() {
+        erase.addListener(new ClickListener() {
 
-			@Override
-			public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-				event.cancel();
-				return super.touchDown(event, x, y, pointer, button);
-			}
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                event.cancel();
+                return super.touchDown(event, x, y, pointer, button);
+            }
 
 
-			@Override
-			public void clicked (InputEvent event, float x, float y) {
-				super.clicked(event, x, y);
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                super.clicked(event, x, y);
 //
 //				SceneEditorWorkspace.getInstance().mapEditorState.setErasing(false);
 //				SceneEditorWorkspace.getInstance().mapEditorState.setPainting(false);
@@ -124,19 +123,19 @@ public class MapEditorToolbar extends Table {
 //				} else {
 //					SceneEditorWorkspace.getInstance().unlockGizmos();
 //				}
-			}
-		});
+            }
+        });
 
-		toolbar.add(paint);
-		toolbar.add(spray);
-		toolbar.add(erase);
+        toolbar.add(paint);
+        toolbar.add(spray);
+        toolbar.add(erase);
 
-		//Add the buttons
+        //Add the buttons
 
-	}
+    }
 
-	public void enablePaintMode() {
-		paint.setChecked(true);
+    public void enablePaintMode() {
+        paint.setChecked(true);
 //		SceneEditorWorkspace.getInstance().mapEditorState.setErasing(false);
 //		SceneEditorWorkspace.getInstance().mapEditorState.setPainting(false);
 //		SceneEditorWorkspace.getInstance().mapEditorState.setSpraying(false);
@@ -149,5 +148,5 @@ public class MapEditorToolbar extends Table {
 //		} else {
 //			SceneEditorWorkspace.getInstance().unlockGizmos();
 //		}
-	}
+    }
 }

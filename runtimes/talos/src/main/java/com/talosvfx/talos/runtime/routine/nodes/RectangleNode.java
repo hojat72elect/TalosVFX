@@ -13,24 +13,24 @@ public class RectangleNode extends RoutineNode {
         Vector2 posGet = fetchVector2Value("center");
         Vector2 sizeGet = fetchVector2Value("size");
 
-        if(posGet != null) {
+        if (posGet != null) {
             pos.set(posGet);
         }
-        if(sizeGet != null) {
+        if (sizeGet != null) {
             size.set(sizeGet);
         }
 
-        if(targetPortName.equals("left")) {
-            return  pos.x - size.x/2f;
+        if (targetPortName.equals("left")) {
+            return pos.x - size.x / 2f;
         }
-        if(targetPortName.equals("right")) {
-            return  pos.x + size.x/2f;
+        if (targetPortName.equals("right")) {
+            return pos.x + size.x / 2f;
         }
-        if(targetPortName.equals("top")) {
-            return  pos.y + size.y/2f;
+        if (targetPortName.equals("top")) {
+            return pos.y + size.y / 2f;
         }
-        if(targetPortName.equals("bottom")) {
-            return  pos.y - size.y/2f;
+        if (targetPortName.equals("bottom")) {
+            return pos.y - size.y / 2f;
         }
         return 0;
     }

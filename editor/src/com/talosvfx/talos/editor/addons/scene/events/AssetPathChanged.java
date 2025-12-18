@@ -9,7 +9,7 @@ public class AssetPathChanged implements TalosEvent {
     public FileHandle newHandle;
 
     @Override
-    public void reset () {
+    public void reset() {
 
     }
 }

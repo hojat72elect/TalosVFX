@@ -2,27 +2,31 @@ package com.talosvfx.talos.editor.addons.scene.apps.shader.workspace;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.PolygonBatch;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.XmlReader;
+import com.badlogic.gdx.utils.XmlWriter;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.rockbite.bongo.engine.render.PolygonSpriteBatchMultiTextureMULTIBIND;
 import com.talosvfx.talos.editor.addons.scene.apps.shader.ShaderEditorApp;
 import com.talosvfx.talos.editor.addons.shader.nodes.ColorOutput;
 import com.talosvfx.talos.editor.data.ShaderStageData;
-import com.talosvfx.talos.editor.notifications.Observer;
-import com.talosvfx.talos.runtime.assets.GameAsset;
-import com.talosvfx.talos.runtime.shader.ShaderInstance;
-import com.talosvfx.talos.runtime.vfx.shaders.ShaderBuilder;
 import com.talosvfx.talos.editor.nodes.DynamicNodeStage;
 import com.talosvfx.talos.editor.nodes.NodeWidget;
 import com.talosvfx.talos.editor.notifications.EventHandler;
 import com.talosvfx.talos.editor.notifications.Notifications;
+import com.talosvfx.talos.editor.notifications.Observer;
 import com.talosvfx.talos.editor.notifications.events.dynamicnodestage.NodeRemovedEvent;
+import com.talosvfx.talos.runtime.assets.GameAsset;
+import com.talosvfx.talos.runtime.vfx.shaders.ShaderBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,15 +35,26 @@ import java.io.StringWriter;
 public class ShaderNodeStage extends DynamicNodeStage<ShaderStageData> implements Observer {
 
     private final ShaderEditorApp shaderEditorApp;
-    private ColorOutput colorOutput;
-
     FrameBuffer frameBuffer;
     PolygonBatch spriteBatch;
     Viewport viewport;
-
+    ExportSequencePayload exportSequencePayload = null;
+    private ColorOutput colorOutput;
     private boolean loading = false;
 
-    public void loadFrom (GameAsset<ShaderStageData> asset) {
+    public ShaderNodeStage(ShaderEditorApp shaderEditorApp, Skin skin) {
+        super(skin);
+        this.shaderEditorApp = shaderEditorApp;
+
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, 240, 240, false);
+        spriteBatch = new PolygonSpriteBatchMultiTextureMULTIBIND();
+        viewport = new FitViewport(240, 240);
+        viewport.apply(true);
+
+        Notifications.registerObserver(this);
+    }
+
+    public void loadFrom(GameAsset<ShaderStageData> asset) {
         loading = true;
         if (asset == null || asset.getResource() == null) return;
 
@@ -52,7 +67,7 @@ public class ShaderNodeStage extends DynamicNodeStage<ShaderStageData> implement
         loading = false;
     }
 
-    public void cacheFullShader () {
+    public void cacheFullShader() {
         ShaderBuilder shaderBuilder = new ShaderBuilder();
 
         for (NodeWidget node : nodeBoard.getNodes()) {
@@ -65,42 +80,12 @@ public class ShaderNodeStage extends DynamicNodeStage<ShaderStageData> implement
                 resource.setFragString(shaderBuilder.getFragmentString());
 
                 resource.setShaderInstanceFromVertFrag();
-
             }
         }
-
-
-    }
-
-
-    class ExportSequencePayload {
-        public int width;
-        public int height;
-        public float duration;
-        public int fps;
-        public float timer = 0;
-        public float totalTimer = 0;
-        public Array<Pixmap> frames = new Array<>();
-        public String name;
-        public String path;
-    }
-
-    ExportSequencePayload exportSequencePayload = null;
-
-    public ShaderNodeStage (ShaderEditorApp shaderEditorApp, Skin skin) {
-        super(skin);
-        this.shaderEditorApp = shaderEditorApp;
-
-        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, 240, 240, false);
-        spriteBatch = new PolygonSpriteBatchMultiTextureMULTIBIND();
-        viewport = new FitViewport(240, 240);
-        viewport.apply(true);
-
-        Notifications.registerObserver(this);
     }
 
     @Override
-    protected XmlReader.Element loadData () {
+    protected XmlReader.Element loadData() {
         FileHandle list = Gdx.files.internal("addons/shader/nodes.xml");
         XmlReader xmlReader = new XmlReader();
         XmlReader.Element root = xmlReader.parse(list);
@@ -108,9 +93,8 @@ public class ShaderNodeStage extends DynamicNodeStage<ShaderStageData> implement
         return root;
     }
 
-
     @Override
-    public NodeWidget createNode (String nodeName, float screenX, float y) {
+    public NodeWidget createNode(String nodeName, float screenX, float y) {
 
         if (!nodeName.equals("ColorOutput")) {
             return super.createNode(nodeName, screenX, y);
@@ -126,36 +110,36 @@ public class ShaderNodeStage extends DynamicNodeStage<ShaderStageData> implement
     }
 
     @Override
-    protected void onBaseStageSelected () {
+    protected void onBaseStageSelected() {
 
     }
 
     @Override
-    public void reset () {
+    public void reset() {
         super.reset();
         colorOutput = null;
     }
 
     @Override
-    public void markAssetChanged () {
+    public void markAssetChanged() {
         if (!loading) {
             super.markAssetChanged();
         }
     }
 
     @Override
-    public void onNodeSelectionChange () {
+    public void onNodeSelectionChange() {
 
     }
 
     @EventHandler
-    public void onNodeRemoved (NodeRemovedEvent event) {
+    public void onNodeRemoved(NodeRemovedEvent event) {
      /*  if (event.getNode() == colorOutput) {
            colorOutput = null;
        }*/
     }
 
-    public String getFragShader () {
+    public String getFragShader() {
         ShaderBuilder builder = new ShaderBuilder();
 
         if (colorOutput == null) return "";
@@ -165,7 +149,7 @@ public class ShaderNodeStage extends DynamicNodeStage<ShaderStageData> implement
         return builder.getFragmentString();
     }
 
-    public String getShaderData () {
+    public String getShaderData() {
         ShaderBuilder builder = new ShaderBuilder();
 
         if (colorOutput == null) return "";
@@ -213,7 +197,7 @@ public class ShaderNodeStage extends DynamicNodeStage<ShaderStageData> implement
         }
     }
 
-    public Pixmap exportPixmap () {
+    public Pixmap exportPixmap() {
         if (colorOutput == null) return null;
 
         frameBuffer.begin();
@@ -255,7 +239,7 @@ public class ShaderNodeStage extends DynamicNodeStage<ShaderStageData> implement
         return pixmap;
     }
 
-    public void exportSequence (String name, String path, int width, int height, float duration, int fps) {
+    public void exportSequence(String name, String path, int width, int height, float duration, int fps) {
         exportSequencePayload = new ExportSequencePayload();
         exportSequencePayload.width = width;
         exportSequencePayload.height = height;
@@ -269,7 +253,7 @@ public class ShaderNodeStage extends DynamicNodeStage<ShaderStageData> implement
     }
 
     @Override
-    public void act () {
+    public void act() {
         super.act();
 
         if (exportSequencePayload != null) {
@@ -293,7 +277,7 @@ public class ShaderNodeStage extends DynamicNodeStage<ShaderStageData> implement
         }
     }
 
-    private void snapFrameToSequence () {
+    private void snapFrameToSequence() {
         if (colorOutput == null) return;
 
         frameBuffer.begin();
@@ -324,7 +308,7 @@ public class ShaderNodeStage extends DynamicNodeStage<ShaderStageData> implement
         exportSequencePayload.frames.add(pixmap);
     }
 
-    private Pixmap flipPixmap (Pixmap src) {
+    private Pixmap flipPixmap(Pixmap src) {
         final int width = src.getWidth();
         final int height = src.getHeight();
         Pixmap flipped = new Pixmap(width, height, src.getFormat());
@@ -339,7 +323,7 @@ public class ShaderNodeStage extends DynamicNodeStage<ShaderStageData> implement
         return flipped;
     }
 
-    private void finishSequenceExport () {
+    private void finishSequenceExport() {
         int frameIndex = 9;
         for (Pixmap pixmap : exportSequencePayload.frames) {
             frameIndex++;
@@ -352,5 +336,17 @@ public class ShaderNodeStage extends DynamicNodeStage<ShaderStageData> implement
 
 
         exportSequencePayload = null;
+    }
+
+    class ExportSequencePayload {
+        public int width;
+        public int height;
+        public float duration;
+        public int fps;
+        public float timer = 0;
+        public float totalTimer = 0;
+        public Array<Pixmap> frames = new Array<>();
+        public String name;
+        public String path;
     }
 }

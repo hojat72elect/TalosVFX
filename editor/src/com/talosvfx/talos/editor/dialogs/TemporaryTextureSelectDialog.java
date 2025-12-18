@@ -15,6 +15,7 @@
  ******************************************************************************/
 
 package com.talosvfx.talos.editor.dialogs;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -25,23 +26,18 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.kotcrab.vis.ui.widget.VisWindow;
-import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.project2.SharedResources;
+
 import lombok.Getter;
 import lombok.Setter;
 
 public class TemporaryTextureSelectDialog extends VisWindow {
 
-    public interface OnTextureSelected {
-        void onSelected (TextureSelection textureSelection);
-    }
-
     private TextureSelection selected;
-
     @Setter
     private OnTextureSelected listener;
 
-    public TemporaryTextureSelectDialog () {
+    public TemporaryTextureSelectDialog() {
         super("Select Texture");
 
         setCenterOnAdd(true);
@@ -59,42 +55,16 @@ public class TemporaryTextureSelectDialog extends VisWindow {
         centerWindow();
     }
 
-    public static class TextureSelection extends Table {
-
-        private final Image selected;
-
-        @Getter
-        private String internalAssetPath;
-        @Getter
-        private final Texture texture;
-
-        public TextureSelection (String internalAssetPath) {
-            this.internalAssetPath = internalAssetPath;
-            setBackground(SharedResources.skin.newDrawable("white", 0, 0, 0, 0.9f));
-
-            texture = new Texture(Gdx.files.internal(internalAssetPath));
-            final Image image = new Image(texture);
-            selected = new Image(SharedResources.skin.newDrawable("white", 1f, 1f, 1f, 1f));
-            this.selected.setColor(1f, 1f, 1f, 0);
-
-            add(new Stack(image, selected)).grow();
-        }
-
-        public void setSelected (boolean selected) {
-            this.selected.setColor(1f, 1f, 1f, selected ? 0.2f : 0);
-        }
-    }
-
     private void initContent() {
 
         Array<TextureSelection> selection = new Array<>();
 
         Table subTable = new Table();
 
-        String[] inbuilt = new String[] {
-            "fire.png",
-            "spot.png",
-            "smoke.png"
+        String[] inbuilt = new String[]{
+                "fire.png",
+                "spot.png",
+                "smoke.png"
         };
 
         int elementsPerRow = 4;
@@ -104,15 +74,11 @@ public class TemporaryTextureSelectDialog extends VisWindow {
             selection.add(textureSelection);
             textureSelection.addListener(new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
                     selected = textureSelection;
 
                     for (TextureSelection tex : selection) {
-                        if (tex == textureSelection) {
-                            tex.setSelected(true);
-                        } else {
-                            tex.setSelected(false);
-                        }
+                        tex.setSelected(tex == textureSelection);
                     }
                 }
             });
@@ -147,4 +113,32 @@ public class TemporaryTextureSelectDialog extends VisWindow {
         });
     }
 
+    public interface OnTextureSelected {
+        void onSelected(TextureSelection textureSelection);
+    }
+
+    public static class TextureSelection extends Table {
+
+        private final Image selected;
+        @Getter
+        private final Texture texture;
+        @Getter
+        private final String internalAssetPath;
+
+        public TextureSelection(String internalAssetPath) {
+            this.internalAssetPath = internalAssetPath;
+            setBackground(SharedResources.skin.newDrawable("white", 0, 0, 0, 0.9f));
+
+            texture = new Texture(Gdx.files.internal(internalAssetPath));
+            final Image image = new Image(texture);
+            selected = new Image(SharedResources.skin.newDrawable("white", 1f, 1f, 1f, 1f));
+            this.selected.setColor(1f, 1f, 1f, 0);
+
+            add(new Stack(image, selected)).grow();
+        }
+
+        public void setSelected(boolean selected) {
+            this.selected.setColor(1f, 1f, 1f, selected ? 0.2f : 0);
+        }
+    }
 }

@@ -7,51 +7,48 @@ import com.talosvfx.talos.runtime.scene.SceneLayer;
 
 public class GameAssetsExportStructure {
 
-	public String talosIdentifier;
-	public Array<GameAssetExportStructure> gameAssets = new Array<>();
+    public String talosIdentifier;
+    public Array<GameAssetExportStructure> gameAssets = new Array<>();
 
-	public SceneData sceneData = new SceneData();
+    public SceneData sceneData = new SceneData();
+    public long ageOfYoungestAsset; // max timestamp of exported sprite and atlas assets
+    private final transient ObjectMap<String, GameAssetExportStructure> cache = new ObjectMap<>();
+    private final transient ObjectMap<GameAssetType, ObjectMap<String, GameAssetExportStructure>> identifierCache = new ObjectMap<>();
+    private transient boolean cacheBuilt = false;
 
-	private transient ObjectMap<String, GameAssetExportStructure> cache = new ObjectMap<>();
-	private transient ObjectMap<GameAssetType, ObjectMap<String, GameAssetExportStructure>> identifierCache = new ObjectMap<>();
+    public GameAssetExportStructure findAsset(String uuid) {
+        if (!cacheBuilt) {
+            buildCache();
+        }
+        return cache.get(uuid);
+    }
 
-	private transient boolean cacheBuilt = false;
+    public GameAssetExportStructure findAsset(String identifier, GameAssetType type) {
+        if (!cacheBuilt) {
+            buildCache();
+        }
+        return identifierCache.get(type).get(identifier);
+    }
 
-	public long ageOfYoungestAsset; // max timestamp of exported sprite and atlas assets
+    public void buildLayerIndices() {
+        Array<SceneLayer> renderLayers = sceneData.getRenderLayers();
+        for (int i = 0; i < renderLayers.size; i++) {
+            SceneLayer sceneLayer = renderLayers.get(i);
+            sceneLayer.setIndex(i);
+        }
+    }
 
-	public GameAssetExportStructure findAsset (String uuid) {
-		if (!cacheBuilt) {
-			buildCache();
-		}
-		return cache.get(uuid);
-	}
+    private void buildCache() {
+        for (GameAssetExportStructure gameAsset : gameAssets) {
+            cache.put(gameAsset.uuid, gameAsset);
 
-	public GameAssetExportStructure findAsset (String identifier, GameAssetType type) {
-		if (!cacheBuilt){
-			buildCache();
-		}
-		return identifierCache.get(type).get(identifier);
-	}
+            if (!identifierCache.containsKey(gameAsset.type)) {
+                identifierCache.put(gameAsset.type, new ObjectMap<>());
+            }
 
-	public void buildLayerIndices() {
-		Array<SceneLayer> renderLayers = sceneData.getRenderLayers();
-		for (int i = 0; i < renderLayers.size; i++) {
-			SceneLayer sceneLayer = renderLayers.get(i);
-			sceneLayer.setIndex(i);
-		}
-	}
+            identifierCache.get(gameAsset.type).put(gameAsset.identifier, gameAsset);
+        }
 
-	private void buildCache () {
-		for (GameAssetExportStructure gameAsset : gameAssets) {
-			cache.put(gameAsset.uuid, gameAsset);
-
-			if (!identifierCache.containsKey(gameAsset.type)) {
-				identifierCache.put(gameAsset.type, new ObjectMap<>());
-			}
-
-			identifierCache.get(gameAsset.type).put(gameAsset.identifier, gameAsset);
-		}
-
-		cacheBuilt = true;
-	}
+        cacheBuilt = true;
+    }
 }

@@ -3,13 +3,15 @@ package com.talosvfx.talos.editor.addons.scene.dialogs;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ObjectMap;
 import com.kotcrab.vis.ui.widget.VisWindow;
 import com.kotcrab.vis.ui.widget.file.FileChooser;
 import com.kotcrab.vis.ui.widget.file.FileChooserAdapter;
@@ -17,10 +19,9 @@ import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.socket.SocketServer;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.IntPropertyWidget;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.PropertyWidget;
+import com.talosvfx.talos.runtime.utils.Supplier;
 
 import java.io.File;
-import java.net.Socket;
-import com.talosvfx.talos.runtime.utils.Supplier;
 
 public class SettingsDialog extends VisWindow {
 
@@ -76,7 +77,7 @@ public class SettingsDialog extends VisWindow {
 
                 String sceneEditorExportScriptPath = TalosMain.Instance().Prefs().getString("sceneEditorExportScriptPath", null);
 
-                if(sceneEditorExportScriptPath != null) {
+                if (sceneEditorExportScriptPath != null) {
                     FileHandle path = Gdx.files.absolute(sceneEditorExportScriptPath);
                     fileChooser.setDirectory(path.parent().file());
                     fileChooser.setDefaultFileName(path.name());
@@ -88,7 +89,7 @@ public class SettingsDialog extends VisWindow {
 
                 fileChooser.setListener(new FileChooserAdapter() {
                     @Override
-                    public void selected (Array<FileHandle> files) {
+                    public void selected(Array<FileHandle> files) {
                         FileHandle file = files.first();
                         exportScriptPathField.setText(file.path());
                     }
@@ -113,8 +114,8 @@ public class SettingsDialog extends VisWindow {
         add(new Label("Export Settings", getSkin())).left().expandX().pad(10);
         row();
 
-        selectBox = new SelectBox<>( getSkin());
-        String[] labels = new String[] {"Default", "Custom Script"};
+        selectBox = new SelectBox<>(getSkin());
+        String[] labels = new String[]{"Default", "Custom Script"};
         selectBox.setItems(labels);
         add(selectBox).width(400).pad(10);
 
@@ -143,7 +144,7 @@ public class SettingsDialog extends VisWindow {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 String selected = selectBox.getSelected();
-                if(selected.equals("Default")) {
+                if (selected.equals("Default")) {
                     exportInlineContainer.clear();
                 } else {
                     exportInlineContainer.clear();
@@ -156,21 +157,21 @@ public class SettingsDialog extends VisWindow {
     }
 
     @Override
-    public VisWindow fadeIn (float fadeTime) {
+    public VisWindow fadeIn(float fadeTime) {
         serverPort = SocketServer.SERVER_PORT;
         serverPortWidget.setValue(serverPort);
         return super.fadeIn(fadeTime);
     }
 
-    private void addServerPortSettings () {
+    private void addServerPortSettings() {
         serverPortWidget = new IntPropertyWidget("Server Port", new Supplier<Integer>() {
             @Override
-            public Integer get () {
+            public Integer get() {
                 return serverPort;
             }
         }, new PropertyWidget.ValueChanged<Integer>() {
             @Override
-            public void report (Integer value) {
+            public void report(Integer value) {
                 serverPort = value;
             }
         }, null);
@@ -185,14 +186,14 @@ public class SettingsDialog extends VisWindow {
         TalosMain.Instance().Prefs().putString("exportType", selected);
         TalosMain.Instance().Prefs().putInteger("serverPort", serverPort);
 
-        if(selected.equals("Default")) {
+        if (selected.equals("Default")) {
             TalosMain.Instance().Prefs().remove("sceneEditorExportScriptPath");
         } else {
             String path = exportScriptPathField.getText();
-            if(path.length() > 0) {
+            if (path.length() > 0) {
 
                 FileHandle handle = Gdx.files.absolute(path);
-                if(!(new File(path)).isAbsolute()) {
+                if (!(new File(path)).isAbsolute()) {
                     handle = Gdx.files.absolute(Gdx.files.absolute(TalosMain.Instance().ProjectController().getCurrentProjectPath()).parent().path() + File.separator + path);
                 }
 

@@ -40,28 +40,27 @@ public class InterpolationModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
         output.set(currentInterpolation.apply(alpha.getFloat()));
-    }
-
-    public void setInterpolation(Interpolation interpolation) {
-        this.currentInterpolation = interpolation;
     }
 
     public Interpolation getInterpolation() {
         return this.currentInterpolation;
     }
 
+    public void setInterpolation(Interpolation interpolation) {
+        this.currentInterpolation = interpolation;
+    }
+
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("interp", InterpolationMappings.getNameForInterpolation(getInterpolation()));
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         currentInterpolation = InterpolationMappings.getInterpolationForName(jsonData.getString("interp"));
     }
-
 }

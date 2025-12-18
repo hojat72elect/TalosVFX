@@ -1,10 +1,13 @@
 package com.talosvfx.talos.editor.nodes.widgets;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.XmlReader;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.SelectBoxWithZoom;
 
@@ -13,8 +16,8 @@ public class SelectWidget extends AbstractWidget<String> {
 
     private SelectBoxWithZoom<String> selectBox;
 
-    private ObjectMap<String, String> titleMap = new ObjectMap<>();
-    private ObjectMap<String, String> keyMap = new ObjectMap<>();
+    private final ObjectMap<String, String> titleMap = new ObjectMap<>();
+    private final ObjectMap<String, String> keyMap = new ObjectMap<>();
 
     private boolean lockEvents = false;
 
@@ -22,7 +25,7 @@ public class SelectWidget extends AbstractWidget<String> {
     public void init(Skin skin) {
         super.init(skin);
 
-        selectBox = new SelectBoxWithZoom<String>(skin, "rounded" );
+        selectBox = new SelectBoxWithZoom<String>(skin, "rounded");
         selectBox.setMaxListCount(5);
 
         selectBox.getStyle().background.setLeftWidth(8);
@@ -34,8 +37,8 @@ public class SelectWidget extends AbstractWidget<String> {
 
         selectBox.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent changeEvent, Actor actor) {
-                if(!lockEvents) {
+            public void changed(ChangeEvent changeEvent, Actor actor) {
+                if (!lockEvents) {
                     fireChangedEvent();
                 }
             }
@@ -49,7 +52,7 @@ public class SelectWidget extends AbstractWidget<String> {
         Array<XmlReader.Element> options = element.getChildrenByName("option");
         Array<String> items = new Array<>();
 
-        for (XmlReader.Element option: options) {
+        for (XmlReader.Element option : options) {
             String optionText = option.getText();
             items.add(optionText);
             titleMap.put(optionText, option.getAttribute("value"));
@@ -57,6 +60,10 @@ public class SelectWidget extends AbstractWidget<String> {
         }
 
         selectBox.setItems(items);
+    }
+
+    public Array<String> getOptions() {
+        return selectBox.getItems();
     }
 
     public void setOptions(Array<String> options) {
@@ -80,14 +87,10 @@ public class SelectWidget extends AbstractWidget<String> {
         lockEvents = false;
     }
 
-    public Array<String> getOptions() {
-        return selectBox.getItems();
-    }
-
     @Override
-    public String getValue () {
+    public String getValue() {
         String title = selectBox.getSelected();
-        if(title == null) return "";
+        if (title == null) return "";
         String name = titleMap.get(title);
 
         return name;
@@ -101,15 +104,15 @@ public class SelectWidget extends AbstractWidget<String> {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonValue) {
+    public void read(Json json, JsonValue jsonValue) {
         String val = jsonValue.asString();
         setValue(val);
     }
 
     @Override
-    public void write (Json json, String name) {
+    public void write(Json json, String name) {
         String value = "";
-        if(selectBox.getSelected() != null) {
+        if (selectBox.getSelected() != null) {
             value = titleMap.get(selectBox.getSelected());
         }
         json.writeValue(name, value);

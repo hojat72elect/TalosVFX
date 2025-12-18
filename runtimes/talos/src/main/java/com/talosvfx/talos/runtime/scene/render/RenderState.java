@@ -4,5 +4,5 @@ import com.badlogic.gdx.utils.Array;
 import com.talosvfx.talos.runtime.scene.GameObject;
 
 public class RenderState {
-	public Array<GameObject> list = new Array<>();
+    public Array<GameObject> list = new Array<>();
 }

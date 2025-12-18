@@ -1,6 +1,5 @@
 package com.talosvfx.talos.editor.notifications.commands;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.CharArray;
 import com.badlogic.gdx.utils.ObjectSet;

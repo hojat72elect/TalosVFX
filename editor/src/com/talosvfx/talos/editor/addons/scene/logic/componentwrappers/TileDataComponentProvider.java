@@ -9,36 +9,35 @@ import com.talosvfx.talos.runtime.scene.components.TileDataComponent;
 
 public class TileDataComponentProvider extends AComponentProvider<TileDataComponent> {
 
-	public TileDataComponentProvider (TileDataComponent component) {
-		super(component);
-	}
+    public TileDataComponentProvider(TileDataComponent component) {
+        super(component);
+    }
 
-	@Override
-	public Array<PropertyWidget> getListOfProperties () {
-		Array<PropertyWidget> properties = new Array<>();
+    @Override
+    public Array<PropertyWidget> getListOfProperties() {
+        Array<PropertyWidget> properties = new Array<>();
 
-		properties.add(WidgetFactory.generate(component, "fakeZ", "FakeZ"));
-		properties.add(WidgetFactory.generate(component, "visualOffset", "VisualOffset"));
+        properties.add(WidgetFactory.generate(component, "fakeZ", "FakeZ"));
+        properties.add(WidgetFactory.generate(component, "visualOffset", "VisualOffset"));
 
-		return properties;
-	}
+        return properties;
+    }
 
-	public ObjectSet<GridPosition> getParentTiles () {
-		return component.parentTiles;
-	}
+    public ObjectSet<GridPosition> getParentTiles() {
+        return component.parentTiles;
+    }
 
-	public void setParentTiles (ObjectSet<GridPosition> parentTiles) {
-		component.parentTiles = parentTiles;
-	}
+    public void setParentTiles(ObjectSet<GridPosition> parentTiles) {
+        component.parentTiles = parentTiles;
+    }
 
-	@Override
-	public String getPropertyBoxTitle () {
-		return "TileData Component";
-	}
+    @Override
+    public String getPropertyBoxTitle() {
+        return "TileData Component";
+    }
 
-	@Override
-	public int getPriority () {
-		return 4;
-	}
-
+    @Override
+    public int getPriority() {
+        return 4;
+    }
 }

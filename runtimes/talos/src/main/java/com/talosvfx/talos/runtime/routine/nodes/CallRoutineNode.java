@@ -5,21 +5,20 @@ import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.XmlReader;
 import com.talosvfx.talos.runtime.RuntimeContext;
 import com.talosvfx.talos.runtime.assets.BaseAssetRepository;
-import com.talosvfx.talos.runtime.routine.serialization.BaseRoutineData;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.runtime.routine.RoutineInstance;
 import com.talosvfx.talos.runtime.routine.RoutineNode;
 import com.talosvfx.talos.runtime.routine.TickableNode;
+import com.talosvfx.talos.runtime.routine.serialization.BaseRoutineData;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyType;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
 
 public class CallRoutineNode extends RoutineNode implements TickableNode, GameAsset.GameAssetUpdateListener {
 
     RoutineInstance targetInstance;
-    private RoutineInstance.RoutineListenerAdapter listener;
-
     GameAsset<BaseRoutineData> currentSelectedAsset;
+    private RoutineInstance.RoutineListenerAdapter listener;
 
     @Override
     protected void constructNode(XmlReader.Element config) {
@@ -31,8 +30,8 @@ public class CallRoutineNode extends RoutineNode implements TickableNode, GameAs
         // pre construct the custom part before configuring from values?
         // todo: IMPORTANT ASSET IS NOT LOADED YET, we do Runnable hack :/
         GameAsset<BaseRoutineData> asset = null;
-        for(JsonValue item: properties) {
-            if(item.has("type") && item.getString("type").equals("ROUTINE")) {
+        for (JsonValue item : properties) {
+            if (item.has("type") && item.getString("type").equals("ROUTINE")) {
                 String name = item.name;
                 String routineAssetId = item.getString("id");
                 //TODO: this needs to be done in a "runtime" friendly way, leaving this task for another time
@@ -42,7 +41,7 @@ public class CallRoutineNode extends RoutineNode implements TickableNode, GameAs
                 asset = baseAssetRepository.getAssetForIdentifier(routineAssetId, GameAssetType.ROUTINE);
 
                 //TODO HOOK IT UP TOM
-                if(asset != null) {
+                if (asset != null) {
                     customConstruction(asset);
                 }
             }
@@ -50,7 +49,7 @@ public class CallRoutineNode extends RoutineNode implements TickableNode, GameAs
 
         super.configureNode(properties);
 
-        if(!configured) {
+        if (!configured) {
             configured = false;
         }
     }
@@ -62,7 +61,7 @@ public class CallRoutineNode extends RoutineNode implements TickableNode, GameAs
             currentSelectedAsset.listeners.removeValue(this, true);
         }
         BaseRoutineData resource = asset.getResource();
-        if(resource == null) {
+        if (resource == null) {
             configured = false;
             return;
         }
@@ -77,7 +76,7 @@ public class CallRoutineNode extends RoutineNode implements TickableNode, GameAs
             port.connectionType = ConnectionType.DATA;
             port.dataType = makeDataType(type);
             port.portType = PortType.INPUT;
-            inputs.put( port.name, port);
+            inputs.put(port.name, port);
         }
 
         Port port = new Port();
@@ -86,7 +85,7 @@ public class CallRoutineNode extends RoutineNode implements TickableNode, GameAs
         port.connectionType = ConnectionType.DATA;
         port.dataType = DataType.STRING;
         port.portType = PortType.INPUT;
-        inputs.put( port.name, port);
+        inputs.put(port.name, port);
 
         // now create that routine
         targetInstance = asset.getResource().createInstance(false, getTalosIdentifier());
@@ -95,24 +94,24 @@ public class CallRoutineNode extends RoutineNode implements TickableNode, GameAs
     }
 
     private DataType makeDataType(PropertyType type) {
-        if(type == PropertyType.FLOAT) return DataType.NUMBER;
-        if(type == PropertyType.ASSET) return DataType.ASSET;
-        if(type == PropertyType.BOOLEAN) return DataType.BOOLEAN;
-        if(type == PropertyType.COLOR) return DataType.COLOR;
-        if(type == PropertyType.VECTOR2) return DataType.VECTOR2;
+        if (type == PropertyType.FLOAT) return DataType.NUMBER;
+        if (type == PropertyType.ASSET) return DataType.ASSET;
+        if (type == PropertyType.BOOLEAN) return DataType.BOOLEAN;
+        if (type == PropertyType.COLOR) return DataType.COLOR;
+        if (type == PropertyType.VECTOR2) return DataType.VECTOR2;
 
         return DataType.NUMBER;
     }
 
     @Override
     public void receiveSignal(String portName) {
-        if(targetInstance != null) {
+        if (targetInstance != null) {
             //todo: setup custom var values (fetch them first)
             Array<PropertyWrapper<?>> wrappers = targetInstance.getParentPropertyWrappers();
             for (PropertyWrapper<?> wrapper : wrappers) {
                 String propertyName = wrapper.propertyName;
                 Object val = fetchValue(propertyName);
-                if(val != null) {
+                if (val != null) {
                     wrapper.setValueUnsafe(val);
                     targetInstance.getProperties().put(wrapper.propertyName, wrapper);
                 }
@@ -130,7 +129,7 @@ public class CallRoutineNode extends RoutineNode implements TickableNode, GameAs
             targetInstance.setListener(listener);
 
             String executorName = fetchStringValue("executorName");
-            if(fetchBooleanValue("payloadOverride")) {
+            if (fetchBooleanValue("payloadOverride")) {
                 targetInstance.setSignalPayload(routineInstanceRef.getSignalPayload());
             } else {
                 targetInstance.setSignalPayload(null);
@@ -142,7 +141,7 @@ public class CallRoutineNode extends RoutineNode implements TickableNode, GameAs
 
     @Override
     public void tick(float delta) {
-        if(targetInstance != null) {
+        if (targetInstance != null) {
             targetInstance.tick(delta);
         }
     }
@@ -150,9 +149,9 @@ public class CallRoutineNode extends RoutineNode implements TickableNode, GameAs
     @Override
     public void reset() {
         super.reset();
-        if(targetInstance != null) {
+        if (targetInstance != null) {
             targetInstance.reset();
-            if(listener != null) {
+            if (listener != null) {
                 listener.terminate();
             }
             targetInstance.removeListener();

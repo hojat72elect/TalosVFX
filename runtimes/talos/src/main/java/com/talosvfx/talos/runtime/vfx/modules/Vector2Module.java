@@ -42,10 +42,10 @@ public class Vector2Module extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
 
-        if(x.isEmpty()) x.set(defaultX);
-        if(y.isEmpty()) y.set(defaultY);
+        if (x.isEmpty()) x.set(defaultX);
+        if (y.isEmpty()) y.set(defaultY);
 
         output.set(x, y);
     }
@@ -67,17 +67,16 @@ public class Vector2Module extends AbstractModule {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("x", getDefaultX());
         json.writeValue("y", getDefaultY());
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         defaultX = jsonData.getFloat("x", 0);
         defaultY = jsonData.getFloat("y", 0);
     }
-
 }

@@ -1,17 +1,17 @@
 package com.talosvfx.talos.editor.widgets.ui.menu;
 
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.XmlReader;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.utils.UIUtils;
+
 import lombok.Getter;
 
 public class MenuPopup extends Table {
 
     private final MainMenu mainMenu;
     @Getter
-    private String id;
+    private final String id;
 
     public MenuPopup(MainMenu mainMenu, String id) {
         this.mainMenu = mainMenu;
@@ -23,7 +23,7 @@ public class MenuPopup extends Table {
         int childCount = parent.getChildCount();
 
         int topPad = 2;
-        if(!isPrimary) {
+        if (!isPrimary) {
             topPad = 6;
         }
 
@@ -33,16 +33,16 @@ public class MenuPopup extends Table {
             XmlReader.Element item = parent.getChild(i);
 
             Table row = null;
-            if(item.getName().equals("menu")) {
+            if (item.getName().equals("menu")) {
                 MenuRow menuRow = new MenuRow(mainMenu, id + "/" + item.getAttribute("name"));
                 menuRow.buildFrom(item);
 
                 row = menuRow;
                 add(row).pad(0).padLeft(10).padRight(10).growX();
-            } else if(item.getName().equals("separator")) {
+            } else if (item.getName().equals("separator")) {
                 row = UIUtils.makeSeparator();
                 add(row).growX().height(1).pad(10).padTop(4).padBottom(4);
-            } else if(item.getName().equals("inject")) {
+            } else if (item.getName().equals("inject")) {
                 String injectorName = item.getAttribute("name");
 
                 Table table = new Table();
@@ -52,14 +52,14 @@ public class MenuPopup extends Table {
                 mainMenu.registerContainer(this, id, injectorName, table);
             }
 
-            if(row != null) {
+            if (row != null) {
                 row();
             }
         }
 
         add().pad(5).row();
 
-        if(isPrimary) {
+        if (isPrimary) {
             setBackground(SharedResources.skin.getDrawable("top-menu-popup-main-bg"));
         } else {
             setBackground(SharedResources.skin.getDrawable("top-menu-popup-sub-bg"));

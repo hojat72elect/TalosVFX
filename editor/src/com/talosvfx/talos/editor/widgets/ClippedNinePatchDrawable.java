@@ -10,20 +10,19 @@ import com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable;
  */
 public class ClippedNinePatchDrawable extends BaseDrawable {
 
-    private ClippedNinePatch patch;
-
     public float maskScaleX = 1, maskScaleY = 1;
+    private final ClippedNinePatch patch;
 
-    public ClippedNinePatchDrawable (ClippedNinePatchDrawable drawable) {
+    public ClippedNinePatchDrawable(ClippedNinePatchDrawable drawable) {
         super(drawable);
         this.patch = drawable.patch;
     }
 
-    public ClippedNinePatchDrawable (ClippedNinePatch patch) {
+    public ClippedNinePatchDrawable(ClippedNinePatch patch) {
         this.patch = patch;
     }
 
-    public ClippedNinePatchDrawable (TextureAtlas.AtlasRegion region) {
+    public ClippedNinePatchDrawable(TextureAtlas.AtlasRegion region) {
         int[] splits = region.findValue("split");
         this.patch = new ClippedNinePatch(region,
                 splits[0],
@@ -32,17 +31,17 @@ public class ClippedNinePatchDrawable extends BaseDrawable {
                 splits[3]);
     }
 
-    public void setMaskScale (float clipScaleX, float clipScaleY) {
+    public void setMaskScale(float clipScaleX, float clipScaleY) {
         this.maskScaleX = clipScaleX;
         this.maskScaleY = clipScaleY;
     }
 
-    public void setColor (Color color) {
+    public void setColor(Color color) {
         patch.setColor(color);
     }
 
     @Override
-    public void draw (Batch batch, float x, float y, float width, float height) {
+    public void draw(Batch batch, float x, float y, float width, float height) {
         patch.setMaskScale(maskScaleX, maskScaleY);
         patch.draw(batch, x, y, width, height);
     }

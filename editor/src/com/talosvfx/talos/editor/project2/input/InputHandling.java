@@ -4,69 +4,68 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ObjectSet;
 import com.badlogic.gdx.utils.OrderedSet;
 import com.talosvfx.talos.editor.project2.SharedResources;
 
 public class InputHandling {
-	public Actor keyboardFocus;
-    private OrderedSet<InputProcessor> permanentInputProcessors = new OrderedSet<>();
+    public Actor keyboardFocus;
+    private final OrderedSet<InputProcessor> permanentInputProcessors = new OrderedSet<>();
 
-	private OrderedSet<InputProcessor> temporaryInputProcessors = new OrderedSet<>();
-	private OrderedSet<InputProcessor> priorityInputProcessors = new OrderedSet<>();
+    private final OrderedSet<InputProcessor> temporaryInputProcessors = new OrderedSet<>();
+    private final OrderedSet<InputProcessor> priorityInputProcessors = new OrderedSet<>();
 
-	private InputMultiplexer inputMultiplexer = new InputMultiplexer();
+    private final InputMultiplexer inputMultiplexer = new InputMultiplexer();
 
-	public void clearPermanentInputProcessors () {
-		permanentInputProcessors.clear();
-	}
+    public void clearPermanentInputProcessors() {
+        permanentInputProcessors.clear();
+    }
 
-	public void clearTemporaryInputProcessors () {
-		temporaryInputProcessors.clear();
-	}
+    public void clearTemporaryInputProcessors() {
+        temporaryInputProcessors.clear();
+    }
 
-	public void addPermanentInputProcessor (InputProcessor inputProcessor) {
-		permanentInputProcessors.add(inputProcessor);
-	}
+    public void addPermanentInputProcessor(InputProcessor inputProcessor) {
+        permanentInputProcessors.add(inputProcessor);
+    }
 
-	public void removePermanentInputProcessor (InputProcessor inputProcessor) {
-		permanentInputProcessors.remove(inputProcessor);
-	}
+    public void removePermanentInputProcessor(InputProcessor inputProcessor) {
+        permanentInputProcessors.remove(inputProcessor);
+    }
 
-	public void addTemporaryInputProcessor (InputProcessor inputProcessor) {
-		temporaryInputProcessors.add(inputProcessor);
-	}
-	public void removeTemporaryInputProcessor (InputProcessor inputProcessor) {
-		temporaryInputProcessors.remove(inputProcessor);
-	}
-	public void setGDXMultiPlexer () {
-		inputMultiplexer.clear();
+    public void addTemporaryInputProcessor(InputProcessor inputProcessor) {
+        temporaryInputProcessors.add(inputProcessor);
+    }
 
-		inputMultiplexer.addProcessor(SharedResources.appManager);
-		inputMultiplexer.addProcessor(SharedResources.commandsSystem);
+    public void removeTemporaryInputProcessor(InputProcessor inputProcessor) {
+        temporaryInputProcessors.remove(inputProcessor);
+    }
 
-		for (InputProcessor priorityInputProcessor : priorityInputProcessors) {
-			inputMultiplexer.addProcessor(priorityInputProcessor);
-		}
+    public void setGDXMultiPlexer() {
+        inputMultiplexer.clear();
 
-		for (InputProcessor permanentInputProcessor : permanentInputProcessors) {
-			inputMultiplexer.addProcessor(permanentInputProcessor);
-		}
+        inputMultiplexer.addProcessor(SharedResources.appManager);
+        inputMultiplexer.addProcessor(SharedResources.commandsSystem);
 
-		for (InputProcessor temporaryInputProcessor : temporaryInputProcessors) {
-			inputMultiplexer.addProcessor(temporaryInputProcessor);
-		}
+        for (InputProcessor priorityInputProcessor : priorityInputProcessors) {
+            inputMultiplexer.addProcessor(priorityInputProcessor);
+        }
 
-		Gdx.input.setInputProcessor(inputMultiplexer);
-	}
+        for (InputProcessor permanentInputProcessor : permanentInputProcessors) {
+            inputMultiplexer.addProcessor(permanentInputProcessor);
+        }
 
-	public void addPriorityInputProcessor (InputProcessor inputProcessor) {
-		priorityInputProcessors.add(inputProcessor);
-	}
+        for (InputProcessor temporaryInputProcessor : temporaryInputProcessors) {
+            inputMultiplexer.addProcessor(temporaryInputProcessor);
+        }
 
-	public void removePriorityInputProcessor (InputProcessor inputProcessor) {
-		priorityInputProcessors.remove(inputProcessor);
-	}
+        Gdx.input.setInputProcessor(inputMultiplexer);
+    }
+
+    public void addPriorityInputProcessor(InputProcessor inputProcessor) {
+        priorityInputProcessors.add(inputProcessor);
+    }
+
+    public void removePriorityInputProcessor(InputProcessor inputProcessor) {
+        priorityInputProcessors.remove(inputProcessor);
+    }
 }

@@ -12,7 +12,7 @@ public class SmoothStepNode extends AbstractShaderNode {
     public final String EDGE_TWO = "edgeTwo";
 
     @Override
-    public ShaderBuilder.Type getVarType (String name) {
+    public ShaderBuilder.Type getVarType(String name) {
 
         if (name.equals(OUTPUT)) {
             return getTargetVarType(INPUT, ShaderBuilder.Type.FLOAT);
@@ -23,7 +23,7 @@ public class SmoothStepNode extends AbstractShaderNode {
 
 
     @Override
-    public void prepareDeclarations (ShaderBuilder shaderBuilder) {
+    public void prepareDeclarations(ShaderBuilder shaderBuilder) {
         String input = getExpression(INPUT);
         String edgeOne = getExpression(EDGE_ONE, null);
         String edgeTwo = getExpression(EDGE_TWO, null);
@@ -36,7 +36,7 @@ public class SmoothStepNode extends AbstractShaderNode {
     }
 
     @Override
-    public String writeOutputCode (String slotId) {
+    public String writeOutputCode(String slotId) {
         return "smoothStepVar" + getId();
     }
 }

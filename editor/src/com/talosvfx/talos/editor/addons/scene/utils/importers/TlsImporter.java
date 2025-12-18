@@ -3,7 +3,9 @@ package com.talosvfx.talos.editor.addons.scene.utils.importers;
 import com.badlogic.gdx.files.FileHandle;
 import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.runtime.assets.GameAsset;
-import com.talosvfx.talos.runtime.scene.GameObject;import com.talosvfx.talos.runtime.vfx.ParticleEffectDescriptor;
+import com.talosvfx.talos.runtime.scene.GameObject;
+import com.talosvfx.talos.runtime.vfx.ParticleEffectDescriptor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +23,7 @@ public class TlsImporter extends AbstractImporter<ParticleEffectDescriptor> {
     }
 
     @Override
-    public GameObject makeInstance (GameAsset<ParticleEffectDescriptor> asset, GameObject parent) {
+    public GameObject makeInstance(GameAsset<ParticleEffectDescriptor> asset, GameObject parent) {
 
         logger.info("Needs reimplementing for context");
 
@@ -35,6 +37,4 @@ public class TlsImporter extends AbstractImporter<ParticleEffectDescriptor> {
 //        return gameObject;
         return null;
     }
-
-
 }

@@ -3,14 +3,11 @@ package com.talosvfx.talos.runtime.scene.components;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
-import com.talosvfx.talos.runtime.RuntimeContext;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.runtime.assets.GameResourceOwner;
@@ -19,10 +16,6 @@ import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.IColorHolder;
 import com.talosvfx.talos.runtime.scene.ISizableComponent;
 import com.talosvfx.talos.runtime.scene.ValueProperty;
-
-import java.util.UUID;
-
-import static com.badlogic.gdx.graphics.g2d.TextureAtlas.*;
 
 public class SpriteRendererComponent extends RendererComponent implements GameResourceOwner<AtlasSprite>, ISizableComponent, IColorHolder {
 
@@ -34,34 +27,41 @@ public class SpriteRendererComponent extends RendererComponent implements GameRe
     public boolean shouldInheritParentColor = true;
     public boolean flipX;
     public boolean flipY;
-    private boolean fixAspectRatio = true;
     public RenderMode renderMode = RenderMode.simple;
     public NineSlice.RenderMode sliceMode = NineSlice.RenderMode.Simple;
-
     @ValueProperty(prefix = {"W", "H"})
     public Vector2 size = new Vector2(1, 1);
-
     @ValueProperty(prefix = {"W", "H"}, min = 0.05f)
     public Vector2 tileSize = new Vector2(1, 1);
+    transient GameAsset.GameAssetUpdateListener gameAssetUpdateListener = new GameAsset.GameAssetUpdateListener() {
+        @Override
+        public void onUpdate() {
+            if (gameAsset.isBroken()) {
+            } else {
+            }
+        }
+    };
+    Vector2 vec = new Vector2();
+    private boolean fixAspectRatio = true;
 
     @Override
-    public GameAssetType getGameAssetType () {
+    public GameAssetType getGameAssetType() {
         return GameAssetType.SPRITE;
     }
 
     @Override
-    public GameAsset<AtlasSprite> getGameResource () {
+    public GameAsset<AtlasSprite> getGameResource() {
         return gameAsset;
     }
 
     @Override
-    public void setGameAsset (GameAsset<AtlasSprite> newGameAsset) {
+    public void setGameAsset(GameAsset<AtlasSprite> newGameAsset) {
         if (this.gameAsset != null) {
             //Remove from old game asset, it might be the same, but it may also have changed
             this.gameAsset.listeners.removeValue(gameAssetUpdateListener, true);
         }
 
-        if(defaultGameAsset == null && !newGameAsset.isBroken()){
+        if (defaultGameAsset == null && !newGameAsset.isBroken()) {
             defaultGameAsset = newGameAsset;
         }
 
@@ -80,7 +80,7 @@ public class SpriteRendererComponent extends RendererComponent implements GameRe
     }
 
     @Override
-    public void clearResource () {
+    public void clearResource() {
         if (gameAsset != null) {
             gameAsset.listeners.removeValue(gameAssetUpdateListener, true);
             gameAsset = null;
@@ -88,24 +88,8 @@ public class SpriteRendererComponent extends RendererComponent implements GameRe
         defaultGameAsset = null;
     }
 
-    public enum RenderMode {
-        simple,
-        sliced,
-        tiled
-    }
-
-
-    transient GameAsset.GameAssetUpdateListener gameAssetUpdateListener = new GameAsset.GameAssetUpdateListener() {
-        @Override
-        public void onUpdate () {
-            if (gameAsset.isBroken()) {
-            } else {
-            }
-        }
-    };
-
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         GameResourceOwner.writeGameAsset(json, this);
 
         json.writeValue("color", color);
@@ -119,17 +103,16 @@ public class SpriteRendererComponent extends RendererComponent implements GameRe
         json.writeValue("tileSize", tileSize);
 
         super.write(json);
-
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         GameAsset<AtlasSprite> asset = GameResourceOwner.readAsset(json, jsonData);
         setGameAsset(asset);
 
         color = json.readValue(Color.class, jsonData.get("color"));
         shouldInheritParentColor = jsonData.getBoolean("shouldInheritParentColor", true);
-        if(color == null) color = new Color(Color.WHITE);
+        if (color == null) color = new Color(Color.WHITE);
 
         flipX = jsonData.getBoolean("flipX", false);
         flipY = jsonData.getBoolean("flipY", false);
@@ -145,25 +128,24 @@ public class SpriteRendererComponent extends RendererComponent implements GameRe
             this.tileSize = json.readValue(Vector2.class, tileSize);
         }
 
-        if(renderMode == null) renderMode = RenderMode.simple;
-        if(sliceMode == null) sliceMode = NineSlice.RenderMode.Simple;
+        if (renderMode == null) renderMode = RenderMode.simple;
+        if (sliceMode == null) sliceMode = NineSlice.RenderMode.Simple;
 
         super.read(json, jsonData);
     }
 
-    Vector2 vec = new Vector2();
     @Override
-    public void minMaxBounds (GameObject ownerEntity, BoundingBox boundingBox) {
+    public void minMaxBounds(GameObject ownerEntity, BoundingBox boundingBox) {
         TransformComponent transformComponent = ownerEntity.getComponent(TransformComponent.class);
         if (transformComponent != null) {
             vec.set(0, 0);
-            transformComponent.localToWorld(ownerEntity, vec);
+            TransformComponent.localToWorld(ownerEntity, vec);
 
             float width = transformComponent.scale.x * size.x;
             float height = transformComponent.scale.y * size.y;
 
-            boundingBox.ext(-width/2, -height/2, 0);
-            boundingBox.ext(+width/2, +height/2, 0);
+            boundingBox.ext(-width / 2, -height / 2, 0);
+            boundingBox.ext(+width / 2, +height / 2, 0);
         }
     }
 
@@ -188,13 +170,13 @@ public class SpriteRendererComponent extends RendererComponent implements GameRe
     }
 
     @Override
-    public float getHeight() {
-        return size.y;
+    public void setWidth(float width) {
+        size.x = width;
     }
 
     @Override
-    public void setWidth(float width) {
-        size.x = width;
+    public float getHeight() {
+        return size.y;
     }
 
     @Override
@@ -227,5 +209,11 @@ public class SpriteRendererComponent extends RendererComponent implements GameRe
                 return fixAspectRatio;
             }
         }
+    }
+
+    public enum RenderMode {
+        simple,
+        sliced,
+        tiled
     }
 }

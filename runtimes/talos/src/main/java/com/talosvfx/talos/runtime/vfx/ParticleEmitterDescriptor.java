@@ -54,19 +54,15 @@ import com.talosvfx.talos.runtime.vfx.modules.VectorFieldModule;
 
 public class ParticleEmitterDescriptor {
 
+    public static ObjectSet<Class> registeredModules;
     private final ParticleEffectDescriptor particleEffectResourceDescriptor;
-
     Array<AbstractModule> modules = new Array<>();
-
     ParticleModule particleModule;
     EmitterModule emitterModule;
     DrawableModule drawableModule;
-
     private int sortPosition;
 
-    public static ObjectSet<Class> registeredModules;
-
-    public ParticleEmitterDescriptor (ParticleEffectDescriptor descriptor) {
+    public ParticleEmitterDescriptor(ParticleEffectDescriptor descriptor) {
         this.particleEffectResourceDescriptor = descriptor;
         registerModules();
     }
@@ -77,7 +73,7 @@ public class ParticleEmitterDescriptor {
     }
 
     public static void registerModules() {
-        if(registeredModules == null) {
+        if (registeredModules == null) {
             registeredModules = new ObjectSet<>();
             registeredModules.add(EmitterModule.class);
             registeredModules.add(InterpolationModule.class);
@@ -114,25 +110,25 @@ public class ParticleEmitterDescriptor {
         }
     }
 
-    public boolean addModule (AbstractModule module) {
+    public boolean addModule(AbstractModule module) {
         boolean added = true;
         if (module instanceof ParticleModule) {
             if (particleModule == null) {
-                particleModule = (ParticleModule)module;
+                particleModule = (ParticleModule) module;
             } else {
                 added = false;
             }
         }
         if (module instanceof EmitterModule) {
             if (emitterModule == null) {
-                emitterModule = (EmitterModule)module;
+                emitterModule = (EmitterModule) module;
             } else {
                 added = false;
             }
         }
         if (module instanceof DrawableModule) {
             if (drawableModule == null) {
-                drawableModule = (DrawableModule)module;
+                drawableModule = (DrawableModule) module;
             } else {
                 added = false;
             }
@@ -143,13 +139,12 @@ public class ParticleEmitterDescriptor {
         }
 
         return added;
-
     }
 
     public void removeModule(AbstractModule module) {
         // was this module connected to someone?
-        for(AbstractModule toModule: modules) {
-            if(toModule.isConnectedTo(module)) {
+        for (AbstractModule toModule : modules) {
+            if (toModule.isConnectedTo(module)) {
                 toModule.detach(module);
             }
         }
@@ -157,10 +152,10 @@ public class ParticleEmitterDescriptor {
         module.remove();
         modules.removeValue(module, true);
 
-        if(module instanceof ParticleModule) {
+        if (module instanceof ParticleModule) {
             particleModule = null;
         }
-        if(module instanceof EmitterModule) {
+        if (module instanceof EmitterModule) {
             emitterModule = null;
         }
     }
@@ -172,7 +167,7 @@ public class ParticleEmitterDescriptor {
         to.attachModuleToMyInput(from, slotTo, slotFrom);
     }
 
-    public void removeNode(AbstractModule module, int slot,boolean isInput) {
+    public void removeNode(AbstractModule module, int slot, boolean isInput) {
         module.detach(slot, isInput);
     }
 
@@ -181,7 +176,7 @@ public class ParticleEmitterDescriptor {
     }
 
     public void resetRequesters() {
-        for(AbstractModule module: modules) {
+        for (AbstractModule module : modules) {
             module.resetLastRequester();
         }
     }
@@ -190,7 +185,7 @@ public class ParticleEmitterDescriptor {
         return emitterModule;
     }
 
-    public DrawableModule getDrawableModule () {
+    public DrawableModule getDrawableModule() {
         return drawableModule;
     }
 
@@ -213,5 +208,4 @@ public class ParticleEmitterDescriptor {
     public void setSortPosition(int sortPosition) {
         this.sortPosition = sortPosition;
     }
-
 }

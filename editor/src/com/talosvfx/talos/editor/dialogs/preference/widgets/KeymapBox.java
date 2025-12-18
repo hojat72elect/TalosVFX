@@ -14,16 +14,16 @@ public class KeymapBox extends Button {
     private Label keyLabel;
 
     private boolean inWaitingMode;
-    private boolean isOnlyUppercase = true;
+    private final boolean isOnlyUppercase = true;
 
-    public KeymapBox () {
+    public KeymapBox() {
         super(SharedResources.skin, "square");
         constructContent();
         addListeners();
     }
 
 
-    private void constructContent () {
+    private void constructContent() {
         keyLabel = new Label("", SharedResources.skin, "small");
         keyLabel.setAlignment(Align.center);
         add(keyLabel).growX().center();
@@ -61,17 +61,17 @@ public class KeymapBox extends Button {
         });
     }
 
-    public void setKey (int key) {
+    public void setKey(int key) {
         setChecked(false);
         this.keyName = Input.Keys.toString(key);
         keyLabel.setText(keyName);
     }
 
-    private void enterWaitingForInputMode () {
+    private void enterWaitingForInputMode() {
         keyLabel.setText("Press a key");
     }
 
-    private void resetDefaults () {
+    private void resetDefaults() {
         keyLabel.setText(keyName);
     }
 }

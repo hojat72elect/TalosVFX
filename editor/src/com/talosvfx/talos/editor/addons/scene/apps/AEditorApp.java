@@ -11,12 +11,12 @@ public abstract class AEditorApp<T> {
 
     protected Array<AppListener> appListeners = new Array<>();
 
-    public void onHide () {
-
+    public AEditorApp(T object) {
+        this.object = object;
     }
 
-    public interface AppListener {
-        void closeRequested();
+    public void onHide() {
+
     }
 
     public boolean notifyClose() {
@@ -26,16 +26,6 @@ public abstract class AEditorApp<T> {
         }
 
         return true;
-    }
-
-    public enum AppOpenStrategy {
-        WINDOW,
-        BOTTOM_TAB,
-        RIGHT_TAB
-    }
-
-    public AEditorApp(T object) {
-        this.object = object;
     }
 
     public abstract void initContent();
@@ -48,5 +38,15 @@ public abstract class AEditorApp<T> {
 
     public void addAppListener(AppListener listener) {
         this.appListeners.add(listener);
+    }
+
+    public enum AppOpenStrategy {
+        WINDOW,
+        BOTTOM_TAB,
+        RIGHT_TAB
+    }
+
+    public interface AppListener {
+        void closeRequested();
     }
 }

@@ -1,23 +1,19 @@
 package com.talosvfx.talos.runtime.routine.nodes;
 
 
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.ObjectSet;
 import com.talosvfx.talos.runtime.routine.RoutineNode;
-import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
 
 public class ExposedVariableChangedNode extends RoutineNode {
 
 
-    private ObjectMap<String, PropertyWrapper> cachedValues = new ObjectMap<>();
-
+    private final ObjectMap<String, PropertyWrapper> cachedValues = new ObjectMap<>();
+    private final ObjectSet<String> temp = new ObjectSet<>();
 
     @Override
-    public void receiveSignal (String portName) {
+    public void receiveSignal(String portName) {
 
         ObjectMap<String, PropertyWrapper> properties = routineInstanceRef.getProperties();
 
@@ -29,9 +25,7 @@ public class ExposedVariableChangedNode extends RoutineNode {
         }
     }
 
-    private ObjectSet<String> temp = new ObjectSet<>();
-
-    private boolean checkAndUpdateChanges (ObjectMap<String, PropertyWrapper> properties, ObjectMap<String, PropertyWrapper> cachedValues) {
+    private boolean checkAndUpdateChanges(ObjectMap<String, PropertyWrapper> properties, ObjectMap<String, PropertyWrapper> cachedValues) {
         boolean hasChanges = false;
 
 
@@ -79,8 +73,5 @@ public class ExposedVariableChangedNode extends RoutineNode {
         }
 
         return hasChanges;
-
     }
-
-
 }

@@ -11,72 +11,74 @@ import com.badlogic.gdx.utils.ObjectSet;
 
 public class GameAssetLoader extends AsynchronousAssetLoader<GameAsset, GameAssetLoader.GameAssetLoaderParam> {
 
-	public GameAssetLoader (FileHandleResolver resolver) {
-		super(resolver);
-	}
+    public GameAssetLoader(FileHandleResolver resolver) {
+        super(resolver);
+    }
 
-	@Override
-	public void loadAsync (AssetManager manager, String fileName, FileHandle file, GameAssetLoaderParam parameter) {
+    public static AssetDescriptor<GameAsset> getAssetDescriptorForGameAsset(GameAssetsExportStructure gameAssetsExportStructure, String identifier, GameAssetType type, GdxAssetRepo assetRepo, FileHandle baseFolder) {
+        GameAssetExportStructure gameAsset = gameAssetsExportStructure.findAsset(identifier, type);
+        AssetDescriptor<GameAsset> value = new AssetDescriptor<GameAsset>(gameAsset.uuid, GameAsset.class, new GameAssetLoader.GameAssetLoaderParam(gameAsset, assetRepo, baseFolder, gameAssetsExportStructure));
+        return value;
+    }
 
-	}
+    public static AssetDescriptor<GameAsset> getAssetDescriptorForGameAsset(GameAssetsExportStructure gameAssetsExportStructure, String uuid, GdxAssetRepo assetRepo, FileHandle baseFolder) {
+        GameAssetExportStructure gameAsset = gameAssetsExportStructure.findAsset(uuid);
+        AssetDescriptor<GameAsset> value = new AssetDescriptor<GameAsset>(uuid, GameAsset.class, new GameAssetLoader.GameAssetLoaderParam(gameAsset, assetRepo, baseFolder, gameAssetsExportStructure));
+        return value;
+    }
 
-	@Override
-	public GameAsset loadSync (AssetManager manager, String fileName, FileHandle file, GameAssetLoaderParam parameter) {
-		GdxAssetRepo assetRepo = parameter.assetRepo;
+    public static AssetDescriptor<GameAsset> getAssetDescriptorForGameAsset(GameAssetsExportStructure gameAssetsExportStructure, GameAssetExportStructure gameAsset, GdxAssetRepo assetRepo, FileHandle baseFolder) {
+        AssetDescriptor<GameAsset> value = new AssetDescriptor<GameAsset>(gameAsset.uuid, GameAsset.class, new GameAssetLoader.GameAssetLoaderParam(gameAsset, assetRepo, baseFolder, gameAssetsExportStructure));
+        return value;
+    }
 
-		GameAssetExportStructure gameAsset = parameter.gameAsset;
-		RuntimeAssetRepository.GameAssetLoader<?> loader = assetRepo.getLoader(gameAsset.type);
+    @Override
+    public void loadAsync(AssetManager manager, String fileName, FileHandle file, GameAssetLoaderParam parameter) {
 
-		GameAsset<?> loadedAsset = loader.load(gameAsset, parameter.baseFolder);
+    }
 
-		assetRepo.registerAsset(loadedAsset, parameter.gameAsset.uuid);
+    @Override
+    public GameAsset loadSync(AssetManager manager, String fileName, FileHandle file, GameAssetLoaderParam parameter) {
+        GdxAssetRepo assetRepo = parameter.assetRepo;
 
-		return loadedAsset;
-	}
+        GameAssetExportStructure gameAsset = parameter.gameAsset;
+        RuntimeAssetRepository.GameAssetLoader<?> loader = assetRepo.getLoader(gameAsset.type);
 
-	@Override
-	public Array<AssetDescriptor> getDependencies (String fileName, FileHandle file, GameAssetLoaderParam parameter) {
+        GameAsset<?> loadedAsset = loader.load(gameAsset, parameter.baseFolder);
 
-		Array<AssetDescriptor> dependencies = new Array<>();
+        assetRepo.registerAsset(loadedAsset, parameter.gameAsset.uuid);
 
-		GameAssetExportStructure gameAsset = parameter.gameAsset;
-		ObjectSet<String> dependentGameAssets = gameAsset.dependentGameAssets;
-		for (String dependentGameAsset : dependentGameAssets) {
-			dependencies.add(getAssetDescriptorForGameAsset(parameter.exportStructure, dependentGameAsset, parameter.assetRepo, parameter.baseFolder));
-		}
+        return loadedAsset;
+    }
 
-		return dependencies;
-	}
+    @Override
+    public Array<AssetDescriptor> getDependencies(String fileName, FileHandle file, GameAssetLoaderParam parameter) {
 
-	public static AssetDescriptor<GameAsset> getAssetDescriptorForGameAsset (GameAssetsExportStructure gameAssetsExportStructure, String identifier, GameAssetType type, GdxAssetRepo assetRepo, FileHandle baseFolder) {
-		GameAssetExportStructure gameAsset = gameAssetsExportStructure.findAsset(identifier, type);
-		AssetDescriptor<GameAsset> value = new AssetDescriptor<GameAsset>(gameAsset.uuid, GameAsset.class, new GameAssetLoader.GameAssetLoaderParam(gameAsset, assetRepo, baseFolder, gameAssetsExportStructure));
-		return value;
-	}
-	public static AssetDescriptor<GameAsset> getAssetDescriptorForGameAsset (GameAssetsExportStructure gameAssetsExportStructure, String uuid, GdxAssetRepo assetRepo, FileHandle baseFolder) {
-		GameAssetExportStructure gameAsset = gameAssetsExportStructure.findAsset(uuid);
-		AssetDescriptor<GameAsset> value = new AssetDescriptor<GameAsset>(uuid, GameAsset.class, new GameAssetLoader.GameAssetLoaderParam(gameAsset, assetRepo, baseFolder, gameAssetsExportStructure));
-		return value;
-	}
-	public static AssetDescriptor<GameAsset> getAssetDescriptorForGameAsset (GameAssetsExportStructure gameAssetsExportStructure, GameAssetExportStructure gameAsset, GdxAssetRepo assetRepo, FileHandle baseFolder) {
-		AssetDescriptor<GameAsset> value = new AssetDescriptor<GameAsset>(gameAsset.uuid, GameAsset.class, new GameAssetLoader.GameAssetLoaderParam(gameAsset, assetRepo, baseFolder, gameAssetsExportStructure));
-		return value;
-	}
+        Array<AssetDescriptor> dependencies = new Array<>();
 
-	public static class GameAssetLoaderParam extends AssetLoaderParameters<GameAsset> {
+        GameAssetExportStructure gameAsset = parameter.gameAsset;
+        ObjectSet<String> dependentGameAssets = gameAsset.dependentGameAssets;
+        for (String dependentGameAsset : dependentGameAssets) {
+            dependencies.add(getAssetDescriptorForGameAsset(parameter.exportStructure, dependentGameAsset, parameter.assetRepo, parameter.baseFolder));
+        }
 
-		public final GameAssetExportStructure gameAsset;
-		public final GdxAssetRepo assetRepo;
+        return dependencies;
+    }
 
-		public final FileHandle baseFolder;
+    public static class GameAssetLoaderParam extends AssetLoaderParameters<GameAsset> {
 
-		public final GameAssetsExportStructure exportStructure;
-		public GameAssetLoaderParam (GameAssetExportStructure gameAsset, GdxAssetRepo assetRepo, FileHandle baseFolder, GameAssetsExportStructure assetsExportStructure) {
-			this.gameAsset = gameAsset;
-			this.assetRepo = assetRepo;
-			this.baseFolder = baseFolder;
-			this.exportStructure = assetsExportStructure;
-		}
-	}
+        public final GameAssetExportStructure gameAsset;
+        public final GdxAssetRepo assetRepo;
 
+        public final FileHandle baseFolder;
+
+        public final GameAssetsExportStructure exportStructure;
+
+        public GameAssetLoaderParam(GameAssetExportStructure gameAsset, GdxAssetRepo assetRepo, FileHandle baseFolder, GameAssetsExportStructure assetsExportStructure) {
+            this.gameAsset = gameAsset;
+            this.assetRepo = assetRepo;
+            this.baseFolder = baseFolder;
+            this.exportStructure = assetsExportStructure;
+        }
+    }
 }

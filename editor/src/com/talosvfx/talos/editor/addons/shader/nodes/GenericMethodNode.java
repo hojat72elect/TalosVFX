@@ -17,14 +17,14 @@ public class GenericMethodNode extends AbstractShaderNode {
     private boolean previewTransparency = false;
 
     @Override
-    public void constructNode (XmlReader.Element module) {
+    public void constructNode(XmlReader.Element module) {
         XmlReader.Element shaderBody = module.getChildByName("shader-body");
         shaderBodyString = shaderBody.getText();
 
         methods.clear();
-        if(module.getChildrenByName("method").size > 0) {
+        if (module.getChildrenByName("method").size > 0) {
             Array<XmlReader.Element> methodsData = module.getChildrenByName("method");
-            for(XmlReader.Element data: methodsData) {
+            for (XmlReader.Element data : methodsData) {
                 ShaderBuilder.Method method = new ShaderBuilder.Method();
                 method.name = data.getAttribute("name");
                 method.declaration = data.getAttribute("declaration");
@@ -44,36 +44,36 @@ public class GenericMethodNode extends AbstractShaderNode {
     }
 
     @Override
-    public void prepareDeclarations (ShaderBuilder shaderBuilder) {
+    public void prepareDeclarations(ShaderBuilder shaderBuilder) {
         ShaderBuilder.Argument[] args = new ShaderBuilder.Argument[typeMap.size];
 
         int iterator = 0;
         String methodArgs = "";
-        for(String inputName: typeMap.keys()) {
+        for (String inputName : typeMap.keys()) {
             ShaderBuilder.Type varType = getVarType(inputName);
             args[iterator++] = new ShaderBuilder.Argument(varType, inputName);
 
             String defaultVal = null;
 
-            if(inputName.equals("uv")) {
+            if (inputName.equals("uv")) {
                 defaultVal = "v_texCoords";
             }
 
             String expr = getExpression(inputName, defaultVal);
 
-            if(expr.equals("null")) {
+            if (expr.equals("null")) {
                 ShaderBuilder.Type type = getVarType(inputName);
                 expr = type.getTypeString() + "(" + defaultsMap.get(inputName) + ")";
             }
 
-            methodArgs +=  expr;
+            methodArgs += expr;
 
-            if(iterator < typeMap.size) {
+            if (iterator < typeMap.size) {
                 methodArgs += ", ";
             }
         }
 
-        for(ShaderBuilder.Method inline: methods) {
+        for (ShaderBuilder.Method inline : methods) {
             shaderBuilder.addMethod(inline);
         }
 
@@ -86,18 +86,15 @@ public class GenericMethodNode extends AbstractShaderNode {
         String expression = methodName + "(" + methodArgs + ")";
 
         shaderBuilder.declareVariable(getVarType("outputValue"), varName + getId(), expression);
-
-
-
     }
 
     @Override
-    public String writeOutputCode (String slotId) {
+    public String writeOutputCode(String slotId) {
         return varName + getId();
     }
 
     @Override
-    protected void inputStateChanged (boolean isInputDynamic) {
+    protected void inputStateChanged(boolean isInputDynamic) {
         if (forcePreview) {
             showShaderBox();
         } else {
@@ -106,7 +103,7 @@ public class GenericMethodNode extends AbstractShaderNode {
     }
 
     @Override
-    protected boolean isInputDynamic () {
+    protected boolean isInputDynamic() {
         if (forcePreview) {
             return true;
         } else {
@@ -119,9 +116,9 @@ public class GenericMethodNode extends AbstractShaderNode {
 
         expression = castTypes(expression, outputType, ShaderBuilder.Type.VEC4, CAST_STRATEGY_REPEAT);
 
-        String result =  "vec4 outputVal = " + expression + ";";
+        String result = "vec4 outputVal = " + expression + ";";
 
-        if(!previewTransparency) {
+        if (!previewTransparency) {
             result += "outputVal.a = 1.0;";
         }
 

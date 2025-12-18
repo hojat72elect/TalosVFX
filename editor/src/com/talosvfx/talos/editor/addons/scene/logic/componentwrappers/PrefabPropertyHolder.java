@@ -7,21 +7,21 @@ import com.talosvfx.talos.runtime.scene.Prefab;
 
 public class PrefabPropertyHolder extends PropertyWrapperProviders.ObjectPropertyHolder<Prefab> {
 
-	private final Prefab prefab;
+    private final Prefab prefab;
 
-	public PrefabPropertyHolder(Prefab prefab) {
-		this.prefab = prefab;
-	}
+    public PrefabPropertyHolder(Prefab prefab) {
+        this.prefab = prefab;
+    }
 
-	@Override
-	public Iterable<IPropertyProvider> getPropertyProviders () {
-		Array<IPropertyProvider> list = new Array<>();
+    @Override
+    public Iterable<IPropertyProvider> getPropertyProviders() {
+        Array<IPropertyProvider> list = new Array<>();
 
-		return list;
-	}
+        return list;
+    }
 
-	@Override
-	public String getName () {
-		return prefab.getName();
-	}
+    @Override
+    public String getName() {
+        return prefab.getName();
+    }
 }

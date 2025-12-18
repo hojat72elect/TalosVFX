@@ -14,7 +14,7 @@ public class GetTransformNode extends RoutineNode {
     public Object queryValue(String targetPortName) {
         SavableContainer container = routineInstanceRef.getContainer();
 
-        if(container == null) return 0;
+        if (container == null) return 0;
         gameObjects.clear();
         String target = fetchStringValue("target");
         if (target == null) {
@@ -23,11 +23,11 @@ public class GetTransformNode extends RoutineNode {
             gameObjects = container.findGameObjects(target);
         }
 
-        if(!gameObjects.isEmpty()) {
+        if (!gameObjects.isEmpty()) {
             TransformComponent component = gameObjects.first().getComponent(TransformComponent.class);
-            if(targetPortName.equals("x")) {
+            if (targetPortName.equals("x")) {
                 return component.position.x;
-            } else if(targetPortName.equals("y")) {
+            } else if (targetPortName.equals("y")) {
                 return component.position.y;
             }
         }

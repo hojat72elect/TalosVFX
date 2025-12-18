@@ -33,13 +33,13 @@ public class SetTransformNode extends RoutineNode {
             component.pivot.y = fetchFloatValue("pivotY");
 
             ISizableComponent sizeComponent = go.findComponent(ISizableComponent.class);
-            if(sizeComponent != null) {
+            if (sizeComponent != null) {
                 sizeComponent.setWidth(fetchFloatValue("width"));
                 sizeComponent.setHeight(fetchFloatValue("height"));
             }
             diff.set(component.position.x - diff.x, component.position.y - diff.y);
 
-            if(diff.len() > 0) {
+            if (diff.len() > 0) {
                 //apply to sub routines
                 applySubRoutineTransforms(go);
             }
@@ -56,6 +56,5 @@ public class SetTransformNode extends RoutineNode {
             RoutineRendererComponent component = gameObject.getComponent(RoutineRendererComponent.class);
             component.routineInstance.applyQuadDiff(diff);
         }
-
     }
 }

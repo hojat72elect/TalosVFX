@@ -23,7 +23,7 @@ import com.talosvfx.talos.runtime.vfx.modules.SingleParticlePointDataGeneratorMo
 public class SingleParticlePointDataGeneratorModuleWrapper extends ModuleWrapper<SingleParticlePointDataGeneratorModule> {
 
 
-    public SingleParticlePointDataGeneratorModuleWrapper () {
+    public SingleParticlePointDataGeneratorModuleWrapper() {
         super();
     }
 
@@ -43,11 +43,9 @@ public class SingleParticlePointDataGeneratorModuleWrapper extends ModuleWrapper
     }
 
     @Override
-    public Class<? extends AbstractModule> getSlotsPreferredModule (Slot slot) {
+    public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
 
 
         return null;
     }
-
-
 }

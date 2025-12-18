@@ -27,21 +27,15 @@ public class ShaderBox extends Actor {
         this.skin = skin;
     }
 
-    public void setBlending (Blending blending) {
+    public void setBlending(Blending blending) {
         this.blending = blending;
-    }
-
-    public enum Blending {
-        NORMAL,
-        ADDITIVE,
-        BLENDADD
     }
 
     public void setShader(ShaderBuilder shaderBuilder) {
         this.shaderBuilder = shaderBuilder;
         ShaderProgram shaderProgram = shaderBuilder.getShaderProgram();
 
-        if(shaderProgram.isCompiled()) {
+        if (shaderProgram.isCompiled()) {
             this.shaderProgram = shaderProgram;
         } else {
             this.shaderProgram = null;
@@ -64,7 +58,7 @@ public class ShaderBox extends Actor {
             batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
         }
 
-        if(shaderProgram != null && shaderProgram.isCompiled()) {
+        if (shaderProgram != null && shaderProgram.isCompiled()) {
             batch.setShader(shaderProgram);
 
             /**
@@ -73,8 +67,8 @@ public class ShaderBox extends Actor {
 
             ObjectMap<String, ShaderBuilder.UniformData> declaredUniforms = shaderBuilder.getDeclaredUniforms();
             int bind = 1;
-            for(ShaderBuilder.UniformData data: declaredUniforms.values()) {
-                if(data.type == ShaderBuilder.Type.TEXTURE && data.payload != null) {
+            for (ShaderBuilder.UniformData data : declaredUniforms.values()) {
+                if (data.type == ShaderBuilder.Type.TEXTURE && data.payload != null) {
                     Texture texture = (Texture) data.payload.getValue();
                     texture.bind(bind);
                     shaderProgram.setUniformi(data.variableName, bind);
@@ -82,7 +76,7 @@ public class ShaderBox extends Actor {
 
                     bind++;
                 }
-                if(data.type == ShaderBuilder.Type.FLOAT && data.payload instanceof ShaderBuilder.IValueProvider) {
+                if (data.type == ShaderBuilder.Type.FLOAT && data.payload instanceof ShaderBuilder.IValueProvider) {
                     ShaderBuilder.IValueProvider provider = data.payload;
                     if (shaderProgram.hasUniform(data.variableName)) {
                         shaderProgram.setUniformf(data.variableName, (float) provider.getValue());
@@ -90,7 +84,7 @@ public class ShaderBox extends Actor {
                         System.out.println("no uniform");
                     }
                 }
-                if(data.type == ShaderBuilder.Type.VEC4 && data.payload instanceof ShaderBuilder.IValueProvider) {
+                if (data.type == ShaderBuilder.Type.VEC4 && data.payload instanceof ShaderBuilder.IValueProvider) {
                     ShaderBuilder.IValueProvider provider = data.payload;
                     if (shaderProgram.hasUniform(data.variableName)) {
                         shaderProgram.setUniformf(data.variableName, (Color) provider.getValue());
@@ -113,7 +107,13 @@ public class ShaderBox extends Actor {
         batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
     }
 
-    protected void drawCall (Batch batch) {
+    protected void drawCall(Batch batch) {
         batch.draw(white, getX(), getY(), getWidth(), getHeight());
+    }
+
+    public enum Blending {
+        NORMAL,
+        ADDITIVE,
+        BLENDADD
     }
 }

@@ -6,12 +6,12 @@ import com.badlogic.gdx.utils.JsonValue;
 
 public class PropertyFloatWrapper extends PropertyNumberWrapper<Float> {
 
-    public PropertyFloatWrapper () {
+    public PropertyFloatWrapper() {
         defaultValue = 0.0f;
     }
 
     @Override
-    public void collectAttributes (Array<String> attributes) {
+    public void collectAttributes(Array<String> attributes) {
         super.collectAttributes(attributes);
         if (minValue == null) {
             minValue = -Float.MAX_VALUE;
@@ -28,7 +28,7 @@ public class PropertyFloatWrapper extends PropertyNumberWrapper<Float> {
     }
 
     @Override
-    public Float parseValueFromString (String value) {
+    public Float parseValueFromString(String value) {
         try {
             return Float.valueOf(value);
         } catch (NumberFormatException e) {
@@ -43,7 +43,7 @@ public class PropertyFloatWrapper extends PropertyNumberWrapper<Float> {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         defaultValue = jsonData.getFloat("defaultValue", 0);
         value = jsonData.getFloat("value", defaultValue);
@@ -56,7 +56,7 @@ public class PropertyFloatWrapper extends PropertyNumberWrapper<Float> {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("value", value);
         json.writeValue("defaultValue", defaultValue);

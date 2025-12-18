@@ -17,5 +17,5 @@ public abstract class InputCombinationTypeWidget<T extends Combination> extends 
 
     protected abstract void createEmpty();
 
-    protected abstract void construct (T combination);
+    protected abstract void construct(T combination);
 }

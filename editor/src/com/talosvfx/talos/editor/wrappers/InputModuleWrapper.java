@@ -21,10 +21,9 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
-import com.kotcrab.vis.ui.widget.VisSelectBox;
-import com.talosvfx.talos.runtime.vfx.modules.InputModule;
-import com.talosvfx.talos.runtime.vfx.ScopePayload;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.SelectBoxWithZoom;
+import com.talosvfx.talos.runtime.vfx.ScopePayload;
+import com.talosvfx.talos.runtime.vfx.modules.InputModule;
 
 public class InputModuleWrapper extends ModuleWrapper<InputModule> {
 
@@ -76,7 +75,7 @@ public class InputModuleWrapper extends ModuleWrapper<InputModule> {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         setKey(module.getInput());
     }

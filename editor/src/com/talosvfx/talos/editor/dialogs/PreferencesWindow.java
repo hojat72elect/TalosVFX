@@ -2,8 +2,12 @@ package com.talosvfx.talos.editor.dialogs;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
@@ -11,7 +15,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.XmlReader;
 import com.talosvfx.talos.editor.addons.scene.events.prefs.PrefChangedEvent;
-import com.talosvfx.talos.editor.dialogs.preference.tabs.*;
+import com.talosvfx.talos.editor.dialogs.preference.tabs.PreferencesTabContent;
 import com.talosvfx.talos.editor.dialogs.preference.widgets.APrefWidget;
 import com.talosvfx.talos.editor.notifications.EventHandler;
 import com.talosvfx.talos.editor.notifications.Notifications;
@@ -21,6 +25,7 @@ import com.talosvfx.talos.editor.notifications.events.ProjectLoadedEvent;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.project2.localprefs.TalosLocalPrefs;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
+
 import lombok.Getter;
 
 public class PreferencesWindow extends AWindowDialog implements Observer {
@@ -50,7 +55,7 @@ public class PreferencesWindow extends AWindowDialog implements Observer {
         return "Talos Preferences";
     }
 
-    private Table constructContentSegment () {
+    private Table constructContentSegment() {
         final Table contentSegment = new Table();
         contentSegment.setBackground(ColorLibrary.obtainBackground(ColorLibrary.SHAPE_SQUIRCLE_BOTTOM, ColorLibrary.BackgroundColor.SUPER_DARK_GRAY));
         contentSegment.defaults().space(5);
@@ -66,7 +71,7 @@ public class PreferencesWindow extends AWindowDialog implements Observer {
         return contentSegment;
     }
 
-    private Table constructTabsSegment () {
+    private Table constructTabsSegment() {
         final Table tabsSegment = new Table();
         tabsSegment.setBackground(ColorLibrary.obtainBackground(ColorLibrary.SHAPE_SQUIRCLE_LEFT, ColorLibrary.BackgroundColor.SUPER_DARK_GRAY));
 
@@ -85,16 +90,16 @@ public class PreferencesWindow extends AWindowDialog implements Observer {
         int iterator = 0;
 
         Array<XmlReader.Element> groups = xmlRoot.getChildrenByName("group");
-        for(XmlReader.Element group : groups) {
+        for (XmlReader.Element group : groups) {
             tabsContent.startGroup();
             Array<XmlReader.Element> tabs = group.getChildrenByName("tab");
-            for(XmlReader.Element tab : tabs) {
+            for (XmlReader.Element tab : tabs) {
                 String title = tab.getAttribute("title");
                 PreferencesTabContent preferencesTabContent = new PreferencesTabContent(tab);
                 widgetArray.addAll(preferencesTabContent.getWidgetArray());
                 VerticalTab verticalTab = tabsContent.addTab(title, preferencesTabContent);
 
-                if(iterator == 0) {
+                if (iterator == 0) {
                     firstTab = verticalTab;
                 }
                 iterator++;
@@ -120,20 +125,57 @@ public class PreferencesWindow extends AWindowDialog implements Observer {
         content.expandFirstBlock();
     }
 
-    public class VerticalTabGroup extends Table {
-        private boolean startGroup;
+    @EventHandler
+    public void onPrefChanged(PrefChangedEvent changedEvent) {
+        String id = changedEvent.getId();
+        if (id.equalsIgnoreCase("gpuDebug")) {
+//            SharedResources.toggleGPUDebug();
 
+            Preferences projectPrefs = TalosLocalPrefs.Instance().getProjectPrefs();
+            boolean gpuDebug = projectPrefs.getBoolean("debug.settings.gpuDebug", false);
+
+            if (gpuDebug) {
+                SharedResources.debug.enableGpuDebugging();
+            } else {
+                SharedResources.debug.disableGpuDebugging();
+            }
+        }
+    }
+
+    @EventHandler
+    public void onFinishInitializingEvent(FinishInitializingEvent event) {
+        for (APrefWidget widget : widgetArray) {
+            if (widget.isProject() || widget.isGlobalProject()) {
+                continue;
+            }
+            widget.read();
+        }
+    }
+
+    @EventHandler
+    public void onProjectLoadedEvent(ProjectLoadedEvent event) {
+        for (APrefWidget widget : widgetArray) {
+            if (widget.isProject()) {
+                widget.readLocal();
+            }
+            if (widget.isGlobalProject()) {
+                widget.readGlobalProject();
+            }
+        }
+    }
+
+    public class VerticalTabGroup extends Table {
         private final int breakSpace = 8;
         private final int minSpace = 1;
-
+        private boolean startGroup;
         @Getter
         private VerticalTab selectedTab;
 
-        public VerticalTabGroup () {
+        public VerticalTabGroup() {
             defaults().height(25).growX();
         }
 
-        public VerticalTab addTab (String title, PreferencesTabContent preferenceTabContent) {
+        public VerticalTab addTab(String title, PreferencesTabContent preferenceTabContent) {
             final VerticalTab tab = new VerticalTab(title, preferenceTabContent);
             tab.addListener(new ClickListener() {
                 @Override
@@ -161,11 +203,11 @@ public class PreferencesWindow extends AWindowDialog implements Observer {
             return tab;
         }
 
-        public void startGroup () {
+        public void startGroup() {
             startGroup = true;
         }
 
-        public void endGroup () {
+        public void endGroup() {
             // if group is ended change the background of the last tab into squircle bottom
             final VerticalTab lastTab = (VerticalTab) getChildren().get(getChildren().size - 1);
             lastTab.roundBottom();
@@ -174,19 +216,17 @@ public class PreferencesWindow extends AWindowDialog implements Observer {
     }
 
     public class VerticalTab extends Table {
-        private boolean roundTop;
-        private boolean roundBottom;
-
         private final ColorLibrary.BackgroundColor defaultBackgroundColor = ColorLibrary.BackgroundColor.PANEL_GRAY;
-        private ColorLibrary.BackgroundColor currentBackgroundColor = defaultBackgroundColor;
-        private ColorLibrary.BackgroundColor overBackgroundColor = ColorLibrary.BackgroundColor.BRIGHT_GRAY;
-        private ColorLibrary.BackgroundColor selectedBackgroundColor = ColorLibrary.BackgroundColor.LIGHT_BLUE;
-
-        private boolean selected;
         @Getter
         private final PreferencesTabContent content;
+        private boolean roundTop;
+        private boolean roundBottom;
+        private ColorLibrary.BackgroundColor currentBackgroundColor = defaultBackgroundColor;
+        private final ColorLibrary.BackgroundColor overBackgroundColor = ColorLibrary.BackgroundColor.BRIGHT_GRAY;
+        private final ColorLibrary.BackgroundColor selectedBackgroundColor = ColorLibrary.BackgroundColor.LIGHT_BLUE;
+        private boolean selected;
 
-        public VerticalTab (String title, PreferencesTabContent content) {
+        public VerticalTab(String title, PreferencesTabContent content) {
             this.content = content;
 
             construct(title);
@@ -195,13 +235,13 @@ public class PreferencesWindow extends AWindowDialog implements Observer {
             updateBackground();
         }
 
-        private void construct (String title) {
+        private void construct(String title) {
             final Label titleLabel = new Label(title, SharedResources.skin, "small");
             titleLabel.setAlignment(Align.left);
             add(titleLabel).expandX().left().padLeft(8);
         }
 
-        private void addListeners () {
+        private void addListeners() {
             addListener(new ClickListener() {
                 @Override
                 public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
@@ -223,19 +263,19 @@ public class PreferencesWindow extends AWindowDialog implements Observer {
             setTouchable(Touchable.enabled);
         }
 
-        public void select () {
+        public void select() {
             selected = true;
             currentBackgroundColor = selectedBackgroundColor;
             updateBackground();
         }
 
-        public void deselect () {
+        public void deselect() {
             selected = false;
             currentBackgroundColor = defaultBackgroundColor;
             updateBackground();
         }
 
-        public void updateBackground () {
+        public void updateBackground() {
             if (roundBottom && roundTop) {
                 setBackground(ColorLibrary.obtainBackground(ColorLibrary.SHAPE_SQUIRCLE, currentBackgroundColor));
             } else if (roundTop) {
@@ -247,54 +287,14 @@ public class PreferencesWindow extends AWindowDialog implements Observer {
             }
         }
 
-        public void roundTop () {
+        public void roundTop() {
             this.roundTop = true;
             updateBackground();
         }
 
-        public void roundBottom () {
+        public void roundBottom() {
             this.roundBottom = true;
             updateBackground();
         }
     }
-
-    @EventHandler
-    public void onPrefChanged (PrefChangedEvent changedEvent) {
-        String id = changedEvent.getId();
-        if (id.equalsIgnoreCase("gpuDebug")) {
-//            SharedResources.toggleGPUDebug();
-
-            Preferences projectPrefs = TalosLocalPrefs.Instance().getProjectPrefs();
-            boolean gpuDebug = projectPrefs.getBoolean("debug.settings.gpuDebug", false);
-
-            if (gpuDebug) {
-                SharedResources.debug.enableGpuDebugging();
-            } else {
-                SharedResources.debug.disableGpuDebugging();
-            }
-
-        }
-    }
-
-    @EventHandler
-    public void onFinishInitializingEvent(FinishInitializingEvent event) {
-        for(APrefWidget widget: widgetArray) {
-            if (widget.isProject() || widget.isGlobalProject()) {
-                continue;
-            }
-            widget.read();
-        }
-    }
-
-    @EventHandler
-    public void onProjectLoadedEvent(ProjectLoadedEvent event) {
-        for(APrefWidget widget: widgetArray) {
-            if(widget.isProject()) {
-                widget.readLocal();
-            }
-            if (widget.isGlobalProject()) {
-                widget.readGlobalProject();
-            }
-        }
-    }
- }
+}

@@ -6,7 +6,6 @@ import com.artemis.Component;
 import com.artemis.ComponentMapper;
 import com.artemis.EntitySubscription;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.rockbite.bongo.engine.components.singletons.Cameras;
 import com.rockbite.bongo.engine.components.singletons.Environment;
@@ -21,122 +20,111 @@ import com.rockbite.bongo.engine.gltf.scene.shader.SceneShaderProvider;
 public abstract class RenderPassSystem extends BaseSystem {
 
 
-	public static class GLViewportConfig {
-		public int x;
-		public int y;
-		public int width;
-		public int height;
+    public static GLViewportConfig glViewport = new GLViewportConfig(0, 0, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
+    protected final SceneShaderProvider sceneShaderProvider;
+    private final Class<? extends Component>[] componentsToGather;
+    protected Environment environment;
+    protected RenderUtils renderUtils;
+    protected ComponentMapper<SceneModelInstance> sceneNodeInstanceMapper;
+    protected EntitySubscription renderObjectsSubscription;
+    private Cameras cameras;
+    private final SceneRenderableProvider sceneRenderableProvider = new SceneRenderableProvider();
+    private final Array<SceneRenderable> sceneRenderables = new Array<>();
+    private boolean shouldStartContext;
+    private boolean shouldEndContext;
+    public RenderPassSystem(SceneShaderProvider sceneShaderProvider, Class<? extends Component>... componentsToGather) {
+        this.sceneShaderProvider = sceneShaderProvider;
+        this.componentsToGather = componentsToGather;
+    }
 
-		public GLViewportConfig (int x, int y, int width, int height) {
-			this.x = x;
-			this.y = y;
-			this.width = width;
-			this.height = height;
-		}
-	}
-	public static GLViewportConfig glViewport = new GLViewportConfig(0, 0, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
+    public RenderPassSystem setContextStartEnd(boolean shouldStartContext, boolean shouldEndContext) {
+        this.shouldStartContext = shouldStartContext;
+        this.shouldEndContext = shouldEndContext;
+        return this;
+    }
 
-	private Cameras cameras;
-	protected Environment environment;
-	protected RenderUtils renderUtils;
+    @Override
+    protected void initialize() {
+        super.initialize();
 
-	protected final SceneShaderProvider sceneShaderProvider;
+        sceneShaderProvider.injectWorld(world);
 
-	private final Class<? extends Component>[] componentsToGather;
+        createSubscriptions();
+    }
 
-	protected ComponentMapper<SceneModelInstance> sceneNodeInstanceMapper;
-	protected EntitySubscription renderObjectsSubscription;
+    protected void createSubscriptions() {
+        createSubscriptions(SceneModelInstance.class);
+    }
 
-	private SceneRenderableProvider sceneRenderableProvider = new SceneRenderableProvider();
+    protected void createSubscriptions(Class baseModelclass) {
+        renderObjectsSubscription = createSubscriptionForRenderType(baseModelclass);
+    }
 
-	private Array<SceneRenderable> sceneRenderables = new Array<>();
+    protected EntitySubscription createSubscriptionForRenderType(Class<? extends Component> renderComponentType) {
+        Array<Class<? extends Component>> baseComponentsToGather = new Array<>();
+        baseComponentsToGather.addAll(componentsToGather);
+        baseComponentsToGather.add(renderComponentType);
+        Class[] types = new Class[baseComponentsToGather.size];
+        for (int i = 0; i < types.length; i++) {
+            types[i] = baseComponentsToGather.get(i);
+        }
+        return world.getAspectSubscriptionManager().get(Aspect.all(types));
+    }
 
-	private boolean shouldStartContext;
-	private boolean shouldEndContext;
+    @Override
+    protected void begin() {
+        super.begin();
 
-	public RenderPassSystem (SceneShaderProvider sceneShaderProvider, Class<? extends Component>... componentsToGather) {
-		this.sceneShaderProvider = sceneShaderProvider;
-		this.componentsToGather = componentsToGather;
-	}
+        if (shouldStartContext) {
+            renderUtils.getRenderContext().begin();
+        }
 
-	public RenderPassSystem setContextStartEnd (boolean shouldStartContext, boolean shouldEndContext) {
-		this.shouldStartContext = shouldStartContext;
-		this.shouldEndContext = shouldEndContext;
-		return this;
-	}
+        collectRendables();
+    }
 
+    protected void collectRendables() {
+        sceneRenderableProvider.obtainSceneRenderables(renderObjectsSubscription, sceneNodeInstanceMapper, sceneShaderProvider, sceneRenderables);
+        sceneRenderableProvider.sort(sceneRenderables);
+    }
 
-	@Override
-	protected void initialize () {
-		super.initialize();
+    @Override
+    protected void end() {
+        super.end();
 
-		sceneShaderProvider.injectWorld(world);
+        if (shouldEndContext) {
+            renderUtils.getRenderContext().end();
+        }
 
-		createSubscriptions();
+        sceneRenderableProvider.freeAll(sceneRenderables);
+    }
 
-	}
+    /**
+     * Render all collected and sorted objects, to be called within process function
+     */
+    public void renderAllCollectedRenderables() {
+        BaseSceneShader currentShader = null;
+        for (SceneRenderable renderable : sceneRenderables) {
+            if (currentShader != renderable.shader) {
+                if (currentShader != null) currentShader.end();
+                currentShader = renderable.shader;
+                currentShader.begin(cameras, renderUtils, environment.getSceneEnvironment());
+            }
+            currentShader.render(renderable);
+        }
+        if (currentShader != null) currentShader.end();
+    }
 
-	protected void createSubscriptions () {
-		createSubscriptions(SceneModelInstance.class);
-	}
-	protected void createSubscriptions (Class baseModelclass) {
-		renderObjectsSubscription = createSubscriptionForRenderType(baseModelclass);
-	}
+    public static class GLViewportConfig {
+        public int x;
+        public int y;
+        public int width;
+        public int height;
 
-	protected EntitySubscription createSubscriptionForRenderType (Class<? extends Component> renderComponentType) {
-		Array<Class<? extends Component>> baseComponentsToGather = new Array<>();
-		baseComponentsToGather.addAll(componentsToGather);
-		baseComponentsToGather.add(renderComponentType);
-		Class[] types = new Class[baseComponentsToGather.size];
-		for (int i = 0; i < types.length; i++) {
-			types[i] = baseComponentsToGather.get(i);
-		}
-		return world.getAspectSubscriptionManager().get(Aspect.all(types));
-	}
-
-	@Override
-	protected void begin () {
-		super.begin();
-
-		if (shouldStartContext) {
-			renderUtils.getRenderContext().begin();
-		}
-
-		collectRendables();
-
-	}
-
-	protected void collectRendables() {
-		sceneRenderableProvider.obtainSceneRenderables(renderObjectsSubscription, sceneNodeInstanceMapper, sceneShaderProvider, sceneRenderables);
-		sceneRenderableProvider.sort(sceneRenderables);
-	}
-
-	@Override
-	protected void end () {
-		super.end();
-
-		if (shouldEndContext) {
-			renderUtils.getRenderContext().end();
-		}
-
-		sceneRenderableProvider.freeAll(sceneRenderables);
-	}
-
-	/**
-	 * Render all collected and sorted objects, to be called within process function
-	 */
-	public void renderAllCollectedRenderables () {
-		BaseSceneShader currentShader = null;
-		for (SceneRenderable renderable : sceneRenderables) {
-			if (currentShader != renderable.shader) {
-				if (currentShader != null) currentShader.end();
-				currentShader = renderable.shader;
-				currentShader.begin(cameras, renderUtils, environment.getSceneEnvironment());
-			}
-			currentShader.render(renderable);
-		}
-		if (currentShader != null) currentShader.end();
-
-	}
-
+        public GLViewportConfig(int x, int y, int width, int height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+    }
 }

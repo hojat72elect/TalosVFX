@@ -8,39 +8,38 @@ import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 
 public class TransformComponentProvider extends AComponentProvider<TransformComponent> {
 
-	public TransformComponentProvider (TransformComponent component) {
-		super(component);
-	}
+    public TransformComponentProvider(TransformComponent component) {
+        super(component);
+    }
 
-	@Override
-	public Array<PropertyWidget> getListOfProperties () {
-		Array<PropertyWidget> properties = new Array<>();
+    @Override
+    public Array<PropertyWidget> getListOfProperties() {
+        Array<PropertyWidget> properties = new Array<>();
 
-		PropertyWidget positionWidget = WidgetFactory.generate(component, "position", "Position");
-		PropertyWidget rotationWidget = WidgetFactory.generate(component, "rotation", "Rotation");
-		PropertyWidget scaleWidget = WidgetFactory.generate(component, "scale", "Scale");
+        PropertyWidget positionWidget = WidgetFactory.generate(component, "position", "Position");
+        PropertyWidget rotationWidget = WidgetFactory.generate(component, "rotation", "Rotation");
+        PropertyWidget scaleWidget = WidgetFactory.generate(component, "scale", "Scale");
 
-		if (component.getGameObject().hasComponent(BoneComponent.class)) {
-			positionWidget.setReadOnly();
-			rotationWidget.setReadOnly();
-			scaleWidget.setReadOnly();
-		}
+        if (component.getGameObject().hasComponent(BoneComponent.class)) {
+            positionWidget.setReadOnly();
+            rotationWidget.setReadOnly();
+            scaleWidget.setReadOnly();
+        }
 
-		properties.add(positionWidget);
-		properties.add(rotationWidget);
-		properties.add(scaleWidget);
+        properties.add(positionWidget);
+        properties.add(rotationWidget);
+        properties.add(scaleWidget);
 
-		return properties;
-	}
+        return properties;
+    }
 
-	@Override
-	public String getPropertyBoxTitle () {
-		return "Transform";
-	}
+    @Override
+    public String getPropertyBoxTitle() {
+        return "Transform";
+    }
 
-	@Override
-	public int getPriority () {
-		return 1;
-	}
-
+    @Override
+    public int getPriority() {
+        return 1;
+    }
 }

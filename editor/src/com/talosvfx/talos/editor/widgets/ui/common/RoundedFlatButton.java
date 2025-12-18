@@ -1,6 +1,10 @@
 package com.talosvfx.talos.editor.widgets.ui.common;
 
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
 import com.talosvfx.talos.editor.project2.SharedResources;
@@ -14,6 +18,23 @@ public class RoundedFlatButton extends Button {
 
     public RoundedFlatButton() {
 
+    }
+
+    public RoundedFlatButton(Skin skin, Drawable drawable) {
+        build(skin, drawable, false);
+    }
+
+    public RoundedFlatButton(Skin skin, Label label) {
+        setSkin(skin);
+        makeStyle(skin);
+
+        label.setAlignment(Align.center);
+
+        iconCell = add(label).center().pad(5).padLeft(10).padRight(10);
+    }
+
+    public RoundedFlatButton(Skin skin, Drawable drawable, boolean toggle) {
+        build(skin, drawable, toggle);
     }
 
     public void make(String text) {
@@ -53,30 +74,11 @@ public class RoundedFlatButton extends Button {
         setStyle(style);
     }
 
-    public RoundedFlatButton(Skin skin, Drawable drawable) {
-        build(skin, drawable, false);
-    }
-
-    public RoundedFlatButton(Skin skin, Label label) {
-        setSkin(skin);
-        makeStyle(skin);
-
-        label.setAlignment(Align.center);
-
-        iconCell = add(label).center().pad(5).padLeft(10).padRight(10);
-
-    }
-
-
-    public RoundedFlatButton(Skin skin, Drawable drawable, boolean toggle) {
-        build(skin, drawable, toggle);
-    }
-
     private void build(Skin skin, Drawable drawable, boolean toggle) {
         setSkin(skin);
         makeStyle(skin);
 
-        if(!toggle) {
+        if (!toggle) {
             setDisabled(true);
         }
         setSize(24, 24);

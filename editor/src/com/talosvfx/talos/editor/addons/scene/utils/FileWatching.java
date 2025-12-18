@@ -1,18 +1,26 @@
 package com.talosvfx.talos.editor.addons.scene.utils;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.LifecycleListener;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Array;
-import com.talosvfx.talos.editor.addons.scene.SceneEditorWorkspace;
 import com.talosvfx.talos.editor.addons.scene.assets.AssetRepository;
 import com.talosvfx.talos.editor.addons.scene.events.ProjectDirectoryContentsChanged;
-import com.talosvfx.talos.editor.addons.scene.events.ScriptFileChangedEvent;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.project2.SharedResources;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,54 +28,33 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class FileWatching {
-    private Thread workingThread;
-
     private final Object lock = new Object();
+    private final Thread workingThread;
     private WatchService watchService;
 
     private volatile boolean shutdown;
 
-    private HashMap<WatchKey, Path> watchKeys = new HashMap<>();
+    private final HashMap<WatchKey, Path> watchKeys = new HashMap<>();
 
-    private Changes changes = new Changes();
+    private final Changes changes = new Changes();
 
-    public static class Changes {
-        public Array<FileHandle> added = new Array<>();
-        public Array<FileHandle> removed = new Array<>();
-        public Array<FileHandle> changed = new Array<>();
-
-        void reset () {
-            added.clear();
-            removed.clear();
-            changed.clear();
-        }
-
-        public boolean hasChanges () {
-            return added.size > 0 || removed.size > 0 || changed.size > 0;
-        }
-
-        public boolean directoryStructureChange () {
-            return added.size > 0 || removed.size > 0;
-        }
-    }
-
-    public FileWatching () {
+    public FileWatching() {
         workingThread = new Thread(this::run, "Watcher thread");
         workingThread.start();
 
         Gdx.app.addLifecycleListener(new LifecycleListener() {
             @Override
-            public void pause () {
+            public void pause() {
 
             }
 
             @Override
-            public void resume () {
+            public void resume() {
 
             }
 
             @Override
-            public void dispose () {
+            public void dispose() {
                 try {
                     shutdown();
                 } catch (Exception e) {
@@ -77,7 +64,7 @@ public class FileWatching {
         });
     }
 
-    public void startWatchingCurrentProject () throws IOException {
+    public void startWatchingCurrentProject() throws IOException {
         synchronized (lock) {
 
             if (watchService != null) {
@@ -95,11 +82,11 @@ public class FileWatching {
         }
     }
 
-    private void directoryModification (Path path, Function<Path, FileVisitResult> function) {
+    private void directoryModification(Path path, Function<Path, FileVisitResult> function) {
         try {
             Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
                 @Override
-                public FileVisitResult preVisitDirectory (Path dir, BasicFileAttributes attrs) {
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
                     return function.apply(dir);
                 }
             });
@@ -108,11 +95,11 @@ public class FileWatching {
         }
     }
 
-    private FileVisitResult registerDirectory (Path dir) {
+    private FileVisitResult registerDirectory(Path dir) {
 
         try {
             WatchKey key = dir.register(watchService,
-                    new WatchEvent.Kind[] {
+                    new WatchEvent.Kind[]{
                             StandardWatchEventKinds.ENTRY_CREATE,
                             StandardWatchEventKinds.ENTRY_DELETE,
                             StandardWatchEventKinds.ENTRY_MODIFY
@@ -126,7 +113,7 @@ public class FileWatching {
         return FileVisitResult.CONTINUE;
     }
 
-    private FileVisitResult unRegisterDirectory (Path path) {
+    private FileVisitResult unRegisterDirectory(Path path) {
 
         WatchKey watchKeyForDir = getWatchKeyForDir(path);
         if (watchKeyForDir != null) {
@@ -137,7 +124,7 @@ public class FileWatching {
         return FileVisitResult.CONTINUE;
     }
 
-    private WatchKey getWatchKeyForDir (Path dir) {
+    private WatchKey getWatchKeyForDir(Path dir) {
         for (Map.Entry<WatchKey, Path> entry : watchKeys.entrySet()) {
             if (entry.getValue() == dir) {
                 return entry.getKey();
@@ -146,11 +133,11 @@ public class FileWatching {
         return null;
     }
 
-    public void shutdown () {
+    public void shutdown() {
         shutdown = true;
     }
 
-    private void run () {
+    private void run() {
         while (!shutdown) {
             try {
 
@@ -168,13 +155,13 @@ public class FileWatching {
                                 Path parent = watchKeys.get(watchKey);
 
                                 watchKey.pollEvents().stream().filter(e -> e.kind() != StandardWatchEventKinds.OVERFLOW)
-                                        .map(e -> ((WatchEvent<Path>)e)).forEach(e -> {
-                                    Path p = e.context();
+                                        .map(e -> ((WatchEvent<Path>) e)).forEach(e -> {
+                                            Path p = e.context();
 
-                                    final Path absolutePath = parent.resolve(p);
+                                            final Path absolutePath = parent.resolve(p);
 
-                                    onFileWatchEvent(e, parent, absolutePath);
-                                });
+                                            onFileWatchEvent(e, parent, absolutePath);
+                                        });
 
                                 watchKey.reset();
                             }
@@ -183,7 +170,7 @@ public class FileWatching {
                     }
                 }
 
-                if(changes.hasChanges()) {
+                if (changes.hasChanges()) {
                     Notifications.fireEvent(Notifications.obtainEvent(ProjectDirectoryContentsChanged.class).set(changes));
                 }
 
@@ -194,7 +181,7 @@ public class FileWatching {
         }
     }
 
-    private void onFileWatchEvent (WatchEvent<Path> event, Path keyPath, Path path) {
+    private void onFileWatchEvent(WatchEvent<Path> event, Path keyPath, Path path) {
         File file = path.toFile();
         if (file.isDirectory()) {
             //We need to add a new watch, and also
@@ -220,7 +207,7 @@ public class FileWatching {
         }
     }
 
-    private void registerWatchActivities (WatchEvent<Path> event, File file) {
+    private void registerWatchActivities(WatchEvent<Path> event, File file) {
         FileHandle handle = pathToFileHandle(file);
         String scriptFolderPath = AssetRepository.getExportedScriptsFolderHandle().path();
 
@@ -244,8 +231,27 @@ public class FileWatching {
         }
     }
 
-    private FileHandle pathToFileHandle (File file) {
+    private FileHandle pathToFileHandle(File file) {
         return new FileHandle(file);
     }
 
+    public static class Changes {
+        public Array<FileHandle> added = new Array<>();
+        public Array<FileHandle> removed = new Array<>();
+        public Array<FileHandle> changed = new Array<>();
+
+        void reset() {
+            added.clear();
+            removed.clear();
+            changed.clear();
+        }
+
+        public boolean hasChanges() {
+            return added.size > 0 || removed.size > 0 || changed.size > 0;
+        }
+
+        public boolean directoryStructureChange() {
+            return added.size > 0 || removed.size > 0;
+        }
+    }
 }

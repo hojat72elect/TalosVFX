@@ -2,6 +2,7 @@ package com.talosvfx.talos.editor.dialogs;
 
 import com.kotcrab.vis.ui.util.dialog.Dialogs;
 import com.talosvfx.talos.TalosMain;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

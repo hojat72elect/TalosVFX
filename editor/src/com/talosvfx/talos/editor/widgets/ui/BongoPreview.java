@@ -8,7 +8,6 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.rockbite.bongo.engine.Bongo;
 import com.rockbite.bongo.engine.EngineBuilder;
@@ -26,101 +25,98 @@ import com.rockbite.bongo.engine.systems.render.EngineDebugSystem;
 import com.rockbite.bongo.engine.systems.render.EnvironmentConfigSystem;
 import com.rockbite.bongo.engine.systems.render.PBRShadedPassSystem;
 import com.rockbite.bongo.engine.systems.render.ShadowPassSystem;
-import com.talosvfx.talos.runtime.scene.components.TransformComponent;
-import com.talosvfx.talos.runtime.vfx.ParticleEffectInstance;
 import com.talosvfx.talos.runtime.components.Particle;
 import com.talosvfx.talos.runtime.systems.render.ParticleRenderPassSystem;
+import com.talosvfx.talos.runtime.vfx.ParticleEffectInstance;
+
 import lombok.Getter;
 
 public class BongoPreview {
 
-	@Getter
-	private final World world;
+    @Getter
+    private final World world;
 
-	private final int particleEntityID;
+    private final int particleEntityID;
 
-	public BongoPreview () {
-		Bongo.init();
+    public BongoPreview() {
+        Bongo.init();
 
-		ShaderProgram.pedantic = true;
+        ShaderProgram.pedantic = true;
 
-		BaseSystem[] userSystems = {
-			new CameraControllerSystem(),
-			new EnvironmentConfigSystem(),
+        BaseSystem[] userSystems = {
+                new CameraControllerSystem(),
+                new EnvironmentConfigSystem(),
 
-			//RENDER
-			new DepthPassSystem().setContextStartEnd(true, false),
-			new ShadowPassSystem(),
-			new PBRShadedPassSystem().setContextStartEnd(false, true),
+                //RENDER
+                new DepthPassSystem().setContextStartEnd(true, false),
+                new ShadowPassSystem(),
+                new PBRShadedPassSystem().setContextStartEnd(false, true),
 
-			new ParticleRenderPassSystem(),
+                new ParticleRenderPassSystem(),
 
-			new EngineDebugSystem()
-		};
+                new EngineDebugSystem()
+        };
 
-		world = EngineBuilder.buildWorld(userSystems);
-		world.getSystem(EngineDebugSystem.class).setDrawUnitSquare(false);
-		world.getSystem(EngineDebugSystem.class).setDrawAxis(false);
+        world = EngineBuilder.buildWorld(userSystems);
+        world.getSystem(EngineDebugSystem.class).setDrawUnitSquare(false);
+        world.getSystem(EngineDebugSystem.class).setDrawAxis(false);
 
-		world.getSystem(CameraControllerSystem.class).setEnabled(false);
+        world.getSystem(CameraControllerSystem.class).setEnabled(false);
 
 
-		//Particle
-		particleEntityID = world.create();
-		EntityEdit edit = world.edit(particleEntityID);
-		Particle particle = edit.create(Particle.class);
-	}
+        //Particle
+        particleEntityID = world.create();
+        EntityEdit edit = world.edit(particleEntityID);
+        Particle particle = edit.create(Particle.class);
+    }
 
-	public void setCamera (Camera camera) {
-		final Cameras cameras = world.getSystem(CameraControllerSystem.class).getCameras();
-		cameras.setGameCamera(camera);
+    public void setCamera(Camera camera) {
+        final Cameras cameras = world.getSystem(CameraControllerSystem.class).getCameras();
+        cameras.setGameCamera(camera);
+    }
 
-	}
+    public void updateParticleInstance(ParticleEffectInstance particleEffectInstance) {
+        final Entity entity = world.getEntity(particleEntityID);
+        entity.getComponent(Particle.class).setParticleEffectInstance(particleEffectInstance);
+    }
 
-	public void updateParticleInstance (ParticleEffectInstance particleEffectInstance) {
-		final Entity entity = world.getEntity(particleEntityID);
-		entity.getComponent(Particle.class).setParticleEffectInstance(particleEffectInstance);
-	}
+    public void updateParticlePosition(Vector3 vector3) {
+        Entity entity = world.getEntity(particleEntityID);
+        Particle component = entity.getComponent(Particle.class);
+        component.getTransform().setToTranslation(vector3);
+    }
 
-	public void updateParticlePosition (Vector3 vector3) {
-		Entity entity = world.getEntity(particleEntityID);
-		Particle component = entity.getComponent(Particle.class);
-		component.getTransform().setToTranslation(vector3);
-	}
+    private SceneModelInstance createBox(String name, Color color, float width, float height, float depth, float metal, float roughness) {
+        final SceneModel testBox = CubeUtils.createBox(
+                name,
+                width, height, depth,
+                SceneMaterial.BasicPBR(name, color, metal, roughness));
 
-	private SceneModelInstance createBox (String name, Color color, float width, float height, float depth, float metal, float roughness) {
-		final SceneModel testBox = CubeUtils.createBox(
-			name,
-			width, height, depth,
-			SceneMaterial.BasicPBR(name, color, metal, roughness));
-
-		final int entity = world.create();
-		final EntityEdit edit = world.edit(entity);
-		edit.create(ShadedLayer.class);
-		edit.create(DepthLayer.class);
-		edit.create(ShadowLayer.class);
+        final int entity = world.create();
+        final EntityEdit edit = world.edit(entity);
+        edit.create(ShadedLayer.class);
+        edit.create(DepthLayer.class);
+        edit.create(ShadowLayer.class);
 //		edit.create(UnlitLayer.class);
 
-		SceneModelInstance modelInstance = new SceneModelInstance(testBox);
-		edit.add(modelInstance);
-		return modelInstance;
-	}
+        SceneModelInstance modelInstance = new SceneModelInstance(testBox);
+        edit.add(modelInstance);
+        return modelInstance;
+    }
 
-	public void render () {
-		world.process();
-	}
+    public void render() {
+        world.process();
+    }
 
-	public Camera getWorldCamera () {
-		return world.getSystem(CameraControllerSystem.class).getCameras().getGameCamera();
-	}
+    public Camera getWorldCamera() {
+        return world.getSystem(CameraControllerSystem.class).getCameras().getGameCamera();
+    }
 
-	public InputAdapter getCameraController () {
-		return world.getSystem(CameraControllerSystem.class).getCameraController();
-	}
+    public InputAdapter getCameraController() {
+        return world.getSystem(CameraControllerSystem.class).getCameraController();
+    }
 
-	public void setCameraController (InputAdapter cameraInputController) {
-		world.getSystem(CameraControllerSystem.class).setCameraController(cameraInputController);
-	}
-
-
+    public void setCameraController(InputAdapter cameraInputController) {
+        world.getSystem(CameraControllerSystem.class).setCameraController(cameraInputController);
+    }
 }

@@ -30,13 +30,11 @@ import com.talosvfx.talos.runtime.vfx.utils.SimplexNoise;
 
 public class NoiseImage extends Actor {
 
-    private Skin skin;
     Texture white;
     ShaderProgram shaderProgram;
-
-    private float frequency = 20f;
-
     Pixmap pixmap;
+    private final Skin skin;
+    private float frequency = 20f;
 
     public NoiseImage(Skin skin) {
         this.skin = skin;
@@ -49,7 +47,7 @@ public class NoiseImage extends Actor {
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
-        if(Gdx.input.isKeyPressed(Input.Keys.D)) {
+        if (Gdx.input.isKeyPressed(Input.Keys.D)) {
             //drawPixmap(batch, parentAlpha);
         } else {
             drawWithShader(batch, parentAlpha);
@@ -69,21 +67,18 @@ public class NoiseImage extends Actor {
     }
 
     /**
-     * @deprecated
-     *
-     * WARNING THIS IS FOR TESTING PURPOSES ONLY,
-     * DO NOT USE AS THIS HAS HORRIBLE PERFORMANCE
-     *
      * @param batch
      * @param parentAlpha
+     * @deprecated WARNING THIS IS FOR TESTING PURPOSES ONLY,
+     * DO NOT USE AS THIS HAS HORRIBLE PERFORMANCE
      */
     public void drawPixmap(Batch batch, float parentAlpha) {
         SimplexNoise simplexNoise = new SimplexNoise();
         pixmap.setColor(0, 0, 0, 1f);
         pixmap.fill();
-        for(int x = 0; x < 165; x++) {
-            for(int y = 0; y < 100; y++) {
-                float v = simplexNoise.query(x/165f, y/100f, frequency) *0.5f + 0.5f;
+        for (int x = 0; x < 165; x++) {
+            for (int y = 0; y < 100; y++) {
+                float v = simplexNoise.query(x / 165f, y / 100f, frequency) * 0.5f + 0.5f;
                 pixmap.setColor(v, v, v, 1f);
                 pixmap.drawPixel(x, y);
             }

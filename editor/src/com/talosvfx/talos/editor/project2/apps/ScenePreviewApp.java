@@ -12,7 +12,7 @@ import com.talosvfx.talos.editor.project2.apps.preferences.ViewportPreferences;
 import com.talosvfx.talos.editor.project2.localprefs.TalosLocalPrefs;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.scene.SavableContainer;
-import com.talosvfx.talos.runtime.scene.Scene;
+
 import lombok.Getter;
 
 
@@ -30,19 +30,19 @@ public class ScenePreviewApp extends AppManager.BaseApp<SavableContainer> implem
 
         DummyLayoutApp<SavableContainer> sceneEditorWorkspaceApp = new DummyLayoutApp<SavableContainer>(SharedResources.skin, this, getAppName()) {
             @Override
-            public Actor getMainContent () {
+            public Actor getMainContent() {
                 return workspaceWidget;
             }
 
             @Override
-            public void onInputProcessorAdded () {
+            public void onInputProcessorAdded() {
                 super.onInputProcessorAdded();
                 workspaceWidget.restoreListeners();
                 SharedResources.stage.setScrollFocus(workspaceWidget);
             }
 
             @Override
-            public void onInputProcessorRemoved () {
+            public void onInputProcessorRemoved() {
                 super.onInputProcessorRemoved();
                 workspaceWidget.disableListeners();
             }
@@ -80,7 +80,7 @@ public class ScenePreviewApp extends AppManager.BaseApp<SavableContainer> implem
     }
 
     @Override
-    public void onUpdate () {
+    public void onUpdate() {
         getGridAppReference().updateTabName(getAppName());
     }
 

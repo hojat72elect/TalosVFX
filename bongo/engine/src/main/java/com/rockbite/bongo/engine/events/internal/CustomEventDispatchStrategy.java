@@ -15,29 +15,28 @@ import net.mostlyoriginal.api.event.common.Event;
  */
 public interface CustomEventDispatchStrategy {
 
-	/**
-	 * Subscribe listener to events.
-	 */
-	public void register (Object owner, CustomEventListenerAbstraction listener);
+    /**
+     * Subscribe listener to events.
+     */
+    void register(Object owner, CustomEventListenerAbstraction listener);
 
-	public void unregisterEventsForOwner (Object owner);
+    void unregisterEventsForOwner(Object owner);
 
-	/**
-	 * Dispatch event to registered listeners.
-	 */
-	public void dispatch (Event event);
+    /**
+     * Dispatch event to registered listeners.
+     */
+    void dispatch(Event event);
 
-	/**
-	 * Dispatch event of given type to registered listeners.
-	 * <p>
-	 * Implementations should assume event is not safe to dispatch
-	 * until the current artemis system has finished processing.
-	 */
-	public <T extends Event> T dispatch (Class<T> type);
+    /**
+     * Dispatch event of given type to registered listeners.
+     * <p>
+     * Implementations should assume event is not safe to dispatch
+     * until the current artemis system has finished processing.
+     */
+    <T extends Event> T dispatch(Class<T> type);
 
-	/**
-	 * Process your own business.
-	 */
-	public void process ();
-
+    /**
+     * Process your own business.
+     */
+    void process();
 }

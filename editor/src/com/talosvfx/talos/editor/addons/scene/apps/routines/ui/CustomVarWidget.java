@@ -2,8 +2,18 @@ package com.talosvfx.talos.editor.addons.scene.apps.routines.ui;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.EventListener;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.FocusListener;
@@ -17,9 +27,10 @@ import com.talosvfx.talos.editor.utils.CursorUtil;
 import com.talosvfx.talos.editor.utils.UIUtils;
 import com.talosvfx.talos.editor.widgets.ui.common.ArrowButton;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
-import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.LabelWithZoom;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.TextFieldWithZoom;
+import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
+
 import lombok.Getter;
 
 public class CustomVarWidget extends Table {
@@ -28,32 +39,23 @@ public class CustomVarWidget extends Table {
     private final Table main;
     @Getter
     private final int index;
-
+    private final RoutineStage routineStage;
     private Label label;
     private Label valueLabel;
     private TextField textField;
-
     private Stage stageRef;
-
     private boolean isSelected;
     private boolean isHover;
-
     private String value;
-
     private EventListener stageListener;
     private ArrowButton arrowButton;
-
     private Table top;
     private Table bottom;
-
     @Getter
     private Table fieldContainer;
     private Cell<Table> contentCell;
-
-    private ATypeWidget innerWidget;
+    private final ATypeWidget innerWidget;
     private Label typeLabel;
-
-    private final RoutineStage routineStage;
 
     public CustomVarWidget(RoutineStage routineStage, ATypeWidget innerWidget, int index) {
         this.index = index;
@@ -94,7 +96,7 @@ public class CustomVarWidget extends Table {
                 super.clicked(event, x, y);
                 arrowButton.toggle();
 
-                if(arrowButton.isCollapsed()) {
+                if (arrowButton.isCollapsed()) {
                     bottom.clearChildren();
                     bottom.pack();
                     UIUtils.invalidateForDepth(bottom, 4);
@@ -164,7 +166,7 @@ public class CustomVarWidget extends Table {
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 super.exit(event, x, y, pointer, toActor);
                 isHover = false;
-                if(pointer == -1) {
+                if (pointer == -1) {
                     setBackgrounds();
                 }
             }
@@ -186,7 +188,7 @@ public class CustomVarWidget extends Table {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
-                if(!dragged) {
+                if (!dragged) {
                     showEditMode();
                 }
             }
@@ -214,14 +216,14 @@ public class CustomVarWidget extends Table {
             @Override
             public void keyboardFocusChanged(FocusEvent event, Actor actor, boolean focused) {
                 super.keyboardFocusChanged(event, actor, focused);
-                if(!focused) {
+                if (!focused) {
                     hideEditMode();
                 }
             }
         });
 
         stageListener = new InputListener() {
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 Vector2 tmpVec = new Vector2();
                 tmpVec.set(x, y);
                 CustomVarWidget.this.stageToLocalCoordinates(tmpVec);
@@ -246,7 +248,7 @@ public class CustomVarWidget extends Table {
             getStage().getRoot().addCaptureListener(stageListener);
             stageRef = getStage();
         } else {
-            if(stageRef != null) {
+            if (stageRef != null) {
                 stageRef.getRoot().removeCaptureListener(stageListener);
                 stageRef = null;
             }
@@ -254,7 +256,7 @@ public class CustomVarWidget extends Table {
     }
 
     private void showEditMode() {
-        if(editing.isVisible()) return;
+        if (editing.isVisible()) return;
 
         getStage().setKeyboardFocus(textField);
         textField.selectAll();
@@ -286,11 +288,11 @@ public class CustomVarWidget extends Table {
         setBackgrounds();
     }
 
-    private void setBackgrounds () {
+    private void setBackgrounds() {
 
         ColorLibrary.BackgroundColor color = ColorLibrary.BackgroundColor.LIGHT_GRAY;
 
-        if(isSelected) {
+        if (isSelected) {
             color = ColorLibrary.BackgroundColor.MID_GRAY;
         } else {
             if (isHover) {
@@ -305,6 +307,10 @@ public class CustomVarWidget extends Table {
         label.setText(text);
     }
 
+    public String getValue() {
+        return value;
+    }
+
     public void setValue(String text) {
         valueLabel.setText(text);
         textField.setText(text);
@@ -312,10 +318,6 @@ public class CustomVarWidget extends Table {
         value = text;
 
         fireChangedEvent();
-    }
-
-    public String getValue () {
-        return value;
     }
 
     protected boolean fireChangedEvent() {
@@ -340,5 +342,4 @@ public class CustomVarWidget extends Table {
     public void applyValueToWrapper(PropertyWrapper<?> propertyWrapper) {
         innerWidget.applyValueToWrapper(propertyWrapper);
     }
-
 }

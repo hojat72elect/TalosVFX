@@ -10,17 +10,15 @@ import java.util.Random;
 public class DistributedRandom {
 
 
-    private int seed;
-
     Pool<Distribution> distributionPool;
     IntMap<Distribution> map = new IntMap<>();
-
+    private int seed;
     private long lastClear;
 
     public DistributedRandom() {
         distributionPool = new Pool<Distribution>() {
             @Override
-            protected Distribution newObject () {
+            protected Distribution newObject() {
                 return new Distribution();
             }
         };
@@ -28,7 +26,7 @@ public class DistributedRandom {
     }
 
     private void clearMap() {
-        if(TimeUtils.millis() - lastClear > 10 * 1000) {
+        if (TimeUtils.millis() - lastClear > 10 * 1000) {
             Iterator<IntMap.Entry<Distribution>> iterator = map.iterator();
             while (iterator.hasNext()) {
                 IntMap.Entry<Distribution> entry = iterator.next();
@@ -46,7 +44,7 @@ public class DistributedRandom {
 
         clearMap();
 
-        if(!map.containsKey(seed)) {
+        if (!map.containsKey(seed)) {
             Distribution distribution = distributionPool.obtain();
             distribution.setSeed(seed);
             map.put(seed, distribution);
@@ -59,10 +57,8 @@ public class DistributedRandom {
 
     public class Distribution implements Pool.Poolable {
 
-        private long lastAccess;
-
         Random random = new Random();
-
+        private long lastAccess;
         private int segment = 0;
 
         public Distribution() {
@@ -70,27 +66,27 @@ public class DistributedRandom {
         }
 
         @Override
-        public void reset () {
+        public void reset() {
             segment = 0;
             lastAccess = TimeUtils.millis();
         }
 
-        public void setSeed (int seed) {
+        public void setSeed(int seed) {
             random.setSeed(seed);
         }
 
-        public float nextFloat () {
+        public float nextFloat() {
             lastAccess = TimeUtils.millis();
 
-            if(segment == 0) {
+            if (segment == 0) {
                 segment = random.nextBoolean() ? 1 : 2;
-            } else if(segment == 1) {
+            } else if (segment == 1) {
                 segment = random.nextBoolean() ? 0 : 2;
             } else {
                 if (segment == 2) segment = random.nextBoolean() ? 0 : 1;
             }
 
-            return (1f/3f) * (segment + random.nextFloat());
+            return (1f / 3f) * (segment + random.nextFloat());
         }
 
         public boolean isExpired() {

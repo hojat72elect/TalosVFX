@@ -27,7 +27,7 @@ import com.talosvfx.talos.runtime.vfx.modules.SpriteMaterialModule;
 public class DrawableModuleWrapper extends ModuleWrapper<DrawableModule> {
 
 
-    public DrawableModuleWrapper () {
+    public DrawableModuleWrapper() {
         super();
     }
 
@@ -47,18 +47,15 @@ public class DrawableModuleWrapper extends ModuleWrapper<DrawableModule> {
 
         addInputSlot("point", DrawableModule.POINT_GENERATOR);
         addInputSlot("mesh", DrawableModule.MESH_GENERATOR);
-
     }
 
     @Override
-    public Class<? extends AbstractModule>  getSlotsPreferredModule(Slot slot) {
+    public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
 
-        if(slot.getIndex() == DrawableModule.MATERIAL_IN) return SpriteMaterialModule.class;
-        if(slot.getIndex() == DrawableModule.POINT_GENERATOR) return SingleParticlePointDataGeneratorModule.class;
-        if(slot.getIndex() == DrawableModule.MESH_GENERATOR) return QuadMeshGeneratorModule.class;
+        if (slot.getIndex() == DrawableModule.MATERIAL_IN) return SpriteMaterialModule.class;
+        if (slot.getIndex() == DrawableModule.POINT_GENERATOR) return SingleParticlePointDataGeneratorModule.class;
+        if (slot.getIndex() == DrawableModule.MESH_GENERATOR) return QuadMeshGeneratorModule.class;
 
         return null;
     }
-
-
 }

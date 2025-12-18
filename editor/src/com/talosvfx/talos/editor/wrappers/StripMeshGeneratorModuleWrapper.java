@@ -26,7 +26,7 @@ import com.talosvfx.talos.runtime.vfx.modules.Vector2Module;
 public class StripMeshGeneratorModuleWrapper extends ModuleWrapper<StripMeshGeneratorModule> {
 
 
-    public StripMeshGeneratorModuleWrapper () {
+    public StripMeshGeneratorModuleWrapper() {
         super();
     }
 
@@ -52,7 +52,7 @@ public class StripMeshGeneratorModuleWrapper extends ModuleWrapper<StripMeshGene
     }
 
     @Override
-    public Class<? extends AbstractModule> getSlotsPreferredModule (Slot slot) {
+    public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
         if (slot.getIndex() == StripMeshGeneratorModule.UVS) return Vector2Module.class;
         if (slot.getIndex() == StripMeshGeneratorModule.OFFSET) return Vector2Module.class;
         if (slot.getIndex() == StripMeshGeneratorModule.COLOUR) return ColorModule.class;
@@ -61,6 +61,4 @@ public class StripMeshGeneratorModuleWrapper extends ModuleWrapper<StripMeshGene
 
         return null;
     }
-
-
 }

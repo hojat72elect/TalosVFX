@@ -1,10 +1,11 @@
 package com.talosvfx.talos.editor.addons.scene.events;
 
 import com.badlogic.gdx.utils.Json;
+import com.talosvfx.talos.editor.notifications.TalosEvent;
 import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.GameObjectContainer;
-import com.talosvfx.talos.editor.notifications.TalosEvent;
 import com.talosvfx.talos.runtime.scene.components.AComponent;
+
 import lombok.Data;
 
 @Data
@@ -16,22 +17,22 @@ public class ComponentAdded implements TalosEvent {
     private AComponent component;
 
     @Override
-    public void reset () {
+    public void reset() {
         component = null;
     }
 
     @Override
-    public boolean notifyThroughSocket () {
+    public boolean notifyThroughSocket() {
         return true;
     }
 
     @Override
-    public String getEventType () {
+    public String getEventType() {
         return "ComponentUpdated";
     }
 
     @Override
-    public Json getAdditionalData (Json json) {
+    public Json getAdditionalData(Json json) {
         GameObject parentGameObject = component.getGameObject();
         if (parentGameObject == null || component == null) {
             return json;
@@ -44,7 +45,7 @@ public class ComponentAdded implements TalosEvent {
     }
 
     @Override
-    public Json getMainData (Json json) {
+    public Json getMainData(Json json) {
         json.writeValue("component", component);
         return json;
     }

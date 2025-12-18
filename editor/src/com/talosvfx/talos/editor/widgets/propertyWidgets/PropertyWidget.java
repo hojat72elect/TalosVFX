@@ -13,255 +13,245 @@ import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.talosvfx.talos.editor.addons.scene.SceneUtils;
 import com.talosvfx.talos.editor.addons.scene.assets.AssetRepository;
 import com.talosvfx.talos.editor.addons.scene.events.PropertyHolderEdited;
+import com.talosvfx.talos.editor.addons.scene.logic.IPropertyHolder;
 import com.talosvfx.talos.editor.addons.scene.logic.MultiPropertyHolder;
 import com.talosvfx.talos.editor.addons.scene.logic.componentwrappers.GameObjectPropertyHolder;
-import com.talosvfx.talos.runtime.scene.GameObject;
-import com.talosvfx.talos.runtime.scene.GameObjectContainer;
-import com.talosvfx.talos.editor.addons.scene.logic.IPropertyHolder;
-import com.talosvfx.talos.runtime.assets.AMetadata;
 import com.talosvfx.talos.editor.addons.scene.widgets.PropertyPanel;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.project2.SharedResources;
-import com.talosvfx.talos.runtime.scene.components.AComponent;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.LabelWithZoom;
-import lombok.Getter;
-import lombok.Setter;
+import com.talosvfx.talos.runtime.assets.AMetadata;
+import com.talosvfx.talos.runtime.scene.GameObject;
+import com.talosvfx.talos.runtime.scene.GameObjectContainer;
+import com.talosvfx.talos.runtime.scene.components.AComponent;
+import com.talosvfx.talos.runtime.utils.Supplier;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.talosvfx.talos.runtime.utils.Supplier;
+
+import lombok.Getter;
+import lombok.Setter;
 
 public abstract class PropertyWidget<T> extends Table {
 
-	private static final Logger logger = LoggerFactory.getLogger(PropertyWidget.class);
+    private static final Logger logger = LoggerFactory.getLogger(PropertyWidget.class);
+    @Setter
+    public ChangeListener injectedChangeListener;
+    @Getter
+    protected LabelWithZoom propertyName;
+    protected Table valueContainer;
+    protected T value;
+    @Setter
+    protected PropertyPanel topLevelPropertiesPanel;
+    protected boolean readOnly;
+    ChangeListener listener;
+    private Supplier<T> supplier;
+    private ValueChanged<T> valueChanged;
+    private Object parent;
+    private boolean hasName = true;
 
-	@Getter
-	protected LabelWithZoom propertyName;
-	protected Table valueContainer;
-	protected T value;
+    protected PropertyWidget() {
 
-	ChangeListener listener;
+    }
 
-	private Supplier<T> supplier;
-	private ValueChanged<T> valueChanged;
+    public PropertyWidget(Supplier<T> supplier, ValueChanged<T> valueChanged, Object parent) {
+        this("empty", supplier, valueChanged, parent);
+    }
 
-	private Object parent;
+    public PropertyWidget(String name, Supplier<T> supplier, ValueChanged<T> valueChanged, Object parent) {
+        this.supplier = supplier;
+        this.valueChanged = valueChanged;
+        setParent(parent);
+        build(name);
+    }
 
-	private boolean hasName = true;
+    public void toggleHide(boolean hidden) {
+        //Check if we are in a cell
+        if (getParent() instanceof Table) {
+            Cell<PropertyWidget<T>> cell = ((Table) getParent()).getCell(this);
+            if (cell != null) {
+                if (hidden) {
+                    setVisible(false);
+                    cell.height(0);
+                    ((Table) getParent()).invalidateHierarchy();
+                } else {
+                    setVisible(true);
+                    cell.height(Value.prefHeight);
+                    ((Table) getParent()).invalidateHierarchy();
+                }
+            }
+        }
+    }
 
-	@Setter
-	protected PropertyPanel topLevelPropertiesPanel;
+    public void setParent(Object scriptProperty) {
+        this.parent = scriptProperty;
+    }
 
-	@Setter
-	public ChangeListener injectedChangeListener;
+    public Object getParentObject() {
+        return parent;
+    }
 
-	protected boolean readOnly;
+    public void setReadOnly() {
+        readOnly = true;
+    }
 
-	public void toggleHide (boolean hidden) {
-		//Check if we are in a cell
-		if (getParent() instanceof Table) {
-			Cell<PropertyWidget<T>> cell = ((Table)getParent()).getCell(this);
-			if (cell != null) {
-				if (hidden) {
-					setVisible(false);
-					cell.height(0);
-					((Table)getParent()).invalidateHierarchy();
-				} else {
-					setVisible(true);
-					cell.height(Value.prefHeight);
-					((Table)getParent()).invalidateHierarchy();
-				}
-			}
-		}
-	}
+    protected void build(String name) {
+        if (name != null) {
+            hasName = true;
+            propertyName = new LabelWithZoom(name + ":", SharedResources.skin);
+            propertyName.setAlignment(Align.left);
+            valueContainer = new Table();
 
-	public void setParent (Object scriptProperty) {
-		this.parent = scriptProperty;
-	}
+            if (isFullSize()) {
+                add(propertyName).left().growX();
+                row();
+                add(valueContainer).growX();
+            } else {
+                add(propertyName).left();
+                add(valueContainer).right().expandX().minWidth(170);
+            }
 
-	public Object getParentObject () {
-		return parent;
-	}
+            addToContainer(getSubWidget());
+        } else {
+            hasName = false;
+            add(getSubWidget()).growX();
+        }
+    }
 
-	public void setReadOnly () {
-		readOnly = true;
-	};
+    protected void addToContainer(Actor actor) {
+        valueContainer.add(actor).growX().width(0).right();
+    }
 
+    public T getValue() {
+        return supplier.get();
+    }
 
-	public interface ValueChanged<T> {
-		void report(T value);
-	}
+    public Actor getSubWidget() {
+        return null;
+    }
 
-	protected PropertyWidget () {
+    public void updateValue() {
+        this.value = supplier.get();
+        updateWidget(value);
+    }
 
-	}
+    @Override
+    public void act(float delta) {
+        super.act(delta);
+        if (readOnly) {
+            updateValue();
+        }
+    }
 
-	public PropertyWidget (Supplier<T> supplier, ValueChanged<T> valueChanged, Object parent) {
-		this("empty", supplier, valueChanged, parent);
-	}
+    public abstract void updateWidget(T value);
 
-	public PropertyWidget (String name, Supplier<T> supplier, ValueChanged<T> valueChanged, Object parent) {
-		this.supplier = supplier;
-		this.valueChanged = valueChanged;
-		setParent(parent);
-		build(name);
-	}
+    protected void callValueChanged(T value) {
+        boolean isFastChange = isFastChange();
+        callValueChanged(value, isFastChange);
+    }
 
-	protected void build(String name) {
-		if(name != null) {
-			hasName = true;
-			propertyName = new LabelWithZoom(name + ":", SharedResources.skin);
-			propertyName.setAlignment(Align.left);
-			valueContainer = new Table();
+    protected void callValueChanged(T value, boolean isFastChange) {
+        valueChanged(value);
+        PropertyHolderEdited event = Notifications.obtainEvent(PropertyHolderEdited.class);
+        event.topLevelPropertiesPanel = topLevelPropertiesPanel;
+        event.parentOfPropertyHolder = this.parent;
+        event.fastChange = isFastChange;
+        Notifications.fireEvent(event);
 
-			if (isFullSize()) {
-				add(propertyName).left().growX();
-				row();
-				add(valueContainer).growX();
-			} else {
-				add(propertyName).left();
-				add(valueContainer).right().expandX().minWidth(170);
-			}
+        if (topLevelPropertiesPanel != null) {
+            topLevelPropertiesPanel.setIgnoringEvents(true);
+        }
+        //Fire the component update that wont manipulate this properties panel
 
-			addToContainer(getSubWidget());
-		} else {
-			hasName = false;
-			add(getSubWidget()).growX();
-		}
-	}
+        if (parent instanceof AComponent) {
+            //WE need the context of what scene this shit belongs to
+            IPropertyHolder currentHolder = topLevelPropertiesPanel.getCurrentHolder();
 
-	protected void addToContainer(Actor actor) {
-		valueContainer.add(actor).growX().width(0).right();
-	}
+            if (currentHolder instanceof GameObjectPropertyHolder) {
+                GameObject gameObject = ((AComponent) parent).getGameObject();
+                SceneUtils.componentUpdated(gameObject.getGameObjectContainerRoot(), gameObject, (AComponent) parent, isFastChange);
+            } else {
+                logger.error("this should be a game object container");
+            }
+        } else if (parent instanceof AMetadata) {
+            if (!isFastChange) {
+                AssetRepository.getInstance().saveMetaData((AMetadata) parent, true);
+            }
+        } else if (parent instanceof GameObjectContainer) {
+            if (!isFastChange) {
+                SceneUtils.markContainerChanged((GameObjectContainer) parent);
+            }
+        } else if (parent instanceof MultiPropertyHolder.MultiPropertyProvider) {
+            MultiPropertyHolder.MultiPropertyProvider multiPropertyProvider = (MultiPropertyHolder.MultiPropertyProvider) parent;
+            Class<?> type = multiPropertyProvider.getWidgetClass(this);
 
-	public T getValue() {
-		return supplier.get();
-	}
+            multiPropertyProvider.propagateChanges();
 
-	public Actor getSubWidget() {
-		return null;
-	}
+            if (AComponent.class.isAssignableFrom(type)) {
+                Array<PropertyWidget> propertyWidgets = multiPropertyProvider.getPropertyWidgetsFor(this);
+                for (PropertyWidget propertyWidget : propertyWidgets) {
+                    AComponent component = ((AComponent) propertyWidget.getParentObject());
+                    SceneUtils.fireComponentUpdateEvent(component, isFastChange);
+                }
+                GameObjectContainer container = ((AComponent) propertyWidgets.first().getParentObject()).getGameObject().getGameObjectContainerRoot();
 
-	public void updateValue() {
-		this.value = supplier.get();
-		updateWidget(value);
-	}
+                if (!isFastChange) {
+                    SceneUtils.markContainerChanged(container);
+                }
+            }
+        }
 
-	@Override
-	public void act (float delta) {
-		super.act(delta);
-		if (readOnly) {
-			updateValue();
-		}
-	}
+        if (topLevelPropertiesPanel != null) {
+            topLevelPropertiesPanel.setIgnoringEvents(false);
+        }
+    }
 
-	public abstract void updateWidget(T value);
+    public boolean isFastChange() {
+        return false;
+    }
 
+    public void valueChanged(T value) {
+        fire(new ChangeListener.ChangeEvent());
+        valueChanged.report(value);
+        if (injectedChangeListener != null) {
+            injectedChangeListener.changed(new ChangeListener.ChangeEvent(), this);
+        }
+    }
 
-	protected void callValueChanged (T value) {
-		boolean isFastChange = isFastChange();
-		callValueChanged(value, isFastChange);
-	}
+    protected boolean isFullSize() {
+        return !hasName;
+    }
 
-	protected void callValueChanged (T value, boolean isFastChange) {
-		valueChanged(value);
-		PropertyHolderEdited event = Notifications.obtainEvent(PropertyHolderEdited.class);
-		event.topLevelPropertiesPanel = topLevelPropertiesPanel;
-		event.parentOfPropertyHolder = this.parent;
-		event.fastChange = isFastChange;
-		Notifications.fireEvent(event);
+    public PropertyWidget clone() {
+        try {
+            Constructor constructor = ClassReflection.getDeclaredConstructor(this.getClass());
+            constructor.setAccessible(true);
+            PropertyWidget widget = (PropertyWidget) constructor.newInstance();
+            widget.build("empty");
 
-		if (topLevelPropertiesPanel != null) {
-			topLevelPropertiesPanel.setIgnoringEvents(true);
-		}
-		//Fire the component update that wont manipulate this properties panel
+            widget.supplier = this.supplier;
+            widget.valueChanged = this.valueChanged;
+            if (widget.propertyName != null && this.propertyName != null) {
+                widget.propertyName.setText(this.propertyName.getText());
+            }
+            return widget;
+        } catch (ReflectionException e) {
+            e.printStackTrace();
+        }
 
-		if (parent instanceof AComponent) {
-			//WE need the context of what scene this shit belongs to
-			IPropertyHolder currentHolder = topLevelPropertiesPanel.getCurrentHolder();
+        return null;
+    }
 
-			if (currentHolder instanceof GameObjectPropertyHolder) {
-				GameObject gameObject = ((AComponent)parent).getGameObject();
-				SceneUtils.componentUpdated(gameObject.getGameObjectContainerRoot(), gameObject, (AComponent)parent, isFastChange);
-			} else {
-				logger.error("this should be a game object container");
-			}
-		} else if (parent instanceof AMetadata) {
-			if (!isFastChange) {
-				AssetRepository.getInstance().saveMetaData((AMetadata)parent, true);
-			}
-		} else if (parent instanceof GameObjectContainer) {
-			if (!isFastChange) {
-				SceneUtils.markContainerChanged((GameObjectContainer)parent);
-			}
-		} else if (parent instanceof MultiPropertyHolder.MultiPropertyProvider) {
-			MultiPropertyHolder.MultiPropertyProvider multiPropertyProvider = (MultiPropertyHolder.MultiPropertyProvider) parent;
-			Class<?> type = multiPropertyProvider.getWidgetClass(this);
+    public void set(Supplier<T> supplier, ValueChanged<T> valueChanged) {
+        this.supplier = supplier;
+        this.valueChanged = valueChanged;
+    }
 
-			multiPropertyProvider.propagateChanges();
+    public void report(T value) {
+        valueChanged.report(value);
+    }
 
-			if (AComponent.class.isAssignableFrom(type)) {
-				Array<PropertyWidget> propertyWidgets = multiPropertyProvider.getPropertyWidgetsFor(this);
-				for (PropertyWidget propertyWidget : propertyWidgets) {
-					AComponent component = ((AComponent) propertyWidget.getParentObject());
-					SceneUtils.fireComponentUpdateEvent(component, isFastChange);
-				}
-				GameObjectContainer container = ((AComponent) propertyWidgets.first().getParentObject()).getGameObject().getGameObjectContainerRoot();
-
-				if (!isFastChange) {
-					SceneUtils.markContainerChanged(container);
-				}
-			}
-		}
-
-		if (topLevelPropertiesPanel != null) {
-			topLevelPropertiesPanel.setIgnoringEvents(false);
-		}
-	}
-
-	public boolean isFastChange () {
-		return false;
-	}
-
-	public void valueChanged(T value) {
-		fire(new ChangeListener.ChangeEvent());
-		valueChanged.report(value);
-		if (injectedChangeListener != null) {
-			injectedChangeListener.changed(new ChangeListener.ChangeEvent(), this);
-		}
-	}
-
-	protected boolean isFullSize() {
-		return !hasName;
-	}
-
-	public PropertyWidget clone()  {
-		try {
-			Constructor constructor = ClassReflection.getDeclaredConstructor(this.getClass());
-			constructor.setAccessible(true);
-			PropertyWidget widget = (PropertyWidget) constructor.newInstance();
-			widget.build("empty");
-
-			widget.supplier = this.supplier;
-			widget.valueChanged = this.valueChanged;
-			if (widget.propertyName != null && this.propertyName != null) {
-				widget.propertyName.setText(this.propertyName.getText());
-			}
-			return widget;
-
-
-		} catch (ReflectionException e) {
-			e.printStackTrace();
-		}
-
-		return null;
-	}
-
-	public void set(Supplier<T> supplier, ValueChanged<T> valueChanged) {
-		this.supplier = supplier;
-		this.valueChanged = valueChanged;
-	}
-
-	public void report(T value) {
-		valueChanged.report(value);
-	}
+    public interface ValueChanged<T> {
+        void report(T value);
+    }
 }

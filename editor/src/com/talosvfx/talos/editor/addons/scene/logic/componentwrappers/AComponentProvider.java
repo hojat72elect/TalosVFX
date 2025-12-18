@@ -5,12 +5,12 @@ import com.talosvfx.talos.runtime.scene.components.AComponent;
 
 public abstract class AComponentProvider<T extends AComponent> extends ComponentPropertyProvider<T> {
 
-	public AComponentProvider (T component) {
-		super(component);
-	}
+    public AComponentProvider(T component) {
+        super(component);
+    }
 
-	@Override
-	public Class<? extends IPropertyProvider> getType () {
-		return getClass();
-	}
+    @Override
+    public Class<? extends IPropertyProvider> getType() {
+        return getClass();
+    }
 }

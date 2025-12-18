@@ -8,6 +8,7 @@ import com.talosvfx.talos.runtime.routine.AsyncRoutineNodeState;
 import com.talosvfx.talos.runtime.routine.RoutineNode;
 import com.talosvfx.talos.runtime.routine.TickableNode;
 import com.talosvfx.talos.runtime.routine.misc.InterpolationLibrary;
+
 import lombok.Getter;
 
 public abstract class AsyncRoutineNode<U, T extends AsyncRoutineNodeState<U>> extends RoutineNode implements TickableNode {
@@ -15,7 +16,7 @@ public abstract class AsyncRoutineNode<U, T extends AsyncRoutineNodeState<U>> ex
     @Getter
     protected Array<T> states = new Array<>();
 
-    private Array<U> tmpArr = new Array<>();
+    private final Array<U> tmpArr = new Array<>();
 
     private boolean isYoyo = false;
     private Interpolation interpolation = Interpolation.linear;
@@ -47,9 +48,9 @@ public abstract class AsyncRoutineNode<U, T extends AsyncRoutineNodeState<U>> ex
 
     @Override
     public void receiveSignal(String portName) {
-        U signalPayload = (U)routineInstanceRef.getSignalPayload();
+        U signalPayload = (U) routineInstanceRef.getSignalPayload();
 
-        if(!supportsConcurrent()) {
+        if (!supportsConcurrent()) {
             for (int i = states.size - 1; i >= 0; i--) {
                 if (states.get(i).getTarget() == signalPayload) {
                     //states.get(i).alpha = 0;
@@ -71,7 +72,7 @@ public abstract class AsyncRoutineNode<U, T extends AsyncRoutineNodeState<U>> ex
 
         boolean success = targetAdded(state);
 
-        if(success) {
+        if (success) {
             states.add(state);
         } else {
             Pools.free(state);
@@ -90,7 +91,7 @@ public abstract class AsyncRoutineNode<U, T extends AsyncRoutineNodeState<U>> ex
     }
 
     public void tick(float delta) {
-        if(states.isEmpty()) return;
+        if (states.isEmpty()) return;
 
         // for each state process it's alpha
         // make sure to use interpolations
@@ -105,12 +106,12 @@ public abstract class AsyncRoutineNode<U, T extends AsyncRoutineNodeState<U>> ex
 
         tmpArr.clear();
 
-        for(int i = states.size - 1; i >= 0; i--) {
+        for (int i = states.size - 1; i >= 0; i--) {
             T state = states.get(i);
 
             //Do removal before
-            if(state.alpha >= 1 && state.direction == 1) {
-                if(!isYoyo) {
+            if (state.alpha >= 1 && state.direction == 1) {
+                if (!isYoyo) {
                     freeState(i);
                     continue;
                 } else {
@@ -118,23 +119,21 @@ public abstract class AsyncRoutineNode<U, T extends AsyncRoutineNodeState<U>> ex
                 }
             }
 
-            if(state.alpha <= 0 && state.direction == -1) {
+            if (state.alpha <= 0 && state.direction == -1) {
                 freeState(i);
                 continue;
             }
             //end removal
 
-            state.alpha += state.direction * delta/state.getDuration();
-            if(state.alpha > 1) state.alpha = 1;
-            if(state.alpha < 0) state.alpha = 0;
+            state.alpha += state.direction * delta / state.getDuration();
+            if (state.alpha > 1) state.alpha = 1;
+            if (state.alpha < 0) state.alpha = 0;
             state.interpolatedAlpha = interpolation.apply(state.alpha);
 
             stateTick(state, delta);
-
-
         }
 
-        for(U target: tmpArr) {
+        for (U target : tmpArr) {
             // this now needs to send signal to next guy
             routineInstanceRef.setSignalPayload(target);
             routineInstanceRef.storeGlobal("executedTargets", targets);
@@ -161,7 +160,7 @@ public abstract class AsyncRoutineNode<U, T extends AsyncRoutineNodeState<U>> ex
     @Override
     public void reset() {
         super.reset();
-        for(int i = states.size - 1; i >= 0; i--) {
+        for (int i = states.size - 1; i >= 0; i--) {
             T state = states.get(i);
             Pools.free(state);
         }

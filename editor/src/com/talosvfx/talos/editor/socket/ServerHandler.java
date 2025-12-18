@@ -1,7 +1,11 @@
 package com.talosvfx.talos.editor.socket;
 
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.annotations.*;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketError;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
+import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 @WebSocket
 public class ServerHandler {
@@ -22,8 +26,7 @@ public class ServerHandler {
     }
 
     @OnWebSocketError
-    public void onError (Session session, Throwable throwable) {
+    public void onError(Session session, Throwable throwable) {
         throwable.printStackTrace();
     }
-
 }

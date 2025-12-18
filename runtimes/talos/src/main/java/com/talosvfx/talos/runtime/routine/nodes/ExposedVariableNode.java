@@ -12,10 +12,10 @@ public class ExposedVariableNode extends RoutineNode {
     private PropertyWrapper<?> propertyWrapper;
 
     @Override
-    public Object queryValue (String targetPortName) {
+    public Object queryValue(String targetPortName) {
 
         PropertyWrapper instance = routineInstanceRef.getProperties().get(key);
-        if(instance == null) {
+        if (instance == null) {
             if (propertyWrapper == null) {
                 return 0;
             } else {
@@ -34,14 +34,14 @@ public class ExposedVariableNode extends RoutineNode {
     }
 
     @Override
-    protected void configureNode (JsonValue properties) {
+    protected void configureNode(JsonValue properties) {
         index = properties.getInt("index");
         key = properties.getString("key");
 
         configured = true;
     }
 
-    public void updateForPropertyWrapper (PropertyWrapper<?> propertyWrapper) {
+    public void updateForPropertyWrapper(PropertyWrapper<?> propertyWrapper) {
         if (propertyWrapper != null) {
             index = propertyWrapper.index;
             this.propertyWrapper = propertyWrapper;

@@ -17,15 +17,14 @@ public class SpineMetadata extends AMetadata {
 
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         pixelsPerUnit = jsonData.getFloat("pixelsPerUnit", DefaultConstants.defaultPixelPerUnitProvider.get());
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("pixelsPerUnit", pixelsPerUnit);
     }
-
 }

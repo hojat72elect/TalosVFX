@@ -1,18 +1,16 @@
 package com.talosvfx.talos.editor.addons.scene.widgets.gizmos;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Polygon;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.talosvfx.talos.editor.addons.scene.SceneUtils;
 import com.talosvfx.talos.editor.utils.CursorUtil;
 import com.talosvfx.talos.runtime.scene.components.SpriteRendererComponent;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,14 +18,15 @@ public class SpriteTransformGizmo extends SmartTransformGizmo {
 
     private static final Logger logger = LoggerFactory.getLogger(SpriteTransformGizmo.class);
 
-    private Vector2 tempVec2 = new Vector2();
+    private final Vector2 tempVec2 = new Vector2();
+    private final float[] verts = new float[2 * 4];
 
     public SpriteTransformGizmo() {
         super();
     }
 
     @Override
-    public void draw (Batch batch, float parentAlpha) {
+    public void draw(Batch batch, float parentAlpha) {
         super.draw(batch, parentAlpha);
 
         if (isSelected()) {
@@ -42,11 +41,9 @@ public class SpriteTransformGizmo extends SmartTransformGizmo {
                 CursorUtil.setDynamicModeCursor(CursorUtil.CursorType.ROTATE);
             }
         }
-
     }
-    private float[] verts = new float[2 * 4];
 
-    public void getBounds (Polygon boundingPolygon) {
+    public void getBounds(Polygon boundingPolygon) {
 
         TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
         SpriteRendererComponent spriteRendererComponent = gameObject.getComponent(SpriteRendererComponent.class);
@@ -59,36 +56,35 @@ public class SpriteTransformGizmo extends SmartTransformGizmo {
         float width = signWidth * spriteRendererComponent.size.x;
         float height = signHeight * spriteRendererComponent.size.y;
 
-        verts[0] = -width/2f;
-        verts[1] = -height/2f;
+        verts[0] = -width / 2f;
+        verts[1] = -height / 2f;
 
-        verts[2] = -width/2f;
-        verts[3] = height/2f;
+        verts[2] = -width / 2f;
+        verts[3] = height / 2f;
 
-        verts[4] = width/2f;
-        verts[5] = height/2f;
+        verts[4] = width / 2f;
+        verts[5] = height / 2f;
 
-        verts[6] = width/2f;
-        verts[7] = -height/2f;
+        verts[6] = width / 2f;
+        verts[7] = -height / 2f;
 
         boundingPolygon.setPosition(transformComponent.worldPosition.x, transformComponent.worldPosition.y);
         boundingPolygon.setVertices(verts);
         boundingPolygon.setOrigin(0, 0);
         boundingPolygon.setRotation(transformComponent.worldRotation);
-
     }
 
     @Override
-    protected void updatePointsFromComponent () {
+    protected void updatePointsFromComponent() {
         getWorldLocAround(tmp, 0, 0); // this is center position of camera
 
         TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
         SpriteRendererComponent spriteRendererComponent = gameObject.getComponent(SpriteRendererComponent.class);
 
-        points[LB].set(tmp.x - spriteRendererComponent.size.x/2f, tmp.y - spriteRendererComponent.size.y/2f);
-        points[LT].set(tmp.x - spriteRendererComponent.size.x/2f, tmp.y + spriteRendererComponent.size.y/2f);
-        points[RT].set(tmp.x + spriteRendererComponent.size.x/2f, tmp.y + spriteRendererComponent.size.y/2f);
-        points[RB].set(tmp.x + spriteRendererComponent.size.x/2f, tmp.y - spriteRendererComponent.size.y/2f);
+        points[LB].set(tmp.x - spriteRendererComponent.size.x / 2f, tmp.y - spriteRendererComponent.size.y / 2f);
+        points[LT].set(tmp.x - spriteRendererComponent.size.x / 2f, tmp.y + spriteRendererComponent.size.y / 2f);
+        points[RT].set(tmp.x + spriteRendererComponent.size.x / 2f, tmp.y + spriteRendererComponent.size.y / 2f);
+        points[RB].set(tmp.x + spriteRendererComponent.size.x / 2f, tmp.y - spriteRendererComponent.size.y / 2f);
 
         points[LB].rotateAroundDeg(tmp, transformComponent.worldRotation);
         points[LT].rotateAroundDeg(tmp, transformComponent.worldRotation);
@@ -100,7 +96,7 @@ public class SpriteTransformGizmo extends SmartTransformGizmo {
     }
 
     @Override
-    protected void transformOldToNew () {
+    protected void transformOldToNew() {
         TransformComponent transform = gameObject.getComponent(TransformComponent.class);
         SpriteRendererComponent spriteRendererComponent = gameObject.getComponent(SpriteRendererComponent.class);
 
@@ -151,13 +147,11 @@ public class SpriteTransformGizmo extends SmartTransformGizmo {
     }
 
     @Override
-    protected void reportResizeUpdated (boolean isRapid) {
+    protected void reportResizeUpdated(boolean isRapid) {
         TransformComponent transform = gameObject.getComponent(TransformComponent.class);
         SceneUtils.componentUpdated(gameObjectContainer, gameObject, transform, isRapid);
 
         SpriteRendererComponent spriteRendererComponent = gameObject.getComponent(SpriteRendererComponent.class);
         SceneUtils.componentUpdated(gameObjectContainer, gameObject, spriteRendererComponent, isRapid);
     }
-
-
 }

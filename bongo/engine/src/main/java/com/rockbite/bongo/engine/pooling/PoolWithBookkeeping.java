@@ -4,134 +4,129 @@ import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.GdxRuntimeException;
-import com.badlogic.gdx.utils.ObjectSet;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.Field;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.rockbite.bongo.engine.Bongo;
 import com.rockbite.bongo.engine.threadutil.ThreadUtils;
+
 import lombok.Getter;
 import lombok.Setter;
 
 public abstract class PoolWithBookkeeping<T> extends Pool<T> {
 
-	@Getter
-	final Array<T> existingInstances = new Array<>();
+    private static final int SIZE_WARN_THRESHOLD = 1000;
+    @Getter
+    final Array<T> existingInstances = new Array<>();
+    @Getter
+    @Setter
+    Thread accessThread;
+    private boolean customPoolThreshold;
+    private int customThreshold;
+    @Getter
+    private final String poolName;
+    private Array<T> freeObjectsArray = null;
 
-	private static final int SIZE_WARN_THRESHOLD = 1000;
+    @Deprecated
+    public PoolWithBookkeeping() {
+        throw new GdxRuntimeException("Use Constructor with poolName");
+    }
 
-	private boolean customPoolThreshold;
-	private int customThreshold;
+    public PoolWithBookkeeping(int initialCapacity) {
+        throw new GdxRuntimeException("Use Constructor with poolName");
+    }
 
+    public PoolWithBookkeeping(int initialCapacity, int max) {
+        throw new GdxRuntimeException("Use Constructor with poolName");
+    }
 
-	public PoolWithBookkeeping<T> setCustomThreshold (int threshold) {
-		this.customThreshold = threshold;
-		customPoolThreshold = true;
-		return this;
-	}
+    public PoolWithBookkeeping(String poolName) {
+        super();
+        this.poolName = poolName;
+    }
 
+    public PoolWithBookkeeping(String poolName, int initialCapacity) {
+        super(initialCapacity);
+        this.poolName = poolName;
+    }
 
-	@Getter
-	private String poolName;
+    public PoolWithBookkeeping(String poolName, int initialCapacity, int max) {
+        super(initialCapacity, max);
+        this.poolName = poolName;
+    }
 
-	@Getter @Setter
-	Thread accessThread;
+    public PoolWithBookkeeping<T> setCustomThreshold(int threshold) {
+        this.customThreshold = threshold;
+        customPoolThreshold = true;
+        return this;
+    }
 
-	@Deprecated
-	public PoolWithBookkeeping () {
-		throw new GdxRuntimeException("Use Constructor with poolName");
-	}
+    public boolean contains(Pool<T> pool, T component) {
+        try {
+            if (freeObjectsArray == null) {
+                Field freeObjects = ClassReflection.getDeclaredField(Pool.class, "freeObjects");
+                freeObjects.setAccessible(true);
+                freeObjectsArray = (Array<T>) freeObjects.get(pool);
+            }
+            if (freeObjectsArray.contains(component, true)) {
+                return true;
+            }
+        } catch (ReflectionException e) {
+            e.printStackTrace();
+        }
 
-	public PoolWithBookkeeping (int initialCapacity) {
-		throw new GdxRuntimeException("Use Constructor with poolName");
-	}
+        return false;
+    }
 
-	public PoolWithBookkeeping (int initialCapacity, int max) {
-		throw new GdxRuntimeException("Use Constructor with poolName");
-	}
+    @Override
+    public void free(T object) {
+        super.free(object);
+        if (Bongo.DEBUG) {
 
-	public PoolWithBookkeeping (String poolName) {
-		super();
-		this.poolName = poolName;
-	}
+            if (Gdx.app != null) {
+                //We are Libgdx
 
-	public PoolWithBookkeeping (String poolName, int initialCapacity) {
-		super(initialCapacity);
-		this.poolName = poolName;
-	}
+                if (accessThread != null) {
+                    ThreadUtils.gdxThreadSafetyCheck(accessThread);
+                } else {
+                    ThreadUtils.gdxThreadSafetyCheck();
+                }
+            }
+        }
+    }
 
-	public PoolWithBookkeeping (String poolName, int initialCapacity, int max) {
-		super(initialCapacity, max);
-		this.poolName = poolName;
-	}
+    public T obtain() {
+        boolean creatingNewObject = getFree() == 0;
+        final T obtain = super.obtain();
+        if (Bongo.DEBUG) {
 
-	private Array<T> freeObjectsArray = null;
-	public boolean contains (Pool<T> pool, T component) {
-		try {
-			if (freeObjectsArray == null) {
-				Field freeObjects = ClassReflection.getDeclaredField(Pool.class, "freeObjects");
-				freeObjects.setAccessible(true);
-				freeObjectsArray = (Array<T>)freeObjects.get(pool);
-			}
-			if (freeObjectsArray.contains(component, true)) {
-				return true;
-			}
-		} catch (ReflectionException e) {
-			e.printStackTrace();
-		}
-
-		return false;
-	}
-
-	@Override
-	public void free(T object) {
-		super.free(object);
-		if (Bongo.DEBUG) {
-
-			if (Gdx.app != null) {
-				//We are Libgdx
-
-				if (accessThread != null) {
-					ThreadUtils.gdxThreadSafetyCheck(accessThread);
-				} else{
-					ThreadUtils.gdxThreadSafetyCheck();
-				}
-			}
-		}
-	}
-
-	public T obtain () {
-		boolean creatingNewObject = getFree() == 0;
-		final T obtain = super.obtain();
-		if (Bongo.DEBUG) {
-
-			if (Gdx.app != null && !Application.ApplicationType.HeadlessDesktop.equals(Gdx.app.getType())) {
-				//We are Libgdx
+            if (Gdx.app != null && !Application.ApplicationType.HeadlessDesktop.equals(Gdx.app.getType())) {
+                //We are Libgdx
 
 
-				if (accessThread != null) {
-					ThreadUtils.gdxThreadSafetyCheck(accessThread);
-				} else{
-					ThreadUtils.gdxThreadSafetyCheck();
-				}
-			}
+                if (accessThread != null) {
+                    ThreadUtils.gdxThreadSafetyCheck(accessThread);
+                } else {
+                    ThreadUtils.gdxThreadSafetyCheck();
+                }
+            }
 
-			//We have added a new instance, lets add it to the existing instances count
-			if (creatingNewObject) {
-				existingInstances.add(obtain);
+            //We have added a new instance, lets add it to the existing instances count
+            if (creatingNewObject) {
+                existingInstances.add(obtain);
 
-				if (customPoolThreshold) {
-					if (existingInstances.size > customThreshold) {
-						System.err.println("Existing instances: " + existingInstances.size + " for pool: " + poolName);
-					}
-				} else {
-					if (existingInstances.size > SIZE_WARN_THRESHOLD) {
-						System.err.println("Existing instances: " + existingInstances.size + " for pool: " + poolName);
-					}
-				}
-			}
-		}
-		return obtain;
-	}
+                if (customPoolThreshold) {
+                    if (existingInstances.size > customThreshold) {
+                        System.err.println("Existing instances: " + existingInstances.size + " for pool: " + poolName);
+                    }
+                } else {
+                    if (existingInstances.size > SIZE_WARN_THRESHOLD) {
+                        System.err.println("Existing instances: " + existingInstances.size + " for pool: " + poolName);
+                    }
+                }
+            }
+        }
+        return obtain;
+    }
 }

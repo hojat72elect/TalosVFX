@@ -22,14 +22,10 @@ public class MenuRow extends Table {
     private final Label shortcut;
     private final String id;
     private final MainMenu mainMenu;
-
-    private Image icon;
-    private Image collapseImage;
-
     Drawable selectedDrawable;
-
     ClickListener clickListener;
-
+    private final Image icon;
+    private final Image collapseImage;
     private float overTimer = 0;
     private boolean openTriggered = false;
 
@@ -66,7 +62,7 @@ public class MenuRow extends Table {
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
 
-                if(!hasSubMenu) {
+                if (!hasSubMenu) {
                     Notifications.fireEvent(Notifications.obtainEvent(MenuItemClickedEvent.class).set(id, payload));
                     mainMenu.collapseAll();
                 }
@@ -82,7 +78,7 @@ public class MenuRow extends Table {
 
         label.setText(title);
 
-        if(item.getChildCount() > 0) {
+        if (item.getChildCount() > 0) {
             collapseImage.setVisible(true);
             hasSubMenu = true;
         } else {
@@ -91,7 +87,7 @@ public class MenuRow extends Table {
 
         payload = id;
 
-        if(item.hasAttribute("icon")) {
+        if (item.hasAttribute("icon")) {
             String iconName = item.getAttribute("icon");
             icon.setDrawable(SharedResources.skin.getDrawable(iconName));
         }
@@ -101,20 +97,20 @@ public class MenuRow extends Table {
     public void act(float delta) {
         super.act(delta);
 
-        if(clickListener.isOver()) {
+        if (clickListener.isOver()) {
             setBackground(selectedDrawable);
         } else {
-            if(mainMenu.isPathOpen(id)) {
+            if (mainMenu.isPathOpen(id)) {
                 setBackground(selectedDrawable);
             } else {
                 setBackground((Drawable) null);
             }
         }
 
-        if(clickListener.isOver()) {
-            overTimer+= Gdx.graphics.getDeltaTime();
+        if (clickListener.isOver()) {
+            overTimer += Gdx.graphics.getDeltaTime();
 
-            if(!openTriggered) {
+            if (!openTriggered) {
                 openTriggered = true;
 
                 triggerOpen();
@@ -128,7 +124,7 @@ public class MenuRow extends Table {
     }
 
     private void triggerOpen() {
-        if(hasSubMenu) {
+        if (hasSubMenu) {
             Notifications.fireEvent(Notifications.obtainEvent(MenuPopupOpenCommand.class).set(id, getPreferredPopupPosition()));
         }
     }
@@ -148,7 +144,7 @@ public class MenuRow extends Table {
 
         collapseImage.setVisible(false);
 
-        if(iconName != null) {
+        if (iconName != null) {
             icon.setDrawable(SharedResources.skin.getDrawable(iconName));
         }
     }

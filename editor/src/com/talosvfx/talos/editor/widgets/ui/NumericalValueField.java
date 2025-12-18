@@ -6,8 +6,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.FloatFieldFilter;
-import com.talosvfx.talos.runtime.vfx.values.NumericalValue;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.TextFieldWithZoom;
+import com.talosvfx.talos.runtime.vfx.values.NumericalValue;
 
 public class NumericalValueField extends Table {
 
@@ -66,7 +66,7 @@ public class NumericalValueField extends Table {
         add(z).padLeft(6f).prefWidth(52).minWidth(10).growX().height(25);
     }
 
-    public void setNumericalValue (NumericalValue value) {
+    public void setNumericalValue(NumericalValue value) {
         this.value = value;
         this.x.setText(String.valueOf(value.get(0)));
         this.y.setText(String.valueOf(value.get(1)));

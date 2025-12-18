@@ -10,6 +10,7 @@ import com.talosvfx.talos.runtime.scene.SceneLayer;
 import com.talosvfx.talos.runtime.scene.components.SpriteRendererComponent;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 import com.talosvfx.talos.runtime.utils.NamingUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +18,7 @@ public class SpawnSpriteNode extends RoutineNode {
 
     private static final Logger logger = LoggerFactory.getLogger(SpawnSpriteNode.class);
 
-    private Vector2 tmp = new Vector2();
+    private final Vector2 tmp = new Vector2();
     private GameObject goRef;
 
     @Override
@@ -27,11 +28,11 @@ public class SpawnSpriteNode extends RoutineNode {
 
         GameAsset asset = fetchAssetValue("sprite");
 
-        if(asset != null) {
+        if (asset != null) {
             tmp.setZero();
             goRef = new GameObject();
             String nm = fetchStringValue("name");
-            if(nm == null || nm.isEmpty()) nm = "dynamicGo";
+            if (nm == null || nm.isEmpty()) nm = "dynamicGo";
             String name = NamingUtils.getNewName(nm, target.getAllGONames());
             goRef.setName(name);
             TransformComponent transformComponent = new TransformComponent();
@@ -56,9 +57,9 @@ public class SpawnSpriteNode extends RoutineNode {
             spriteRendererComponent.size.y = fetchFloatValue("height");
 
             String mode = fetchStringValue("mode");
-            if(mode == null) mode = "simple";
+            if (mode == null) mode = "simple";
 
-            spriteRendererComponent.renderMode = SpriteRendererComponent.RenderMode.simple.valueOf(mode);
+            spriteRendererComponent.renderMode = SpriteRendererComponent.RenderMode.valueOf(mode);
 
             Color color = fetchColorValue("color");
             spriteRendererComponent.color.set(color);
@@ -77,7 +78,7 @@ public class SpawnSpriteNode extends RoutineNode {
     }
 
     @Override
-    public void reset () {
+    public void reset() {
         super.reset();
         goRef = null;
     }

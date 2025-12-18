@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.XmlReader;
 import com.talosvfx.talos.editor.notifications.commands.enums.Commands;
 import com.talosvfx.talos.editor.notifications.commands.implementations.GeneralCommand;
 import com.talosvfx.talos.editor.utils.InputUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +19,7 @@ public class CommandParser {
     public static ObjectMap<Commands.CommandType, Array<ICommand>> commandConfiguration = new ObjectMap<>();
     public static ObjectMap<Commands.CommandGroup, Array<Commands.CommandType>> commandGroupConfiguration = new ObjectMap<>();
 
-    private ObjectMap<String, Integer> customKeyNames = new ObjectMap<>();
+    private final ObjectMap<String, Integer> customKeyNames = new ObjectMap<>();
 
     public CommandParser() {
         customKeyNames.put("DEL", Input.Keys.DEL);
@@ -60,7 +61,7 @@ public class CommandParser {
         }
     }
 
-    public Commands.CommandType getCommandTypeByUniqueName (String uniqueName) {
+    public Commands.CommandType getCommandTypeByUniqueName(String uniqueName) {
         for (Commands.CommandType value : Commands.CommandType.values()) {
             if (value.uniqueName.equals(uniqueName)) {
                 return value;
@@ -70,17 +71,17 @@ public class CommandParser {
         return null;
     }
 
-    private CommandContextType getContextType (String type) {
-        if (type.toUpperCase().equals("FOCUSED")) {
+    private CommandContextType getContextType(String type) {
+        if (type.equalsIgnoreCase("FOCUSED")) {
             return CommandContextType.FOCUSED_APP;
-        } else if (type.toUpperCase().equals("GLOBAL")) {
+        } else if (type.equalsIgnoreCase("GLOBAL")) {
             return CommandContextType.GLOBAL;
         }
 
         return null;
     }
 
-    private Combination parseCombination (XmlReader.Element combinationElement) {
+    private Combination parseCombination(XmlReader.Element combinationElement) {
         String type = combinationElement.getAttribute("type");
         Combination combination;
         String commandText = combinationElement.getText();

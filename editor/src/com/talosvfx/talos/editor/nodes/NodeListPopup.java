@@ -17,56 +17,18 @@ import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.LabelWithZoom;
 
 public class NodeListPopup extends VisWindow {
 
-    private InputListener stageListener;
     FilteredTree<String> tree;
     SearchFilteredTree<String> searchFilteredTree;
-
     Vector2 createLocationScreenCoords = new Vector2();
+    private InputListener stageListener;
+    private final ObjectMap<String, String> titleToNodeName = new ObjectMap<>();
+    private final ObjectMap<Class, XmlReader.Element> registry = new ObjectMap<>();
+    private final ObjectMap<String, XmlReader.Element> nameRegistry = new ObjectMap<>();
 
-    private ObjectMap<String, String> titleToNodeName = new ObjectMap<>();
-    private ObjectMap<Class, XmlReader.Element> registry = new ObjectMap<>();
-    private ObjectMap<String, XmlReader.Element> nameRegistry = new ObjectMap<>();
-
-    private String classPath;
-
-    public Class getNodeClassByName (String name) {
-        String className = getClassNameFromModuleName(name);
-        Class nodeClazz = null;
-        try {
-            nodeClazz = ClassReflection.forName(classPath + "." + className);
-        } catch (ReflectionException e) {
-            e.printStackTrace();
-        }
-
-        return nodeClazz;
-    }
-
-    public Class getNodeClassByClassName (String className) {
-        Class nodeClazz = null;
-        try {
-            nodeClazz = ClassReflection.forName(classPath + "." + className);
-        } catch (ReflectionException e) {
-            e.printStackTrace();
-        }
-
-        return nodeClazz;
-    }
-
-    public XmlReader.Element getModuleByName (String name) {
-        return nameRegistry.get(name);
-    }
-
-    interface NodeListListener {
-        void chosen(Class clazz, XmlReader.Element module, float screenX, float screenY);
-    }
-
+    private final String classPath;
     private NodeListListener nodeListListener;
 
-    public void setListener(NodeListListener listener) {
-        nodeListListener = listener;
-    }
-
-    public NodeListPopup (XmlReader.Element root) {
+    public NodeListPopup(XmlReader.Element root) {
         super("Add Node", "module-list");
 
         setModal(false);
@@ -88,17 +50,49 @@ public class NodeListPopup extends VisWindow {
         add(searchFilteredTree).width(300).row();
         add().growY();
 
-        invalidate(); pack();
+        invalidate();
+        pack();
 
         createListeners();
     }
 
-    public boolean contains (float x, float y) {
+    public Class getNodeClassByName(String name) {
+        String className = getClassNameFromModuleName(name);
+        Class nodeClazz = null;
+        try {
+            nodeClazz = ClassReflection.forName(classPath + "." + className);
+        } catch (ReflectionException e) {
+            e.printStackTrace();
+        }
+
+        return nodeClazz;
+    }
+
+    public Class getNodeClassByClassName(String className) {
+        Class nodeClazz = null;
+        try {
+            nodeClazz = ClassReflection.forName(classPath + "." + className);
+        } catch (ReflectionException e) {
+            e.printStackTrace();
+        }
+
+        return nodeClazz;
+    }
+
+    public XmlReader.Element getModuleByName(String name) {
+        return nameRegistry.get(name);
+    }
+
+    public void setListener(NodeListListener listener) {
+        nodeListListener = listener;
+    }
+
+    public boolean contains(float x, float y) {
         return getX() < x && getX() + getWidth() > x && getY() < y && getY() + getHeight() > y;
     }
 
     @Override
-    protected void setStage (Stage stage) {
+    protected void setStage(Stage stage) {
         super.setStage(stage);
         if (stage != null) stage.addListener(stageListener);
     }
@@ -106,7 +100,7 @@ public class NodeListPopup extends VisWindow {
     private void createListeners() {
         stageListener = new InputListener() {
             @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 if (!NodeListPopup.this.contains(x, y) && button == 0) {
                     remove();
                     return false;
@@ -117,12 +111,12 @@ public class NodeListPopup extends VisWindow {
 
         tree.addItemListener(new FilteredTree.ItemListener() {
             @Override
-            public void selected (FilteredTree.Node node) {
-                if(node.children.size == 0) {
+            public void selected(FilteredTree.Node node) {
+                if (node.children.size == 0) {
                     String nodeName = titleToNodeName.get(node.name);
                     String className = getClassNameFromModuleName(nodeName);
 
-                    if(nodeListListener != null) {
+                    if (nodeListListener != null) {
                         try {
                             Class clazz = ClassReflection.forName(classPath + "." + className);
                             nodeListListener.chosen(clazz, getConfigFor(nodeName), createLocationScreenCoords.x, createLocationScreenCoords.y);
@@ -134,8 +128,9 @@ public class NodeListPopup extends VisWindow {
                     remove();
                 }
             }
+
             @Override
-            public void addedIntoSelection (FilteredTree.Node node) {
+            public void addedIntoSelection(FilteredTree.Node node) {
                 super.addedIntoSelection(node);
             }
         });
@@ -143,10 +138,10 @@ public class NodeListPopup extends VisWindow {
 
     private void parseCategory(FilteredTree<String> tree, FilteredTree.Node parent, XmlReader.Element element) {
         Array<XmlReader.Element> categories = element.getChildrenByName("category");
-        for(XmlReader.Element category: categories) {
+        for (XmlReader.Element category : categories) {
             FilteredTree.Node categoryNode = new FilteredTree.Node(category.getAttribute("title"), new LabelWithZoom(category.getAttribute("title"), getSkin()));
 
-            if(parent != null) parent.add(categoryNode);
+            if (parent != null) parent.add(categoryNode);
             else tree.add(categoryNode);
 
             parseCategory(tree, categoryNode, category);
@@ -154,14 +149,14 @@ public class NodeListPopup extends VisWindow {
 
         // get modules
         Array<XmlReader.Element> modules = element.getChildrenByName("module");
-        for(XmlReader.Element module: modules) {
+        for (XmlReader.Element module : modules) {
             FilteredTree.Node node = new FilteredTree.Node(module.getAttribute("title"), new LabelWithZoom(module.getAttribute("title"), getSkin()));
 
-            titleToNodeName.put(module.getAttribute("title"),module.getAttribute("name"));
+            titleToNodeName.put(module.getAttribute("title"), module.getAttribute("name"));
 
             registerNode(module);
 
-            if(parent != null) parent.add(node);
+            if (parent != null) parent.add(node);
             else tree.add(node);
         }
     }
@@ -203,7 +198,7 @@ public class NodeListPopup extends VisWindow {
         getStage().setScrollFocus(searchFilteredTree.scrollPane);
         tree.collapseAll();
 
-        if(getHeight() < 200) {
+        if (getHeight() < 200) {
             setHeight(200);
         }
 
@@ -211,16 +206,20 @@ public class NodeListPopup extends VisWindow {
     }
 
     @Override
-    public boolean remove () {
+    public boolean remove() {
         if (getStage() != null) getStage().removeListener(stageListener);
         return super.remove();
     }
 
-    public XmlReader.Element getConfigFor (String name) {
+    public XmlReader.Element getConfigFor(String name) {
         return nameRegistry.get(name);
     }
 
-    public XmlReader.Element getConfigFor (Class clazz) {
+    public XmlReader.Element getConfigFor(Class clazz) {
         return registry.get(clazz);
+    }
+
+    interface NodeListListener {
+        void chosen(Class clazz, XmlReader.Element module, float screenX, float screenY);
     }
 }

@@ -11,7 +11,7 @@ public class VoronoiNode extends AbstractShaderNode {
     public final String OUTPUT = "outputValue";
 
     @Override
-    public void prepareDeclarations (ShaderBuilder shaderBuilder) {
+    public void prepareDeclarations(ShaderBuilder shaderBuilder) {
         ShaderBuilder.Argument[] args = new ShaderBuilder.Argument[3];
         args[0] = new ShaderBuilder.Argument(ShaderBuilder.Type.VEC2, "uv");
         args[1] = new ShaderBuilder.Argument(ShaderBuilder.Type.FLOAT, "angleOffset");
@@ -19,8 +19,7 @@ public class VoronoiNode extends AbstractShaderNode {
 
         ShaderBuilder.Method method = shaderBuilder.addMethod(ShaderBuilder.Type.FLOAT, "voronoiNoise", args);
 
-        String body = "" +
-                "float outputValue = 0.0;\n" +
+        String body = "float outputValue = 0.0;\n" +
                 "float cells = 0.0;\n" +
                 "\n" +
                 "vec2 g = floor(uv * cellDensity);\n" +
@@ -62,17 +61,17 @@ public class VoronoiNode extends AbstractShaderNode {
     }
 
     @Override
-    public String writeOutputCode (String slotId) {
+    public String writeOutputCode(String slotId) {
         return "voronoiVar" + getId();
     }
 
     @Override
-    protected void inputStateChanged (boolean isInputDynamic) {
+    protected void inputStateChanged(boolean isInputDynamic) {
         showShaderBox();
     }
 
     @Override
-    protected boolean isInputDynamic () {
+    protected boolean isInputDynamic() {
         return true;
     }
 }

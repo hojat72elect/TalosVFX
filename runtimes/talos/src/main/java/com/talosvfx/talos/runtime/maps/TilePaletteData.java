@@ -6,12 +6,12 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.OrderedMap;
-import com.talosvfx.talos.runtime.RuntimeContext;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.runtime.assets.GameResourceOwner;
 import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.components.TileDataComponent;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +27,13 @@ public class TilePaletteData implements Json.Serializable {
     public transient OrderedMap<GameAsset<?>, GameObject> gameObjects;
     public transient GameObject rootDummy;
 
-    public void addSprite (GameAsset<?> gameAsset, Vector2 position) {
+    public TilePaletteData() {
+        references = new ObjectMap<>();
+
+        gameObjects = new OrderedMap<>();
+    }
+
+    public void addSprite(GameAsset<?> gameAsset, Vector2 position) {
         GridPosition gridPosition = new GridPosition(MathUtils.round(position.x), MathUtils.round(position.y));
         StaticTile staticTile = new StaticTile(gameAsset, gridPosition);
         TileGameObjectProxy tileGameObjectProxy = new TileGameObjectProxy();
@@ -38,12 +44,12 @@ public class TilePaletteData implements Json.Serializable {
         gameObjects.put(gameAsset, tileGameObjectProxy);
     }
 
-    public void addEntity (GameAsset<?> gameAsset, GameObject gameObject) {
+    public void addEntity(GameAsset<?> gameAsset, GameObject gameObject) {
         gameObjects.put(gameAsset, gameObject);
         rootDummy.addGameObject(gameObject);
     }
 
-    public GameObject addEntity (GameAsset<?> gameAsset) {
+    public GameObject addEntity(GameAsset<?> gameAsset) {
         //Lets create an entity from the asset
         logger.info("Shouldm probably double triple check this commented code if bugs from asset importer happen");
 
@@ -68,7 +74,7 @@ public class TilePaletteData implements Json.Serializable {
         return null;
     }
 
-    public void removeEntity (GameAsset<?> gameAsset) {
+    public void removeEntity(GameAsset<?> gameAsset) {
         GameObject gameObject = gameObjects.remove(gameAsset);
         rootDummy.removeObject(gameObject);
 
@@ -76,21 +82,10 @@ public class TilePaletteData implements Json.Serializable {
 //        SceneEditorWorkspace.getInstance().removeGizmos(gameObject);
     }
 
-    public enum TileOrEntity {
-        TILE,
-        ENTITY
-    }
-
-    public TilePaletteData () {
-        references = new ObjectMap<>();
-
-        gameObjects = new OrderedMap<>();
-    }
-
     @Override
     public void write(Json json) {
         json.writeArrayStart("references");
-        for (UUID uuid: references.keys()) {
+        for (UUID uuid : references.keys()) {
             GameAsset<?> reference = references.get(uuid);
 
             json.writeObjectStart();
@@ -106,7 +101,7 @@ public class TilePaletteData implements Json.Serializable {
             } else if (tileOrEntity == TileOrEntity.TILE) {
                 json.writeObjectStart("position");
 
-                TileGameObjectProxy gameObject = (TileGameObjectProxy)gameObjects.get(reference);
+                TileGameObjectProxy gameObject = (TileGameObjectProxy) gameObjects.get(reference);
                 GridPosition position = gameObject.staticTile.getGridPosition();
 
                 json.writeValue("x", position.getIntX());
@@ -119,7 +114,7 @@ public class TilePaletteData implements Json.Serializable {
         json.writeArrayEnd();
     }
 
-    private TileOrEntity getTileOrEntity (GameAsset<?> reference) {
+    private TileOrEntity getTileOrEntity(GameAsset<?> reference) {
         if (gameObjects.containsKey(reference) && !(gameObjects.get(reference) instanceof TileGameObjectProxy)) {
             return TileOrEntity.ENTITY;
         }
@@ -146,7 +141,6 @@ public class TilePaletteData implements Json.Serializable {
             if (tileOrEntity == TileOrEntity.ENTITY) {
                 GameObject gameObject = json.readValue(GameObject.class, reference.get("entity"));
                 addEntity(assetForIdentifier, gameObject);
-
             } else if (tileOrEntity == TileOrEntity.TILE) {
                 JsonValue posVal = reference.get("position");
                 float x = posVal.get(0).asFloat();
@@ -162,5 +156,10 @@ public class TilePaletteData implements Json.Serializable {
                 System.out.println(type + " with identifier " + identifier + " is not found.");
             }
         }
+    }
+
+    public enum TileOrEntity {
+        TILE,
+        ENTITY
     }
 }

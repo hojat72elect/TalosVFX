@@ -16,10 +16,10 @@ public class MixNode extends AbstractShaderNode {
         String exprA = inputStrings.get(INPUT_A);
         String exprB = inputStrings.get(INPUT_B);
 
-        if(exprA == null) {
+        if (exprA == null) {
             exprA = "vec4(0.0)";
         }
-        if(exprB == null) {
+        if (exprB == null) {
             exprB = "vec4(0.0)";
         }
 
@@ -30,5 +30,4 @@ public class MixNode extends AbstractShaderNode {
     public String writeOutputCode(String slotId) {
         return "mixVar" + getId();
     }
-
 }

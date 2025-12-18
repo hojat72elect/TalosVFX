@@ -2,7 +2,6 @@ package com.talosvfx.talos.editor.addons.scene.apps.routines.nodes;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.Value;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
@@ -10,10 +9,10 @@ import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.XmlReader;
 import com.esotericsoftware.spine.Animation;
 import com.esotericsoftware.spine.SkeletonData;
-import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.editor.nodes.widgets.GameAssetWidget;
 import com.talosvfx.talos.editor.nodes.widgets.SelectWidget;
 import com.talosvfx.talos.editor.project2.SharedResources;
+import com.talosvfx.talos.runtime.assets.GameAsset;
 
 public class SetSpineAnimationNodeWidget extends AbstractRoutineNodeWidget {
 
@@ -33,7 +32,7 @@ public class SetSpineAnimationNodeWidget extends AbstractRoutineNodeWidget {
         container.add(selectBox).growX().row();
 
 
-        GameAssetWidget reference = (GameAssetWidget)getWidget("reference");
+        GameAssetWidget reference = (GameAssetWidget) getWidget("reference");
 
         reference.addListener(new ChangeListener() {
             @Override
@@ -44,7 +43,7 @@ public class SetSpineAnimationNodeWidget extends AbstractRoutineNodeWidget {
 
         selectBox.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 reportNodeDataModified(false);
 //                inputs.get("animation").valueOverride = properties.getString("animation");
             }
@@ -55,8 +54,8 @@ public class SetSpineAnimationNodeWidget extends AbstractRoutineNodeWidget {
     public void read(Json json, JsonValue jsonValue) {
         super.read(json, jsonValue);
 
-        GameAssetWidget reference = (GameAssetWidget)getWidget("reference");
-        if(reference != null) {
+        GameAssetWidget reference = (GameAssetWidget) getWidget("reference");
+        if (reference != null) {
             loadList(reference);
         }
 
@@ -78,7 +77,7 @@ public class SetSpineAnimationNodeWidget extends AbstractRoutineNodeWidget {
         SkeletonData skeletonData = value.getResource();
         Array<Animation> animations = skeletonData.getAnimations();
         Array<String> names = new Array<>();
-        for(Animation animation: animations) {
+        for (Animation animation : animations) {
             names.add(animation.getName());
         }
         selectBox.setOptions(names);

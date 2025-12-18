@@ -5,7 +5,6 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
-import com.talosvfx.talos.runtime.RuntimeContext;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.runtime.assets.GameResourceOwner;
@@ -13,261 +12,250 @@ import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.ValueProperty;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 
-import java.util.UUID;
-
 public class TalosLayer implements GameResourceOwner<TilePaletteData>, Json.Serializable {
 
 
-	private String name;
-	private LayerType type;
-
-	private GameAsset<TilePaletteData> gameAsset;
-
-	private int mapWidth = 100;
-	private int mapHeight = 100;
-
-	@ValueProperty(min = 0.001f, max = 10f)
-	private float tileSizeX = 1;
-
-	@ValueProperty(min = 0.001f, max = 10f)
-	private float tileSizeY = 1;
+    static Vector2 temp = new Vector2();
+    public transient GameObject entityPlacing;
+    IntMap<IntMap<StaticTile>> staticTiles = new IntMap<IntMap<StaticTile>>();
+    Array<GameObject> rootEntities = new Array<>();
+    private String name;
+    private LayerType type;
+    private GameAsset<TilePaletteData> gameAsset;
 
 
-	//Layer dependent info, don't use poly to keep it simple
+    //Layer dependent info, don't use poly to keep it simple
 
-	//One is a 2d array, one is a bag of entities
+    //One is a 2d array, one is a bag of entities
+    GameAsset.GameAssetUpdateListener gameAssetUpdateListener = new GameAsset.GameAssetUpdateListener() {
+        @Override
+        public void onUpdate() {
+            if (gameAsset.isBroken()) {
+            } else {
+            }
+        }
+    };
+    private int mapWidth = 100;
+    private int mapHeight = 100;
+    @ValueProperty(min = 0.001f, max = 10f)
+    private float tileSizeX = 1;
+    @ValueProperty(min = 0.001f, max = 10f)
+    private float tileSizeY = 1;
 
-	IntMap<IntMap<StaticTile>> staticTiles = new IntMap<IntMap<StaticTile>>();
-	Array<GameObject> rootEntities = new Array<>();
+    protected TalosLayer() {
+    }
 
-	public transient GameObject entityPlacing;
+    public TalosLayer(String name) {
+        this.name = name;
+        this.type = LayerType.DYNAMIC_ENTITY; // lets have dynamic the default
+    }
 
+    public String getName() {
+        return name;
+    }
 
-	protected TalosLayer () {}
+    public void setName(String newName) {
+        this.name = newName;
+    }
 
-	public TalosLayer (String name) {
-		this.name = name;
-		this.type = LayerType.DYNAMIC_ENTITY; // lets have dynamic the default
-	}
-	public String getName () {
-		return name;
-	}
+    @Override
+    public void write(Json json) {
+        if (gameAsset != null) { //can be null
+            GameResourceOwner.writeGameAsset(json, this);
+        }
 
-	public void setName (String newName) {
-		this.name = newName;
-	}
+        json.writeValue("type", this.type);
+        json.writeValue("name", this.name);
 
-	@Override
-	public void write (Json json) {
-		if (gameAsset != null) { //can be null
-			GameResourceOwner.writeGameAsset(json, this);
-		}
+        json.writeValue("mapWidth", mapWidth);
+        json.writeValue("mapHeight", mapHeight);
 
-		json.writeValue("type", this.type);
-		json.writeValue("name", this.name);
+        switch (type) {
+            case STATIC:
+                serializeForStatic(json);
+                break;
+            case DYNAMIC_ENTITY:
+                serializeForDynamic(json);
+                break;
+        }
+    }
 
-		json.writeValue("mapWidth", mapWidth);
-		json.writeValue("mapHeight", mapHeight);
+    private void serializeForDynamic(Json json) {
+        json.writeArrayStart("entities");
+        for (GameObject rootEntity : rootEntities) {
+            json.writeValue(rootEntity);
+        }
+        json.writeArrayEnd();
+    }
 
-		switch (type) {
-		case STATIC:
-			serializeForStatic(json);
-			break;
-		case DYNAMIC_ENTITY:
-			serializeForDynamic(json);
-			break;
-		}
-	}
+    private void deserializeForDynamic(Json json, JsonValue jsonData) {
+        JsonValue entities = jsonData.get("entities");
+        for (JsonValue entity : entities) {
+            GameObject object = json.readValue(GameObject.class, entity);
+            this.rootEntities.add(object);
+        }
+    }
 
-	private void serializeForDynamic (Json json) {
-		json.writeArrayStart("entities");
-		for (GameObject rootEntity : rootEntities) {
-			json.writeValue(rootEntity);
-		}
-		json.writeArrayEnd();
-	}
-	private void deserializeForDynamic (Json json, JsonValue jsonData) {
-		JsonValue entities = jsonData.get("entities");
-		for (JsonValue entity : entities) {
-			GameObject object = json.readValue(GameObject.class, entity);
-			this.rootEntities.add(object);
-		}
-	}
+    private void serializeForStatic(Json json) {
+        json.writeValue("tileSizeX", tileSizeX);
+        json.writeValue("tileSizeY", tileSizeY);
 
-	private void serializeForStatic (Json json) {
-		json.writeValue("tileSizeX", tileSizeX);
-		json.writeValue("tileSizeY", tileSizeY);
+        json.writeArrayStart("tiles");
+        for (IntMap.Entry<IntMap<StaticTile>> staticTile : staticTiles) {
+            int x = staticTile.key;
+            IntMap<StaticTile> value = staticTile.value;
 
-		json.writeArrayStart("tiles");
-		for (IntMap.Entry<IntMap<StaticTile>> staticTile : staticTiles) {
-			int x = staticTile.key;
-			IntMap<StaticTile> value = staticTile.value;
+            for (IntMap.Entry<StaticTile> staticTileEntry : value) {
+                int y = staticTileEntry.key;
+                StaticTile tile = staticTileEntry.value;
+                json.writeValue(tile);
+            }
+        }
+        json.writeArrayEnd();
+    }
 
-			for (IntMap.Entry<StaticTile> staticTileEntry : value) {
-				int y = staticTileEntry.key;
-				StaticTile tile = staticTileEntry.value;
-				json.writeValue(tile);
-			}
-		}
-		json.writeArrayEnd();
-	}
+    private void deserializeForStatic(Json json, JsonValue jsonData) {
+        this.tileSizeX = jsonData.getFloat("tileSizeX", 1);
+        this.tileSizeY = jsonData.getFloat("tileSizeY", 1);
 
-	private void deserializeForStatic (Json json, JsonValue jsonData) {
-		this.tileSizeX = jsonData.getFloat("tileSizeX", 1);
-		this.tileSizeY = jsonData.getFloat("tileSizeY", 1);
+        JsonValue tiles = jsonData.get("tiles");
+        for (JsonValue tile : tiles) {
+            StaticTile readTile = json.readValue(StaticTile.class, tile);
+            putTile(readTile);
+        }
+    }
 
-		JsonValue tiles = jsonData.get("tiles");
-		for (JsonValue tile : tiles) {
-			StaticTile readTile = json.readValue(StaticTile.class, tile);
-			putTile(readTile);
-		}
-	}
+    public void removeTile(int x, int y) {
+        if (staticTiles.containsKey(x)) {
+            IntMap<StaticTile> entries = staticTiles.get(x);
+            if (entries.containsKey(y)) {
+                entries.remove(y);
+            }
+        }
+    }
 
-	public void removeTile (int x, int y) {
-		if (staticTiles.containsKey(x)) {
-			IntMap<StaticTile> entries = staticTiles.get(x);
-			if (entries.containsKey(y)) {
-				entries.remove(y);
-			}
-		}
-	}
+    private void putTile(StaticTile readTile) {
+        GridPosition gridPosition = readTile.gridPosition;
 
-	private void putTile (StaticTile readTile) {
-		GridPosition gridPosition = readTile.gridPosition;
+        if (!staticTiles.containsKey(gridPosition.getIntX())) {
+            staticTiles.put(gridPosition.getIntX(), new IntMap<>());
+        }
+        IntMap<StaticTile> entries = staticTiles.get(gridPosition.getIntX());
+        entries.put(gridPosition.getIntY(), readTile);
+    }
 
-		if (!staticTiles.containsKey(gridPosition.getIntX())) {
-			staticTiles.put(gridPosition.getIntX(), new IntMap<>());
-		}
-		IntMap<StaticTile> entries = staticTiles.get(gridPosition.getIntX());
-		entries.put(gridPosition.getIntY(), readTile);
-	}
+    @Override
+    public void read(Json json, JsonValue jsonData) {
+        GameAsset<TilePaletteData> objectGameAsset = GameResourceOwner.readAsset(json, jsonData);
+        setGameAsset(objectGameAsset);
 
-	@Override
-	public void read (Json json, JsonValue jsonData) {
-		GameAsset<TilePaletteData> objectGameAsset = GameResourceOwner.readAsset(json, jsonData);
-		setGameAsset(objectGameAsset);
+        this.type = json.readValue(LayerType.class, jsonData.get("type"));
+        this.name = jsonData.getString("name");
 
-		this.type = json.readValue(LayerType.class, jsonData.get("type"));
-		this.name = jsonData.getString("name");
+        this.mapWidth = jsonData.getInt("mapWidth", 100);
+        this.mapHeight = jsonData.getInt("mapHeight", 100);
 
-		this.mapWidth = jsonData.getInt("mapWidth", 100);
-		this.mapHeight = jsonData.getInt("mapHeight", 100);
+        switch (type) {
+            case STATIC:
+                deserializeForStatic(json, jsonData);
+                break;
+            case DYNAMIC_ENTITY:
+                deserializeForDynamic(json, jsonData);
+                break;
+        }
+    }
 
-		switch (type) {
-		case STATIC:
-			deserializeForStatic(json, jsonData);
-			break;
-		case DYNAMIC_ENTITY:
-			deserializeForDynamic(json, jsonData);
-			break;
-		}
-	}
+    @Override
+    public String toString() {
+        return name + " - " + type.toString();
+    }
 
+    public LayerType getType() {
+        return type;
+    }
 
+    public int getMapWidth() {
+        return mapWidth;
+    }
 
-	@Override
-	public String toString () {
-		return name + " - " + type.toString();
-	}
+    public int getMapHeight() {
+        return mapHeight;
+    }
 
-	public LayerType getType () {
-		return type;
-	}
+    public float getTileSizeX() {
+        return tileSizeX;
+    }
 
-	public int getMapWidth () {
-		return mapWidth;
-	}
+    public float getTileSizeY() {
+        return tileSizeY;
+    }
 
-	public int getMapHeight () {
-		return mapHeight;
-	}
+    public Array<GameObject> getRootEntities() {
+        return rootEntities;
+    }
 
-	public float getTileSizeX () {
-		return tileSizeX;
-	}
+    public IntMap<IntMap<StaticTile>> getStaticTiles() {
+        return staticTiles;
+    }
 
-	public float getTileSizeY () {
-		return tileSizeY;
-	}
+    @Override
+    public GameAssetType getGameAssetType() {
+        return GameAssetType.TILE_PALETTE;
+    }
 
-	public Array<GameObject> getRootEntities () {
-		return rootEntities;
-	}
+    @Override
+    public GameAsset<TilePaletteData> getGameResource() {
+        return gameAsset;
+    }
 
-	public IntMap<IntMap<StaticTile>> getStaticTiles () {
-		return staticTiles;
-	}
+    @Override
+    public void setGameAsset(GameAsset<TilePaletteData> newGameAsset) {
+        if (this.gameAsset != null) {
+            //Remove from old game asset, it might be the same, but it may also have changed
+            this.gameAsset.listeners.removeValue(gameAssetUpdateListener, true);
+        }
 
-	@Override
-	public GameAssetType getGameAssetType () {
-		return GameAssetType.TILE_PALETTE;
-	}
+        this.gameAsset = newGameAsset;
 
-	@Override
-	public GameAsset<TilePaletteData> getGameResource () {
-		return gameAsset;
-	}
+        if (newGameAsset != null) {
+            this.gameAsset.listeners.add(gameAssetUpdateListener);
 
-	GameAsset.GameAssetUpdateListener gameAssetUpdateListener = new GameAsset.GameAssetUpdateListener() {
-		@Override
-		public void onUpdate () {
-			if (gameAsset.isBroken()) {
-			} else {
-			}
-		}
-	};
+            gameAssetUpdateListener.onUpdate();
+        }
+    }
 
-	@Override
-	public void setGameAsset (GameAsset<TilePaletteData> newGameAsset) {
-		if (this.gameAsset != null) {
-			//Remove from old game asset, it might be the same, but it may also have changed
-			this.gameAsset.listeners.removeValue(gameAssetUpdateListener, true);
-		}
+    @Override
+    public void clearResource() {
+        if (gameAsset != null) {
+            gameAsset.listeners.removeValue(gameAssetUpdateListener, true);
+            gameAsset = null;
+        }
+    }
 
-		this.gameAsset = newGameAsset;
+    public void setStaticTile(StaticTile staticTile) {
+        putTile(staticTile);
+    }
 
-		if (newGameAsset != null) {
-			this.gameAsset.listeners.add(gameAssetUpdateListener);
+    public void removeEntity(float x, float y) {
+        float smallestDistance = Float.MAX_VALUE;
+        GameObject target = null;
+        for (GameObject rootEntity : getRootEntities()) {
+            if (rootEntity.hasComponent(TransformComponent.class)) {
+                TransformComponent component = rootEntity.getComponent(TransformComponent.class);
+                float dst = temp.set(x, y).dst(component.position);
+                if (dst < smallestDistance) {
+                    smallestDistance = dst;
+                    target = rootEntity;
+                }
+            }
+        }
 
-			gameAssetUpdateListener.onUpdate();
-		}
-	}
+        if (target != null) {
+            getRootEntities().removeValue(target, true);
+        }
+    }
 
-	@Override
-	public void clearResource () {
-		if (gameAsset != null) {
-			gameAsset.listeners.removeValue(gameAssetUpdateListener, true);
-			gameAsset = null;
-		}
-	}
-
-
-
-	public void setStaticTile (StaticTile staticTile) {
-		putTile(staticTile);
-	}
-
-	static Vector2 temp = new Vector2();
-	public void removeEntity (float x, float y) {
-		float smallestDistance = Float.MAX_VALUE;
-		GameObject target = null;
-		for (GameObject rootEntity : getRootEntities()) {
-			if (rootEntity.hasComponent(TransformComponent.class)) {
-				TransformComponent component = rootEntity.getComponent(TransformComponent.class);
-				float dst = temp.set(x, y).dst(component.position);
-				if (dst < smallestDistance) {
-					smallestDistance = dst;
-					target = rootEntity;
-				}
-			}
-		}
-
-		if (target != null) {
-			getRootEntities().removeValue(target, true);
-		}
-	}
-
-	public void removeEntity (GameObject entityUnderMouse) {
-		getRootEntities().removeValue(entityUnderMouse, true);
-	}
+    public void removeEntity(GameObject entityUnderMouse) {
+        getRootEntities().removeValue(entityUnderMouse, true);
+    }
 }

@@ -3,6 +3,7 @@ package com.talosvfx.talos.runtime.scene.components;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pools;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,14 +11,10 @@ import org.slf4j.LoggerFactory;
 public class CurveComponent extends AComponent {
 
     private static final Logger logger = LoggerFactory.getLogger(CurveComponent.class);
-
-    public Array<Vector2> points = new Array<>();
-
-    public boolean isClosed = false;
-
-    public transient Vector2[] tmpArr;
     public static float[] neighbourDistances = new float[2];
-
+    public Array<Vector2> points = new Array<>();
+    public boolean isClosed = false;
+    public transient Vector2[] tmpArr;
     public boolean automaticControl = false;
 
     public float scale = 1;
@@ -38,15 +35,15 @@ public class CurveComponent extends AComponent {
     public void addSegment(Vector2 anchorPos) {
         Vector2 tmp = Pools.get(Vector2.class).obtain();
 
-        tmp.set(points.get(points.size-1)).scl(2f).sub(points.get(points.size-2));
+        tmp.set(points.get(points.size - 1)).scl(2f).sub(points.get(points.size - 2));
         points.add(new Vector2(tmp));
-        tmp.set(points.get(points.size-1)).add(anchorPos).scl(0.5f);
+        tmp.set(points.get(points.size - 1)).add(anchorPos).scl(0.5f);
         points.add(new Vector2(tmp));
         points.add(new Vector2(anchorPos));
 
         Pools.get(Vector2.class).free(tmp);
 
-        if(automaticControl) {
+        if (automaticControl) {
             autoSetAllAffectedControlPoints(points.size - 1);
         }
 
@@ -60,7 +57,7 @@ public class CurveComponent extends AComponent {
         points.set(segmentIndex * 3 + 3, new Vector2(point));
         points.set(segmentIndex * 3 + 4, new Vector2(0, 0));
 
-        if(automaticControl) {
+        if (automaticControl) {
             autoSetAllAffectedControlPoints(segmentIndex * 3 + 3);
         } else {
             autoSetAnchorControlPoints(segmentIndex * 3 + 3);
@@ -72,7 +69,7 @@ public class CurveComponent extends AComponent {
 
     public void deleteSegment(int anchorIndex) {
         int numSegments = getNumSegments();
-        if(numSegments > 2 || (!isClosed && numSegments > 1)) {
+        if (numSegments > 2 || (!isClosed && numSegments > 1)) {
             if (anchorIndex == 0) {
                 if (isClosed) {
                     points.get(points.size - 1).set(points.get(points.size - 2));
@@ -91,10 +88,10 @@ public class CurveComponent extends AComponent {
 
     public void setClosedState(boolean isClosed) {
         this.isClosed = isClosed;
-        if(isClosed) {
+        if (isClosed) {
             Vector2 tmp = Pools.get(Vector2.class).obtain();
 
-            tmp.set(points.get(points.size-1)).scl(2f).sub(points.get(points.size-2));
+            tmp.set(points.get(points.size - 1)).scl(2f).sub(points.get(points.size - 2));
             points.add(new Vector2(tmp));
 
             tmp.set(points.get(0)).scl(2f).sub(points.get(1));
@@ -102,13 +99,13 @@ public class CurveComponent extends AComponent {
 
             Pools.get(Vector2.class).free(tmp);
 
-            if(automaticControl) {
+            if (automaticControl) {
                 autoSetAnchorControlPoints(0);
                 autoSetAnchorControlPoints(points.size - 3);
             }
         } else {
             points.removeRange(points.size - 2, points.size - 1);
-            if(automaticControl) {
+            if (automaticControl) {
                 autoSetStartAndEndControls();
             }
         }
@@ -119,8 +116,8 @@ public class CurveComponent extends AComponent {
     }
 
     public Vector2[] getPointsInSegment(int index) {
-        for(int i = 0; i < 4; i++) {
-            if(i == 3) {
+        for (int i = 0; i < 4; i++) {
+            if (i == 3) {
                 tmpArr[i].set(points.get(loopIndex(index * 3 + i)));
             } else {
                 tmpArr[i].set(points.get(index * 3 + i));
@@ -134,7 +131,7 @@ public class CurveComponent extends AComponent {
         Vector2 direction = Pools.obtain(Vector2.class);
         direction.set(0, 0);
 
-        if(anchorIndex - 3 >= 0 || isClosed) {
+        if (anchorIndex - 3 >= 0 || isClosed) {
             Vector2 offset = Pools.obtain(Vector2.class);
             offset.set(points.get(loopIndex(anchorIndex - 3))).sub(anchorPos);
             float length = offset.len();
@@ -142,7 +139,7 @@ public class CurveComponent extends AComponent {
             neighbourDistances[0] = length;
             Pools.free(offset);
         }
-        if(anchorIndex + 3 >= 0 || isClosed) {
+        if (anchorIndex + 3 >= 0 || isClosed) {
             Vector2 offset = Pools.obtain(Vector2.class);
             offset.set(points.get(loopIndex(anchorIndex + 3))).sub(anchorPos);
             float length = offset.len();
@@ -153,9 +150,9 @@ public class CurveComponent extends AComponent {
 
         direction.nor();
 
-        for(int i = 0; i < 2; i++) {
+        for (int i = 0; i < 2; i++) {
             int controlIndex = anchorIndex + i * 2 - 1;
-            if((controlIndex >= 0 && controlIndex < points.size) || isClosed) {
+            if ((controlIndex >= 0 && controlIndex < points.size) || isClosed) {
                 Vector2 tmp = Pools.obtain(Vector2.class);
                 tmp.set(direction).scl(neighbourDistances[i]).scl(0.5f).add(anchorPos);
                 points.get(loopIndex(controlIndex)).set(tmp);
@@ -168,8 +165,8 @@ public class CurveComponent extends AComponent {
     }
 
     public void autoSetAllAffectedControlPoints(int updatedAnchorIndex) {
-        for(int i = updatedAnchorIndex - 3; i <= updatedAnchorIndex + 3; i+=3) {
-            if(i >= 0 && i < points.size || isClosed) {
+        for (int i = updatedAnchorIndex - 3; i <= updatedAnchorIndex + 3; i += 3) {
+            if (i >= 0 && i < points.size || isClosed) {
                 autoSetAnchorControlPoints(loopIndex(i));
             }
         }
@@ -177,14 +174,14 @@ public class CurveComponent extends AComponent {
     }
 
     public void autoSetAllControlPoints() {
-        for(int i = 0; i < points.size; i+=3) {
+        for (int i = 0; i < points.size; i += 3) {
             autoSetAnchorControlPoints(i);
         }
         autoSetStartAndEndControls();
     }
 
     public void autoSetStartAndEndControls() {
-        if(!isClosed) {
+        if (!isClosed) {
             points.get(1).set(points.get(0)).add(points.get(2)).scl(0.5f);
             points.get(points.size - 2).set(points.get(points.size - 1)).add(points.get(points.size - 3)).scl(0.5f);
         }
@@ -199,7 +196,7 @@ public class CurveComponent extends AComponent {
         Vector2 touchedPointRef = points.get(touchedPointIndex);
         tmp.set(x, y).sub(touchedPointRef); // delta move
 
-        if(touchedPointIndex % 3 == 0 || !automaticControl) {
+        if (touchedPointIndex % 3 == 0 || !automaticControl) {
             touchedPointRef.set(x, y);
 
             if (automaticControl) {
@@ -227,7 +224,6 @@ public class CurveComponent extends AComponent {
                     }
                 }
             }
-
         }
 
 

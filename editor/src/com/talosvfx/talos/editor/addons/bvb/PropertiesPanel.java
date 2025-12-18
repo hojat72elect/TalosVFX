@@ -2,19 +2,24 @@ package com.talosvfx.talos.editor.addons.bvb;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.talosvfx.talos.editor.addons.scene.SceneUtils;
-import com.talosvfx.talos.editor.addons.scene.logic.componentwrappers.*;
-import com.talosvfx.talos.runtime.scene.GameObject;
+import com.talosvfx.talos.editor.addons.scene.logic.componentwrappers.AComponentProvider;
+import com.talosvfx.talos.editor.addons.scene.logic.componentwrappers.TransformComponentProvider;
 import com.talosvfx.talos.editor.addons.scene.widgets.PropertyPanel;
 import com.talosvfx.talos.editor.project2.SharedResources;
-import com.talosvfx.talos.editor.widgets.propertyWidgets.PropertyWidget;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.IPropertyProvider;
+import com.talosvfx.talos.editor.widgets.propertyWidgets.PropertyWidget;
 import com.talosvfx.talos.editor.widgets.ui.menu.BasicPopup;
+import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.components.AComponent;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,16 +49,16 @@ public class PropertiesPanel extends Table {
         titleLabel = new Label("", getSkin());
         titleLabel.setEllipsis(true);
         Table titleContainer = new Table();
-        titleContainer.add(titleLabel).padTop(-titleLabel.getPrefHeight()-3).growX().left();
+        titleContainer.add(titleLabel).padTop(-titleLabel.getPrefHeight() - 3).growX().left();
         if (propertyProvider instanceof AComponentProvider && !(propertyProvider instanceof TransformComponentProvider)) {
             AComponent component = ((AComponentProvider<?>) propertyProvider).getComponent();
 
             ImageButton settingButton = new ImageButton(SharedResources.skin.getDrawable("ic-vertical-dots"));
             titleContainer.add(settingButton).padTop(-titleLabel.getPrefHeight() - 3).right().width(20).padRight(2).row();
 
-            settingButton.addListener( new ClickListener(){
+            settingButton.addListener(new ClickListener() {
 
-                private Vector2 temp = new Vector2();
+                private final Vector2 temp = new Vector2();
 
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
@@ -68,10 +73,10 @@ public class PropertiesPanel extends Table {
                             .onClick(new BasicPopup.PopupListener<String>() {
                                 @Override
                                 public void itemClicked(String payload) {
-                                    if(payload.equals("reset")) {
+                                    if (payload.equals("reset")) {
                                         component.reset();
                                         updateValues();
-                                    } else if(payload.equals("remove")) {
+                                    } else if (payload.equals("remove")) {
                                         component.remove();
 
                                         GameObject gameObject = component.getGameObject();
@@ -87,8 +92,7 @@ public class PropertiesPanel extends Table {
                             .show(settingButton, temp.x, temp.y);
                 }
             });
-
-        }else{
+        } else {
             titleContainer.row();
         }
 
@@ -109,13 +113,13 @@ public class PropertiesPanel extends Table {
         titleLabel.setText(title);
     }
 
-    private void setPropertyProvider (IPropertyProvider propertyProvider) {
+    private void setPropertyProvider(IPropertyProvider propertyProvider) {
         currentPropertyPanels.clear();
         currentPropertyPanels.add(propertyProvider);
         reconstruct();
     }
 
-    public void reconstruct () {
+    public void reconstruct() {
         propertyGroup.clear();
         propertyWidgets.clear();
         propertyGroup.top().left();
@@ -126,7 +130,7 @@ public class PropertiesPanel extends Table {
 
             Array<PropertyWidget> listOfProperties = currentPropertyPanel.getListOfProperties();
 
-            if(listOfProperties != null) {
+            if (listOfProperties != null) {
                 for (PropertyWidget propertyWidget : listOfProperties) {
                     propertyWidget.setTopLevelPropertiesPanel(parentPropertyPanel);
                     propertyWidgets.add(propertyWidget);

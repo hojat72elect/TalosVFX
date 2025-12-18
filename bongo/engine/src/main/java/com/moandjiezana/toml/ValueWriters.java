@@ -1,7 +1,6 @@
 package com.moandjiezana.toml;
 
 import static com.moandjiezana.toml.BooleanValueReaderWriter.BOOLEAN_VALUE_READER_WRITER;
-import static com.moandjiezana.toml.DateValueReaderWriter.DATE_PARSER_JDK_6;
 import static com.moandjiezana.toml.DateValueReaderWriter.DATE_VALUE_READER_WRITER;
 import static com.moandjiezana.toml.MapValueWriter.MAP_VALUE_WRITER;
 import static com.moandjiezana.toml.NumberValueReaderWriter.NUMBER_VALUE_READER_WRITER;
@@ -12,26 +11,26 @@ import static com.moandjiezana.toml.TableArrayValueWriter.TABLE_ARRAY_VALUE_WRIT
 
 class ValueWriters {
 
-  static final ValueWriters WRITERS = new ValueWriters();
+    static final ValueWriters WRITERS = new ValueWriters();
+    private static final ValueWriter[] VALUE_WRITERS = {
+            STRING_VALUE_READER_WRITER, NUMBER_VALUE_READER_WRITER, BOOLEAN_VALUE_READER_WRITER, getPlatformSpecificDateConverter(),
+            MAP_VALUE_WRITER, PRIMITIVE_ARRAY_VALUE_WRITER, TABLE_ARRAY_VALUE_WRITER
+    };
 
-  ValueWriter findWriterFor(Object value) {
-    for (ValueWriter valueWriter : VALUE_WRITERS) {
-      if (valueWriter.canWrite(value)) {
-        return valueWriter;
-      }
+    private ValueWriters() {
     }
 
-    return OBJECT_VALUE_WRITER;
-  }
+    private static DateValueReaderWriter getPlatformSpecificDateConverter() {
+        return DATE_VALUE_READER_WRITER;
+    }
 
-  private ValueWriters() {}
-  
-  private static DateValueReaderWriter getPlatformSpecificDateConverter() {
-    return DATE_VALUE_READER_WRITER;
-  }
+    ValueWriter findWriterFor(Object value) {
+        for (ValueWriter valueWriter : VALUE_WRITERS) {
+            if (valueWriter.canWrite(value)) {
+                return valueWriter;
+            }
+        }
 
-  private static final ValueWriter[] VALUE_WRITERS = {
-      STRING_VALUE_READER_WRITER, NUMBER_VALUE_READER_WRITER, BOOLEAN_VALUE_READER_WRITER, getPlatformSpecificDateConverter(),
-      MAP_VALUE_WRITER, PRIMITIVE_ARRAY_VALUE_WRITER, TABLE_ARRAY_VALUE_WRITER
-  };
+        return OBJECT_VALUE_WRITER;
+    }
 }

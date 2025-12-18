@@ -26,7 +26,7 @@ import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
 import java.util.Locale;
 
 public class OnEventNodeWidget extends RoutineNodeWidget {
-    private Array<PropertyWrapper<?>> propertyWrappers = new Array<>();
+    private final Array<PropertyWrapper<?>> propertyWrappers = new Array<>();
     private Table fieldTable;
 
     @Override
@@ -45,7 +45,7 @@ public class OnEventNodeWidget extends RoutineNodeWidget {
 
         plusButton.addListener(new ClickListener() {
             private BasicPopup<PropertyType> popup;
-            private Vector2 temp = new Vector2();
+            private final Vector2 temp = new Vector2();
 
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -190,8 +190,8 @@ public class OnEventNodeWidget extends RoutineNodeWidget {
 
                 @Override
                 public void collapse(CustomVarChangeEvent event, Actor actor) {
-                                                                            reportNodeDataModified(false);
-                                                                                                           }
+                    reportNodeDataModified(false);
+                }
             });
 
             innerWidget.updateFromPropertyWrapper(propertyWrapper);

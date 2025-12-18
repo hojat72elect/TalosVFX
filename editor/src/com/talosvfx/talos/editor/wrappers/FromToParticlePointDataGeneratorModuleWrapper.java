@@ -18,27 +18,26 @@ package com.talosvfx.talos.editor.wrappers;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.kotcrab.vis.ui.widget.VisTextField;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.events.deprecatedparticles.RegisterDragPoints;
 import com.talosvfx.talos.editor.notifications.events.deprecatedparticles.UnRegisterDragPoints;
 import com.talosvfx.talos.editor.widgets.ui.DragPoint;
+import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.TextFieldWithZoom;
 import com.talosvfx.talos.runtime.vfx.Slot;
 import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
 import com.talosvfx.talos.runtime.vfx.modules.FromToParticlePointDataGeneratorModule;
 import com.talosvfx.talos.runtime.vfx.modules.ParticlePointDataGeneratorModule;
 import com.talosvfx.talos.runtime.vfx.modules.StaticValueModule;
-import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.TextFieldWithZoom;
 
 
-public class FromToParticlePointDataGeneratorModuleWrapper extends ModuleWrapper<FromToParticlePointDataGeneratorModule> implements IDragPointProvider{
+public class FromToParticlePointDataGeneratorModuleWrapper extends ModuleWrapper<FromToParticlePointDataGeneratorModule> implements IDragPointProvider {
 
     private DragPoint dragPointFrom;
     private DragPoint dragPointTo;
 
     private TextFieldWithZoom numPointsTextField;
 
-    public FromToParticlePointDataGeneratorModuleWrapper () {
+    public FromToParticlePointDataGeneratorModuleWrapper() {
         super();
     }
 
@@ -65,7 +64,7 @@ public class FromToParticlePointDataGeneratorModuleWrapper extends ModuleWrapper
         numPointsTextField = addInputSlotWithTextField("num points", FromToParticlePointDataGeneratorModule.POINTS_COUNT);
         numPointsTextField.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 float numPoints = floatFromText(numPointsTextField);
                 module.setNumPoints(numPoints);
             }
@@ -74,12 +73,10 @@ public class FromToParticlePointDataGeneratorModuleWrapper extends ModuleWrapper
 
         dragPointFrom = new DragPoint(0, 0);
         dragPointTo = new DragPoint(1, 0);
-
-
     }
 
     @Override
-    public Class<? extends AbstractModule> getSlotsPreferredModule (Slot slot) {
+    public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
 
 //        if (slot.getIndex() == FromToParticlePointDataGeneratorModule.FROM) return TalosMain.Instance().UIStage().getPreferred3DVectorClass();;
 //        if (slot.getIndex() == FromToParticlePointDataGeneratorModule.TO) return TalosMain.Instance().UIStage().getPreferred3DVectorClass();;
@@ -103,17 +100,17 @@ public class FromToParticlePointDataGeneratorModuleWrapper extends ModuleWrapper
     }
 
     @Override
-    public DragPoint[] fetchDragPoints () {
-        return new DragPoint[] {dragPointFrom, dragPointTo};
+    public DragPoint[] fetchDragPoints() {
+        return new DragPoint[]{dragPointFrom, dragPointTo};
     }
 
     @Override
-    public void dragPointChanged (DragPoint point) {
-        if(point == dragPointFrom) {
+    public void dragPointChanged(DragPoint point) {
+        if (point == dragPointFrom) {
             module.setDefaults(dragPointFrom.position, dragPointTo.position);
         }
 
-        if(point == dragPointTo) {
+        if (point == dragPointTo) {
             module.setDefaults(dragPointFrom.position, dragPointTo.position);
         }
     }

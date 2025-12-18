@@ -18,29 +18,29 @@ public abstract class PropertyWrapper<T> implements Cloneable, Json.Serializable
 
     public boolean isCollapsed = true;
 
-    public void collectAttributes (Array<String> attributes) {
-        for (int i = 0; i < attributes.size; i+=2) {
+    public void collectAttributes(Array<String> attributes) {
+        for (int i = 0; i < attributes.size; i += 2) {
             String type = attributes.get(i);
             if (type.equals("defaultValue")) {
-                defaultValue = parseValueFromString(attributes.get(i+1));
+                defaultValue = parseValueFromString(attributes.get(i + 1));
             }
         }
     }
 
-    public void setValueUnsafe (Object value) {
+    public void setValueUnsafe(Object value) {
         this.value = (T) value;
-    }
-
-    public void setValue (T value) {
-        this.value = value;
     }
 
     public T getValue() {
         return this.value;
     }
 
+    public void setValue(T value) {
+        this.value = value;
+    }
+
     @Override
-    public PropertyWrapper<T> clone () {
+    public PropertyWrapper<T> clone() {
         try {
             PropertyWrapper<T> clone = (PropertyWrapper<T>) super.clone();
             clone.value = value;
@@ -56,27 +56,26 @@ public abstract class PropertyWrapper<T> implements Cloneable, Json.Serializable
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
-       propertyName = jsonData.getString("propertyName");
-       index = jsonData.getInt("index");
-       isValueOverridden = jsonData.getBoolean("isValueOverridden", false);
-       isCollapsed = jsonData.getBoolean("isCollapsed", true);
+    public void read(Json json, JsonValue jsonData) {
+        propertyName = jsonData.getString("propertyName");
+        index = jsonData.getInt("index");
+        isValueOverridden = jsonData.getBoolean("isValueOverridden", false);
+        isCollapsed = jsonData.getBoolean("isCollapsed", true);
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         json.writeValue("propertyName", propertyName);
         json.writeValue("index", index);
         json.writeValue("isValueOverridden", isValueOverridden);
         json.writeValue("isCollapsed", isCollapsed);
     }
 
-    public abstract T parseValueFromString (String value);
+    public abstract T parseValueFromString(String value);
 
     public abstract PropertyType getType();
 
-    public void setDefault () {
+    public void setDefault() {
         this.value = defaultValue;
     }
-
 }

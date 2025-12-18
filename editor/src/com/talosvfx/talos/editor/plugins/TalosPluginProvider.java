@@ -13,18 +13,18 @@ public abstract class TalosPluginProvider {
 
     private PluginDefinition pluginDefinition;
 
-    private ArrayList<TalosPlugin> plugins = new ArrayList<>();
+    private final ArrayList<TalosPlugin> plugins = new ArrayList<>();
 
-    private HashMap<String, Class<? extends NodeWidget>> customNodeWidgets = new HashMap<>();
+    private final HashMap<String, Class<? extends NodeWidget>> customNodeWidgets = new HashMap<>();
 
     private boolean initialized;
 
-    public TalosPluginProvider () {
+    public TalosPluginProvider() {
         //Load from plugin resource
 
     }
 
-    private boolean isInitialized () {
+    private boolean isInitialized() {
         return initialized;
     }
 
@@ -32,29 +32,29 @@ public abstract class TalosPluginProvider {
      * Used for loading all resources that may be related to the provider's plugins.
      * Useful for lazy loading of plugin's resources for efficiency
      */
-    protected abstract void initialize ();
+    protected abstract void initialize();
 
-    public void init () {
+    public void init() {
         initialize();
         for (TalosPlugin plugin : plugins) {
             plugin.onPluginProviderInitialized();
         }
     }
 
-    public void setPluginDefinition (PluginDefinition pluginDefinition) {
+    public void setPluginDefinition(PluginDefinition pluginDefinition) {
         this.pluginDefinition = pluginDefinition;
     }
 
-    public Class<? extends NodeWidget> getCustomNodeWidget (String className) {
+    public Class<? extends NodeWidget> getCustomNodeWidget(String className) {
         return customNodeWidgets.get(className);
     }
 
-    public ArrayList<TalosPlugin> getPlugins () {
+    public ArrayList<TalosPlugin> getPlugins() {
         return plugins;
     }
 
     @SuppressWarnings("unchecked")
-    public void loadPlugins (HashMap<String, Class<?>> classes) throws ReflectionException {
+    public void loadPlugins(HashMap<String, Class<?>> classes) throws ReflectionException {
         for (String plugin : pluginDefinition.plugins) {
             if (!classes.containsKey(plugin)) {
                 System.out.println("Ignoring plugin: " + plugin + " as not found");
@@ -81,10 +81,9 @@ public abstract class TalosPluginProvider {
         }
     }
 
-    private void loadPlugin (Class<? extends TalosPlugin<?>> talosPluginClass) throws ReflectionException {
+    private void loadPlugin(Class<? extends TalosPlugin<?>> talosPluginClass) throws ReflectionException {
         final Constructor constructor = ClassReflection.getConstructor(getClass());
-        TalosPlugin<?> talosPlugin = (TalosPlugin<?>)constructor.newInstance(this);
+        TalosPlugin<?> talosPlugin = (TalosPlugin<?>) constructor.newInstance(this);
         plugins.add(talosPlugin);
     }
-
 }

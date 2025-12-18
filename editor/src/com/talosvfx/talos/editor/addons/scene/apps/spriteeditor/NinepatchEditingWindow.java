@@ -2,7 +2,6 @@ package com.talosvfx.talos.editor.addons.scene.apps.spriteeditor;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -13,25 +12,20 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.talosvfx.talos.editor.addons.scene.assets.AssetRepository;
-import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.editor.project2.SharedResources;
+import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.meta.SpriteMetadata;
 
 public class NinepatchEditingWindow extends SpriteEditorWindow {
+    private final float pad = 40.0f;
+    private final float space = 20.0f;
     public EditPanel editPanel;
     private Table propertiesPanel;
-
     private NinePatchPreview ninePatchPreview;
     private NumberPanel leftProperty;
     private NumberPanel rightProperty;
     private NumberPanel topProperty;
     private NumberPanel bottomProperty;
-
-
-    private final float pad = 40.0f;
-    private final float space = 20.0f;
-
-
     // data
     private Texture texture;
     private NinePatchDrawable patchDrawable;
@@ -41,7 +35,7 @@ public class NinepatchEditingWindow extends SpriteEditorWindow {
     private SpriteMetadataListener listener;
 
 
-    public NinepatchEditingWindow (SpriteEditor spriteEditor) {
+    public NinepatchEditingWindow(SpriteEditor spriteEditor) {
         super(spriteEditor);
 
         setListener((left, right, top, bottom) -> {
@@ -58,7 +52,7 @@ public class NinepatchEditingWindow extends SpriteEditorWindow {
         initRightPanel();
     }
 
-    private void initEditPanel () {
+    private void initEditPanel() {
         editPanel = new EditPanel(new EditPanel.EditPanelListener() {
             @Override
             public void changed(float left, float right, float top, float bottom) {
@@ -76,7 +70,7 @@ public class NinepatchEditingWindow extends SpriteEditorWindow {
         addActor(editPanel);
     }
 
-    private void initRightPanel () {
+    private void initRightPanel() {
         // init nine patch preview
         ninePatchPreview = new NinePatchPreview();
 
@@ -245,7 +239,7 @@ public class NinepatchEditingWindow extends SpriteEditorWindow {
         });
     }
 
-    public void saveAndClose () {
+    public void saveAndClose() {
 
         // TODO: 23.02.23 dummy refactor
         if (gameAsset == null) {
@@ -300,7 +294,7 @@ public class NinepatchEditingWindow extends SpriteEditorWindow {
         editPanel.setSize(getWidth() - 2.0f * pad - propertiesPanel.getPrefWidth() - space, getHeight() - 2.0f * pad);
     }
 
-    private void layoutWrapped () {
+    private void layoutWrapped() {
         propertiesPanel.setPosition(pad + propertiesPanel.getPrefWidth() / 2f, pad + propertiesPanel.getPrefHeight() / 2f);
         float remainingHeight = getHeight() - 2.0f * pad - space - propertiesPanel.getPrefHeight();
         remainingHeight = Math.max(remainingHeight, editPanel.getPrefHeight());
@@ -309,7 +303,7 @@ public class NinepatchEditingWindow extends SpriteEditorWindow {
     }
 
     @Override
-    public void updateForGameAsset (GameAsset<AtlasSprite> gameAsset) {
+    public void updateForGameAsset(GameAsset<AtlasSprite> gameAsset) {
         super.updateForGameAsset(gameAsset);
 
         final SpriteMetadata metadata = (SpriteMetadata) gameAsset.getRootRawAsset().metaData;
@@ -354,7 +348,7 @@ public class NinepatchEditingWindow extends SpriteEditorWindow {
     }
 
     @Override
-    public void setScrollFocus () {
+    public void setScrollFocus() {
         SharedResources.stage.setScrollFocus(editPanel);
     }
 
@@ -371,18 +365,18 @@ public class NinepatchEditingWindow extends SpriteEditorWindow {
         public static final float WIDTH = 175.0f;
         public static final float HEIGHT = 175.0f;
 
-        public void show (NinePatchDrawable patchDrawable) {
+        public void show(NinePatchDrawable patchDrawable) {
             clearChildren();
             Image vertical = new Image(patchDrawable) {
                 {
                     float w = NinePatchPreview.WIDTH / 4f - 5;
                     float h = 3 * NinePatchPreview.HEIGHT / 4f;
                     float width = patchDrawable.getMinWidth();
-                    float height =  patchDrawable.getMinHeight();
+                    float height = patchDrawable.getMinHeight();
                     float upscaled_width, upscaled_height;
                     if (width < height) {
                         upscaled_width = width;
-                        upscaled_height = height * ( h / w);
+                        upscaled_height = height * (h / w);
                     } else {
                         upscaled_width = width;
                         upscaled_height = height * ((width * h) / (height * w));
@@ -409,10 +403,10 @@ public class NinepatchEditingWindow extends SpriteEditorWindow {
                     float w = NinePatchPreview.WIDTH;
                     float h = NinePatchPreview.HEIGHT / 4f - 5;
                     float width = patchDrawable.getMinWidth();
-                    float height =  patchDrawable.getMinHeight();
+                    float height = patchDrawable.getMinHeight();
                     float upscaled_width, upscaled_height;
                     if (width > height) {
-                        upscaled_width = width * ((w/height) / (h/width));
+                        upscaled_width = width * ((w / height) / (h / width));
                         upscaled_height = height;
                     } else {
                         upscaled_width = width * (w / h);

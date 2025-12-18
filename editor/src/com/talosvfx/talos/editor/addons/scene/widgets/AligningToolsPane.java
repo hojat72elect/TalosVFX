@@ -16,7 +16,7 @@ import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 
 
 public class AligningToolsPane extends Table {
-    private OrderedSet<GameObject> selection;
+    private final OrderedSet<GameObject> selection;
 
     public AligningToolsPane(OrderedSet<GameObject> selection) {
         this.selection = selection;
@@ -42,7 +42,7 @@ public class AligningToolsPane extends Table {
         add(horizontalAlignToBottom).size(iconSize);
 
         Image separator = new Image(SharedResources.skin.newDrawable("white", ColorLibrary.BackgroundColor.BRIGHT_GRAY.getColor()));
-        add(separator).size(1,25);
+        add(separator).size(1, 25);
 //        row();
         ImageButton distributeHorizontalCenter = new ImageButton(SharedResources.skin.getDrawable("distribute-horizontal-center"));
         ImageButton distributeVerticalCenter = new ImageButton(SharedResources.skin.getDrawable("distribute-vertical-center"));
@@ -164,7 +164,7 @@ public class AligningToolsPane extends Table {
         });*/
     }
 
-    private void onUpdate(){
+    private void onUpdate() {
         SceneUtils.componentBatchUpdated(selection.orderedItems().get(0).getGameObjectContainerRoot(), selection.orderedItems(), TransformComponent.class, false);
     }
 
@@ -173,5 +173,4 @@ public class AligningToolsPane extends Table {
         super.act(delta);
         setPosition(getParent().getWidth() - getWidth() - 25, getParent().getHeight() - getHeight() - 25);
     }
-
 }

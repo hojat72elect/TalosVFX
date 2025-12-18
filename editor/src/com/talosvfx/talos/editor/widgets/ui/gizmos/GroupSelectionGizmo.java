@@ -11,239 +11,234 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.Pools;
 import com.talosvfx.talos.editor.addons.scene.SceneUtils;
-import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.editor.addons.scene.widgets.gizmos.Gizmo;
 import com.talosvfx.talos.editor.widgets.ui.ViewportWidget;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
+import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.GameObjectContainer;
 import com.talosvfx.talos.runtime.scene.components.SpriteRendererComponent;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
-import lombok.Getter;
 
 import java.util.Comparator;
 
+import lombok.Getter;
+
 public class GroupSelectionGizmo extends Gizmo {
 
-	@Getter
-	private final ViewportWidget viewportWidget;
+    @Getter
+    private final ViewportWidget viewportWidget;
 
-	private BoundingBox selectionBounds = new BoundingBox();
+    private final BoundingBox selectionBounds = new BoundingBox();
 
-	private ObjectMap<GameObject, Vector2> worldSpaceStartingOffsets = new ObjectMap<>();
-	private Comparator<GameObject> parentHierarchySorter;
+    private final ObjectMap<GameObject, Vector2> worldSpaceStartingOffsets = new ObjectMap<>();
+    private final Comparator<GameObject> parentHierarchySorter;
 
-	private boolean hasDeterminedDirection = false;
-	private boolean isHorizontalMove = false;
+    private boolean hasDeterminedDirection = false;
+    private boolean isHorizontalMove = false;
 
-	private Vector2 prevPoint = new Vector2();
+    private final Vector2 prevPoint = new Vector2();
 
-	public GroupSelectionGizmo (ViewportWidget widget) {
-		this.viewportWidget = widget;
+    public GroupSelectionGizmo(ViewportWidget widget) {
+        this.viewportWidget = widget;
 
-		parentHierarchySorter = new Comparator<GameObject>() {
-			@Override
-			public int compare (GameObject o1, GameObject o2) {
-				int o1Count = o1.getParentCount();
-				int o2Count = o2.getParentCount();
-				return Integer.compare(o1Count, o2Count);
-			}
-		};
-	}
+        parentHierarchySorter = new Comparator<GameObject>() {
+            @Override
+            public int compare(GameObject o1, GameObject o2) {
+                int o1Count = o1.getParentCount();
+                int o2Count = o2.getParentCount();
+                return Integer.compare(o1Count, o2Count);
+            }
+        };
+    }
 
-	@Override
-	public void act (float delta) {
-		super.act(delta);
+    @Override
+    public void act(float delta) {
+        super.act(delta);
 
-		calculateSelectionBounds();
-	}
+        calculateSelectionBounds();
+    }
 
-	@Override
-	public boolean hit (float x, float y) {
-		if(selectionBounds.getHeight() == 0 || selectionBounds.getWidth() == 0) return false;
+    @Override
+    public boolean hit(float x, float y) {
+        if (selectionBounds.getHeight() == 0 || selectionBounds.getWidth() == 0) return false;
 
-		return selectionBounds.contains(new Vector3(x, y, 0));
-	}
+        return selectionBounds.contains(new Vector3(x, y, 0));
+    }
 
-	@Override
-	public void setSelected (boolean selected) {
-		super.setSelected(selected);
+    @Override
+    public void setSelected(boolean selected) {
+        super.setSelected(selected);
+    }
 
-	}
+    @Override
+    public void touchDown(float x, float y, int button) {
+        super.touchDown(x, y, button);
 
-	@Override
-	public void touchDown (float x, float y, int button) {
-		super.touchDown(x, y, button);
+        worldSpaceStartingOffsets.clear();
+        hasDeterminedDirection = false;
 
-		worldSpaceStartingOffsets.clear();
-		hasDeterminedDirection = false;
+        //Sort the selection by parent hierarchy becuase its impportant to do parents first
 
-		//Sort the selection by parent hierarchy becuase its impportant to do parents first
+        Array<GameObject> gameObjects = viewportWidget.selection.orderedItems();
 
-		Array<GameObject> gameObjects = viewportWidget.selection.orderedItems();
+        gameObjects.sort(parentHierarchySorter);
+        for (GameObject object : gameObjects) {
+            if (object.hasComponent(TransformComponent.class)) {
+                TransformComponent transformComponent = object.getComponent(TransformComponent.class);
+                Vector2 worldPosition = transformComponent.worldPosition;
 
-		gameObjects.sort(parentHierarchySorter);
-		for (GameObject object : gameObjects) {
-			if (object.hasComponent(TransformComponent.class)) {
-				TransformComponent transformComponent = object.getComponent(TransformComponent.class);
-				Vector2 worldPosition = transformComponent.worldPosition;
+                worldSpaceStartingOffsets.put(object, new Vector2().set(x, y).sub(worldPosition));
+            }
+        }
 
-				worldSpaceStartingOffsets.put(object, new Vector2().set(x, y).sub(worldPosition));
-			}
-		}
+        prevPoint.set(x, y);
+    }
 
-		prevPoint.set(x, y);
-	}
+    @Override
+    public void touchDragged(float x, float y) {
+        super.touchDragged(x, y);
+        Vector2 tmp = Pools.obtain(Vector2.class);
 
-	@Override
-	public void touchDragged (float x, float y) {
-		super.touchDragged(x, y);
-		Vector2 tmp = Pools.obtain(Vector2.class);
+        if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+            if (!hasDeterminedDirection) {
+                tmp.set(x, y).sub(prevPoint);
+                float x1 = tmp.x;
+                float y1 = tmp.y;
 
-		if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
-			if (!hasDeterminedDirection) {
-				tmp.set(x, y).sub(prevPoint);
-				float x1 = tmp.x;
-				float y1 = tmp.y;
+                isHorizontalMove = Math.abs(x1) > Math.abs(y1);
+                hasDeterminedDirection = true;
+            }
 
-				isHorizontalMove = Math.abs(x1) > Math.abs(y1);
-				hasDeterminedDirection = true;
-			}
+            if (isHorizontalMove) {
+                y = prevPoint.y;
+            } else {
+                x = prevPoint.x;
+            }
+        } else {
+            hasDeterminedDirection = false;
+        }
 
-			if (isHorizontalMove) {
-				y = prevPoint.y;
-			} else {
-				x = prevPoint.x;
-			}
-		} else {
-			hasDeterminedDirection = false;
-		}
+        for (GameObject object : viewportWidget.selection) {
+            GameObject parent = object;
+            boolean needUpdate = true;
+            while ((parent = parent.getParent()) != null) {
+                if (viewportWidget.selection.contains(parent)) {
+                    needUpdate = false;
+                    break;
+                }
+            }
+            if (!needUpdate)
+                continue;
 
-		for (GameObject object : viewportWidget.selection) {
-			GameObject parent = object;
-			boolean needUpdate = true;
-			while ((parent = parent.getParent()) != null) {
-				if (viewportWidget.selection.contains(parent)) {
-					needUpdate = false;
-					break;
-				}
-			}
-			if (!needUpdate)
-				continue;
+            if (object.hasComponent(TransformComponent.class)) {
+                Vector2 worldSpaceOffset = worldSpaceStartingOffsets.get(object);
+                Vector2 newWorldSpace = new Vector2(x, y).sub(worldSpaceOffset);
 
-			if (object.hasComponent(TransformComponent.class)) {
-				Vector2 worldSpaceOffset = worldSpaceStartingOffsets.get(object);
-				Vector2 newWorldSpace = new Vector2(x, y).sub(worldSpaceOffset);
+                GameObject.setPositionFromWorldPosition(object, newWorldSpace);
+            }
+        }
 
-				GameObject.setPositionFromWorldPosition(object, newWorldSpace);
-			}
-		}
+        prevPoint.set(x, y);
+        Pools.free(tmp);
+    }
 
-		prevPoint.set(x, y);
-		Pools.free(tmp);
-	}
+    @Override
+    public void touchUp(float x, float y) {
+        GameObjectContainer container = viewportWidget.selection.first().getGameObjectContainerRoot();
+        SceneUtils.componentBatchUpdated(container, viewportWidget.selection.orderedItems(), TransformComponent.class, false);
+    }
 
-	@Override
-	public void touchUp(float x, float y) {
-		GameObjectContainer container = viewportWidget.selection.first().getGameObjectContainerRoot();
-		SceneUtils.componentBatchUpdated(container, viewportWidget.selection.orderedItems(), TransformComponent.class, false);
-	}
+    private void calculateSelectionBounds() {
+        selectionBounds.clr();
 
-	private void calculateSelectionBounds () {
-		selectionBounds.clr();
+        boolean first = true;
 
-		boolean first = true;
-
-		for (GameObject object : viewportWidget.selection) {
-			//Do da bounds on the transforms or widgets
-
+        for (GameObject object : viewportWidget.selection) {
+            //Do da bounds on the transforms or widgets
 
 
-			if (object.hasComponent(TransformComponent.class)) {
+            if (object.hasComponent(TransformComponent.class)) {
 
-				TransformComponent transformComponent = object.getComponent(TransformComponent.class);
-				if (first) {
-					first = false;
-					Vector3 minMaxDefault = new Vector3(transformComponent.worldPosition.x, transformComponent.worldPosition.y, 0);
-					selectionBounds.set(minMaxDefault, minMaxDefault);
-				} else {
-					selectionBounds.ext(transformComponent.worldPosition.x, transformComponent.worldPosition.y, 0);
-
-				}
-
+                TransformComponent transformComponent = object.getComponent(TransformComponent.class);
+                if (first) {
+                    first = false;
+                    Vector3 minMaxDefault = new Vector3(transformComponent.worldPosition.x, transformComponent.worldPosition.y, 0);
+                    selectionBounds.set(minMaxDefault, minMaxDefault);
+                } else {
+                    selectionBounds.ext(transformComponent.worldPosition.x, transformComponent.worldPosition.y, 0);
+                }
 
 
+                if (object.hasComponent(SpriteRendererComponent.class)) {
+                    SpriteRendererComponent spriteRendererComponent = object.getComponent(SpriteRendererComponent.class);
+                    float x = transformComponent.worldPosition.x;
+                    float y = transformComponent.worldPosition.y;
 
-				if (object.hasComponent(SpriteRendererComponent.class)) {
-					SpriteRendererComponent spriteRendererComponent = object.getComponent(SpriteRendererComponent.class);
-					float x = transformComponent.worldPosition.x;
-					float y = transformComponent.worldPosition.y;
+                    Vector2 spriteSize = spriteRendererComponent.size;
+                    float spriteHeight = spriteSize.y * transformComponent.worldScale.x;
+                    float spriteWidth = spriteSize.x * transformComponent.worldScale.y;
+                    float halfWidth = spriteWidth / 2;
+                    float halfHeight = spriteHeight / 2;
 
-					Vector2 spriteSize = spriteRendererComponent.size;
-					float spriteHeight = spriteSize.y * transformComponent.worldScale.x;
-					float spriteWidth = spriteSize.x * transformComponent.worldScale.y;
-					float halfWidth = spriteWidth / 2;
-					float halfHeight = spriteHeight / 2;
+                    selectionBounds.ext(x - halfWidth, y - halfHeight, 0);
+                    selectionBounds.ext(x - halfWidth, y + halfHeight, 0);
+                    selectionBounds.ext(x + halfWidth, y - halfHeight, 0);
+                    selectionBounds.ext(x + halfWidth, y + halfHeight, 0);
+                }
+            }
+        }
+    }
 
-					selectionBounds.ext(x - halfWidth, y - halfHeight, 0);
-					selectionBounds.ext(x - halfWidth, y + halfHeight, 0);
-					selectionBounds.ext(x + halfWidth, y - halfHeight, 0);
-					selectionBounds.ext(x + halfWidth, y + halfHeight, 0);
-				}
-			}
+    @Override
+    public void draw(Batch batch, float parentAlpha) {
+        super.draw(batch, parentAlpha);
 
-		}
-	}
+        if (selected && !viewportWidget.selection.isEmpty()) {
 
-	@Override
-	public void draw (Batch batch, float parentAlpha) {
-		super.draw(batch, parentAlpha);
+            float boundsWidth = selectionBounds.getWidth();
+            float boundsHeight = selectionBounds.getHeight();
+            float centerX = selectionBounds.getCenterX();
+            float centerY = selectionBounds.getCenterY();
+            drawCircle(new Vector2(centerX, centerY), batch);
 
-		if (selected && !viewportWidget.selection.isEmpty()) {
+            drawLine(batch, centerX - boundsWidth / 2, centerY - boundsHeight / 2, centerX - boundsWidth / 2, centerY + boundsHeight / 2, ColorLibrary.ORANGE);
+            drawLine(batch, centerX + boundsWidth / 2, centerY - boundsHeight / 2, centerX + boundsWidth / 2, centerY + boundsHeight / 2, ColorLibrary.ORANGE);
 
-			float boundsWidth = selectionBounds.getWidth();
-			float boundsHeight = selectionBounds.getHeight();
-			float centerX = selectionBounds.getCenterX();
-			float centerY = selectionBounds.getCenterY();
-			drawCircle(new Vector2(centerX, centerY), batch);
+            drawLine(batch, centerX - boundsWidth / 2, centerY + boundsHeight / 2, centerX + boundsWidth / 2, centerY + boundsHeight / 2, ColorLibrary.ORANGE);
+            drawLine(batch, centerX - boundsWidth / 2, centerY - boundsHeight / 2, centerX + boundsWidth / 2, centerY - boundsHeight / 2, ColorLibrary.ORANGE);
+        }
+    }
 
-			drawLine(batch, centerX - boundsWidth/2, centerY - boundsHeight/2, centerX - boundsWidth/2, centerY + boundsHeight/2, ColorLibrary.ORANGE);
-			drawLine(batch, centerX + boundsWidth/2, centerY - boundsHeight/2, centerX + boundsWidth/2, centerY + boundsHeight/2, ColorLibrary.ORANGE);
+    public float getCenterX() {
+        return selectionBounds.getCenterX();
+    }
 
-			drawLine(batch, centerX - boundsWidth/2, centerY + boundsHeight/2, centerX + boundsWidth/2, centerY + boundsHeight/2, ColorLibrary.ORANGE);
-			drawLine(batch, centerX - boundsWidth/2, centerY - boundsHeight/2, centerX + boundsWidth/2, centerY - boundsHeight/2, ColorLibrary.ORANGE);
-		}
-	}
-
-	public float getCenterX () {
-		return selectionBounds.getCenterX();
-	}
-
-	public float getCenterY () {
-		return selectionBounds.getCenterY();
-	}
+    public float getCenterY() {
+        return selectionBounds.getCenterY();
+    }
 
 
-	@Override
-	protected void updateFromGameObject () {
+    @Override
+    protected void updateFromGameObject() {
 
-	}
+    }
 
-	@Override
-	public GameObject getGameObject () {
-		throw new GdxRuntimeException("Not supported for Mega gizmo");
-	}
+    @Override
+    public GameObject getGameObject() {
+        throw new GdxRuntimeException("Not supported for Mega gizmo");
+    }
 
-	@Override
-	public boolean isControllingGameObject (GameObject gameObject) {
-		return viewportWidget.selection.contains(gameObject) && viewportWidget.selection.size != 1;
-	}
+    @Override
+    public boolean isControllingGameObject(GameObject gameObject) {
+        return viewportWidget.selection.contains(gameObject) && viewportWidget.selection.size != 1;
+    }
 
-	@Override
-	public int getPriority () {
-		return -1;
-	}
+    @Override
+    public int getPriority() {
+        return -1;
+    }
 
-	public Array<GameObject> getGameObjects() {
-		return worldSpaceStartingOffsets.keys().toArray();
-	}
+    public Array<GameObject> getGameObjects() {
+        return worldSpaceStartingOffsets.keys().toArray();
+    }
 }

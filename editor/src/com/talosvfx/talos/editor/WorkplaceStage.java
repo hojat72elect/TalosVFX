@@ -9,7 +9,7 @@ public abstract class WorkplaceStage {
 
 
     @Getter
-    private Table rootActor;
+    private final Table rootActor;
 
     public WorkplaceStage() {
         rootActor = new Table();
@@ -20,7 +20,7 @@ public abstract class WorkplaceStage {
 
     public abstract void init();
 
-    public void resize (int width, int height) {
+    public void resize(int width, int height) {
     }
 
 
@@ -31,5 +31,5 @@ public abstract class WorkplaceStage {
 
     }
 
-    public  abstract void fileDrop(String[] paths, float x, float y);
+    public abstract void fileDrop(String[] paths, float x, float y);
 }

@@ -13,7 +13,7 @@ public class MathNode extends AbstractShaderNode {
     public final String OUTPUT = "outputValue";
 
     @Override
-    public ShaderBuilder.Type getVarType (String name) {
+    public ShaderBuilder.Type getVarType(String name) {
 
         if (name.equals(OUTPUT)) {
             ShaderBuilder.Type maxType = getMaxType(
@@ -33,7 +33,7 @@ public class MathNode extends AbstractShaderNode {
 
         ShaderBuilder.Type outputType = getVarType(OUTPUT);
 
-        if(outputType != getTargetVarType(INPUT_A, ShaderBuilder.Type.FLOAT) || outputType != getTargetVarType(INPUT_B, ShaderBuilder.Type.FLOAT)) {
+        if (outputType != getTargetVarType(INPUT_A, ShaderBuilder.Type.FLOAT) || outputType != getTargetVarType(INPUT_B, ShaderBuilder.Type.FLOAT)) {
             // gotta cast
             exprA = castTypes(exprA, getTargetVarType(INPUT_A, ShaderBuilder.Type.FLOAT), outputType, CAST_STRATEGY_REPEAT);
             exprB = castTypes(exprB, getTargetVarType(INPUT_B, ShaderBuilder.Type.FLOAT), outputType, CAST_STRATEGY_REPEAT);
@@ -50,7 +50,7 @@ public class MathNode extends AbstractShaderNode {
             expression = "sin(" + exprA + ") * (" + exprB + ")";
         } else if (operation.equals("COS")) {
             expression = "cos(" + exprA + ") * (" + exprB + ")";
-        } else if(operation.equals("POW")) {
+        } else if (operation.equals("POW")) {
             expression = "pow(" + exprA + ", " + exprB + ")";
         } else {
             if (operation.equals("ADD")) {
@@ -68,7 +68,7 @@ public class MathNode extends AbstractShaderNode {
 
 
         if (clamp) {
-            expression = "fract(" + expression +  ")";
+            expression = "fract(" + expression + ")";
         }
 
         shaderBuilder.addLine(outputType.getTypeString() + " mathVar" + getId() + " = " + expression);

@@ -6,7 +6,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.talosvfx.talos.editor.addons.bvb.PropertiesPanel;
-import com.talosvfx.talos.editor.addons.scene.events.*;
+import com.talosvfx.talos.editor.addons.scene.events.AssetResolutionChanged;
+import com.talosvfx.talos.editor.addons.scene.events.ComponentAdded;
+import com.talosvfx.talos.editor.addons.scene.events.ComponentUpdated;
+import com.talosvfx.talos.editor.addons.scene.events.GameObjectNameChanged;
+import com.talosvfx.talos.editor.addons.scene.events.PropertyHolderSelected;
 import com.talosvfx.talos.editor.addons.scene.events.meta.MetaDataReloadedEvent;
 import com.talosvfx.talos.editor.addons.scene.logic.IPropertyHolder;
 import com.talosvfx.talos.editor.addons.scene.logic.PropertyWrapperProviders;
@@ -18,12 +22,11 @@ import com.talosvfx.talos.editor.notifications.Observer;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.IPropertyProvider;
 import com.talosvfx.talos.runtime.scene.components.DataComponent;
-import com.talosvfx.talos.runtime.scene.components.RoutineRendererComponent;
-import com.talosvfx.talos.runtime.scene.components.ScriptComponent;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.Comparator;
+
+import lombok.Getter;
+import lombok.Setter;
 
 public class PropertyPanel extends Table implements Observer {
 
@@ -36,9 +39,9 @@ public class PropertyPanel extends Table implements Observer {
     @Getter
     ScrollPane scrollPane;
 
-    private Array<IPropertyProvider> providerSet = new Array<>();
-    private Array<PropertiesPanel> panelList = new Array<>();
-    private ObjectMap<IPropertyProvider, PropertiesPanel> providerPanelMap = new ObjectMap<>();
+    private final Array<IPropertyProvider> providerSet = new Array<>();
+    private final Array<PropertiesPanel> panelList = new Array<>();
+    private final ObjectMap<IPropertyProvider, PropertiesPanel> providerPanelMap = new ObjectMap<>();
     private IPropertyHolder currentPropertyHolder;
 
     public PropertyPanel() {
@@ -60,9 +63,9 @@ public class PropertyPanel extends Table implements Observer {
     }
 
     @EventHandler
-    public void onGameObjectNameChanged (GameObjectNameChanged event) {
+    public void onGameObjectNameChanged(GameObjectNameChanged event) {
         PropertiesPanel propertiesPanel = providerPanelMap.get(PropertyWrapperProviders.getOrCreateProvider(event.target));
-        if(propertiesPanel != null) {
+        if (propertiesPanel != null) {
             propertiesPanel.updateValues();
         }
     }
@@ -70,8 +73,8 @@ public class PropertyPanel extends Table implements Observer {
 
     @EventHandler
     public void onPropertyHolderSelected(PropertyHolderSelected event) {
-        if(event.getTarget() == null) return;
-        if(event.getTarget().getPropertyProviders() == null) return;
+        if (event.getTarget() == null) return;
+        if (event.getTarget().getPropertyProviders() == null) return;
 
         showPanel(event.getTarget(), event.getTarget().getPropertyProviders());
     }
@@ -89,16 +92,16 @@ public class PropertyPanel extends Table implements Observer {
 //    }
 
     @EventHandler
-    public void onMetaDataReloadedEvent (MetaDataReloadedEvent event) {
+    public void onMetaDataReloadedEvent(MetaDataReloadedEvent event) {
         if (currentPropertyHolder == event.getMetadata()) {
             updateValues();
         }
     }
 
-    public void showPanel (IPropertyHolder target, Iterable<IPropertyProvider> propertyProviders) {
+    public void showPanel(IPropertyHolder target, Iterable<IPropertyProvider> propertyProviders) {
         providerSet.clear();
-        for(IPropertyProvider propertyProvider: propertyProviders) {
-            if(propertyProvider.getType() == null) continue;
+        for (IPropertyProvider propertyProvider : propertyProviders) {
+            if (propertyProvider.getType() == null) continue;
             providerSet.add(propertyProvider);
         }
         build();
@@ -117,14 +120,14 @@ public class PropertyPanel extends Table implements Observer {
         list.sort(new Comparator<IPropertyProvider>() {
             @Override
             public int compare(IPropertyProvider o1, IPropertyProvider o2) {
-                return o1.getPriority()-o2.getPriority();
+                return o1.getPriority() - o2.getPriority();
             }
         });
 
         panelList.clear();
         providerPanelMap.clear();
 
-        for(IPropertyProvider provider: list) {
+        for (IPropertyProvider provider : list) {
             PropertiesPanel panel = new PropertiesPanel(provider, getSkin(), this);
 
             container.add(panel).growX().top().padBottom(5);
@@ -137,7 +140,7 @@ public class PropertyPanel extends Table implements Observer {
     }
 
     public void hidePanel(IPropertyProvider propertyProvider) {
-        if(propertyProvider == null) return;
+        if (propertyProvider == null) return;
         providerSet.removeValue(propertyProvider, true);
         build();
 
@@ -145,7 +148,7 @@ public class PropertyPanel extends Table implements Observer {
     }
 
     public void updateValues() {
-        for(PropertiesPanel panel: panelList) {
+        for (PropertiesPanel panel : panelList) {
             panel.updateValues();
         }
     }
@@ -158,7 +161,7 @@ public class PropertyPanel extends Table implements Observer {
     }
 
     @EventHandler
-    public void onComponentAdded (ComponentAdded componentAdded) {
+    public void onComponentAdded(ComponentAdded componentAdded) {
         if (componentAdded.getParent() == null || this.currentPropertyHolder == null) {
             return;
         }
@@ -167,8 +170,9 @@ public class PropertyPanel extends Table implements Observer {
             showPanel(this.currentPropertyHolder, this.currentPropertyHolder.getPropertyProviders());
         }
     }
+
     @EventHandler
-    public void onComponentUpdate (ComponentUpdated componentUpdated) {
+    public void onComponentUpdate(ComponentUpdated componentUpdated) {
         if (!ignoringEvents) {
             propertyProviderUpdated(PropertyWrapperProviders.getOrCreateProvider(componentUpdated.getComponent()));
         }
@@ -179,15 +183,16 @@ public class PropertyPanel extends Table implements Observer {
             }
         }
     }
+
     @EventHandler
-    public void onAssetResolutionChanged (AssetResolutionChanged resolutionChanged) {
+    public void onAssetResolutionChanged(AssetResolutionChanged resolutionChanged) {
         if (!ignoringEvents) {
             updateValues();
         }
     }
 
-    public void propertyProviderUpdated (IPropertyProvider propertyProvider) {
-        if(providerPanelMap.containsKey(propertyProvider)) {
+    public void propertyProviderUpdated(IPropertyProvider propertyProvider) {
+        if (providerPanelMap.containsKey(propertyProvider)) {
             PropertiesPanel propertiesPanel = providerPanelMap.get(propertyProvider);
             if (propertyProvider instanceof ScriptComponentProvider || propertyProvider instanceof RoutineRenderComponentProvider) {
                 propertiesPanel.reconstruct();
@@ -197,14 +202,13 @@ public class PropertyPanel extends Table implements Observer {
         }
     }
 
-    public void notifyPropertyHolderRemoved (IPropertyHolder propertyHolder) {
-        if(currentPropertyHolder == propertyHolder) {
+    public void notifyPropertyHolderRemoved(IPropertyHolder propertyHolder) {
+        if (currentPropertyHolder == propertyHolder) {
             cleanPanels();
         }
     }
 
-    public IPropertyHolder getCurrentHolder () {
+    public IPropertyHolder getCurrentHolder() {
         return currentPropertyHolder;
     }
-
 }

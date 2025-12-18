@@ -12,12 +12,12 @@ public class PluginDefinition {
     public ArrayList<String> plugins;
     public ArrayList<String> customNodes;
 
-    public PluginDefinition () {
+    public PluginDefinition() {
 
     }
 
     @Override
-    public String toString () {
+    public String toString() {
         return "Name: " + name + "\n" +
                 "Version: " + version + "\n" +
                 "PluginProvider: " + pluginProvider + "\n" +
@@ -25,7 +25,7 @@ public class PluginDefinition {
                 "CustomNodes: " + stringArray(customNodes);
     }
 
-    private String stringArray (ArrayList<String> stringEntry) {
+    private String stringArray(ArrayList<String> stringEntry) {
         CharArray buffer = new CharArray();
         for (String plugin : stringEntry) {
             buffer.append("\n\t").append(plugin);

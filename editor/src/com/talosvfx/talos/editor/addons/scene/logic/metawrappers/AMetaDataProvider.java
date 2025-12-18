@@ -7,29 +7,29 @@ import com.talosvfx.talos.runtime.assets.AMetadata;
 
 public class AMetaDataProvider<T extends AMetadata> implements IPropertyProvider {
 
-	protected final T meta;
+    protected final T meta;
 
-	public AMetaDataProvider (T meta) {
-		this.meta = meta;
-	}
+    public AMetaDataProvider(T meta) {
+        this.meta = meta;
+    }
 
-	@Override
-	public Array<PropertyWidget> getListOfProperties () {
-		return null;
-	}
+    @Override
+    public Array<PropertyWidget> getListOfProperties() {
+        return null;
+    }
 
-	@Override
-	public String getPropertyBoxTitle () {
-		return null;
-	}
+    @Override
+    public String getPropertyBoxTitle() {
+        return null;
+    }
 
-	@Override
-	public int getPriority () {
-		return 1;
-	}
+    @Override
+    public int getPriority() {
+        return 1;
+    }
 
-	@Override
-	public Class<? extends IPropertyProvider> getType () {
-		return getClass();
-	}
+    @Override
+    public Class<? extends IPropertyProvider> getType() {
+        return getClass();
+    }
 }

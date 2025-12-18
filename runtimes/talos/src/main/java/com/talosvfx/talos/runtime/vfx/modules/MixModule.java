@@ -44,21 +44,21 @@ public class MixModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
         int count = Math.max(val1.elementsCount(), val2.elementsCount());
-        for(int i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             output.getElements()[i] = Interpolation.linear.apply(val1.getElements()[i], val2.getElements()[i], alpha.getFloat());
         }
         output.setElementsCount(count);
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
     }
 }

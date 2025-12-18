@@ -21,7 +21,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.talosvfx.talos.editor.addons.scene.SceneEditorWorkspace;
@@ -31,15 +36,15 @@ public class SearchFilteredTree<T> extends Table {
     private static final float AUTO_SCROLL_SPEED = 500;
 
     public TextField textField;
-    private FilteredTree<T> filteredTree;
     public ScrollPane scrollPane;
-
+    private final FilteredTree<T> filteredTree;
     private boolean autoSelect = true;
 
-    private Table searchTable;
+    private final Table searchTable;
 
-    private Vector2 tmp = new Vector2();
-    public SearchFilteredTree (Skin skin, final FilteredTree<T> tree, final TextField.TextFieldFilter filter) {
+    private final Vector2 tmp = new Vector2();
+
+    public SearchFilteredTree(Skin skin, final FilteredTree<T> tree, final TextField.TextFieldFilter filter) {
 
         searchTable = new Table();
         Image image = new Image(skin.newDrawable("search"));
@@ -62,7 +67,7 @@ public class SearchFilteredTree<T> extends Table {
 
         textField.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 tree.smartFilter(textField.getText(), autoSelect);
                 tree.invalidateHierarchy();
                 tree.invalidate();
@@ -72,14 +77,13 @@ public class SearchFilteredTree<T> extends Table {
 
         textField.addListener(new ClickListener() {
             @Override
-            public boolean keyDown(InputEvent event, int keycode)  {
-                if(SceneEditorWorkspace.isEnterPressed(keycode)) {
+            public boolean keyDown(InputEvent event, int keycode) {
+                if (SceneEditorWorkspace.isEnterPressed(keycode)) {
                     filteredTree.reportUserEnter();
                 }
                 return super.keyDown(event, keycode);
             }
         });
-
     }
 
     public void reset() {
@@ -90,7 +94,7 @@ public class SearchFilteredTree<T> extends Table {
         filteredTree.layout();
     }
 
-    public void setPad (float padTop, float padLeft, float padBottom, float padRight) {
+    public void setPad(float padTop, float padLeft, float padBottom, float padRight) {
         Cell<TextField> textFieldCell = searchTable.getCell(textField);
         textFieldCell.pad(padTop, padLeft, padBottom, padRight);
     }
@@ -111,7 +115,7 @@ public class SearchFilteredTree<T> extends Table {
     }
 
     private boolean isInTopZone(float localX, float localY) {
-        return localY < scrollPane.getHeight() && localY > scrollPane.getHeight() -  AUTO_SCROLL_RANGE;
+        return localY < scrollPane.getHeight() && localY > scrollPane.getHeight() - AUTO_SCROLL_RANGE;
     }
 
     private boolean isInBottomZone(float localX, float localY) {

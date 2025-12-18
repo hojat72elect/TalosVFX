@@ -17,7 +17,9 @@
 package com.talosvfx.talos.editor.widgets.ui;
 
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.*;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
@@ -31,6 +33,7 @@ import com.talosvfx.talos.editor.wrappers.EmitterModuleWrapper;
 import com.talosvfx.talos.editor.wrappers.WrapperRegistry;
 import com.talosvfx.talos.runtime.utils.TempHackUtil;
 import com.talosvfx.talos.runtime.vfx.modules.EmitterModule;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,14 +41,11 @@ public class ModuleListPopup extends VisWindow {
 
 
     private static final Logger logger = LoggerFactory.getLogger(ModuleListPopup.class);
-
-    private InputListener stageListener;
     FilteredTree<String> tree;
     SearchFilteredTree<String> searchFilteredTree;
-
     Vector2 createLocationScreen = new Vector2();
-
-    private ObjectMap<String, String> nameToModuleClass = new ObjectMap<>();
+    private InputListener stageListener;
+    private final ObjectMap<String, String> nameToModuleClass = new ObjectMap<>();
     private ModuleBoardWidget moduleBoardWidget;
 
     public ModuleListPopup(XmlReader.Element root) {
@@ -68,17 +68,18 @@ public class ModuleListPopup extends VisWindow {
         add(searchFilteredTree).width(300).row();
         add().growY();
 
-        invalidate(); pack();
+        invalidate();
+        pack();
 
         createListeners();
     }
 
-    public boolean contains (float x, float y) {
+    public boolean contains(float x, float y) {
         return getX() < x && getX() + getWidth() > x && getY() < y && getY() + getHeight() > y;
     }
 
     @Override
-    protected void setStage (Stage stage) {
+    protected void setStage(Stage stage) {
         super.setStage(stage);
         if (stage != null) stage.addListener(stageListener);
     }
@@ -86,7 +87,7 @@ public class ModuleListPopup extends VisWindow {
     private void createListeners() {
         stageListener = new InputListener() {
             @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 if (!ModuleListPopup.this.contains(x, y) && button == 0) {
                     remove();
                     return false;
@@ -98,10 +99,10 @@ public class ModuleListPopup extends VisWindow {
         tree.addItemListener(new FilteredTree.ItemListener() {
             @Override
             public void selected(FilteredTree.Node node) {
-                if(node.children.size == 0) {
+                if (node.children.size == 0) {
                     try {
                         Class clazz = ClassReflection.forName(TempHackUtil.hackIt("com.talosvfx.talos.runtime.modules." + nameToModuleClass.get(node.name)));
-                        if(WrapperRegistry.map.containsKey(clazz)) {
+                        if (WrapperRegistry.map.containsKey(clazz)) {
                             moduleBoardWidget.createModule(clazz, createLocationScreen.x, createLocationScreen.y);
                             remove();
                         } else {
@@ -114,7 +115,7 @@ public class ModuleListPopup extends VisWindow {
             }
 
             @Override
-            public void addedIntoSelection (FilteredTree.Node node) {
+            public void addedIntoSelection(FilteredTree.Node node) {
                 super.addedIntoSelection(node);
             }
         });
@@ -122,10 +123,10 @@ public class ModuleListPopup extends VisWindow {
 
     private void parseCategory(FilteredTree<String> tree, FilteredTree.Node parent, XmlReader.Element element) {
         Array<XmlReader.Element> categories = element.getChildrenByName("category");
-        for(XmlReader.Element category: categories) {
+        for (XmlReader.Element category : categories) {
             FilteredTree.Node categoryNode = new FilteredTree.Node(category.getAttribute("name"), new Label(category.getAttribute("name"), getSkin()));
 
-            if(parent != null) parent.add(categoryNode);
+            if (parent != null) parent.add(categoryNode);
             else tree.add(categoryNode);
 
             parseCategory(tree, categoryNode, category);
@@ -133,13 +134,13 @@ public class ModuleListPopup extends VisWindow {
 
         // get modules
         Array<XmlReader.Element> modules = element.getChildrenByName("module");
-        for(XmlReader.Element module: modules) {
+        for (XmlReader.Element module : modules) {
             FilteredTree.Node node = new FilteredTree.Node(module.getAttribute("name"), new Label(module.getAttribute("name"), getSkin()));
             nameToModuleClass.put(module.getAttribute("name"), module.getText());
 
             registerModule(module);
 
-            if(parent != null) parent.add(node);
+            if (parent != null) parent.add(node);
             else tree.add(node);
         }
     }
@@ -177,7 +178,7 @@ public class ModuleListPopup extends VisWindow {
     }
 
     @Override
-    public boolean remove () {
+    public boolean remove() {
         if (getStage() != null) getStage().removeListener(stageListener);
         return super.remove();
     }

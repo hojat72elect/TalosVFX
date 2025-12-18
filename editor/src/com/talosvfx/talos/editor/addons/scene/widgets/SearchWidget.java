@@ -5,7 +5,11 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Container;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Scaling;
@@ -13,25 +17,26 @@ import com.badlogic.gdx.utils.Timer;
 import com.talosvfx.talos.editor.addons.scene.widgets.directoryview.DirectoryViewWidget;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
-import info.debatty.java.stringsimilarity.JaroWinkler;
-import info.debatty.java.stringsimilarity.interfaces.StringSimilarity;
 
 import java.util.Stack;
 
+import info.debatty.java.stringsimilarity.JaroWinkler;
+import info.debatty.java.stringsimilarity.interfaces.StringSimilarity;
+
 public class SearchWidget extends Table {
     private static final float HEIGHT = 20f;
-    private TextField textField;
-    private DirectoryViewWidget directoryViewWidget;
-    private Stack<FileHandle> stack = new Stack<>();
-    private Array<FileHandle> similarFiles = new Array<>(false, 16);
     private final float DEBOUNCE_DELAY = 0.2f;
+    private final StringSimilarity similar = new JaroWinkler();
+    private final TextField textField;
+    private final DirectoryViewWidget directoryViewWidget;
+    private final Stack<FileHandle> stack = new Stack<>();
+    private final Array<FileHandle> similarFiles = new Array<>(false, 16);
     private Timer.Task searchTask; // task for debounced search
     private String queryTemp;
     private String otherTemp;// to not create a new Strings every time for lowercase()
-    private final StringSimilarity similar = new JaroWinkler();
 
 
-    public SearchWidget (DirectoryViewWidget boundDirectoryWidget) {
+    public SearchWidget(DirectoryViewWidget boundDirectoryWidget) {
         this.directoryViewWidget = boundDirectoryWidget;
         Skin skin = SharedResources.skin;
         // add search icon
@@ -87,7 +92,7 @@ public class SearchWidget extends Table {
     }
 
 
-    private void performSearch (String query) {
+    private void performSearch(String query) {
         this.queryTemp = query.toLowerCase();
         if (queryTemp.isEmpty()) {
             FileHandle currentFolder = directoryViewWidget.getCurrentFolder();
@@ -120,5 +125,4 @@ public class SearchWidget extends Table {
 
         directoryViewWidget.fillItems(similarFiles);
     }
-
 }

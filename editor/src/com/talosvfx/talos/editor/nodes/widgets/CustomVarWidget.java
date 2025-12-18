@@ -2,12 +2,27 @@ package com.talosvfx.talos.editor.nodes.widgets;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Event;
+import com.badlogic.gdx.scenes.scene2d.EventListener;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.FocusListener;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.Pools;
+import com.badlogic.gdx.utils.XmlReader;
 import com.talosvfx.talos.editor.addons.scene.SceneEditorWorkspace;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.ui.DeleteButton;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.ui.types.ATypeWidget;
@@ -19,6 +34,7 @@ import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.LabelWithZoom;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.TextFieldWithZoom;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,7 +43,7 @@ public class CustomVarWidget<T> extends AbstractWidget<T> {
     private final Table editing;
     private final Table main;
     @Getter
-    private PropertyWrapper<T> propertyWrapper;
+    private final PropertyWrapper<T> propertyWrapper;
 
     private Label fieldNameLabel;
     private TextField fieldNameTextField;
@@ -47,7 +63,7 @@ public class CustomVarWidget<T> extends AbstractWidget<T> {
     private Table fieldContainer;
     private Cell<Table> contentCell;
 
-    private ATypeWidget<T> innerWidget;
+    private final ATypeWidget<T> innerWidget;
     private Label typeLabel;
 
     public CustomVarWidget(PropertyWrapper<T> propertyWrapper, ATypeWidget<T> innerWidget) {
@@ -95,7 +111,6 @@ public class CustomVarWidget<T> extends AbstractWidget<T> {
 
                 propertyWrapper.isCollapsed = arrowButton.isCollapsed();
                 fireCollapse();
-
             }
         });
 
@@ -391,13 +406,6 @@ public class CustomVarWidget<T> extends AbstractWidget<T> {
     }
 
     public abstract static class CustomVarWidgetChangeListener implements EventListener {
-        public enum Type {
-            nameChanged,
-            valueChanged,
-            delete,
-            collapse,
-        }
-
         @Override
         public boolean handle(Event event) {
             if (!(event instanceof CustomVarChangeEvent)) return false;
@@ -424,7 +432,6 @@ public class CustomVarWidget<T> extends AbstractWidget<T> {
             return false;
         }
 
-
         public abstract void nameChanged(CustomVarChangeEvent event, Actor actor, String oldName, String newName, boolean isFastChange);
 
         public abstract void valueChanged(CustomVarChangeEvent event, Actor actor, boolean isFastChange);
@@ -435,16 +442,27 @@ public class CustomVarWidget<T> extends AbstractWidget<T> {
 
         }
 
+        public enum Type {
+            nameChanged,
+            valueChanged,
+            delete,
+            collapse,
+        }
+
         public static class CustomVarChangeEvent extends Event {
-            @Getter@Setter
+            @Getter
+            @Setter
             private Type type;
-            @Getter@Setter
+            @Getter
+            @Setter
             private boolean isFastChange;
 
-            @Getter@Setter
+            @Getter
+            @Setter
             private String oldName;
 
-            @Getter@Setter
+            @Getter
+            @Setter
             private String newName;
         }
     }

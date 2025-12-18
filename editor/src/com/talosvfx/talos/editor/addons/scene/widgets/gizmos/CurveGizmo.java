@@ -15,30 +15,32 @@ import com.kotcrab.vis.ui.FocusManager;
 import com.talosvfx.talos.editor.addons.scene.SceneUtils;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.runtime.scene.components.CurveComponent;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CurveGizmo extends Gizmo {
 
     private static final Logger logger = LoggerFactory.getLogger(CurveGizmo.class);
-    private Bezier<Vector2> bezier = new Bezier<>();
-    private Vector2 tmp = new Vector2();
-    private Vector2 tmp2 = new Vector2();
-    private Vector2 tmp3 = new Vector2();
-    private Vector2 tmp4 = new Vector2();
+    private final Bezier<Vector2> bezier = new Bezier<>();
+    private final Vector2 tmp = new Vector2();
+    private final Vector2 tmp2 = new Vector2();
+    private final Vector2 tmp3 = new Vector2();
+    private final Vector2 tmp4 = new Vector2();
 
     private int animatingAnchor = -1;
-    private Vector2 ctrlOne = new Vector2();
-    private Vector2 ctrlTwo = new Vector2();
+    private final Vector2 ctrlOne = new Vector2();
+    private final Vector2 ctrlTwo = new Vector2();
 
     private int touchedPointIndex;
     private Vector2 touchedPointRef;
 
     private int selectedSegmentIndex = -1;
 
-    private Color darkerLine = Color.valueOf("#333333");
+    private final Color darkerLine = Color.valueOf("#333333");
 
-    private Actor animateActor;
+    private final Actor animateActor;
+    private boolean touchDragged;
 
     public CurveGizmo() {
         animateActor = new Actor();
@@ -52,31 +54,31 @@ public class CurveGizmo extends Gizmo {
     @Override
     public void draw(Batch batch, float parentAlpha) {
 
-        if(gameObject.hasComponent(CurveComponent.class)) {
+        if (gameObject.hasComponent(CurveComponent.class)) {
             CurveComponent curve = gameObject.getComponent(CurveComponent.class);
             Array<Vector2> points = curve.points;
 
-            if(selected) {
+            if (selected) {
                 for (int i = 0; i < points.size; i++) {
-                    if(i % 3 == 0) {
+                    if (i % 3 == 0) {
                         drawCircle(toWorld(points.get(i)), batch);
                     }
                 }
             }
 
-            for(int i = 0; i < curve.getNumSegments(); i++) {
+            for (int i = 0; i < curve.getNumSegments(); i++) {
                 Vector2[] pointsInSegment = curve.getPointsInSegment(i);
 
-                if(selected) {
+                if (selected) {
                     Color color = Color.GRAY;
-                    if(curve.automaticControl){
+                    if (curve.automaticControl) {
                         color = darkerLine;
                     }
 
                     ctrlOne.set(pointsInSegment[1]);
                     ctrlTwo.set(pointsInSegment[2]);
 
-                    if(animatingAnchor >= 0) {
+                    if (animatingAnchor >= 0) {
                         if (i * 3 + 2 == animatingAnchor - 1) {
                             tmp.set(ctrlTwo).sub(curve.points.get(animatingAnchor)).scl(animateActor.getX()).add(curve.points.get(animatingAnchor));
                             ctrlTwo.set(tmp);
@@ -84,13 +86,12 @@ public class CurveGizmo extends Gizmo {
                             tmp.set(ctrlOne).sub(curve.points.get(animatingAnchor)).scl(animateActor.getX()).add(curve.points.get(animatingAnchor));
                             ctrlOne.set(tmp);
                         }
-
                     }
 
                     drawLine(batch, toWorld(ctrlOne, tmp2), toWorld(pointsInSegment[0], tmp3), color);
                     drawLine(batch, toWorld(ctrlTwo, tmp2), toWorld(pointsInSegment[3], tmp3), color);
 
-                    if(!curve.automaticControl) {
+                    if (!curve.automaticControl) {
                         drawCircle(toWorld(ctrlOne), batch);
                         drawCircle(toWorld(ctrlTwo), batch);
                     }
@@ -99,18 +100,18 @@ public class CurveGizmo extends Gizmo {
                 bezier.set(pointsInSegment);
 
                 Vector2 prev = bezier.valueAt(tmp, 0);
-                float step = 1f/20f;
-                for(float t = step; t <= 1f; t+=step) {
+                float step = 1f / 20f;
+                for (float t = step; t <= 1f; t += step) {
                     Vector2 curr = bezier.valueAt(tmp2, t);
-                    if(selectedSegmentIndex == i) {
+                    if (selectedSegmentIndex == i) {
                         drawLine(batch, toWorld(prev, tmp3), toWorld(curr, tmp4), Color.YELLOW);
                     } else {
                         drawLine(batch, toWorld(prev, tmp3), toWorld(curr, tmp4), Color.RED);
                     }
                     prev.set(curr);
                 }
-                Vector2 curr = bezier.valueAt(tmp2,1f);
-                if(selectedSegmentIndex == i) {
+                Vector2 curr = bezier.valueAt(tmp2, 1f);
+                if (selectedSegmentIndex == i) {
                     drawLine(batch, toWorld(prev, tmp3), toWorld(curr, tmp4), Color.YELLOW);
                 } else {
                     drawLine(batch, toWorld(prev, tmp3), toWorld(curr, tmp4), Color.RED);
@@ -118,7 +119,7 @@ public class CurveGizmo extends Gizmo {
             }
         }
 
-        if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             FocusManager.resetFocus(SharedResources.stage);
         }
     }
@@ -137,15 +138,15 @@ public class CurveGizmo extends Gizmo {
 
         int touchPoint = getTouchedPoint(x, y);
 
-        if(touchPoint >= 0) {
+        if (touchPoint >= 0) {
             return true;
         }
 
-        if(Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+        if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
             return true;
         }
 
-        if(Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+        if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
             return false;
         }
 
@@ -154,7 +155,7 @@ public class CurveGizmo extends Gizmo {
 
     private int getTouchedPoint(float x, float y) {
         CurveComponent curve = gameObject.getComponent(CurveComponent.class);
-        if(curve != null) {
+        if (curve != null) {
             Array<Vector2> points = curve.points;
             for (int i = 0; i < points.size; i++) {
                 if (isPointHit(toWorld(points.get(i)), x, y)) {
@@ -168,11 +169,7 @@ public class CurveGizmo extends Gizmo {
 
     private boolean isPointHit(Vector2 point, float x, float y, float radius) {
         float dst = point.dst(x, y) / worldPerPixel;
-        if (dst < radius) {
-            return true;
-        }
-
-        return false;
+        return dst < radius;
     }
 
     private boolean isPointHit(Vector2 point, float x, float y) {
@@ -183,7 +180,7 @@ public class CurveGizmo extends Gizmo {
     public void touchDown(float x, float y, int button) {
         CurveComponent curve = gameObject.getComponent(CurveComponent.class);
         int touchedPoint = getTouchedPoint(x, y);
-        if(button == 0) {
+        if (button == 0) {
             if (touchedPoint >= 0) {
                 touchedPointRef = gameObject.getComponent(CurveComponent.class).points.get(touchedPoint);
                 touchedPointIndex = touchedPoint;
@@ -201,7 +198,7 @@ public class CurveGizmo extends Gizmo {
                 }
             }
         } else if (button == 1) {
-            if(touchedPoint % 3 == 0) {
+            if (touchedPoint % 3 == 0) {
                 curve.deleteSegment(touchedPoint);
             }
         }
@@ -218,18 +215,18 @@ public class CurveGizmo extends Gizmo {
     }
 
     @Override
-    public void setSelected (boolean selected) {
+    public void setSelected(boolean selected) {
         super.setSelected(selected);
     }
 
     private float getDistanceToBezier(Bezier<Vector2> bz, Vector2 point, Vector2 closestOut, int samples) {
-        float alphaIterate = 1f/samples;
+        float alphaIterate = 1f / samples;
         Vector2 prev = bz.valueAt(tmp3, alphaIterate);
         float min = Float.MAX_VALUE;
-        for(float t = alphaIterate; t < 1; t+=alphaIterate) {
+        for (float t = alphaIterate; t < 1; t += alphaIterate) {
             Vector2 curr = bz.valueAt(tmp2, t);
             float dst = Intersector.distanceSegmentPoint(prev, curr, point);
-            if(min > dst) {
+            if (min > dst) {
                 min = dst;
                 closestOut.set(curr);
             }
@@ -240,27 +237,27 @@ public class CurveGizmo extends Gizmo {
 
     @Override
     public void mouseMoved(float x, float y) {
-        float threshold =  worldPerPixel * 10f;
+        float threshold = worldPerPixel * 10f;
 
         selectedSegmentIndex = -1;
 
         Vector2 local = toLocal(tmp, x, y);
         CurveComponent curve = gameObject.getComponent(CurveComponent.class);
-        for(int i = 0; i < curve.getNumSegments(); i++) {
+        for (int i = 0; i < curve.getNumSegments(); i++) {
             Vector2[] pointsInSegment = curve.getPointsInSegment(i);
             bezier.set(pointsInSegment);
             float dst = getDistanceToBezier(bezier, local, tmp4, 1000);
-            if(dst < threshold) {
+            if (dst < threshold) {
                 selectedSegmentIndex = i;
             }
         }
 
-        if(selectedSegmentIndex >= 0) {
+        if (selectedSegmentIndex >= 0) {
             // debug info here
         }
     }
 
-    private boolean getClosestWorldPoint (Vector2 out, float worldX, float worldY, float threshHold) {
+    private boolean getClosestWorldPoint(Vector2 out, float worldX, float worldY, float threshHold) {
         float minDist = Float.MAX_VALUE;
         int chosenSegment = 0;
         float closestWorldX = 0;
@@ -273,7 +270,7 @@ public class CurveGizmo extends Gizmo {
         float localY = local.y;
 
         CurveComponent curve = gameObject.getComponent(CurveComponent.class);
-        for(int i = 0; i < curve.getNumSegments(); i++) {
+        for (int i = 0; i < curve.getNumSegments(); i++) {
             Vector2[] pointsInSegment = curve.getPointsInSegment(i);
             bezier.set(pointsInSegment);
 
@@ -294,11 +291,9 @@ public class CurveGizmo extends Gizmo {
         return isPointHit(world, worldX, worldY, threshHold);
     }
 
-
-    private boolean touchDragged;
     @Override
     public void touchDragged(float x, float y) {
-        if(touchedPointRef != null) {
+        if (touchedPointRef != null) {
             touchDragged = true;
 
             final CurveComponent curve = gameObject.getComponent(CurveComponent.class);
@@ -328,7 +323,7 @@ public class CurveGizmo extends Gizmo {
     }
 
     @Override
-    public int getPriority () {
-       return -1;
+    public int getPriority() {
+        return -1;
     }
 }

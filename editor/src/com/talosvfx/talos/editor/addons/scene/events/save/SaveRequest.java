@@ -4,8 +4,8 @@ import com.talosvfx.talos.editor.notifications.TalosEvent;
 
 public class SaveRequest implements TalosEvent {
 
-	@Override
-	public void reset () {
+    @Override
+    public void reset() {
 
-	}
+    }
 }

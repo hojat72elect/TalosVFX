@@ -2,21 +2,26 @@ package com.talosvfx.talos.runtime.scene.components;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.Null;
+import com.badlogic.gdx.utils.ObjectMap;
 import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyType;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
+
 import lombok.Getter;
 
-public class DataComponent extends AComponent implements Json.Serializable{
+public class DataComponent extends AComponent implements Json.Serializable {
     @Getter
-    private Array<PropertyWrapper<?>> properties = new Array<>();
+    private final Array<PropertyWrapper<?>> properties = new Array<>();
 
 
     /**
      * \Runtime only access, loaded on deserialization
      */
-    private transient ObjectMap<String, PropertyWrapper> propertyWrapperObjectMap = new ObjectMap<>();
+    private final transient ObjectMap<String, PropertyWrapper> propertyWrapperObjectMap = new ObjectMap<>();
 
     @Override
     public void write(Json json) {
@@ -37,7 +42,7 @@ public class DataComponent extends AComponent implements Json.Serializable{
         }
     }
 
-    public @Null PropertyWrapper<?> getWrapperOrNull (String propertyName) {
+    public @Null PropertyWrapper<?> getWrapperOrNull(String propertyName) {
         if (propertyWrapperObjectMap.containsKey(propertyName)) {
             return propertyWrapperObjectMap.get(propertyName);
         }
@@ -49,7 +54,7 @@ public class DataComponent extends AComponent implements Json.Serializable{
      * @param propertyName
      * @return null if no property found
      */
-    public @Null Boolean getBooleanOrNull (String propertyName) {
+    public @Null Boolean getBooleanOrNull(String propertyName) {
         PropertyWrapper<?> wrapperOrNull = getWrapperOrNull(propertyName);
         if (wrapperOrNull != null) {
             if (wrapperOrNull.getType() == PropertyType.BOOLEAN) return (Boolean) wrapperOrNull.getValue();
@@ -61,7 +66,7 @@ public class DataComponent extends AComponent implements Json.Serializable{
      * @param propertyName
      * @return null if no property found
      */
-    public @Null String getStringOrNull (String propertyName) {
+    public @Null String getStringOrNull(String propertyName) {
         PropertyWrapper<?> wrapperOrNull = getWrapperOrNull(propertyName);
         if (wrapperOrNull != null) {
             if (wrapperOrNull.getType() == PropertyType.STRING) return (String) wrapperOrNull.getValue();
@@ -73,7 +78,7 @@ public class DataComponent extends AComponent implements Json.Serializable{
      * @param propertyName
      * @return null if no property found
      */
-    public @Null Float getFloatOrNull (String propertyName) {
+    public @Null Float getFloatOrNull(String propertyName) {
         PropertyWrapper<?> wrapperOrNull = getWrapperOrNull(propertyName);
         if (wrapperOrNull != null) {
             if (wrapperOrNull.getType() == PropertyType.FLOAT) return (Float) wrapperOrNull.getValue();
@@ -85,7 +90,7 @@ public class DataComponent extends AComponent implements Json.Serializable{
      * @param propertyName
      * @return null if no property found
      */
-    public @Null Vector2 getVector2OrNull (String propertyName) {
+    public @Null Vector2 getVector2OrNull(String propertyName) {
         PropertyWrapper<?> wrapperOrNull = getWrapperOrNull(propertyName);
         if (wrapperOrNull != null) {
             if (wrapperOrNull.getType() == PropertyType.VECTOR2) return (Vector2) wrapperOrNull.getValue();
@@ -97,7 +102,7 @@ public class DataComponent extends AComponent implements Json.Serializable{
      * @param propertyName
      * @return null if no property found
      */
-    public @Null GameObject getGameObjectOrNull (String propertyName) {
+    public @Null GameObject getGameObjectOrNull(String propertyName) {
         PropertyWrapper<?> wrapperOrNull = getWrapperOrNull(propertyName);
         if (wrapperOrNull != null) {
             if (wrapperOrNull.getType() == PropertyType.GAME_OBJECT) return (GameObject) wrapperOrNull.getValue();
@@ -109,7 +114,7 @@ public class DataComponent extends AComponent implements Json.Serializable{
      * @param propertyName
      * @return null if no property found
      */
-    public @Null Color getColorOrNull (String propertyName) {
+    public @Null Color getColorOrNull(String propertyName) {
         PropertyWrapper<?> wrapperOrNull = getWrapperOrNull(propertyName);
         if (wrapperOrNull != null) {
             if (wrapperOrNull.getType() == PropertyType.COLOR) return (Color) wrapperOrNull.getValue();

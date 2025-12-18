@@ -40,7 +40,7 @@ public class LabelWidget extends AbstractWidget<Object> {
         String portType = element.getAttribute("port", "input");
 
         int align = Align.left;
-        if(portType != null && portType.equals("output")) {
+        if (portType != null && portType.equals("output")) {
             align = Align.right;
         }
 
@@ -48,17 +48,17 @@ public class LabelWidget extends AbstractWidget<Object> {
     }
 
     @Override
-    public Object getValue () {
+    public Object getValue() {
         return null;
     }
 
     @Override
-    public void read (Json json, JsonValue jsonValue) {
+    public void read(Json json, JsonValue jsonValue) {
 
     }
 
     @Override
-    public void write (Json json, String name) {
+    public void write(Json json, String name) {
 
     }
 }

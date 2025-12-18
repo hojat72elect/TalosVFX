@@ -11,13 +11,6 @@ public class SizeToNode extends AsyncRoutineNode<GameObject, SizeToNode.SizeStat
 
     private boolean additive;
 
-    public static class SizeState extends AsyncRoutineNodeState<GameObject> {
-        public Vector2 originalSize = new Vector2();
-        public Vector2 targetSize = new Vector2();
-
-        public ISizableComponent component;
-    }
-
     @Override
     protected SizeState obtainState() {
         SizeState state = Pools.obtain(SizeState.class);
@@ -28,7 +21,7 @@ public class SizeToNode extends AsyncRoutineNode<GameObject, SizeToNode.SizeStat
     protected boolean targetAdded(SizeState state) {
         GameObject target = state.getTarget();
         state.component = target.findComponent(ISizableComponent.class);
-        if(state.component == null) return false;
+        if (state.component == null) return false;
         state.originalSize.set(state.component.getWidth(), state.component.getHeight());
 
         float width = fetchFloatValue("width");
@@ -45,7 +38,7 @@ public class SizeToNode extends AsyncRoutineNode<GameObject, SizeToNode.SizeStat
     protected void stateTick(SizeState state, float delta) {
         ISizableComponent component = state.component;
         GameObject target = state.getTarget();
-        if(additive) {
+        if (additive) {
             float w = state.originalSize.x + state.targetSize.x * state.interpolatedAlpha;
             float h = state.originalSize.y + state.targetSize.y * state.interpolatedAlpha;
             component.setWidth(w);
@@ -57,10 +50,16 @@ public class SizeToNode extends AsyncRoutineNode<GameObject, SizeToNode.SizeStat
             component.setHeight(h);
         }
 
-        if(target.hasComponent(RoutineRendererComponent.class)) {
+        if (target.hasComponent(RoutineRendererComponent.class)) {
             RoutineRendererComponent rt = target.getComponent(RoutineRendererComponent.class);
             rt.routineInstance.setDirty();
         }
     }
 
+    public static class SizeState extends AsyncRoutineNodeState<GameObject> {
+        public Vector2 originalSize = new Vector2();
+        public Vector2 targetSize = new Vector2();
+
+        public ISizableComponent component;
+    }
 }

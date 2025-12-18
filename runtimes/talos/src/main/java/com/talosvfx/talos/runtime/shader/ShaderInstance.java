@@ -7,5 +7,4 @@ public class ShaderInstance {
 
 
     public ShaderProgram shaderProgram;
-
 }

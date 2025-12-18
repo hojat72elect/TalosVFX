@@ -3,7 +3,9 @@ package com.talosvfx.talos.editor.addons.scene.apps.routines.nodes.misc;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ObjectFloatMap;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.nodes.AsyncRoutineNodeWidget;
@@ -15,13 +17,13 @@ public class MicroNodeView extends Table {
 
 
     private final AsyncRoutineNodeWidget asyncRoutineNodeWidget;
-    private Image shadow;
-    private ProgressWidget progressContainer;
-    private Image bg;
+    private final Image shadow;
+    private final ProgressWidget progressContainer;
+    private final Image bg;
 
-    private Label label;
+    private final Label label;
 
-    private ObjectFloatMap<Object> progressMap = new ObjectFloatMap<>();
+    private final ObjectFloatMap<Object> progressMap = new ObjectFloatMap<>();
 
     public MicroNodeView(AsyncRoutineNodeWidget asyncRoutineNodeWidget) {
         super(SharedResources.skin);
@@ -42,8 +44,8 @@ public class MicroNodeView extends Table {
         addActor(bg);
 
         shadow.setOrigin(Align.center);
-        shadow.setPosition(-shadow.getWidth()/2, -shadow.getHeight()/2);
-        bg.setPosition(-bg.getWidth()/2, -bg.getHeight()/2);
+        shadow.setPosition(-shadow.getWidth() / 2, -shadow.getHeight() / 2);
+        bg.setPosition(-bg.getWidth() / 2, -bg.getHeight() / 2);
 
         label = new LabelWithZoom("1.0", SharedResources.skin);
         add(label).expand().center();

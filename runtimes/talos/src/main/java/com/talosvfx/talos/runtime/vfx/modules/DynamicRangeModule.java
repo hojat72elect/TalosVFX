@@ -26,15 +26,13 @@ import java.util.Random;
 
 public class DynamicRangeModule extends CurveModule {
 
+    public static final int OUTPUT = 0;
     private float lowMin = 0, lowMax = 0;
     private float highMin = 1, highMax = 1;
-
-    public static final int OUTPUT = 0;
-
-    private Random random = new Random();
+    private final Random random = new Random();
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
 
         // do the random thing first
         float low = calcRandomRange(lowMin, lowMax, 1);
@@ -86,7 +84,7 @@ public class DynamicRangeModule extends CurveModule {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("lowMin", lowMin, float.class);
         json.writeValue("lowMax", lowMax, float.class);
@@ -95,7 +93,7 @@ public class DynamicRangeModule extends CurveModule {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         lowMin = jsonData.getFloat("lowMin");
         lowMax = jsonData.getFloat("lowMax");

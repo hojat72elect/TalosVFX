@@ -5,8 +5,10 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
+import com.badlogic.gdx.scenes.scene2d.ui.Slider;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.CharArray;
@@ -17,22 +19,18 @@ import com.talosvfx.talos.editor.widgets.ui.common.FlatButton;
 public class TimelineRight<U> extends AbstractList<TimeRow<U>, U> {
 
     private final Table contentPane;
+    private final String ZERO_STRING = "0";
+    private final String TIME_SEPARATOR_STRING = " : ";
     private Table contentTable;
     private ScrollPane scrollPane;
-
     private float timeWindowSize;
-    private float timeWindowPosition = 0f;
+    private final float timeWindowPosition = 0f;
     private float timeCursor = 0f;
-
     private Slider zoomSlider;
-
     private DynamicSlider timeSlider;
     private Slider scroll;
     private TimeCursor timeCursorWidget;
-
-    private CharArray stringBuilder = new CharArray();
-    private final String ZERO_STRING = "0";
-    private final String TIME_SEPARATOR_STRING = " : ";
+    private final CharArray stringBuilder = new CharArray();
     private Table timeBar;
 
     public TimelineRight(TimelineWidget timeline) {
@@ -72,10 +70,9 @@ public class TimelineRight<U> extends AbstractList<TimeRow<U>, U> {
         value = 1f - value;
 
         timeWindowSize = (float) (5f + Math.pow(value * 4f, 3.425f));
-
     }
 
-    private Table buildContentContainerPane () {
+    private Table buildContentContainerPane() {
         Table content = new Table();
 
         Image leftSeparator = new Image(getSkin().getDrawable("timeline-secondary-separator"));
@@ -105,7 +102,7 @@ public class TimelineRight<U> extends AbstractList<TimeRow<U>, U> {
         return content;
     }
 
-    private Table buildRightPart () {
+    private Table buildRightPart() {
         Table content = new Table();
 
         Image border = new Image(ColorLibrary.obtainBackground(getSkin(), ColorLibrary.BackgroundColor.BLACK));
@@ -139,7 +136,7 @@ public class TimelineRight<U> extends AbstractList<TimeRow<U>, U> {
         return content;
     }
 
-    private Table buildHeader () {
+    private Table buildHeader() {
         Table header = new Table();
         header.setBackground(getSkin().getDrawable("timeline-top-bar-bg"));
 
@@ -157,10 +154,10 @@ public class TimelineRight<U> extends AbstractList<TimeRow<U>, U> {
         timeBar.setTouchable(Touchable.enabled);
         timeBar.addListener(new InputListener() {
 
-            private Vector2 vec = new Vector2();
+            private final Vector2 vec = new Vector2();
 
             @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 vec.set(x, y);
                 event.getTarget().localToStageCoordinates(vec);
                 float time = timeline.stageToTime(vec);
@@ -174,7 +171,7 @@ public class TimelineRight<U> extends AbstractList<TimeRow<U>, U> {
         return header;
     }
 
-    private Table buildContentPain () {
+    private Table buildContentPain() {
         Table content = new Table();
 
         content.setBackground(ColorLibrary.obtainBackground(getSkin(), ColorLibrary.BackgroundColor.DARK_GRAY));
@@ -197,10 +194,10 @@ public class TimelineRight<U> extends AbstractList<TimeRow<U>, U> {
         scrollPane.setScrollY(pos);
     }
 
-    private Table buildBottomPanel () {
+    private Table buildBottomPanel() {
         Table contentContainer = new Table();
 
-        timeSlider = new DynamicSlider( false, getSkin());
+        timeSlider = new DynamicSlider(false, getSkin());
         timeSlider.setValue(0);
         timeSlider.updateConfig(0, timeWindowSize);
 
@@ -254,7 +251,7 @@ public class TimelineRight<U> extends AbstractList<TimeRow<U>, U> {
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
 
-                if(event.isCancelled()) return;
+                if (event.isCancelled()) return;
 
                 timeline.onRowClicked(item);
             }
@@ -272,7 +269,7 @@ public class TimelineRight<U> extends AbstractList<TimeRow<U>, U> {
     protected void rebuildFromData() {
         contentTable.clearChildren();
 
-        for(TimeRow item: getItems()) {
+        for (TimeRow item : getItems()) {
             addItemToTable(item);
         }
     }
@@ -286,29 +283,29 @@ public class TimelineRight<U> extends AbstractList<TimeRow<U>, U> {
         super.act(delta);
 
         // update time related values
-        for(TimeRow<U> row: getItems()) {
+        for (TimeRow<U> row : getItems()) {
             row.updateTimeWindow(timeWindowPosition, timeWindowSize);
         }
         timeSlider.updateConfig(0, timeWindowSize);
     }
 
-    public void setTimeCursor (float time) {
+    public void setTimeCursor(float time) {
         timeCursor = time;
 
-        float pos = (time/timeWindowSize) * contentPane.getWidth() * 0.5f; // jesus, this is 0.5 is just... I can't, this is so stupid. wtf
+        float pos = (time / timeWindowSize) * contentPane.getWidth() * 0.5f; // jesus, this is 0.5 is just... I can't, this is so stupid. wtf
 
         timeCursorWidget.setPosition(pos, 0);
 
         int seconds = (int) time;
-        int millis = (int)((time - seconds) * 10) * 10;
+        int millis = (int) ((time - seconds) * 10) * 10;
 
         stringBuilder.clear();
-        if(seconds < 10) {
+        if (seconds < 10) {
             stringBuilder.append(ZERO_STRING);
         }
         stringBuilder.append(seconds);
         stringBuilder.append(TIME_SEPARATOR_STRING);
-        if(millis < 10) {
+        if (millis < 10) {
             stringBuilder.append(ZERO_STRING);
         }
         stringBuilder.append(millis);
@@ -316,11 +313,11 @@ public class TimelineRight<U> extends AbstractList<TimeRow<U>, U> {
         timeCursorWidget.setLabelValue(stringBuilder.toString());
     }
 
-    public Actor getTimeBar () {
+    public Actor getTimeBar() {
         return timeBar;
     }
 
-    public float getTimeWindowSize () {
+    public float getTimeWindowSize() {
         return timeWindowSize;
     }
 }

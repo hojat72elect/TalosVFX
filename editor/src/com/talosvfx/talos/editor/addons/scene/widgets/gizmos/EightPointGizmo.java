@@ -1,10 +1,11 @@
 package com.talosvfx.talos.editor.addons.scene.widgets.gizmos;
 
+import static com.talosvfx.talos.editor.addons.scene.widgets.gizmos.EightPointGizmo.ControlPointType.CORNER;
+import static com.talosvfx.talos.editor.addons.scene.widgets.gizmos.EightPointGizmo.ControlPointType.MIDDLE;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
@@ -17,155 +18,141 @@ import com.badlogic.gdx.utils.Array;
 import com.talosvfx.talos.editor.addons.scene.SceneUtils;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.utils.CursorUtil;
-import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.components.SpriteRendererComponent;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
-import net.mostlyoriginal.api.plugin.extendedcomponentmapper.M;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.talosvfx.talos.editor.addons.scene.widgets.gizmos.EightPointGizmo.ControlPointType.CORNER;
-import static com.talosvfx.talos.editor.addons.scene.widgets.gizmos.EightPointGizmo.ControlPointType.MIDDLE;
-
 public class EightPointGizmo extends Gizmo {
 
-	private static final Logger logger = LoggerFactory.getLogger(SpriteTransformGizmo.class);
+    private static final Logger logger = LoggerFactory.getLogger(SpriteTransformGizmo.class);
+    private static final int BOTTOM_LEFT = 0;
+    private static final int LEFT_MIDDLE = 1;
+    private static final int TOP_LEFT = 2;
+    private static final int TOP_MIDDLE = 3;
+    private static final int TOP_RIGHT = 4;
+    private static final int RIGHT_MIDDLE = 5;
+    private static final int BOTTOM_RIGHT = 6;
+    private static final int BOTTOM_MIDDLE = 7;
+    private final TextureRegion whitePixelRegion;
+    private final Image controlRect;
+    Vector2 temp3 = new Vector2();
+    Vector2 tempRot = new Vector2();
+    private final Array<ControlPoint> controlPoints = new Array<>();
+    private boolean userInteracted = false;
 
-	public enum ControlPointType {
-		CORNER,
-		MIDDLE
-	}
+    private boolean transformChanged;
+    private boolean spriteRenderComponentChanged;
+    private ControlPoint currentManipulatingPoint = null;
+    private final Vector2 controlPointOffset = new Vector2();
+    private final Vector2 rotationStartVector = new Vector2();
+    private final Vector2 testVector = new Vector2();
+    private float startRotation;
+    private float startWorldRotation;
+    private boolean rotating;
+    private final Vector2 temp = new Vector2();
+    private final Vector2 temp2 = new Vector2();
+    private final BoundingBox boundingBox = new BoundingBox();
+    private final float[] verts = new float[2 * 4];
+    public EightPointGizmo() {
+        for (int i = 0; i < 8; i++) {
+            controlPoints.add(new ControlPoint(-1, CORNER));//dummy
+        }
+        register(CORNER, BOTTOM_LEFT);
+        register(MIDDLE, LEFT_MIDDLE);
+        register(CORNER, TOP_LEFT);
+        register(MIDDLE, TOP_MIDDLE);
+        register(CORNER, TOP_RIGHT);
+        register(MIDDLE, RIGHT_MIDDLE);
+        register(CORNER, BOTTOM_RIGHT);
+        register(MIDDLE, BOTTOM_MIDDLE);
 
-	private static class ControlPoint {
-		private Vector2 position = new Vector2();
-		private ControlPointType pointType;
+        whitePixelRegion = SharedResources.skin.getRegion("white-pixel");
+        Drawable rectDrawable = SharedResources.skin.newDrawable("white-pixel");
+        controlRect = new Image(rectDrawable);
+    }
 
-		private int id;
+    private void register(ControlPointType type, int id) {
+        controlPoints.set(id, new ControlPoint(id, type));
+    }
 
-		public ControlPoint (int id, ControlPointType type) {
-			this.id = id;
-			this.pointType = type;
-		}
-	}
+    @Override
+    public void act(float delta) {
+        super.act(delta);
 
-	private Array<ControlPoint> controlPoints = new Array<>();
+        if (!userInteracted) { //Truth is the component
+            SpriteRendererComponent spriteRenderComponent = gameObject.getComponent(SpriteRendererComponent.class);
+            TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
+            componentToPoints(transformComponent, spriteRenderComponent);
+        }
+    }
 
-	private static final int BOTTOM_LEFT = 0;
-	private static final int LEFT_MIDDLE = 1;
-	private static final int TOP_LEFT = 2;
-	private static final int TOP_MIDDLE = 3;
-	private static final int TOP_RIGHT = 4;
-	private static final int RIGHT_MIDDLE = 5;
-	private static final int BOTTOM_RIGHT = 6;
-	private static final int BOTTOM_MIDDLE = 7;
+    private void componentToPoints(TransformComponent transformComponent, SpriteRendererComponent spriteRenderComponent) {
+        Vector2 worldPosition = transformComponent.worldPosition;
+        float worldRotation = transformComponent.worldRotation;
+        Vector2 worldScale = transformComponent.worldScale;
 
-	private final TextureRegion whitePixelRegion;
-	private final Image controlRect;
+        Vector2 size = spriteRenderComponent.size;
 
-	private boolean userInteracted = false;
+        float calculatedWidth = worldScale.x * size.x;
+        float calculatedHeight = worldScale.y * size.y;
 
-	private boolean transformChanged;
-	private boolean spriteRenderComponentChanged;
+        float halfWidth = calculatedWidth / 2f;
+        float halfHeight = calculatedHeight / 2f;
 
-	public EightPointGizmo () {
-		for (int i = 0; i < 8; i++) {
-			controlPoints.add(new ControlPoint(-1, CORNER));//dummy
-		}
-		register(CORNER, BOTTOM_LEFT);
-		register(MIDDLE, LEFT_MIDDLE);
-		register(CORNER, TOP_LEFT);
-		register(MIDDLE, TOP_MIDDLE);
-		register(CORNER, TOP_RIGHT);
-		register(MIDDLE, RIGHT_MIDDLE);
-		register(CORNER, BOTTOM_RIGHT);
-		register(MIDDLE, BOTTOM_MIDDLE);
+        controlPoints.get(BOTTOM_LEFT).position.set(-halfWidth, -halfHeight).rotateDeg(worldRotation).add(worldPosition);
+        controlPoints.get(LEFT_MIDDLE).position.set(-halfWidth, 0).rotateDeg(worldRotation).add(worldPosition);
+        controlPoints.get(TOP_LEFT).position.set(-halfWidth, halfHeight).rotateDeg(worldRotation).add(worldPosition);
 
-		whitePixelRegion = SharedResources.skin.getRegion("white-pixel");
-		Drawable rectDrawable = SharedResources.skin.newDrawable("white-pixel");
-		controlRect = new Image(rectDrawable);
-	}
+        controlPoints.get(TOP_MIDDLE).position.set(0, halfHeight).rotateDeg(worldRotation).add(worldPosition);
+        controlPoints.get(BOTTOM_MIDDLE).position.set(0, -halfHeight).rotateDeg(worldRotation).add(worldPosition);
 
-	private void register (ControlPointType type, int id) {
-		controlPoints.set(id, new ControlPoint(id, type));
-	}
+        controlPoints.get(TOP_RIGHT).position.set(halfWidth, halfHeight).rotateDeg(worldRotation).add(worldPosition);
+        controlPoints.get(RIGHT_MIDDLE).position.set(halfWidth, 0).rotateDeg(worldRotation).add(worldPosition);
+        controlPoints.get(BOTTOM_RIGHT).position.set(halfWidth, -halfHeight).rotateDeg(worldRotation).add(worldPosition);
+    }
 
-	@Override
-	public void act (float delta) {
-		super.act(delta);
+    @Override
+    public void draw(Batch batch, float parentAlpha) {
+        super.draw(batch, parentAlpha);
+        if (isSelected()) {
 
-		if (!userInteracted) { //Truth is the component
-			SpriteRendererComponent spriteRenderComponent = gameObject.getComponent(SpriteRendererComponent.class);
-			TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
-			componentToPoints(transformComponent, spriteRenderComponent);
-		}
-	}
+            SpriteRendererComponent spriteRenderComponent = gameObject.getComponent(SpriteRendererComponent.class);
+            TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
 
-	private void componentToPoints (TransformComponent transformComponent, SpriteRendererComponent spriteRenderComponent) {
-		Vector2 worldPosition = transformComponent.worldPosition;
-		float worldRotation = transformComponent.worldRotation;
-		Vector2 worldScale = transformComponent.worldScale;
+            drawPixelLines(batch, spriteRenderComponent, transformComponent);
 
-		Vector2 size = spriteRenderComponent.size;
+            for (ControlPoint controlPoint : controlPoints) {
+                float size = 8 * worldPerPixel;
+                controlRect.setSize(size, size);
 
-		float calculatedWidth = worldScale.x * size.x;
-		float calculatedHeight = worldScale.y * size.y;
-
-		float halfWidth = calculatedWidth / 2f;
-		float halfHeight = calculatedHeight / 2f;
-
-		controlPoints.get(BOTTOM_LEFT).position.set(-halfWidth, -halfHeight).rotateDeg(worldRotation).add(worldPosition);
-		controlPoints.get(LEFT_MIDDLE).position.set(-halfWidth, 0).rotateDeg(worldRotation).add(worldPosition);
-		controlPoints.get(TOP_LEFT).position.set(-halfWidth, halfHeight).rotateDeg(worldRotation).add(worldPosition);
-
-		controlPoints.get(TOP_MIDDLE).position.set(0, halfHeight).rotateDeg(worldRotation).add(worldPosition);
-		controlPoints.get(BOTTOM_MIDDLE).position.set(0, -halfHeight).rotateDeg(worldRotation).add(worldPosition);
-
-		controlPoints.get(TOP_RIGHT).position.set(halfWidth, halfHeight).rotateDeg(worldRotation).add(worldPosition);
-		controlPoints.get(RIGHT_MIDDLE).position.set(halfWidth, 0).rotateDeg(worldRotation).add(worldPosition);
-		controlPoints.get(BOTTOM_RIGHT).position.set(halfWidth, -halfHeight).rotateDeg(worldRotation).add(worldPosition);
-
-	}
-
-	@Override
-	public void draw (Batch batch, float parentAlpha) {
-		super.draw(batch, parentAlpha);
-		if (isSelected()) {
-
-			SpriteRendererComponent spriteRenderComponent = gameObject.getComponent(SpriteRendererComponent.class);
-			TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
-
-			drawPixelLines(batch, spriteRenderComponent, transformComponent);
-
-			for (ControlPoint controlPoint : controlPoints) {
-				float size = 8 * worldPerPixel;
-				controlRect.setSize(size, size);
-
-				controlRect.setPosition(controlPoint.position.x - size / 2f, controlPoint.position.y - size / 2f);
-				controlRect.draw(batch, parentAlpha);
-			}
+                controlRect.setPosition(controlPoint.position.x - size / 2f, controlPoint.position.y - size / 2f);
+                controlRect.draw(batch, parentAlpha);
+            }
 
 
-			Vector2 vec = new Vector2(Gdx.input.getX(), Gdx.input.getY());
+            Vector2 vec = new Vector2(Gdx.input.getX(), Gdx.input.getY());
 
-			viewport.screenToLocalCoordinates(vec);
-			vec = viewport.getWorldFromLocal(vec.x, vec.y);
+            viewport.screenToLocalCoordinates(vec);
+            vec = viewport.getWorldFromLocal(vec.x, vec.y);
 
-			if (isOnTouchedPoint(vec.x, vec.y)) {
-				ControlPoint controlPoint = getTouchedPoint(vec.x, vec.y);
-				if (controlPoint.pointType == CORNER) {
-					CursorUtil.setDynamicModeCursor(CursorUtil.CursorType.RESIZE);
-				} else {
-					if (controlPoint.id == TOP_MIDDLE || controlPoint.id == BOTTOM_MIDDLE) {
-						CursorUtil.setDynamicModeCursor(CursorUtil.CursorType.RESIZE);
-					} else {
-						CursorUtil.setDynamicModeCursor(CursorUtil.CursorType.RESIZE);
-					}
-				}
-			}
-			if (isOnTouchedRotationArea(vec.x, vec.y)) {
-				CursorUtil.setDynamicModeCursor(CursorUtil.CursorType.ROTATE);
-			}
-		}
+            if (isOnTouchedPoint(vec.x, vec.y)) {
+                ControlPoint controlPoint = getTouchedPoint(vec.x, vec.y);
+                if (controlPoint.pointType == CORNER) {
+                    CursorUtil.setDynamicModeCursor(CursorUtil.CursorType.RESIZE);
+                } else {
+                    if (controlPoint.id == TOP_MIDDLE || controlPoint.id == BOTTOM_MIDDLE) {
+                        CursorUtil.setDynamicModeCursor(CursorUtil.CursorType.RESIZE);
+                    } else {
+                        CursorUtil.setDynamicModeCursor(CursorUtil.CursorType.RESIZE);
+                    }
+                }
+            }
+            if (isOnTouchedRotationArea(vec.x, vec.y)) {
+                CursorUtil.setDynamicModeCursor(CursorUtil.CursorType.ROTATE);
+            }
+        }
 
 //			batch.end();
 //			ShapeRenderer shapeRenderer = new ShapeRenderer();
@@ -181,732 +168,707 @@ public class EightPointGizmo extends Gizmo {
 //			batch.begin();
 
 
-	}
+    }
 
-	private void drawPixelLines (Batch batch, SpriteRendererComponent spriteRenderComponent, TransformComponent transformComponent) {
-		Vector2 worldPosition = transformComponent.worldPosition;
-		float worldRotation = transformComponent.worldRotation;
-		Vector2 worldScale = transformComponent.worldScale;
+    private void drawPixelLines(Batch batch, SpriteRendererComponent spriteRenderComponent, TransformComponent transformComponent) {
+        Vector2 worldPosition = transformComponent.worldPosition;
+        float worldRotation = transformComponent.worldRotation;
+        Vector2 worldScale = transformComponent.worldScale;
 
-		Vector2 size = spriteRenderComponent.size;
+        Vector2 size = spriteRenderComponent.size;
 
-		float calculatedWidth = worldScale.x * size.x;
-		float calculatedHeight = worldScale.y * size.y;
+        float calculatedWidth = worldScale.x * size.x;
+        float calculatedHeight = worldScale.y * size.y;
 
-		float halfWidth = calculatedWidth / 2f;
-		float halfHeight = calculatedHeight / 2f;
+        float halfWidth = calculatedWidth / 2f;
+        float halfHeight = calculatedHeight / 2f;
 
-		float pixelSize = 2f * worldPerPixel;
+        float pixelSize = 2f * worldPerPixel;
 
-		batch.setColor(Color.valueOf("387ede"));
+        batch.setColor(Color.valueOf("387ede"));
+
+        drawPixelLine(batch, BOTTOM_LEFT, TOP_LEFT, pixelSize, true);
+        drawPixelLine(batch, TOP_LEFT, TOP_RIGHT, pixelSize, false);
+        drawPixelLine(batch, BOTTOM_RIGHT, TOP_RIGHT, pixelSize, true);
+        drawPixelLine(batch, BOTTOM_LEFT, BOTTOM_RIGHT, pixelSize, false);
 
-		drawPixelLine(batch, BOTTOM_LEFT, TOP_LEFT, pixelSize, true);
-		drawPixelLine(batch, TOP_LEFT, TOP_RIGHT, pixelSize, false);
-		drawPixelLine(batch, BOTTOM_RIGHT, TOP_RIGHT, pixelSize, true);
-		drawPixelLine(batch, BOTTOM_LEFT, BOTTOM_RIGHT, pixelSize, false);
+        batch.setColor(Color.WHITE);
+    }
 
-		batch.setColor(Color.WHITE);
+    private void drawPixelLine(Batch batch, int from, int to, float pixelSize, boolean vertical) {
+        TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
 
-	}
+        ControlPoint fromControlPoint = controlPoints.get(from);
+        ControlPoint toControlPoint = controlPoints.get(to);
 
-	Vector2 temp3 = new Vector2();
+        float midPointX = (fromControlPoint.position.x + toControlPoint.position.x) / 2f;
+        float midPointY = (fromControlPoint.position.y + toControlPoint.position.y) / 2f;
 
-	private void drawPixelLine (Batch batch, int from, int to, float pixelSize, boolean vertical) {
-		TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
+        temp3.set(fromControlPoint.position).sub(toControlPoint.position);
+        float length = temp3.len();
 
-		ControlPoint fromControlPoint = controlPoints.get(from);
-		ControlPoint toControlPoint = controlPoints.get(to);
+        if (vertical) {
+            batch.draw(whitePixelRegion, midPointX - pixelSize / 2f, midPointY - length / 2f, pixelSize / 2f, length / 2f, pixelSize, length, 1f, 1f, transformComponent.worldRotation);
+        } else {
+            batch.draw(whitePixelRegion, midPointX - length / 2f, midPointY - pixelSize / 2f, length / 2f, pixelSize / 2f, length, pixelSize, 1f, 1f, transformComponent.worldRotation);
+        }
+    }
 
-		float midPointX = (fromControlPoint.position.x + toControlPoint.position.x) / 2f;
-		float midPointY = (fromControlPoint.position.y + toControlPoint.position.y) / 2f;
+    @Override
+    public void touchDown(float x, float y, int button) {
+        userInteracted = true;
+        super.touchDown(x, y, button);
 
-		temp3.set(fromControlPoint.position).sub(toControlPoint.position);
-		float length = temp3.len();
+        ControlPoint touchedPoint = getTouchedPoint(x, y);
+        if (touchedPoint != null) {
+            //Lets store the relative position for start
 
-		if (vertical) {
-			batch.draw(whitePixelRegion, midPointX - pixelSize / 2f, midPointY - length / 2f, pixelSize / 2f, length / 2f, pixelSize, length, 1f, 1f, transformComponent.worldRotation);
-		} else {
-			batch.draw(whitePixelRegion, midPointX - length / 2f, midPointY - pixelSize / 2f, length / 2f, pixelSize / 2f, length, pixelSize, 1f, 1f, transformComponent.worldRotation);
-		}
+            currentManipulatingPoint = touchedPoint;
 
-	}
+            controlPointOffset.set(x, y).sub(touchedPoint.position);
+        } else {
 
-	private ControlPoint currentManipulatingPoint = null;
-	private Vector2 controlPointOffset = new Vector2();
+            boolean onTouchedRotationArea = isOnTouchedRotationArea(x, y);
+            if (onTouchedRotationArea) {
+                rotating = true;
+                int touchedRotationArea = getTouchedRotationArea(x, y);
 
-	private Vector2 rotationStartVector = new Vector2();
-	private Vector2 testVector = new Vector2();
-	private float startRotation;
-	private float startWorldRotation;
+                //
+                TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
+                rotationStartVector.set(x, y).sub(transformComponent.worldPosition);
+                startRotation = transformComponent.rotation;
+                startWorldRotation = transformComponent.worldRotation;
+            }
+        }
+    }
 
-	private boolean rotating;
-	@Override
-	public void touchDown (float x, float y, int button) {
-		userInteracted = true;
-		super.touchDown(x, y, button);
+    @Override
+    public void touchDragged(float x, float y) {
+        userInteracted = true;
+        super.touchDragged(x, y);
 
-		ControlPoint touchedPoint = getTouchedPoint(x, y);
-		if (touchedPoint != null) {
-			//Lets store the relative position for start
+        float deltaX = x - controlPointOffset.x;
+        float deltaY = y - controlPointOffset.y;
 
-			currentManipulatingPoint = touchedPoint;
+        if (currentManipulatingPoint != null) {
+            movePointByDelta(x, y, deltaX, deltaY, currentManipulatingPoint);
+        } else if (rotating) {
+            testVector.set(x, y).sub(gameObject.getComponent(TransformComponent.class).worldPosition);
+            processRotation(rotationStartVector, testVector);
+        }
+    }
 
-			controlPointOffset.set(x, y).sub(touchedPoint.position);
-		} else {
+    private void processRotation(Vector2 rotationStartVector, Vector2 testVector) {
+        float angleDegDiff = rotationStartVector.angleDeg(testVector);
 
-			boolean onTouchedRotationArea = isOnTouchedRotationArea(x, y);
-			if (onTouchedRotationArea) {
-				rotating = true;
-				int touchedRotationArea = getTouchedRotationArea(x, y);
+        TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
+        transformComponent.rotation = startRotation - angleDegDiff;
+        transformComponent.worldRotation = startWorldRotation - angleDegDiff;
 
-				//
-				TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
-				rotationStartVector.set(x, y).sub(transformComponent.worldPosition);
-				startRotation = transformComponent.rotation;
-				startWorldRotation = transformComponent.worldRotation;
 
-			}
+        SceneUtils.componentUpdated(gameObjectContainer, gameObject, transformComponent, true);
 
-		}
-	}
+        SpriteRendererComponent spriteRenderComponent = gameObject.getComponent(SpriteRendererComponent.class);
+        componentToPoints(transformComponent, spriteRenderComponent);
+    }
 
-	@Override
-	public void touchDragged (float x, float y) {
-		userInteracted = true;
-		super.touchDragged(x, y);
+    private void movePointByDelta(float x, float y, float deltaX, float deltaY, ControlPoint currentManipulatingPoint) {
+        TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
+        currentManipulatingPoint.position.set(x, y).sub(controlPointOffset);
 
-		float deltaX = x - controlPointOffset.x;
-		float deltaY = y - controlPointOffset.y;
+        final boolean keepAspectRatio;
+        final SpriteRendererComponent spriteRendererComponent;
+        final AtlasSprite texture;
+        if (gameObject.hasComponent(SpriteRendererComponent.class)) {
+            spriteRendererComponent = gameObject.getComponent(SpriteRendererComponent.class);
+            texture = spriteRendererComponent.getGameResource().getResource();
+            keepAspectRatio = spriteRendererComponent.shouldFixAspectRatio(false) && (texture != null);
+        } else {
+            keepAspectRatio = false;
+            spriteRendererComponent = null;
+            texture = null;
+        }
 
-		if (currentManipulatingPoint != null) {
-			movePointByDelta(x, y, deltaX, deltaY, currentManipulatingPoint);
-		} else if (rotating) {
-			testVector.set(x, y).sub(gameObject.getComponent(TransformComponent.class).worldPosition);
-			processRotation(rotationStartVector, testVector);
-		}
-	}
+        //We move all other points apart from the opposite point which is always 4 away
 
-	private void processRotation (Vector2 rotationStartVector, Vector2 testVector) {
-		float angleDegDiff = rotationStartVector.angleDeg(testVector);
+        //If its a corner, we moving a bunch of these points
 
-		TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
-		transformComponent.rotation = startRotation - angleDegDiff;
-		transformComponent.worldRotation = startWorldRotation - angleDegDiff;
+        int id = currentManipulatingPoint.id;
 
+        int ignore = id + 4;
+        ignore %= 8;
+        if (ignore < 0)
+            ignore += 8;
 
-		SceneUtils.componentUpdated(gameObjectContainer, gameObject, transformComponent, true);
+        ControlPoint stationaryPoint = controlPoints.get(ignore);
+
+        switch (currentManipulatingPoint.pointType) {
+            case CORNER: {
 
-		SpriteRendererComponent spriteRenderComponent = gameObject.getComponent(SpriteRendererComponent.class);
-		componentToPoints(transformComponent, spriteRenderComponent);
+                //Lets update the 2 other corners, -2 + 2
+
+                BoundingBox rect = getUnrotateRectFromOppositeCorners(currentManipulatingPoint, stationaryPoint);
 
-	}
+                //Unrotate all points
+
+                for (ControlPoint controlPoint : controlPoints) {
+                    controlPoint.position.sub(transformComponent.worldPosition);
+                    controlPoint.position.rotateDeg(-transformComponent.worldRotation);
+                }
 
-	private void movePointByDelta (float x, float y, float deltaX, float deltaY, ControlPoint currentManipulatingPoint) {
-		TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
-		currentManipulatingPoint.position.set(x, y).sub(controlPointOffset);
+                float width = rect.getWidth();
+                float height = rect.getHeight();
+
+                //need to determine if our width/height is negative too
+
+                //We can do this because we are unrotated rect atm
+
+                //brain cant work it the algorithm, gonna do monkey way
 
-		final boolean keepAspectRatio;
-		final SpriteRendererComponent spriteRendererComponent;
-		final AtlasSprite texture;
-		if (gameObject.hasComponent(SpriteRendererComponent.class)) {
-			spriteRendererComponent = gameObject.getComponent(SpriteRendererComponent.class);
-			texture = spriteRendererComponent.getGameResource().getResource();
-			keepAspectRatio = spriteRendererComponent.shouldFixAspectRatio(false) && (texture != null);
-		} else {
-			keepAspectRatio = false;
-			spriteRendererComponent = null;
-			texture = null;
-		}
+                if (stationaryPoint.id == TOP_LEFT) {
+                    //Do the other corners
+
+                    //Have to compare it to things we are taking truth from
+                    boolean invertedX = controlPoints.get(TOP_LEFT).position.x > controlPoints.get(BOTTOM_RIGHT).position.x;
+                    boolean invertedY = controlPoints.get(TOP_LEFT).position.y < controlPoints.get(BOTTOM_RIGHT).position.y;
+
+                    if (invertedX) {
+                        width *= -1;
+                    }
+                    if (invertedY) {
+                        height *= -1;
+                    }
+
+                    if (keepAspectRatio) {
+                        float aspect = (float) texture.getRegionWidth() / texture.getRegionHeight();
+                        width = height * aspect;
+                    }
+
+                    controlPoints.get(TOP_RIGHT).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y);
+                    controlPoints.get(BOTTOM_LEFT).position.set(stationaryPoint.position.x, stationaryPoint.position.y - height);
+
+                    if (keepAspectRatio) {
+                        controlPoints.get(BOTTOM_RIGHT).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y - height);
+                    }
+
+                    controlPoints.get(TOP_MIDDLE).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y);
+                    controlPoints.get(RIGHT_MIDDLE).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y - height / 2f);
+                    controlPoints.get(LEFT_MIDDLE).position.set(stationaryPoint.position.x, stationaryPoint.position.y - height / 2f);
+                    controlPoints.get(BOTTOM_MIDDLE).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y - height);
+                }
+
+                if (stationaryPoint.id == BOTTOM_RIGHT) {
+                    //Do the other corners
+
+                    //Have to compare it to things we are taking truth from
+                    boolean invertedX = controlPoints.get(TOP_LEFT).position.x > controlPoints.get(BOTTOM_RIGHT).position.x;
+                    boolean invertedY = controlPoints.get(TOP_LEFT).position.y < controlPoints.get(BOTTOM_RIGHT).position.y;
+
+                    if (invertedX) {
+                        width *= -1;
+                    }
+                    if (invertedY) {
+                        height *= -1;
+                    }
+
+                    if (keepAspectRatio) {
+                        float inverseAspect = (float) texture.getRegionHeight() / texture.getRegionWidth();
+                        height = width * inverseAspect;
+                    }
+
+                    controlPoints.get(TOP_RIGHT).position.set(stationaryPoint.position.x, stationaryPoint.position.y + height);
+                    controlPoints.get(BOTTOM_LEFT).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y);
+
+                    if (keepAspectRatio) {
+                        controlPoints.get(TOP_LEFT).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y + height);
+                    }
+
+                    controlPoints.get(TOP_MIDDLE).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y + height);
+                    controlPoints.get(RIGHT_MIDDLE).position.set(stationaryPoint.position.x, stationaryPoint.position.y + height / 2f);
+                    controlPoints.get(LEFT_MIDDLE).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y + height / 2f);
+                    controlPoints.get(BOTTOM_MIDDLE).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y);
+                }
+
+                if (stationaryPoint.id == BOTTOM_LEFT) {
+                    //Do the other corners
+
+                    //Have to compare it to things we are taking truth from
+                    boolean invertedX = controlPoints.get(TOP_RIGHT).position.x < controlPoints.get(BOTTOM_LEFT).position.x;
+                    boolean invertedY = controlPoints.get(TOP_RIGHT).position.y < controlPoints.get(BOTTOM_LEFT).position.y;
+
+                    if (invertedX) {
+                        width *= -1;
+                    }
+                    if (invertedY) {
+                        height *= -1;
+                    }
+
+                    if (keepAspectRatio) {
+                        float inverseAspect = (float) texture.getRegionHeight() / texture.getRegionWidth();
+                        height = width * inverseAspect;
+                    }
+
+                    controlPoints.get(TOP_LEFT).position.set(stationaryPoint.position.x, stationaryPoint.position.y + height);
+                    controlPoints.get(BOTTOM_RIGHT).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y);
+
+                    if (keepAspectRatio) {
+                        controlPoints.get(TOP_RIGHT).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y + height);
+                    }
+
+                    controlPoints.get(TOP_MIDDLE).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y + height);
+                    controlPoints.get(RIGHT_MIDDLE).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y + height / 2f);
+                    controlPoints.get(LEFT_MIDDLE).position.set(stationaryPoint.position.x, stationaryPoint.position.y + height / 2f);
+                    controlPoints.get(BOTTOM_MIDDLE).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y);
+                }
+
+                if (stationaryPoint.id == TOP_RIGHT) {
+                    //Do the other corners
+
+                    //Have to compare it to things we are taking truth from
+                    boolean invertedX = controlPoints.get(TOP_RIGHT).position.x < controlPoints.get(BOTTOM_LEFT).position.x;
+                    boolean invertedY = controlPoints.get(TOP_RIGHT).position.y < controlPoints.get(BOTTOM_LEFT).position.y;
+
+                    if (invertedX) {
+                        width *= -1;
+                    }
+                    if (invertedY) {
+                        height *= -1;
+                    }
+
+                    if (keepAspectRatio) {
+                        float aspect = (float) texture.getRegionWidth() / texture.getRegionHeight();
+                        width = height * aspect;
+                    }
+
+                    controlPoints.get(TOP_LEFT).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y);
+                    controlPoints.get(BOTTOM_RIGHT).position.set(stationaryPoint.position.x, stationaryPoint.position.y - height);
+
+                    if (keepAspectRatio) {
+                        controlPoints.get(BOTTOM_LEFT).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y - height);
+                    }
+
+                    controlPoints.get(TOP_MIDDLE).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y);
+                    controlPoints.get(RIGHT_MIDDLE).position.set(stationaryPoint.position.x, stationaryPoint.position.y - height / 2f);
+                    controlPoints.get(LEFT_MIDDLE).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y - height / 2f);
+                    controlPoints.get(BOTTOM_MIDDLE).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y - height);
+                }
+
+                //put them back into space
+                for (ControlPoint controlPoint : controlPoints) {
+                    controlPoint.position.rotateDeg(transformComponent.worldRotation);
+                    controlPoint.position.add(transformComponent.worldPosition);
+                }
+
+                updateTransformFromControlPoints();
+            }
+            break;
+            case MIDDLE: {
+                currentManipulatingPoint.position.set(x, y).sub(controlPointOffset);
+
+                for (ControlPoint controlPoint : controlPoints) {
+                    controlPoint.position.sub(transformComponent.worldPosition);
+                    controlPoint.position.rotateDeg(-transformComponent.worldRotation);
+                }
+
+                if (stationaryPoint.id == LEFT_MIDDLE) {
+                    //Left middle,. y has to match stationary point
+                    currentManipulatingPoint.position.y = stationaryPoint.position.y;
+
+                    float width = Math.abs(currentManipulatingPoint.position.x - stationaryPoint.position.x);
+                    float height = Math.abs(controlPoints.get(TOP_LEFT).position.y - controlPoints.get(BOTTOM_LEFT).position.y);
+
+                    boolean invertedX = controlPoints.get(LEFT_MIDDLE).position.x > controlPoints.get(RIGHT_MIDDLE).position.x;
+                    boolean invertedY = controlPoints.get(TOP_LEFT).position.y < controlPoints.get(BOTTOM_LEFT).position.y;
+
+                    if (invertedX) {
+                        width *= -1;
+                    }
+                    if (invertedY) {
+                        height *= -1;
+                    }
+
+                    if (keepAspectRatio) {
+                        float inverseAspect = (float) texture.getRegionHeight() / texture.getRegionWidth();
+                        height = width * inverseAspect;
+                    }
+
+                    controlPoints.get(TOP_RIGHT).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y + height / 2f);
+                    controlPoints.get(BOTTOM_RIGHT).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y - height / 2f);
+
+                    controlPoints.get(TOP_MIDDLE).position.x = stationaryPoint.position.x + width / 2f;
+                    controlPoints.get(BOTTOM_MIDDLE).position.x = stationaryPoint.position.x + width / 2f;
+
+                    if (keepAspectRatio) {
+                        controlPoints.get(TOP_LEFT).position.set(stationaryPoint.position.x, stationaryPoint.position.y + height / 2f);
+                        controlPoints.get(BOTTOM_LEFT).position.set(stationaryPoint.position.x, stationaryPoint.position.y - height / 2f);
+
+                        controlPoints.get(TOP_MIDDLE).position.y = stationaryPoint.position.y + height / 2f;
+                        controlPoints.get(BOTTOM_MIDDLE).position.y = stationaryPoint.position.y - height / 2f;
+                    }
+                }
+
+                if (stationaryPoint.id == RIGHT_MIDDLE) {
+                    //Left middle,. y has to match stationary point
+                    currentManipulatingPoint.position.y = stationaryPoint.position.y;
+
+                    float width = Math.abs(currentManipulatingPoint.position.x - stationaryPoint.position.x);
+                    float height = Math.abs(controlPoints.get(TOP_LEFT).position.y - controlPoints.get(BOTTOM_LEFT).position.y);
+
+                    boolean invertedX = controlPoints.get(LEFT_MIDDLE).position.x > controlPoints.get(RIGHT_MIDDLE).position.x;
+                    boolean invertedY = controlPoints.get(TOP_LEFT).position.y < controlPoints.get(BOTTOM_LEFT).position.y;
+
+                    if (invertedX) {
+                        width *= -1;
+                    }
+                    if (invertedY) {
+                        height *= -1;
+                    }
+
+                    if (keepAspectRatio) {
+                        float inverseAspect = (float) texture.getRegionHeight() / texture.getRegionWidth();
+                        height = width * inverseAspect;
+                    }
+
+                    controlPoints.get(TOP_LEFT).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y + height / 2f);
+                    controlPoints.get(BOTTOM_LEFT).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y - height / 2f);
+
+                    controlPoints.get(TOP_MIDDLE).position.x = stationaryPoint.position.x - width / 2f;
+                    controlPoints.get(BOTTOM_MIDDLE).position.x = stationaryPoint.position.x - width / 2f;
+
+                    if (keepAspectRatio) {
+                        controlPoints.get(TOP_RIGHT).position.set(stationaryPoint.position.x, stationaryPoint.position.y + height / 2f);
+                        controlPoints.get(BOTTOM_RIGHT).position.set(stationaryPoint.position.x, stationaryPoint.position.y - height / 2f);
+
+                        controlPoints.get(TOP_MIDDLE).position.y = stationaryPoint.position.y + height / 2f;
+                        controlPoints.get(BOTTOM_MIDDLE).position.y = stationaryPoint.position.y - height / 2f;
+                    }
+                }
+
+                if (stationaryPoint.id == BOTTOM_MIDDLE) {
+                    currentManipulatingPoint.position.x = stationaryPoint.position.x;
+
+                    float width = Math.abs(controlPoints.get(BOTTOM_RIGHT).position.x - controlPoints.get(BOTTOM_LEFT).position.x);
+                    float height = Math.abs(currentManipulatingPoint.position.y - stationaryPoint.position.y);
+
+                    boolean invertedX = controlPoints.get(TOP_LEFT).position.x > controlPoints.get(TOP_RIGHT).position.x;
+                    boolean invertedY = controlPoints.get(BOTTOM_MIDDLE).position.y > controlPoints.get(TOP_MIDDLE).position.y;
+
+                    if (invertedX) {
+                        width *= -1;
+                    }
+                    if (invertedY) {
+                        height *= -1;
+                    }
+
+                    if (keepAspectRatio) {
+                        float aspect = (float) texture.getRegionWidth() / texture.getRegionHeight();
+                        width = height * aspect;
+                    }
+
+                    controlPoints.get(TOP_LEFT).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y + height);
+                    controlPoints.get(TOP_RIGHT).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y + height);
+
+                    controlPoints.get(LEFT_MIDDLE).position.y = stationaryPoint.position.y + height / 2f;
+                    controlPoints.get(RIGHT_MIDDLE).position.y = stationaryPoint.position.y + height / 2f;
+
+                    if (keepAspectRatio) {
+                        controlPoints.get(BOTTOM_LEFT).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y);
+                        controlPoints.get(BOTTOM_RIGHT).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y);
+
+                        controlPoints.get(LEFT_MIDDLE).position.x = stationaryPoint.position.x - width / 2f;
+                        controlPoints.get(RIGHT_MIDDLE).position.x = stationaryPoint.position.x + width / 2f;
+                    }
+                }
 
-		//We move all other points apart from the opposite point which is always 4 away
+                if (stationaryPoint.id == TOP_MIDDLE) {
+                    currentManipulatingPoint.position.x = stationaryPoint.position.x;
 
-		//If its a corner, we moving a bunch of these points
+                    float width = Math.abs(controlPoints.get(BOTTOM_RIGHT).position.x - controlPoints.get(BOTTOM_LEFT).position.x);
+                    float height = Math.abs(currentManipulatingPoint.position.y - stationaryPoint.position.y);
 
-		int id = currentManipulatingPoint.id;
+                    boolean invertedX = controlPoints.get(TOP_LEFT).position.x > controlPoints.get(TOP_RIGHT).position.x;
+                    boolean invertedY = controlPoints.get(BOTTOM_MIDDLE).position.y > controlPoints.get(TOP_MIDDLE).position.y;
 
-		int ignore = id + 4;
-		ignore %= 8;
-		if (ignore < 0)
-			ignore += 8;
+                    if (invertedX) {
+                        width *= -1;
+                    }
+                    if (invertedY) {
+                        height *= -1;
+                    }
 
-		ControlPoint stationaryPoint = controlPoints.get(ignore);
+                    if (keepAspectRatio) {
+                        float aspect = (float) texture.getRegionWidth() / texture.getRegionHeight();
+                        width = height * aspect;
+                    }
 
-		switch (currentManipulatingPoint.pointType) {
-		case CORNER: {
+                    controlPoints.get(BOTTOM_LEFT).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y - height);
+                    controlPoints.get(BOTTOM_RIGHT).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y - height);
 
-			//Lets update the 2 other corners, -2 + 2
+                    controlPoints.get(LEFT_MIDDLE).position.y = stationaryPoint.position.y - height / 2f;
+                    controlPoints.get(RIGHT_MIDDLE).position.y = stationaryPoint.position.y - height / 2f;
 
-			BoundingBox rect = getUnrotateRectFromOppositeCorners(currentManipulatingPoint, stationaryPoint);
+                    if (keepAspectRatio) {
+                        controlPoints.get(TOP_LEFT).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y);
+                        controlPoints.get(TOP_RIGHT).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y);
 
-			//Unrotate all points
+                        controlPoints.get(LEFT_MIDDLE).position.x = stationaryPoint.position.x - width / 2f;
+                        controlPoints.get(RIGHT_MIDDLE).position.x = stationaryPoint.position.x + width / 2f;
+                    }
+                }
 
-			for (ControlPoint controlPoint : controlPoints) {
-				controlPoint.position.sub(transformComponent.worldPosition);
-				controlPoint.position.rotateDeg(-transformComponent.worldRotation);
-			}
+                //put them back into space
+                for (ControlPoint controlPoint : controlPoints) {
+                    controlPoint.position.rotateDeg(transformComponent.worldRotation);
+                    controlPoint.position.add(transformComponent.worldPosition);
+                }
 
-			float width = rect.getWidth();
-			float height = rect.getHeight();
+                updateTransformFromControlPoints();
+            }
 
-			//need to determine if our width/height is negative too
+            break;
+        }
+    }
 
-			//We can do this because we are unrotated rect atm
+    private void updateTransformFromControlPoints() {
+        //Oh god
+        TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
 
-			//brain cant work it the algorithm, gonna do monkey way
+        //Center
 
-			if (stationaryPoint.id == TOP_LEFT) {
-				//Do the other corners
+        ControlPoint bottomLeftControlPoint = controlPoints.get(BOTTOM_LEFT);
+        ControlPoint bottomRightControlPoint = controlPoints.get(BOTTOM_RIGHT);
+        ControlPoint topRightControlPoint = controlPoints.get(TOP_RIGHT);
 
-				//Have to compare it to things we are taking truth from
-				boolean invertedX = controlPoints.get(TOP_LEFT).position.x > controlPoints.get(BOTTOM_RIGHT).position.x;
-				boolean invertedY = controlPoints.get(TOP_LEFT).position.y < controlPoints.get(BOTTOM_RIGHT).position.y;
+        float centerX = (topRightControlPoint.position.x + bottomLeftControlPoint.position.x) / 2f;
+        float centerY = (topRightControlPoint.position.y + bottomLeftControlPoint.position.y) / 2f;
 
-				if (invertedX) {
-					width *= -1;
-				}
-				if (invertedY) {
-					height *= -1;
-				}
+        for (ControlPoint controlPoint : controlPoints) {
+            controlPoint.position.sub(transformComponent.worldPosition);
+            controlPoint.position.rotateDeg(-transformComponent.worldRotation);
+        }
 
-				if (keepAspectRatio) {
-					float aspect = (float) texture.getRegionWidth() / texture.getRegionHeight();
-					width = height * aspect;
-				}
+        //May be negative
+        float totalWidth = bottomRightControlPoint.position.x - bottomLeftControlPoint.position.x;
+        float totalHeight = topRightControlPoint.position.y - bottomRightControlPoint.position.y;
 
-				controlPoints.get(TOP_RIGHT).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y);
-				controlPoints.get(BOTTOM_LEFT).position.set(stationaryPoint.position.x, stationaryPoint.position.y - height);
+        for (ControlPoint controlPoint : controlPoints) {
+            controlPoint.position.rotateDeg(transformComponent.worldRotation);
+            controlPoint.position.add(transformComponent.worldPosition);
+        }
 
-				if (keepAspectRatio) {
-					controlPoints.get(BOTTOM_RIGHT).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y - height);
-				}
+        Vector2 out = new Vector2();
+        out.set(centerX, centerY);
 
-				controlPoints.get(TOP_MIDDLE).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y);
-				controlPoints.get(RIGHT_MIDDLE).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y - height / 2f);
-				controlPoints.get(LEFT_MIDDLE).position.set(stationaryPoint.position.x, stationaryPoint.position.y - height / 2f);
-				controlPoints.get(BOTTOM_MIDDLE).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y - height);
-			}
+        //Offset needs to change depending on rotation because we are dealing in unrotated coords
+        int howMany90Rots = MathUtils.floor(transformComponent.worldRotation / 90);
+        int howMany180Rots = MathUtils.floor(transformComponent.worldRotation / 180f);
 
-			if (stationaryPoint.id == BOTTOM_RIGHT) {
-				//Do the other corners
+        int sig = (int) Math.pow(-1, howMany90Rots + howMany180Rots);
 
-				//Have to compare it to things we are taking truth from
-				boolean invertedX = controlPoints.get(TOP_LEFT).position.x > controlPoints.get(BOTTOM_RIGHT).position.x;
-				boolean invertedY = controlPoints.get(TOP_LEFT).position.y < controlPoints.get(BOTTOM_RIGHT).position.y;
+        sig = 1;
 
-				if (invertedX) {
-					width *= -1;
-				}
-				if (invertedY) {
-					height *= -1;
-				}
+        out.scl(sig, sig);
 
-				if (keepAspectRatio) {
-					float inverseAspect = (float) texture.getRegionHeight() / texture.getRegionWidth();
-					height = width * inverseAspect;
-				}
+        TransformComponent.worldToLocal(gameObject.getParent(), out);
+        transformComponent.position.set(out);
 
-				controlPoints.get(TOP_RIGHT).position.set(stationaryPoint.position.x, stationaryPoint.position.y + height);
-				controlPoints.get(BOTTOM_LEFT).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y);
 
-				if (keepAspectRatio) {
-					controlPoints.get(TOP_LEFT).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y + height);
-				}
+        SceneUtils.componentUpdated(gameObjectContainer, gameObject, transformComponent, true);
+        transformChanged = true;
 
-				controlPoints.get(TOP_MIDDLE).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y + height);
-				controlPoints.get(RIGHT_MIDDLE).position.set(stationaryPoint.position.x, stationaryPoint.position.y + height / 2f);
-				controlPoints.get(LEFT_MIDDLE).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y + height / 2f);
-				controlPoints.get(BOTTOM_MIDDLE).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y);
-			}
+        if (gameObject.hasComponent(SpriteRendererComponent.class)) {
+            //we set the size to the sprite's shit taking into account the scale
 
-			if (stationaryPoint.id == BOTTOM_LEFT) {
-				//Do the other corners
+            Vector2 scale = transformComponent.worldScale;
 
-				//Have to compare it to things we are taking truth from
-				boolean invertedX = controlPoints.get(TOP_RIGHT).position.x < controlPoints.get(BOTTOM_LEFT).position.x;
-				boolean invertedY = controlPoints.get(TOP_RIGHT).position.y < controlPoints.get(BOTTOM_LEFT).position.y;
+            float totalWidthScaleConsidered = totalWidth / scale.x;
+            float totalHeightScaleConsidered = totalHeight / scale.y;
 
-				if (invertedX) {
-					width *= -1;
-				}
-				if (invertedY) {
-					height *= -1;
-				}
+            SpriteRendererComponent spriteRendererComponent = gameObject.getComponent(SpriteRendererComponent.class);
+            spriteRendererComponent.size.set(totalWidthScaleConsidered, totalHeightScaleConsidered);
 
-				if (keepAspectRatio) {
-					float inverseAspect = (float) texture.getRegionHeight() / texture.getRegionWidth();
-					height = width * inverseAspect;
-				}
+            SceneUtils.componentUpdated(gameObjectContainer, gameObject, spriteRendererComponent, true);
 
-				controlPoints.get(TOP_LEFT).position.set(stationaryPoint.position.x, stationaryPoint.position.y + height);
-				controlPoints.get(BOTTOM_RIGHT).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y);
+            spriteRenderComponentChanged = true;
+        }
+    }
 
-				if (keepAspectRatio) {
-					controlPoints.get(TOP_RIGHT).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y + height);
-				}
+    private BoundingBox getUnrotateRectFromOppositeCorners(ControlPoint currentManipulatingPoint, ControlPoint stationaryPoint) {
+        //Find the midpoint
+        float midX = (currentManipulatingPoint.position.x + stationaryPoint.position.x) / 2f;
+        float midY = (currentManipulatingPoint.position.y + stationaryPoint.position.y) / 2f;
 
-				controlPoints.get(TOP_MIDDLE).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y + height);
-				controlPoints.get(RIGHT_MIDDLE).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y + height / 2f);
-				controlPoints.get(LEFT_MIDDLE).position.set(stationaryPoint.position.x, stationaryPoint.position.y + height / 2f);
-				controlPoints.get(BOTTOM_MIDDLE).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y);
-			}
+        TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
 
-			if (stationaryPoint.id == TOP_RIGHT) {
-				//Do the other corners
+        temp.set(currentManipulatingPoint.position);
+        temp2.set(stationaryPoint.position);
 
-				//Have to compare it to things we are taking truth from
-				boolean invertedX = controlPoints.get(TOP_RIGHT).position.x < controlPoints.get(BOTTOM_LEFT).position.x;
-				boolean invertedY = controlPoints.get(TOP_RIGHT).position.y < controlPoints.get(BOTTOM_LEFT).position.y;
+        //Put these around their center
 
-				if (invertedX) {
-					width *= -1;
-				}
-				if (invertedY) {
-					height *= -1;
-				}
+        temp.sub(midX, midY);
+        temp2.sub(midX, midY);
 
-				if (keepAspectRatio) {
-					float aspect = (float) texture.getRegionWidth() / texture.getRegionHeight();
-					width = height * aspect;
-				}
+        //Un-rotate these by world rot
+        temp.rotateDeg(-transformComponent.worldRotation);
+        temp2.rotateDeg(-transformComponent.worldRotation);
 
-				controlPoints.get(TOP_LEFT).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y);
-				controlPoints.get(BOTTOM_RIGHT).position.set(stationaryPoint.position.x, stationaryPoint.position.y - height);
+        //We should have a rect now from two opposite points, we just need to figure outn which is max
 
-				if (keepAspectRatio) {
-					controlPoints.get(BOTTOM_LEFT).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y - height);
-				}
+        boundingBox.clr();
 
-				controlPoints.get(TOP_MIDDLE).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y);
-				controlPoints.get(RIGHT_MIDDLE).position.set(stationaryPoint.position.x, stationaryPoint.position.y - height / 2f);
-				controlPoints.get(LEFT_MIDDLE).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y - height / 2f);
-				controlPoints.get(BOTTOM_MIDDLE).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y - height);
-			}
+        boundingBox.ext(temp.x, temp.y, 0);
+        boundingBox.ext(temp2.x, temp2.y, 0);
 
-			//put them back into space
-			for (ControlPoint controlPoint : controlPoints) {
-				controlPoint.position.rotateDeg(transformComponent.worldRotation);
-				controlPoint.position.add(transformComponent.worldPosition);
-			}
+        return boundingBox;
+    }
 
-			updateTransformFromControlPoints();
+    @Override
+    public void touchUp(float x, float y) {
+        super.touchUp(x, y);
 
 
-		}
-		break;
-		case MIDDLE: {
-			currentManipulatingPoint.position.set(x, y).sub(controlPointOffset);
+        boolean updateTransform = transformChanged || rotating;
 
-			for (ControlPoint controlPoint : controlPoints) {
-				controlPoint.position.sub(transformComponent.worldPosition);
-				controlPoint.position.rotateDeg(-transformComponent.worldRotation);
-			}
+        boolean slowChangeSent = false;
 
-			if (stationaryPoint.id == LEFT_MIDDLE) {
-				//Left middle,. y has to match stationary point
-				currentManipulatingPoint.position.y = stationaryPoint.position.y;
+        if (updateTransform) {
+            SceneUtils.componentUpdated(gameObjectContainer, gameObject, gameObject.getComponent(TransformComponent.class), slowChangeSent);
+            slowChangeSent = true;
+        }
+        if (spriteRenderComponentChanged) {
+            SceneUtils.componentUpdated(gameObjectContainer, gameObject, gameObject.getComponent(TransformComponent.class), slowChangeSent);
+        }
 
-				float width = Math.abs(currentManipulatingPoint.position.x - stationaryPoint.position.x);
-				float height = Math.abs(controlPoints.get(TOP_LEFT).position.y - controlPoints.get(BOTTOM_LEFT).position.y);
 
-				boolean invertedX = controlPoints.get(LEFT_MIDDLE).position.x > controlPoints.get(RIGHT_MIDDLE).position.x;
-				boolean invertedY = controlPoints.get(TOP_LEFT).position.y  < controlPoints.get(BOTTOM_LEFT).position.y;
+        transformChanged = false;
+        spriteRenderComponentChanged = false;
+        userInteracted = false;
+        currentManipulatingPoint = null;
+        rotating = false;
+    }
 
-				if (invertedX) {
-					width *= -1;
-				}
-				if (invertedY) {
-					height *= -1;
-				}
+    @Override
+    public boolean hit(float x, float y) {
+        if (!selected)
+            return false;
 
-				if (keepAspectRatio) {
-					float inverseAspect = (float) texture.getRegionHeight() / texture.getRegionWidth();
-					height = width * inverseAspect;
-				}
+        if (isOnTouchedPoint(x, y)) {
+            return true;
+        }
+        return isOnTouchedRotationArea(x, y);
+    }
 
-				controlPoints.get(TOP_RIGHT).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y + height / 2f);
-				controlPoints.get(BOTTOM_RIGHT).position.set(stationaryPoint.position.x + width, stationaryPoint.position.y - height / 2f);
+    protected boolean isOnTouchedRotationArea(float x, float y) {
+        int touchedRA = getTouchedRotationArea(x, y);
+        return touchedRA != -1;
+    }
 
-				controlPoints.get(TOP_MIDDLE).position.x = stationaryPoint.position.x + width / 2f;
-				controlPoints.get(BOTTOM_MIDDLE).position.x = stationaryPoint.position.x + width / 2f;
+    private boolean collidesRotArea(ControlPoint controlPoint, float x, float y) {
+        float radius = 40f * worldPerPixel;
 
-				if (keepAspectRatio) {
-					controlPoints.get(TOP_LEFT).position.set(stationaryPoint.position.x, stationaryPoint.position.y + height / 2f);
-					controlPoints.get(BOTTOM_LEFT).position.set(stationaryPoint.position.x, stationaryPoint.position.y - height / 2f);
+        TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
+        Vector2 center = transformComponent.worldPosition;
 
-					controlPoints.get(TOP_MIDDLE).position.y = stationaryPoint.position.y + height / 2f;
-					controlPoints.get(BOTTOM_MIDDLE).position.y = stationaryPoint.position.y - height / 2f;
-				}
+        tempRot.set(controlPoint.position).sub(center);
 
-			}
+        float len = tempRot.len();
+        len += radius;
 
-			if (stationaryPoint.id == RIGHT_MIDDLE) {
-				//Left middle,. y has to match stationary point
-				currentManipulatingPoint.position.y = stationaryPoint.position.y;
+        Vector2 nor = tempRot.nor();
+        nor.scl(len);
+        nor.add(transformComponent.worldPosition);
 
-				float width = Math.abs(currentManipulatingPoint.position.x - stationaryPoint.position.x);
-				float height = Math.abs(controlPoints.get(TOP_LEFT).position.y - controlPoints.get(BOTTOM_LEFT).position.y);
+        return nor.dst(x, y) < radius;
+    }
 
-				boolean invertedX = controlPoints.get(LEFT_MIDDLE).position.x > controlPoints.get(RIGHT_MIDDLE).position.x;
-				boolean invertedY = controlPoints.get(TOP_LEFT).position.y  < controlPoints.get(BOTTOM_LEFT).position.y;
+    private int getTouchedRotationArea(float x, float y) {
 
-				if (invertedX) {
-					width *= -1;
-				}
-				if (invertedY) {
-					height *= -1;
-				}
 
-				if (keepAspectRatio) {
-					float inverseAspect = (float) texture.getRegionHeight() / texture.getRegionWidth();
-					height = width * inverseAspect;
-				}
+        if (collidesRotArea(controlPoints.get(BOTTOM_LEFT), x, y)) {
+            return 0;
+        }
+        if (collidesRotArea(controlPoints.get(TOP_LEFT), x, y)) {
+            return 1;
+        }
+        if (collidesRotArea(controlPoints.get(TOP_RIGHT), x, y)) {
+            return 2;
+        }
+        if (collidesRotArea(controlPoints.get(BOTTOM_RIGHT), x, y)) {
+            return 3;
+        }
 
-				controlPoints.get(TOP_LEFT).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y + height / 2f);
-				controlPoints.get(BOTTOM_LEFT).position.set(stationaryPoint.position.x - width, stationaryPoint.position.y - height / 2f);
+        return -1;
+    }
 
-				controlPoints.get(TOP_MIDDLE).position.x = stationaryPoint.position.x - width / 2f;
-				controlPoints.get(BOTTOM_MIDDLE).position.x = stationaryPoint.position.x - width / 2f;
+    protected boolean isOnTouchedPoint(float x, float y) {
+        ControlPoint touchedPoint = getTouchedPoint(x, y);
+        return touchedPoint != null;
+    }
 
-				if (keepAspectRatio) {
-					controlPoints.get(TOP_RIGHT).position.set(stationaryPoint.position.x, stationaryPoint.position.y + height / 2f);
-					controlPoints.get(BOTTOM_RIGHT).position.set(stationaryPoint.position.x, stationaryPoint.position.y - height / 2f);
+    private ControlPoint getTouchedPoint(float x, float y) {
+        for (ControlPoint controlPoint : controlPoints) {
+            if (isPointHit(controlPoint.position, x, y)) {
+                return controlPoint;
+            }
+        }
+        return null;
+    }
 
-					controlPoints.get(TOP_MIDDLE).position.y = stationaryPoint.position.y + height / 2f;
-					controlPoints.get(BOTTOM_MIDDLE).position.y = stationaryPoint.position.y - height / 2f;
-				}
-			}
+    private boolean isPointHit(Vector2 point, float x, float y) {
+        float dst = point.dst(x, y);
+        boolean hit = dst < (8 * worldPerPixel);
+        return hit;
+    }
 
-			if (stationaryPoint.id == BOTTOM_MIDDLE) {
-				currentManipulatingPoint.position.x = stationaryPoint.position.x;
+    @Override
+    public int getPriority() {
+        return 0;
+    }
 
-				float width = Math.abs(controlPoints.get(BOTTOM_RIGHT).position.x - controlPoints.get(BOTTOM_LEFT).position.x);
-				float height = Math.abs(currentManipulatingPoint.position.y - stationaryPoint.position.y);
+    public void getBounds(Polygon boundingPolygon) {
 
-				boolean invertedX = controlPoints.get(TOP_LEFT).position.x > controlPoints.get(TOP_RIGHT).position.x;
-				boolean invertedY = controlPoints.get(BOTTOM_MIDDLE).position.y > controlPoints.get(TOP_MIDDLE).position.y;
+        TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
+        SpriteRendererComponent spriteRendererComponent = gameObject.getComponent(SpriteRendererComponent.class);
 
-				if (invertedX) {
-					width *= -1;
-				}
-				if (invertedY) {
-					height *= -1;
-				}
+        // patch for negative width and height cases
+        float signWidth = Math.signum(spriteRendererComponent.size.x);
+        float signHeight = Math.signum(spriteRendererComponent.size.y);
 
-				if (keepAspectRatio) {
-					float aspect = (float) texture.getRegionWidth() / texture.getRegionHeight();
-					width = height * aspect;
-				}
+        float width = signWidth * spriteRendererComponent.size.x * transformComponent.worldScale.x;
+        float height = signHeight * spriteRendererComponent.size.y * transformComponent.worldScale.y;
 
-				controlPoints.get(TOP_LEFT).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y + height);
-				controlPoints.get(TOP_RIGHT).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y + height);
+        verts[0] = -width / 2f;
+        verts[1] = -height / 2f;
 
-				controlPoints.get(LEFT_MIDDLE).position.y = stationaryPoint.position.y + height / 2f;
-				controlPoints.get(RIGHT_MIDDLE).position.y = stationaryPoint.position.y + height / 2f;
+        verts[2] = -width / 2f;
+        verts[3] = height / 2f;
 
-				if (keepAspectRatio) {
-					controlPoints.get(BOTTOM_LEFT).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y);
-					controlPoints.get(BOTTOM_RIGHT).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y);
+        verts[4] = width / 2f;
+        verts[5] = height / 2f;
 
-					controlPoints.get(LEFT_MIDDLE).position.x = stationaryPoint.position.x - width / 2f;
-					controlPoints.get(RIGHT_MIDDLE).position.x = stationaryPoint.position.x + width / 2f;
-				}
-			}
+        verts[6] = width / 2f;
+        verts[7] = -height / 2f;
 
-			if (stationaryPoint.id == TOP_MIDDLE) {
-				currentManipulatingPoint.position.x = stationaryPoint.position.x;
+        boundingPolygon.setPosition(transformComponent.worldPosition.x, transformComponent.worldPosition.y);
+        boundingPolygon.setVertices(verts);
+        boundingPolygon.setOrigin(0, 0);
+        boundingPolygon.setRotation(transformComponent.worldRotation);
+    }
 
-				float width = Math.abs(controlPoints.get(BOTTOM_RIGHT).position.x - controlPoints.get(BOTTOM_LEFT).position.x);
-				float height = Math.abs(currentManipulatingPoint.position.y - stationaryPoint.position.y);
+    public enum ControlPointType {
+        CORNER,
+        MIDDLE
+    }
 
-				boolean invertedX = controlPoints.get(TOP_LEFT).position.x > controlPoints.get(TOP_RIGHT).position.x;
-				boolean invertedY = controlPoints.get(BOTTOM_MIDDLE).position.y > controlPoints.get(TOP_MIDDLE).position.y;
+    private static class ControlPoint {
+        private final Vector2 position = new Vector2();
+        private final ControlPointType pointType;
 
-				if (invertedX) {
-					width *= -1;
-				}
-				if (invertedY) {
-					height *= -1;
-				}
+        private final int id;
 
-				if (keepAspectRatio) {
-					float aspect = (float) texture.getRegionWidth() / texture.getRegionHeight();
-					width = height * aspect;
-				}
-
-				controlPoints.get(BOTTOM_LEFT).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y - height);
-				controlPoints.get(BOTTOM_RIGHT).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y - height);
-
-				controlPoints.get(LEFT_MIDDLE).position.y = stationaryPoint.position.y - height / 2f;
-				controlPoints.get(RIGHT_MIDDLE).position.y = stationaryPoint.position.y - height / 2f;
-
-				if (keepAspectRatio) {
-					controlPoints.get(TOP_LEFT).position.set(stationaryPoint.position.x - width / 2f, stationaryPoint.position.y);
-					controlPoints.get(TOP_RIGHT).position.set(stationaryPoint.position.x + width / 2f, stationaryPoint.position.y);
-
-					controlPoints.get(LEFT_MIDDLE).position.x = stationaryPoint.position.x - width / 2f;
-					controlPoints.get(RIGHT_MIDDLE).position.x = stationaryPoint.position.x + width / 2f;
-				}
-			}
-
-			//put them back into space
-			for (ControlPoint controlPoint : controlPoints) {
-				controlPoint.position.rotateDeg(transformComponent.worldRotation);
-				controlPoint.position.add(transformComponent.worldPosition);
-			}
-
-			updateTransformFromControlPoints();
-
-		}
-
-		break;
-		}
-
-	}
-
-	private void updateTransformFromControlPoints () {
-		//Oh god
-		TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
-
-		//Center
-
-		ControlPoint bottomLeftControlPoint = controlPoints.get(BOTTOM_LEFT);
-		ControlPoint bottomRightControlPoint = controlPoints.get(BOTTOM_RIGHT);
-		ControlPoint topRightControlPoint = controlPoints.get(TOP_RIGHT);
-
-		float centerX = (topRightControlPoint.position.x + bottomLeftControlPoint.position.x) / 2f;
-		float centerY = (topRightControlPoint.position.y + bottomLeftControlPoint.position.y) / 2f;
-
-		for (ControlPoint controlPoint : controlPoints) {
-			controlPoint.position.sub(transformComponent.worldPosition);
-			controlPoint.position.rotateDeg(-transformComponent.worldRotation);
-		}
-
-		//May be negative
-		float totalWidth = bottomRightControlPoint.position.x - bottomLeftControlPoint.position.x;
-		float totalHeight = topRightControlPoint.position.y - bottomRightControlPoint.position.y;
-
-		for (ControlPoint controlPoint : controlPoints) {
-			controlPoint.position.rotateDeg(transformComponent.worldRotation);
-			controlPoint.position.add(transformComponent.worldPosition);
-		}
-
-		Vector2 out = new Vector2();
-		out.set(centerX, centerY);
-
-		//Offset needs to change depending on rotation because we are dealing in unrotated coords
-		int howMany90Rots = MathUtils.floor(transformComponent.worldRotation / 90);
-		int howMany180Rots = MathUtils.floor(transformComponent.worldRotation / 180f);
-
-		int sig = (int) Math.pow(-1, howMany90Rots + howMany180Rots);
-
-		sig = 1;
-
-		out.scl(sig, sig);
-
-		TransformComponent.worldToLocal(gameObject.getParent(), out);
-		transformComponent.position.set(out);
-
-
-		SceneUtils.componentUpdated(gameObjectContainer, gameObject, transformComponent, true);
-		transformChanged = true;
-
-		if (gameObject.hasComponent(SpriteRendererComponent.class)) {
-			//we set the size to the sprite's shit taking into account the scale
-
-			Vector2 scale = transformComponent.worldScale;
-
-			float totalWidthScaleConsidered = totalWidth / scale.x;
-			float totalHeightScaleConsidered = totalHeight / scale.y;
-
-			SpriteRendererComponent spriteRendererComponent = gameObject.getComponent(SpriteRendererComponent.class);
-			spriteRendererComponent.size.set(totalWidthScaleConsidered, totalHeightScaleConsidered);
-
-			SceneUtils.componentUpdated(gameObjectContainer, gameObject, spriteRendererComponent, true);
-
-			spriteRenderComponentChanged = true;
-		}
-
-	}
-
-	private Vector2 temp = new Vector2();
-	private Vector2 temp2 = new Vector2();
-	private BoundingBox boundingBox = new BoundingBox();
-
-	private BoundingBox getUnrotateRectFromOppositeCorners (ControlPoint currentManipulatingPoint, ControlPoint stationaryPoint) {
-		//Find the midpoint
-		float midX = (currentManipulatingPoint.position.x + stationaryPoint.position.x) / 2f;
-		float midY = (currentManipulatingPoint.position.y + stationaryPoint.position.y) / 2f;
-
-		TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
-
-		temp.set(currentManipulatingPoint.position);
-		temp2.set(stationaryPoint.position);
-
-		//Put these around their center
-
-		temp.sub(midX, midY);
-		temp2.sub(midX, midY);
-
-		//Un-rotate these by world rot
-		temp.rotateDeg(-transformComponent.worldRotation);
-		temp2.rotateDeg(-transformComponent.worldRotation);
-
-		//We should have a rect now from two opposite points, we just need to figure outn which is max
-
-		boundingBox.clr();
-
-		boundingBox.ext(temp.x, temp.y, 0);
-		boundingBox.ext(temp2.x, temp2.y, 0);
-
-		return boundingBox;
-	}
-
-	@Override
-	public void touchUp (float x, float y) {
-		super.touchUp(x, y);
-
-
-		boolean updateTransform = transformChanged || rotating;
-
-		boolean slowChangeSent = false;
-
-		if (updateTransform) {
-			SceneUtils.componentUpdated(gameObjectContainer, gameObject, gameObject.getComponent(TransformComponent.class), slowChangeSent);
-			slowChangeSent = true;
-		}
-		if (spriteRenderComponentChanged) {
-			SceneUtils.componentUpdated(gameObjectContainer, gameObject, gameObject.getComponent(TransformComponent.class), slowChangeSent);
-		}
-
-
-		transformChanged = false;
-		spriteRenderComponentChanged = false;
-		userInteracted = false;
-		currentManipulatingPoint = null;
-		rotating = false;
-	}
-
-	@Override
-	public boolean hit (float x, float y) {
-		if (!selected)
-			return false;
-
-		if (isOnTouchedPoint(x, y)) {
-			return true;
-		}
-		if (isOnTouchedRotationArea(x, y)) {
-			return true;
-		}
-
-		return false;
-	}
-
-	protected boolean isOnTouchedRotationArea (float x, float y) {
-		int touchedRA = getTouchedRotationArea(x, y);
-		return touchedRA != -1;
-	}
-
-
-	Vector2 tempRot = new Vector2();
-
-	private boolean collidesRotArea (ControlPoint controlPoint, float x, float y) {
-		float radius = 40f * worldPerPixel;
-
-		TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
-		Vector2 center = transformComponent.worldPosition;
-
-		tempRot.set(controlPoint.position).sub(center);
-
-		float len = tempRot.len();
-		len += radius;
-
-		Vector2 nor = tempRot.nor();
-		nor.scl(len);
-		nor.add(transformComponent.worldPosition);
-
-		if (nor.dst(x, y) < radius) {
-			return true;
-		}
-		return false;
-
-	}
-
-	private int getTouchedRotationArea (float x, float y) {
-
-
-		if (collidesRotArea(controlPoints.get(BOTTOM_LEFT), x, y)) {
-			return 0;
-		}
-		if (collidesRotArea(controlPoints.get(TOP_LEFT), x, y)) {
-			return 1;
-		}
-		if (collidesRotArea(controlPoints.get(TOP_RIGHT), x, y)) {
-			return 2;
-		}
-		if (collidesRotArea(controlPoints.get(BOTTOM_RIGHT), x, y)) {
-			return 3;
-		}
-
-		return -1;
-	}
-
-	protected boolean isOnTouchedPoint (float x, float y) {
-		ControlPoint touchedPoint = getTouchedPoint(x, y);
-		return touchedPoint != null;
-	}
-
-	private ControlPoint getTouchedPoint (float x, float y) {
-		for (ControlPoint controlPoint : controlPoints) {
-			if (isPointHit(controlPoint.position, x, y)) {
-				return controlPoint;
-			}
-		}
-		return null;
-	}
-
-	;
-
-	private boolean isPointHit (Vector2 point, float x, float y) {
-		float dst = point.dst(x, y);
-		boolean hit = dst < (8 * worldPerPixel);
-		return hit;
-	}
-
-	@Override
-	public int getPriority () {
-		return 0;
-	}
-
-	private float[] verts = new float[2 * 4];
-
-	public void getBounds (Polygon boundingPolygon) {
-
-		TransformComponent transformComponent = gameObject.getComponent(TransformComponent.class);
-		SpriteRendererComponent spriteRendererComponent = gameObject.getComponent(SpriteRendererComponent.class);
-
-		// patch for negative width and height cases
-		float signWidth = Math.signum(spriteRendererComponent.size.x);
-		float signHeight = Math.signum(spriteRendererComponent.size.y);
-
-		float width = signWidth * spriteRendererComponent.size.x * transformComponent.worldScale.x;
-		float height = signHeight * spriteRendererComponent.size.y * transformComponent.worldScale.y;
-
-		verts[0] = -width / 2f;
-		verts[1] = -height / 2f;
-
-		verts[2] = -width / 2f;
-		verts[3] = height / 2f;
-
-		verts[4] = width / 2f;
-		verts[5] = height / 2f;
-
-		verts[6] = width / 2f;
-		verts[7] = -height / 2f;
-
-		boundingPolygon.setPosition(transformComponent.worldPosition.x, transformComponent.worldPosition.y);
-		boundingPolygon.setVertices(verts);
-		boundingPolygon.setOrigin(0, 0);
-		boundingPolygon.setRotation(transformComponent.worldRotation);
-
-	}
+        public ControlPoint(int id, ControlPointType type) {
+            this.id = id;
+            this.pointType = type;
+        }
+    }
 }

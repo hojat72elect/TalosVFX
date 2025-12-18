@@ -1,13 +1,12 @@
 package com.talosvfx.talos.runtime.scene.render;
 
+import static com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
+
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.NinePatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.talosvfx.talos.runtime.RuntimeContext;
 import com.talosvfx.talos.runtime.assets.AMetadata;
@@ -21,20 +20,18 @@ import com.talosvfx.talos.runtime.scene.GameObjectRenderer;
 import com.talosvfx.talos.runtime.scene.components.SpriteRendererComponent;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 
-import static com.badlogic.gdx.graphics.g2d.TextureAtlas.*;
-
 public class SpriteComponentRenderer extends ComponentRenderer<SpriteRendererComponent> {
 
 
-    private Vector2 vector2 = new Vector2();
+    private final Vector2 vector2 = new Vector2();
 
 
-    public SpriteComponentRenderer (GameObjectRenderer gameObjectRenderer) {
+    public SpriteComponentRenderer(GameObjectRenderer gameObjectRenderer) {
         super(gameObjectRenderer);
     }
 
     @Override
-    public void render (Batch batch, Camera camera, GameObject gameObject, SpriteRendererComponent rendererComponent) {
+    public void render(Batch batch, Camera camera, GameObject gameObject, SpriteRendererComponent rendererComponent) {
         batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
         TransformComponent transformComponent = gameObject.getTransformComponent();
@@ -233,10 +230,7 @@ public class SpriteComponentRenderer extends ComponentRenderer<SpriteRendererCom
 
                         textureRegion.setV(cachedV);
                         textureRegion.setU2(cachedU2);
-
                     }
-
-
                 } else if (spriteRenderer.renderMode == SpriteRendererComponent.RenderMode.simple) {
 
                     float pivotX = transformComponent.pivot.x;
@@ -254,7 +248,5 @@ public class SpriteComponentRenderer extends ComponentRenderer<SpriteRendererCom
                 batch.setColor(Color.WHITE);
             }
         }
-
     }
-
 }

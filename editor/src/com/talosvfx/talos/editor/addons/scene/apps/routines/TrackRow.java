@@ -7,10 +7,10 @@ import com.talosvfx.talos.editor.widgets.ui.timeline.TimelineItemDataProvider;
 
 class TrackRow implements TimelineItemDataProvider<RoutineExecuteNodeWidget> {
 
-    private float duration = 10;
-    private int index;
+    private final float duration = 10;
+    private final int index;
 
-    private RoutineExecuteNodeWidget routineExecuteNodeWidget;
+    private final RoutineExecuteNodeWidget routineExecuteNodeWidget;
 
     public TrackRow(RoutineExecuteNodeWidget routineExecuteNodeWidget, int index) {
         this.routineExecuteNodeWidget = routineExecuteNodeWidget;
@@ -63,12 +63,12 @@ class TrackRow implements TimelineItemDataProvider<RoutineExecuteNodeWidget> {
     }
 
     @Override
-    public boolean isItemVisible() {
-        return true;
+    public void setTimePosition(float time) {
+
     }
 
     @Override
-    public void setTimePosition(float time) {
-
+    public boolean isItemVisible() {
+        return true;
     }
 }

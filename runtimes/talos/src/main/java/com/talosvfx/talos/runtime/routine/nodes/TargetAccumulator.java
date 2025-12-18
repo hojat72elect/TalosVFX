@@ -10,12 +10,12 @@ public class TargetAccumulator extends RoutineNode {
     @Override
     public void receiveSignal(String portName) {
 
-        if(portName.equals("addSignal")) {
+        if (portName.equals("addSignal")) {
             list.add(routineInstanceRef.getSignalPayload());
-        } else if(portName.equals("startSignal")) {
+        } else if (portName.equals("startSignal")) {
             routineInstanceRef.setSignalPayload(list);
             routineInstanceRef.storeGlobal("executedTargets", list);
-            for(Object target: list) {
+            for (Object target : list) {
                 routineInstanceRef.setSignalPayload(target);
                 sendSignal("onComplete");
             }

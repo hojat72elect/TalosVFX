@@ -19,7 +19,6 @@ package com.talosvfx.talos.runtime.vfx.modules;
 import com.badlogic.gdx.utils.IntMap;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
-import com.talosvfx.talos.runtime.assets.GameResourceOwner;
 import com.talosvfx.talos.runtime.vfx.ParticleEmitterDescriptor;
 import com.talosvfx.talos.runtime.vfx.ScopePayload;
 import com.talosvfx.talos.runtime.vfx.Slot;
@@ -38,33 +37,33 @@ public abstract class AbstractModule implements Json.Serializable {
 
     private int lastRequester = -1;
 
-    public AbstractModule () {
+    public AbstractModule() {
         init();
     }
 
-    protected void init () {
+    protected void init() {
         defineSlots();
     }
 
-    public void setModuleGraph (ParticleEmitterDescriptor graph) {
+    public void setModuleGraph(ParticleEmitterDescriptor graph) {
         this.graph = graph;
     }
 
     protected abstract void defineSlots();
 
     public void attachModuleToMyInput(AbstractModule module, int mySlot, int targetSlot) {
-        if(inputSlots.get(mySlot) == null || module.outputSlots.get(targetSlot) == null) return;
+        if (inputSlots.get(mySlot) == null || module.outputSlots.get(targetSlot) == null) return;
         inputSlots.get(mySlot).connect(module, module.outputSlots.get(targetSlot));
     }
 
     public void attachModuleToMyOutput(AbstractModule module, int mySlot, int targetSlot) {
-        if(inputSlots.get(mySlot) == null || module.outputSlots.get(targetSlot) == null) return;
+        if (inputSlots.get(mySlot) == null || module.outputSlots.get(targetSlot) == null) return;
         outputSlots.get(mySlot).connect(module, module.inputSlots.get(targetSlot));
     }
 
     public void detach(AbstractModule module) {
-        for(Slot slot : inputSlots.values()) {
-            if(slot.getTargetModule() == module) {
+        for (Slot slot : inputSlots.values()) {
+            if (slot.getTargetModule() == module) {
                 slot.getTargetSlot().detach();
                 slot.detach();
             }
@@ -72,14 +71,14 @@ public abstract class AbstractModule implements Json.Serializable {
     }
 
     public void detach(int slot, boolean isInput) {
-        if(isInput && inputSlots.get(slot) != null) {
+        if (isInput && inputSlots.get(slot) != null) {
             inputSlots.get(slot).detach();
         }
     }
 
     public boolean isConnectedTo(AbstractModule module) {
-        for(Slot slot : inputSlots.values()) {
-            if(slot.getTargetModule() == module) {
+        for (Slot slot : inputSlots.values()) {
+            if (slot.getTargetModule() == module) {
                 return true;
             }
         }
@@ -87,7 +86,7 @@ public abstract class AbstractModule implements Json.Serializable {
         return false;
     }
 
-    public void processValues () {
+    public void processValues() {
         processAlphaDefaults();
         processCustomValues();
     }
@@ -111,45 +110,37 @@ public abstract class AbstractModule implements Json.Serializable {
                     alpha.set(getScope().get(ScopePayload.PARTICLE_ALPHA));
                     alpha.setEmpty(false);
                 }
-
             }
         }
-
-
     }
 
 
     /**
      * Need to keep the output values updated
      */
-    protected abstract void processCustomValues ();
-
-
-    public void setIndex(int index) {
-        this.index = index;
-    }
-
+    protected abstract void processCustomValues();
 
     /**
      * Fetch value from the input of this module
+     *
      * @param slotId
      */
     public void fetchInputSlotValue(int slotId) {
         //find what it is connected to
         Slot inputSlot = inputSlots.get(slotId);
 
-        if(inputSlot == null) {
+        if (inputSlot == null) {
             return;
         }
 
-        if(inputSlot.getTargetSlot() == null) {
-            if(inputSlot.getValue() == null) return;
+        if (inputSlot.getTargetSlot() == null) {
+            if (inputSlot.getValue() == null) return;
 
             inputSlot.getValue().setEmpty(true);
         } else {
             //ask it's module give it's output value
             Value result = inputSlot.getTargetModule().fetchOutputSlotValue(inputSlot.getTargetSlot().getIndex());
-            if(result != null) {
+            if (result != null) {
                 inputSlot.getValue().set(result);
                 inputSlot.getValue().setEmpty(false);
                 inputSlot.getValue().setAddition(result.isAddition());
@@ -159,6 +150,7 @@ public abstract class AbstractModule implements Json.Serializable {
 
     /**
      * this module is asked to calculate and then give it's output value
+     *
      * @param slotId
      */
     public Value fetchOutputSlotValue(int slotId) {
@@ -178,7 +170,7 @@ public abstract class AbstractModule implements Json.Serializable {
     }
 
     public void fetchAllInputSlotValues() {
-        for(Slot inputSlot : inputSlots.values()) {
+        for (Slot inputSlot : inputSlots.values()) {
             fetchInputSlotValue(inputSlot.getIndex());
         }
     }
@@ -205,7 +197,7 @@ public abstract class AbstractModule implements Json.Serializable {
         return value;
     }
 
-    public NumericalValue createAlphaInputSlot (int slotId) {
+    public NumericalValue createAlphaInputSlot(int slotId) {
 
         NumericalValue inputSlot = createInputSlot(slotId);
         alphaSlots.put(slotId, inputSlots.get(slotId));
@@ -238,17 +230,21 @@ public abstract class AbstractModule implements Json.Serializable {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         json.writeValue("index", index);
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         index = jsonData.getInt("index");
     }
 
     public int getIndex() {
         return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
     }
 
     public IntMap<Slot> getInputSlots() {
@@ -259,6 +255,6 @@ public abstract class AbstractModule implements Json.Serializable {
         return outputSlots;
     }
 
-    public void remove(){}
-
+    public void remove() {
+    }
 }

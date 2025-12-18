@@ -41,20 +41,20 @@ public class PropertyPanelContainer extends Table {
 
         Array<IPropertyProvider> list = new Array<>();
 
-        for(IPropertyProvider provider: providerSet.values()) {
+        for (IPropertyProvider provider : providerSet.values()) {
             list.add(provider);
         }
 
         list.sort(new Comparator<IPropertyProvider>() {
             @Override
             public int compare(IPropertyProvider o1, IPropertyProvider o2) {
-                return o1.getPriority()-o2.getPriority();
+                return o1.getPriority() - o2.getPriority();
             }
         });
 
         panelList.clear();
 
-        for(IPropertyProvider provider: list) {
+        for (IPropertyProvider provider : list) {
             PropertiesPanel panel = new PropertiesPanel(provider, getSkin(), null);
 
             container.add(panel).growX().top().padBottom(5);
@@ -65,13 +65,13 @@ public class PropertyPanelContainer extends Table {
     }
 
     public void hidePanel(IPropertyProvider propertyProvider) {
-        if(propertyProvider == null) return;
+        if (propertyProvider == null) return;
         providerSet.remove(propertyProvider.getClass());
         build();
     }
 
     public void updateValues() {
-        for(PropertiesPanel panel: panelList) {
+        for (PropertiesPanel panel : panelList) {
             panel.updateValues();
         }
     }

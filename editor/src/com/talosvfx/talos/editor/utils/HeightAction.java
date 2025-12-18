@@ -8,20 +8,24 @@ public class HeightAction<T extends Cell> extends TemporalAction {
     private float startHeight;
     private float height;
     private T widgetCell;
-    public void setTarget (float targetHeight) {
+
+    public void setTarget(float targetHeight) {
         this.targetHeight = targetHeight;
     }
+
     @Override
-    public void begin () {
+    public void begin() {
         startHeight = widgetCell.getPrefHeight();
     }
+
     @Override
-    protected void update (float percent) {
+    protected void update(float percent) {
         height = startHeight + (targetHeight - startHeight) * percent;
         widgetCell.height(height);
         widgetCell.getTable().invalidateHierarchy();
     }
-    public void setTarget (T widgetCell) {
+
+    public void setTarget(T widgetCell) {
         this.widgetCell = widgetCell;
     }
 }

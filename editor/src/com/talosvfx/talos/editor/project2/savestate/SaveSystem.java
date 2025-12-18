@@ -1,6 +1,5 @@
 package com.talosvfx.talos.editor.project2.savestate;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.files.FileHandle;
 import com.talosvfx.talos.TalosMain;
@@ -18,11 +17,11 @@ import com.talosvfx.talos.editor.project2.TalosProjectData;
 import com.talosvfx.talos.editor.project2.localprefs.TalosLocalPrefs;
 import com.talosvfx.talos.editor.utils.Toasts;
 import com.talosvfx.talos.runtime.assets.BaseAssetRepository;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Scanner;
@@ -31,18 +30,18 @@ public class SaveSystem implements Observer {
 
     private static final Logger logger = LoggerFactory.getLogger(SaveSystem.class);
 
-    public SaveSystem () {
+    public SaveSystem() {
         Notifications.registerObserver(this);
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.SAVE)
-    public void onSaveAction (CommandEvent actionEvent) {
+    public void onSaveAction(CommandEvent actionEvent) {
         Notifications.fireEvent(Notifications.obtainEvent(SaveRequest.class));
     }
 
 
     @EventHandler
-    public void onSave (SaveRequest event) {
+    public void onSave(SaveRequest event) {
         if (SharedResources.currentProject != null) {
             TalosProjectData currentProject = SharedResources.currentProject;
             try {
@@ -58,18 +57,18 @@ public class SaveSystem implements Observer {
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.EXPORT)
-    public void onExportAction (CommandEvent actionEvent) {
+    public void onExportAction(CommandEvent actionEvent) {
         Notifications.quickFire(ExportRequest.class);
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.EXPORT_OPTIMIZED)
-    public void onExportOptimized (CommandEvent event) {
+    public void onExportOptimized(CommandEvent event) {
         ExportRequest exportRequest = Notifications.obtainEvent(ExportRequest.class);
         exportRequest.setOptimized(true);
         Notifications.fireEvent(exportRequest);
     }
 
-    public String getNodePath () {
+    public String getNodePath() {
         String nodePath = "";
         try {
             Process process = Runtime.getRuntime().exec(new String[]{"/bin/bash", "-c", "which node"});
@@ -83,7 +82,7 @@ public class SaveSystem implements Observer {
     }
 
     @EventHandler
-    public void onExport (ExportRequest event) {
+    public void onExport(ExportRequest event) {
         logger.info("On export");
 
         TalosProjectData currentProject = SharedResources.currentProject;
@@ -129,7 +128,7 @@ public class SaveSystem implements Observer {
                     String projectDirectoryPath = "\"" + projectPath + "\"";
                     String projectFilePathComm = "\"" + projectFilePath + "\"";
 
-                    if (TalosMain.Instance().isOsX()) {
+                    if (TalosMain.isOsX()) {
                         Toasts.getInstance().showInfoToast("Trying to launch build script runner for " + scriptCommandBinaryPath);
 
                         ProcessBuilder pb = new ProcessBuilder("bash", "-l", "-c", scriptCommandBinaryPath + " " + buildScriptPath + " " + projectDirectoryPath + " " + projectFilePathComm);
@@ -137,7 +136,6 @@ public class SaveSystem implements Observer {
                     } else {
                         ProcessBuilder pb = new ProcessBuilder(scriptCommandBinaryPath, buildScriptPath, projectDirectoryPath, projectFilePathComm);
                         startAndPipeToLogger(pb);
-
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -152,11 +150,11 @@ public class SaveSystem implements Observer {
         }
     }
 
-    private void startAndPipeToLogger (ProcessBuilder pb) throws IOException {
+    private void startAndPipeToLogger(ProcessBuilder pb) throws IOException {
         Process start = pb.start();
         new Thread(new Runnable() {
             @Override
-            public void run () {
+            public void run() {
                 Scanner scanner = new Scanner(start.getInputStream());
                 while (scanner.hasNextLine()) {
                     logger.info(scanner.nextLine());
@@ -165,7 +163,7 @@ public class SaveSystem implements Observer {
         }).start();
         new Thread(new Runnable() {
             @Override
-            public void run () {
+            public void run() {
                 Scanner scanner = new Scanner(start.getErrorStream());
                 while (scanner.hasNextLine()) {
                     logger.error(scanner.nextLine());

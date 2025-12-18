@@ -1,10 +1,14 @@
 package com.talosvfx.talos.editor.plugins;
 
-import com.badlogic.gdx.ApplicationAdapter;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.talosvfx.talos.editor.nodes.NodeWidget;
+
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
@@ -13,7 +17,10 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.*;
+import java.nio.file.FileSystems;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -21,16 +28,14 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-import static java.nio.file.StandardWatchEventKinds.*;
-
 public class PluginManager {
 
-    private ArrayList<TalosPluginProvider> pluginProviders = new ArrayList<>();
+    private final ArrayList<TalosPluginProvider> pluginProviders = new ArrayList<>();
 
     private WatchService watchService;
-    private HashMap<WatchKey, FileHandle> watching = new HashMap<>();
+    private final HashMap<WatchKey, FileHandle> watching = new HashMap<>();
 
-    public PluginManager () {
+    public PluginManager() {
         try {
             watchService = FileSystems.getDefault().newWatchService();
         } catch (IOException e) {
@@ -39,7 +44,7 @@ public class PluginManager {
 
         Thread fileWatchingThread = new Thread(new Runnable() {
             @Override
-            public void run () {
+            public void run() {
                 while (true) {
                     try {
                         tickFileWatching();
@@ -55,7 +60,7 @@ public class PluginManager {
         fileWatchingThread.start();
     }
 
-    private void tickFileWatching () {
+    private void tickFileWatching() {
         for (; ; ) {
 
             // wait for key to be signalled
@@ -85,7 +90,6 @@ public class PluginManager {
                 System.out.println();
 
                 reloadAllPlugins(dir);
-
             }
 
             // reset key and remove from set if directory no longer accessible
@@ -102,7 +106,7 @@ public class PluginManager {
     }
 
 
-    private void addFileTracker (FileHandle pluginDir) {
+    private void addFileTracker(FileHandle pluginDir) {
 
         if (watching.containsValue(pluginDir)) {
             return;
@@ -112,20 +116,18 @@ public class PluginManager {
         try {
             register = pluginDir.file().toPath().register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
             watching.put(register, pluginDir);
-
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
-    public void loadInternalPlugins () {
+    public void loadInternalPlugins() {
         reloadAllPlugins(Gdx.files.internal("plugins/"));
 
         //Register file watcher for internal (only locally actually, in deployment internal is stuck inside the jar
     }
 
-    public void reloadAllPlugins (FileHandle pluginDir) {
+    public void reloadAllPlugins(FileHandle pluginDir) {
 
         FileHandle[] list = pluginDir.list();
 
@@ -139,7 +141,7 @@ public class PluginManager {
     }
 
 
-    private void loadPluginProvider (FileHandle pluginJar) {
+    private void loadPluginProvider(FileHandle pluginJar) {
 
         try {
             JarFile jarFile = new JarFile(pluginJar.file());
@@ -188,18 +190,16 @@ public class PluginManager {
                 } else {
                     registerPluginsForPluginDefinition(pluginDefinition, providerClazz, classes);
                 }
-
             } else {
                 System.out.println("Skipping invalid plugin: No plugin.yaml found for : " + pluginJar.name());
             }
-
         } catch (IOException | ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException | ReflectionException e) {
             e.printStackTrace();
         }
     }
 
-    private void registerPluginsForPluginDefinition (PluginDefinition pluginDefinition, Class<? extends TalosPluginProvider> providerClazz, HashMap<String, Class<?>> classes) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException,
-        ReflectionException {
+    private void registerPluginsForPluginDefinition(PluginDefinition pluginDefinition, Class<? extends TalosPluginProvider> providerClazz, HashMap<String, Class<?>> classes) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException,
+            ReflectionException {
         TalosPluginProvider talosPluginProvider = providerClazz.newInstance();
         talosPluginProvider.setPluginDefinition(pluginDefinition);
         talosPluginProvider.loadPlugins(classes);
@@ -207,11 +207,10 @@ public class PluginManager {
         pluginProviders.add(talosPluginProvider);
 
         talosPluginProvider.init();
-
     }
 
 
-    private TalosPlugin findPlugin (String pluginName) {
+    private TalosPlugin findPlugin(String pluginName) {
         for (TalosPluginProvider pluginProvider : pluginProviders) {
             ArrayList<TalosPlugin> plugins = pluginProvider.getPlugins();
             for (TalosPlugin plugin : plugins) {
@@ -223,7 +222,7 @@ public class PluginManager {
         return null;
     }
 
-    public Class<? extends NodeWidget> getCustomNodeWidget (String className) {
+    public Class<? extends NodeWidget> getCustomNodeWidget(String className) {
         for (TalosPluginProvider pluginProvider : pluginProviders) {
             Class<? extends NodeWidget> customNodeWidget = pluginProvider.getCustomNodeWidget(className);
             if (customNodeWidget != null) {
@@ -232,5 +231,4 @@ public class PluginManager {
         }
         return null;
     }
-
 }

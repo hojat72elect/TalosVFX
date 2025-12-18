@@ -7,31 +7,26 @@ import com.talosvfx.talos.runtime.vfx.ParticleEmitterDescriptor;
 import com.talosvfx.talos.runtime.vfx.ScopePayload;
 import com.talosvfx.talos.runtime.vfx.utils.VectorField;
 import com.talosvfx.talos.runtime.vfx.values.NumericalValue;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class VectorFieldModule extends AbstractModule {
 
-    private static final Logger logger = LoggerFactory.getLogger(VectorFieldModule.class);
-
     public static final int SIZE_SCALE = 0;
     public static final int FORCE_SCALE = 1;
     public static final int POSITION = 2;
-
     public static final int ANGLE = 0;
     public static final int VELOCITY = 1;
-
-
+    private static final Logger logger = LoggerFactory.getLogger(VectorFieldModule.class);
+    public String fgaFileName;
     NumericalValue scale;
     NumericalValue force;
     NumericalValue position;
     NumericalValue angle;
     NumericalValue velocity;
-
     Vector2 pos = new Vector2();
     Vector2 tmp = new Vector2();
-
-    public String fgaFileName;
     VectorField vectorField;
 
     @Override
@@ -45,15 +40,15 @@ public class VectorFieldModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
-        if(vectorField == null) return;
+    public void processCustomValues() {
+        if (vectorField == null) return;
         float scaleVal = 1f;
-        if(!scale.isEmpty()) {
+        if (!scale.isEmpty()) {
             scaleVal = scale.getFloat();
         }
 
         float forceVal = 1f;
-        if(!force.isEmpty()) {
+        if (!force.isEmpty()) {
             forceVal = force.getFloat();
         }
 

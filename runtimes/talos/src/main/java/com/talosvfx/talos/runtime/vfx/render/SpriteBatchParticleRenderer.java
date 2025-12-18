@@ -24,14 +24,9 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.PolygonBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.utils.Array;
 import com.talosvfx.talos.runtime.vfx.IEmitter;
 import com.talosvfx.talos.runtime.vfx.Particle;
 import com.talosvfx.talos.runtime.vfx.ParticleEffectInstance;
-import com.talosvfx.talos.runtime.vfx.ParticlePointData;
-import com.talosvfx.talos.runtime.vfx.ParticlePointGroup;
 import com.talosvfx.talos.runtime.vfx.ScopePayload;
 import com.talosvfx.talos.runtime.vfx.modules.DrawableModule;
 import com.talosvfx.talos.runtime.vfx.modules.MaterialModule;
@@ -42,58 +37,62 @@ import com.talosvfx.talos.runtime.vfx.utils.DefaultShaders;
 
 public class SpriteBatchParticleRenderer implements ParticleRenderer {
 
-	public PolygonBatch batch;
+    public PolygonBatch batch;
 
-	Color color = new Color(Color.WHITE);
-	private ShaderProgram blendAddShader;
-	private Camera camera;
+    Color color = new Color(Color.WHITE);
+    private ShaderProgram blendAddShader;
+    private Camera camera;
     private boolean pma;
 
-    public SpriteBatchParticleRenderer () {
-		initShaders();
-	}
+    public SpriteBatchParticleRenderer() {
+        initShaders();
+    }
 
-	public SpriteBatchParticleRenderer (Camera camera) {
-		this();
-		this.camera = camera;
-	}
+    public SpriteBatchParticleRenderer(Camera camera) {
+        this();
+        this.camera = camera;
+    }
 
-	public SpriteBatchParticleRenderer (Camera camera, PolygonBatch batch) {
-		this(camera);
-		this.batch = batch;
-	}
+    public SpriteBatchParticleRenderer(Camera camera, PolygonBatch batch) {
+        this(camera);
+        this.batch = batch;
+    }
 
-	private void initShaders() {
-		blendAddShader = new ShaderProgram(
-				DefaultShaders.DEFAULT_VERTEX_SHADER,
-				DefaultShaders.BLEND_ADD_FRAGMENT_SHADER);
-	}
+    private void initShaders() {
+        blendAddShader = new ShaderProgram(
+                DefaultShaders.DEFAULT_VERTEX_SHADER,
+                DefaultShaders.BLEND_ADD_FRAGMENT_SHADER);
+    }
 
-	public void setBatch (PolygonBatch batch) {
-		this.batch = batch;
-	}
-
-	@Override
-	public Camera getCamera () {
-		return camera;
-	}
-
-    @Override
-    public void setPMA (boolean pma) {
-        this.pma = pma;
+    public void setBatch(PolygonBatch batch) {
+        this.batch = batch;
     }
 
     @Override
-    public boolean isPMA () {
+    public Camera getCamera() {
+        return camera;
+    }
+
+    public void setCamera(Camera camera) {
+        this.camera = camera;
+    }
+
+    @Override
+    public boolean isPMA() {
         return this.pma;
     }
 
     @Override
-	public void render (ParticleEffectInstance particleEffectInstance) {
+    public void setPMA(boolean pma) {
+        this.pma = pma;
+    }
 
-		for (int i = 0; i < particleEffectInstance.getEmitters().size; i++) {
-			final IEmitter particleEmitter = particleEffectInstance.getEmitters().get(i);
-			if(!particleEmitter.isVisible()) continue;
+    @Override
+    public void render(ParticleEffectInstance particleEffectInstance) {
+
+        for (int i = 0; i < particleEffectInstance.getEmitters().size; i++) {
+            final IEmitter particleEmitter = particleEffectInstance.getEmitters().get(i);
+            if (!particleEmitter.isVisible()) continue;
 
             if (!isPMA()) {
                 if (particleEmitter.isBlendAdd()) {
@@ -110,28 +109,28 @@ public class SpriteBatchParticleRenderer implements ParticleRenderer {
             }
 
 
-			ShaderProgram prevShader = batch.getShader();
-			if (particleEmitter.isBlendAdd() && prevShader != blendAddShader) {
-				//batch.setShader(blendAddShader); //TODO: let's leave any shader stuff to shader graph, and rest can be baked
-			}
+            ShaderProgram prevShader = batch.getShader();
+            if (particleEmitter.isBlendAdd() && prevShader != blendAddShader) {
+                //batch.setShader(blendAddShader); //TODO: let's leave any shader stuff to shader graph, and rest can be baked
+            }
 
-			final DrawableModule drawableModule = particleEmitter.getDrawableModule();
-			if (drawableModule == null) continue;
+            final DrawableModule drawableModule = particleEmitter.getDrawableModule();
+            if (drawableModule == null) continue;
 
-			MeshGeneratorModule meshGenerator = drawableModule.getMeshGenerator();
-			if (meshGenerator == null) continue;
-			meshGenerator.setRenderMode(false);
+            MeshGeneratorModule meshGenerator = drawableModule.getMeshGenerator();
+            if (meshGenerator == null) continue;
+            meshGenerator.setRenderMode(false);
 
-			if (drawableModule == null) continue;
-			if (drawableModule.getMaterialModule() == null) continue;
-			ParticlePointDataGeneratorModule particlePointDataGeneratorModule = drawableModule.getPointDataGenerator();
-			if (particlePointDataGeneratorModule == null) continue;
+            if (drawableModule == null) continue;
+            if (drawableModule.getMaterialModule() == null) continue;
+            ParticlePointDataGeneratorModule particlePointDataGeneratorModule = drawableModule.getPointDataGenerator();
+            if (particlePointDataGeneratorModule == null) continue;
 
-			int cachedMode = particleEmitter.getScope().getRequestMode();
-			int cachedRequesterID = particleEmitter.getScope().getRequesterID();
+            int cachedMode = particleEmitter.getScope().getRequestMode();
+            int cachedRequesterID = particleEmitter.getScope().getRequesterID();
 
-			particleEmitter.getScope().setCurrentRequestMode(ScopePayload.SUB_PARTICLE_ALPHA);
-			meshGenerator.render(this, drawableModule.getMaterialModule(), particleEmitter.pointData());
+            particleEmitter.getScope().setCurrentRequestMode(ScopePayload.SUB_PARTICLE_ALPHA);
+            meshGenerator.render(this, drawableModule.getMaterialModule(), particleEmitter.pointData());
 
 //			batch.end();
 //			ShapeRenderer shapeRenderer = new ShapeRenderer();
@@ -148,44 +147,37 @@ public class SpriteBatchParticleRenderer implements ParticleRenderer {
 //			shapeRenderer.dispose();
 //			batch.begin();
 
-			particleEmitter.getScope().setCurrentRequestMode(cachedMode);
-			particleEmitter.getScope().setCurrentRequesterID(cachedRequesterID);
+            particleEmitter.getScope().setCurrentRequestMode(cachedMode);
+            particleEmitter.getScope().setCurrentRequesterID(cachedRequesterID);
 
 
- 			if (batch.getShader() != prevShader) {
- 				batch.setShader(prevShader);
-			}
-		}
-	}
+            if (batch.getShader() != prevShader) {
+                batch.setShader(prevShader);
+            }
+        }
+    }
 
-	@Override
-	public void render (float[] verts, MaterialModule materialModule) {
-		if (materialModule instanceof SpriteMaterialModule) {
-
-
-		}
-	}
-
-	@Override
-	public void render (float[] verts, int vertCount, short[] tris, int triCount, MaterialModule materialModule) {
-		if (materialModule instanceof SpriteMaterialModule) {
-			TextureRegion textureRegion = ((SpriteMaterialModule)materialModule).getTextureRegion();
-
-			final Texture texture = textureRegion.getTexture();
-
-			batch.draw(texture, verts, 0, vertCount, tris, 0, triCount);
-		}
-	}
-
-	private void renderParticle (Batch batch, Particle particle, float parentAlpha) {
-		color.set(Color.WHITE);
-		batch.setColor(color);
+    @Override
+    public void render(float[] verts, MaterialModule materialModule) {
+        if (materialModule instanceof SpriteMaterialModule) {
 
 
+        }
+    }
 
-	}
+    @Override
+    public void render(float[] verts, int vertCount, short[] tris, int triCount, MaterialModule materialModule) {
+        if (materialModule instanceof SpriteMaterialModule) {
+            TextureRegion textureRegion = ((SpriteMaterialModule) materialModule).getTextureRegion();
 
-	public void setCamera(Camera camera) {
-		this.camera = camera;
-	}
+            final Texture texture = textureRegion.getTexture();
+
+            batch.draw(texture, verts, 0, vertCount, tris, 0, triCount);
+        }
+    }
+
+    private void renderParticle(Batch batch, Particle particle, float parentAlpha) {
+        color.set(Color.WHITE);
+        batch.setColor(color);
+    }
 }

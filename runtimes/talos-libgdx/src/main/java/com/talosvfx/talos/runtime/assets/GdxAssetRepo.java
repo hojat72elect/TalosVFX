@@ -7,17 +7,16 @@ import com.talosvfx.talos.runtime.RuntimeContext;
 public class GdxAssetRepo extends RuntimeAssetRepository {
 
 
-	public void loadBundleFromFile (FileHandle repoFile) {
-		GameAssetsExportStructure gameAssetsExportStructure = new Json().fromJson(GameAssetsExportStructure.class, repoFile);
+    public void loadBundleFromFile(FileHandle repoFile) {
+        GameAssetsExportStructure gameAssetsExportStructure = new Json().fromJson(GameAssetsExportStructure.class, repoFile);
 
-		RuntimeContext.TalosContext talosContext = new RuntimeContext.TalosContext(gameAssetsExportStructure.talosIdentifier);
-		talosContext.setBaseAssetRepository(this);
+        RuntimeContext.TalosContext talosContext = new RuntimeContext.TalosContext(gameAssetsExportStructure.talosIdentifier);
+        talosContext.setBaseAssetRepository(this);
 
-		RuntimeContext.getInstance().registerContext(talosContext.getIdentifier(), talosContext);
+        RuntimeContext.getInstance().registerContext(talosContext.getIdentifier(), talosContext);
 
 
-		gameAssetsExportStructure.buildLayerIndices();
-		loadBundle(gameAssetsExportStructure, repoFile.parent());
-
-	}
+        gameAssetsExportStructure.buildLayerIndices();
+        loadBundle(gameAssetsExportStructure, repoFile.parent());
+    }
 }

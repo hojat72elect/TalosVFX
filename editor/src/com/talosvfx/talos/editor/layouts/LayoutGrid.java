@@ -17,11 +17,12 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.ObjectMap;
-import com.talosvfx.talos.runtime.assets.GameAssetType;
-import com.talosvfx.talos.runtime.assets.RawAsset;
 import com.talosvfx.talos.editor.project2.AppManager;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.utils.Toasts;
+import com.talosvfx.talos.runtime.assets.GameAssetType;
+import com.talosvfx.talos.runtime.assets.RawAsset;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,39 +32,32 @@ import java.util.UUID;
 public class LayoutGrid extends WidgetGroup implements Json.Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(LayoutGrid.class);
-
-    private DragAndDrop dragAndDrop;
-
     LayoutItem root;
-
     LayoutContent overItem;
     LayoutContent startItem;
-    private Skin skin;
-
-    private DragHitResult dragHitResult = new DragHitResult();
-
-    private ObjectMap<LayoutContentAppPair, DragAndDrop.Source> sources = new ObjectMap<>();
-    private ObjectMap<LayoutContent, DragAndDrop.Target> targets = new ObjectMap<>();
-
     float horizontalPercent = 0.3f;
     float verticalPercent = 0.3f;
-
     float rootHorizontalPercent = 0.03f;
     float rootVerticalPercent = 0.03f;
+    private DragAndDrop dragAndDrop;
+    private final Skin skin;
+    private final DragHitResult dragHitResult = new DragHitResult();
+    private final ObjectMap<LayoutContentAppPair, DragAndDrop.Source> sources = new ObjectMap<>();
+    private final ObjectMap<LayoutContent, DragAndDrop.Target> targets = new ObjectMap<>();
 
-    public LayoutGrid (Skin skin) {
+    public LayoutGrid(Skin skin) {
         this.skin = skin;
 
         dragAndDrop = new DragAndDrop();
         dragAndDrop.setKeepWithinStage(false);
     }
 
-    public void removeContent (LayoutContent content) {
+    public void removeContent(LayoutContent content) {
         removeContent(content, true);
     }
 
 
-    public void removeApp (LayoutContent layoutContent, LayoutApp layoutApp) {
+    public void removeApp(LayoutContent layoutContent, LayoutApp layoutApp) {
         //Find the content that has it and remove it
         layoutContent.removeContent(layoutApp);
         SharedResources.appManager.onAppRemoved(layoutApp);
@@ -71,10 +65,9 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         if (layoutContent.isEmpty()) {
             removeContent(layoutContent);
         }
-
     }
 
-    public void removeContent (LayoutContent content, boolean removeEmptyParent) {
+    public void removeContent(LayoutContent content, boolean removeEmptyParent) {
         removeDragTarget(content);
 
         if (content == root) {
@@ -85,7 +78,7 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         }
     }
 
-    private void removeRecursive (LayoutItem content, boolean removeEmpty) {
+    private void removeRecursive(LayoutItem content, boolean removeEmpty) {
         if (content.getParent() instanceof LayoutGrid) {
             reset();
             return;
@@ -98,10 +91,9 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         if (removeEmpty && parent.isEmpty()) {
             removeRecursive(parent, removeEmpty);
         }
-
     }
 
-    public void reset () {
+    public void reset() {
         if (this.root != null) {
             this.root.remove();
             this.root = null;
@@ -114,23 +106,23 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
     }
 
     @Override
-    public void draw (Batch batch, float parentAlpha) {
+    public void draw(Batch batch, float parentAlpha) {
         super.draw(batch, parentAlpha);
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         LayoutJsonStructure layoutJsonStructure = buildJsonFromObject(root);
         json.writeValue("structure", layoutJsonStructure);
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         LayoutJsonStructure layoutJsonStructure = json.readValue(LayoutJsonStructure.class, jsonData.get("structure"));
         System.out.println("got structure");
     }
 
-    public void setLayoutActive (LayoutContent layoutContent) {
+    public void setLayoutActive(LayoutContent layoutContent) {
         Array<LayoutContent> out = new Array<>();
         getAllLayoutContentsFlat(root, out);
 
@@ -140,11 +132,11 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         layoutContent.setLayoutFocused(true);
     }
 
-    public void getAllLayoutContentsFlat (Array<LayoutContent> out) {
+    public void getAllLayoutContentsFlat(Array<LayoutContent> out) {
         getAllLayoutContentsFlat(root, out);
     }
 
-    private void getAllLayoutContentsFlat (LayoutItem root, Array<LayoutContent> out) {
+    private void getAllLayoutContentsFlat(LayoutItem root, Array<LayoutContent> out) {
         if (root == null) return;
         if (root instanceof LayoutContent) {
             out.add((LayoutContent) root);
@@ -163,17 +155,7 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         }
     }
 
-
-    public enum LayoutDirection {
-        UP,
-        RIGHT,
-        DOWN,
-        LEFT,
-        TAB,
-        POP
-    }
-
-    public void addContent (LayoutItem content) {
+    public void addContent(LayoutItem content) {
         if (root == null) {
             root = content;
             addActor(root);
@@ -195,11 +177,9 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         }
 
         registerDragTargetRecursive(content);
-
-
     }
 
-    public void registerDragTargetRecursive (LayoutItem item) {
+    public void registerDragTargetRecursive(LayoutItem item) {
         if (item instanceof LayoutContent) {
             registerDragTarget((LayoutContent) item);
         } else if (item instanceof LayoutRow) {
@@ -217,11 +197,11 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         }
     }
 
-    void registerDragTarget (LayoutContent layoutContent) {
+    void registerDragTarget(LayoutContent layoutContent) {
         if (targets.containsKey(layoutContent)) return; //Don't register twice
         DragAndDrop.Target target = new DragAndDrop.Target(layoutContent) {
             @Override
-            public boolean drag (DragAndDrop.Source source, DragAndDrop.Payload payload, float x, float y, int pointer) {
+            public boolean drag(DragAndDrop.Source source, DragAndDrop.Payload payload, float x, float y, int pointer) {
 
                 //should just always be true
 
@@ -229,7 +209,7 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
             }
 
             @Override
-            public void drop (DragAndDrop.Source source, DragAndDrop.Payload payload, float x, float y, int pointer) {
+            public void drop(DragAndDrop.Source source, DragAndDrop.Payload payload, float x, float y, int pointer) {
                 DragHitResult hitResult = dragHitResult;
 
                 Object payloadObject = payload.getObject();
@@ -256,14 +236,13 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
                 } else {
                     dropContainer(layoutContentAppPair, dragHitResult.hit, dragHitResult.direction);
                 }
-
             }
         };
         dragAndDrop.addTarget(target);
         targets.put(layoutContent, target);
     }
 
-    public void removeDragTarget (LayoutContent content) {
+    public void removeDragTarget(LayoutContent content) {
         DragAndDrop.Target remove = targets.remove(content);
         dragAndDrop.removeTarget(remove);
     }
@@ -271,7 +250,7 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
     /*
     target is null when root should be used
      */
-    private void dropContainer (LayoutContentAppPair source, @Null LayoutContent target, LayoutDirection direction) {
+    private void dropContainer(LayoutContentAppPair source, @Null LayoutContent target, LayoutDirection direction) {
         //Here comes the logic
 
         LayoutContent parent = source.layoutContent;
@@ -294,10 +273,9 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         } else {
             placeContentRelative(target, direction, app);
         }
-
     }
 
-    public void placeContentRelative (LayoutContent target, LayoutDirection direction, LayoutApp app) {
+    public void placeContentRelative(LayoutContent target, LayoutDirection direction, LayoutApp app) {
         //Target
         switch (direction) {
 
@@ -323,7 +301,6 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
                     exchangeAndWrapToColumn(newColumn, target);
 
                     colTarget = newColumn;
-
                 }
 
                 LayoutContent newLayoutContent = new LayoutContent(skin, this);
@@ -355,7 +332,6 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
                     exchangeAndWrapToRow(newRow, target);
 
                     rowTarget = newRow;
-
                 }
 
                 LayoutContent newLayoutContent = new LayoutContent(skin, this);
@@ -376,7 +352,7 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         }
     }
 
-    public void placeContentInRoot (LayoutDirection direction, LayoutApp app) {
+    public void placeContentInRoot(LayoutDirection direction, LayoutApp app) {
         //Target
         switch (direction) {
 
@@ -391,7 +367,6 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
                     newLayoutContent.addContent(app);
 
                     ((LayoutColumn) root).addRowContainer(newLayoutContent, direction == LayoutDirection.UP);
-
                 } else {
                     LayoutItem oldRoot = root;
                     removeActor(oldRoot);
@@ -419,7 +394,6 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
 
                     root = newColumn;
                 }
-
             }
             break;
 
@@ -434,7 +408,6 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
                     newLayoutContent.addContent(app);
 
                     ((LayoutRow) root).addColumnContainer(newLayoutContent, direction == LayoutDirection.LEFT);
-
                 } else {
                     LayoutItem oldRoot = root;
                     removeActor(oldRoot);
@@ -470,7 +443,7 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         }
     }
 
-    private void exchangeAndWrapToColumn (LayoutColumn newColumn, LayoutContent target) {
+    private void exchangeAndWrapToColumn(LayoutColumn newColumn, LayoutContent target) {
 
         //We need to swap this column with the parent
         LayoutItem parent = (LayoutItem) target.getParent();
@@ -484,7 +457,7 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         newColumn.addRowContainer(target, false);
     }
 
-    private void exchangeAndWrapToRow (LayoutRow newRow, LayoutContent target) {
+    private void exchangeAndWrapToRow(LayoutRow newRow, LayoutContent target) {
 
         //We need to swap this column with the parent
         LayoutItem parent = (LayoutItem) target.getParent();
@@ -501,13 +474,13 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
 
     //Add each LayoutContent for drag and drop as a source
     //Add each LayoutContent for drag and drop as a target
-    void registerDragSource (LayoutContent parent, LayoutApp layoutApp, Actor actorToDrag) {
+    void registerDragSource(LayoutContent parent, LayoutApp layoutApp, Actor actorToDrag) {
 
         LayoutContentAppPair layoutContentAppObject = new LayoutContentAppPair(parent, layoutApp);
 
         DragAndDrop.Source source = new DragAndDrop.Source(actorToDrag) {
             @Override
-            public DragAndDrop.Payload dragStart (InputEvent event, float x, float y, int pointer) {
+            public DragAndDrop.Payload dragStart(InputEvent event, float x, float y, int pointer) {
                 DragAndDrop.Payload payload = new DragAndDrop.Payload();
 
                 LayoutContent dummy = new LayoutContent(skin, LayoutGrid.this);
@@ -525,7 +498,7 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
             }
 
             @Override
-            public void drag (InputEvent event, float x, float y, int pointer) {
+            public void drag(InputEvent event, float x, float y, int pointer) {
                 super.drag(event, x, y, pointer);
 
                 float unhitSize = 200;
@@ -646,13 +619,11 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
                         dragActor.setSize(unhitSize, unhitSize);
                         dragAndDrop.setDragActorPosition(dragActor.getWidth() / 2f, -dragActor.getHeight() / 2f);
                     }
-
                 }
-
             }
 
             @Override
-            public void dragStop (InputEvent event, float x, float y, int pointer, DragAndDrop.Payload payload, DragAndDrop.Target target) {
+            public void dragStop(InputEvent event, float x, float y, int pointer, DragAndDrop.Payload payload, DragAndDrop.Target target) {
                 super.dragStop(event, x, y, pointer, payload, target);
                 startItem = null;
                 dragHitResult.reset();
@@ -663,7 +634,7 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         sources.put(layoutContentAppObject, source);
     }
 
-    private void getDragHit (DragHitResult dragHitResult) {
+    private void getDragHit(DragHitResult dragHitResult) {
         dragHitResult.reset();
 
         int x = Gdx.input.getX();
@@ -712,7 +683,6 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
                     dragHitResult.direction = LayoutDirection.RIGHT;
                     return;
                 }
-
             } else {
                 //its going to be Y if it exists
                 if (vecForMainGrid.y < rootVerticalPercent) {
@@ -751,7 +721,6 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
                 dragHitResult.hit = overItem;
                 dragHitResult.direction = LayoutDirection.RIGHT;
             }
-
         } else {
 
             //its going to be Y if it exists
@@ -771,54 +740,10 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         if (dragHitResult.direction == null) { //Disable pop, not ready
 //			dragHitResult.direction = LayoutDirection.POP;
         }
-
-    }
-
-    static class LayoutContentAppPair {
-        public LayoutContent layoutContent;
-        public LayoutApp app;
-
-        public LayoutContentAppPair (LayoutContent parent, LayoutApp app) {
-            this.layoutContent = parent;
-            this.app = app;
-        }
-
-        @Override
-        public boolean equals (Object o) {
-            if (this == o)
-                return true;
-            if (o == null || getClass() != o.getClass())
-                return false;
-            LayoutContentAppPair that = (LayoutContentAppPair) o;
-            return Objects.equals(layoutContent, that.layoutContent) && Objects.equals(app, that.app);
-        }
-
-        @Override
-        public int hashCode () {
-            return Objects.hash(layoutContent, app);
-        }
-    }
-
-    static class DragHitResult {
-        public LayoutContent hit;
-        public boolean root;
-        public LayoutDirection direction;
-
-        void reset () {
-            hit = null;
-            root = false;
-            direction = null;
-        }
-
-        @Override
-        public String toString () {
-            String hitName = hit != null ? hit.getClass().getSimpleName() : "null";
-            return "DragHitResult{" + "hit=" + hitName + ", root=" + root + ", direction=" + direction + '}';
-        }
     }
 
     @Override
-    public void layout () {
+    public void layout() {
         super.layout();
         if (root == null)
             return;
@@ -827,7 +752,7 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
     }
 
     @Override
-    public void act (float delta) {
+    public void act(float delta) {
         super.act(delta);
         if (root == null) {
             return;
@@ -858,7 +783,7 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         }
     }
 
-    private Actor getLayoutFromHit (Actor hit) {
+    private Actor getLayoutFromHit(Actor hit) {
         if (hit == null) return null;
 
         if (hit instanceof LayoutContent) return hit;
@@ -873,47 +798,22 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         return hit;
     }
 
-    enum LayoutType {
-        ROW,
-        COLUMN,
-        CONTENT,
-        APP
-    }
-
-    public static class LayoutJsonStructure {
-        LayoutType type;
-        String appID;
-
-        boolean tabActive;
-
-        String baseAppClazz;
-        String gameAssetIdentifier;
-        String gameAssetUniqueIdentifier;
-        GameAssetType gameAssetType;
-
-        float relativeWidth;
-        float relativeHeight;
-        Array<LayoutJsonStructure> children = new Array<>();
-    }
-
-    public String writeToJsonString () {
+    public String writeToJsonString() {
         Json json = new Json();
         LayoutJsonStructure layoutJsonStructure = buildJsonFromObject(root);
         return json.prettyPrint(layoutJsonStructure);
     }
 
-
-    public void writeToJson (FileHandle handle) {
+    public void writeToJson(FileHandle handle) {
         Json json = new Json();
 
         LayoutJsonStructure rootJson = buildJsonFromObject(root);
 
         String result = json.prettyPrint(rootJson);
         handle.writeString(result, false);
-
     }
 
-    public void readFromJsonStructure (LayoutJsonStructure layoutJsonStructure) {
+    public void readFromJsonStructure(LayoutJsonStructure layoutJsonStructure) {
         LayoutItem parent = null;
 
         if (layoutJsonStructure.type == LayoutType.COLUMN) {
@@ -936,13 +836,13 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         addContent(parent);
     }
 
-    public void readFromJson (JsonValue jsonLayoutRepresentation) {
+    public void readFromJson(JsonValue jsonLayoutRepresentation) {
         Json json = new Json();
         LayoutJsonStructure layoutJsonStructure = json.readValue(LayoutJsonStructure.class, jsonLayoutRepresentation);
         readFromJsonStructure(layoutJsonStructure);
     }
 
-    private void loadChildren (LayoutItem parent, LayoutJsonStructure layoutJsonStructure) {
+    private void loadChildren(LayoutItem parent, LayoutJsonStructure layoutJsonStructure) {
         Array<LayoutJsonStructure> children = layoutJsonStructure.children;
 
         if (children != null && !children.isEmpty()) {
@@ -957,7 +857,6 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
                     layoutColumn.setRelativeHeight(child.relativeHeight);
 
                     layoutItem = layoutColumn;
-
                 } else if (child.type == LayoutType.ROW) {
                     LayoutRow layoutRow = new LayoutRow(skin, this);
                     layoutRow.setRelativeWidth(child.relativeWidth);
@@ -970,7 +869,6 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
                     layoutContent.setRelativeHeight(child.relativeHeight);
 
                     layoutItem = layoutContent;
-
                 } else if (child.type == LayoutType.APP) {
 
                     String appID = child.appID;
@@ -996,7 +894,6 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
 
                         LayoutContent parent1 = (LayoutContent) parent;
                         parent1.addContent(gridAppReference, false, false);
-
                     } catch (Exception e) {
                         e.printStackTrace();
                         logger.error("Error creating app from layout", e);
@@ -1016,7 +913,6 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
                     //Load the children
 
                     loadChildren(layoutItem, child);
-
                 }
             }
         }
@@ -1025,8 +921,7 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
             ((LayoutContent) parent).sortToActiveTab();
     }
 
-
-    private LayoutJsonStructure buildJsonFromObject (LayoutItem root) {
+    private LayoutJsonStructure buildJsonFromObject(LayoutItem root) {
         LayoutJsonStructure jsonStructure = new LayoutJsonStructure();
 
         if (root instanceof LayoutColumn) {
@@ -1075,4 +970,79 @@ public class LayoutGrid extends WidgetGroup implements Json.Serializable {
         return jsonStructure;
     }
 
+
+    public enum LayoutDirection {
+        UP,
+        RIGHT,
+        DOWN,
+        LEFT,
+        TAB,
+        POP
+    }
+
+    enum LayoutType {
+        ROW,
+        COLUMN,
+        CONTENT,
+        APP
+    }
+
+    static class LayoutContentAppPair {
+        public LayoutContent layoutContent;
+        public LayoutApp app;
+
+        public LayoutContentAppPair(LayoutContent parent, LayoutApp app) {
+            this.layoutContent = parent;
+            this.app = app;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+            LayoutContentAppPair that = (LayoutContentAppPair) o;
+            return Objects.equals(layoutContent, that.layoutContent) && Objects.equals(app, that.app);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(layoutContent, app);
+        }
+    }
+
+    static class DragHitResult {
+        public LayoutContent hit;
+        public boolean root;
+        public LayoutDirection direction;
+
+        void reset() {
+            hit = null;
+            root = false;
+            direction = null;
+        }
+
+        @Override
+        public String toString() {
+            String hitName = hit != null ? hit.getClass().getSimpleName() : "null";
+            return "DragHitResult{" + "hit=" + hitName + ", root=" + root + ", direction=" + direction + '}';
+        }
+    }
+
+    public static class LayoutJsonStructure {
+        LayoutType type;
+        String appID;
+
+        boolean tabActive;
+
+        String baseAppClazz;
+        String gameAssetIdentifier;
+        String gameAssetUniqueIdentifier;
+        GameAssetType gameAssetType;
+
+        float relativeWidth;
+        float relativeHeight;
+        Array<LayoutJsonStructure> children = new Array<>();
+    }
 }

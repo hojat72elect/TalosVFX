@@ -10,7 +10,7 @@ public class ShakeInterpolation extends Interpolation {
 
     /**
      * @param frequency amount of shakes till complete
-     * @param seed please pass seed from 0 - 1
+     * @param seed      please pass seed from 0 - 1
      */
     public ShakeInterpolation(float frequency, float seed) {
         this.frequency = frequency;

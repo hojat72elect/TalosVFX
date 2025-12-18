@@ -28,137 +28,134 @@ import java.util.Comparator;
 
 public class GradientColorModule extends AbstractModule {
 
-	public static final int ALPHA = 0;
-	public static final int OUTPUT = 0;
+    public static final int ALPHA = 0;
+    public static final int OUTPUT = 0;
 
-	NumericalValue alpha;
-	NumericalValue output;
+    NumericalValue alpha;
+    NumericalValue output;
+    Comparator<ColorPoint> comparator = new Comparator<ColorPoint>() {
+        @Override
+        public int compare(ColorPoint o1, ColorPoint o2) {
+            if (o1.pos < o2.pos)
+                return -1;
+            if (o1.pos > o2.pos)
+                return 1;
 
-	private Array<ColorPoint> points;
+            return 0;
+        }
+    };
+    private Array<ColorPoint> points;
+    private final Color tmpColor = new Color();
 
-	private Color tmpColor = new Color();
+    @Override
+    public void init() {
+        super.init();
+        resetPoints();
+    }
 
-	Comparator<ColorPoint> comparator = new Comparator<ColorPoint>() {
-		@Override
-		public int compare (ColorPoint o1, ColorPoint o2) {
-			if (o1.pos < o2.pos)
-				return -1;
-			if (o1.pos > o2.pos)
-				return 1;
+    @Override
+    protected void defineSlots() {
+        alpha = createAlphaInputSlot(ALPHA);
 
-			return 0;
-		}
-	};
+        output = createOutputSlot(OUTPUT);
+    }
 
-	@Override
-	public void init () {
-		super.init();
-		resetPoints();
-	}
+    @Override
+    public void processCustomValues() {
+        interpolate(alpha.getFloat(), output);
+    }
 
-	@Override
-	protected void defineSlots () {
-		alpha = createAlphaInputSlot(ALPHA);
+    private void interpolate(float alpha, NumericalValue output) {
+        Color color = getPosColor(alpha);
+        output.set(color.r, color.g, color.b, 1f);
+    }
 
-		output = createOutputSlot(OUTPUT);
-	}
+    public Array<ColorPoint> getPoints() {
+        return points;
+    }
 
-	@Override
-	public void processCustomValues () {
-		interpolate(alpha.getFloat(), output);
-	}
+    public void setPoints(Array<ColorPoint> from) {
+        points.clear();
+        for (ColorPoint fromPoint : from) {
+            ColorPoint point = new ColorPoint(fromPoint.color, fromPoint.pos);
+            points.add(point);
+        }
+    }
 
-	private void interpolate (float alpha, NumericalValue output) {
-		Color color = getPosColor(alpha);
-		output.set(color.r, color.g, color.b, 1f);
-	}
+    private void resetPoints() {
+        // need to guarantee at least one point
+        points = new Array<>();
+        ColorPoint colorPoint = new ColorPoint();
+        colorPoint.pos = 0;
+        colorPoint.color.set(255 / 255f, 68 / 255f, 26 / 255f, 1f);
+        points.add(colorPoint);
+    }
 
-	public Array<ColorPoint> getPoints () {
-		return points;
-	}
+    public ColorPoint createPoint(Color color, float pos) {
+        ColorPoint colorPoint = new ColorPoint();
+        colorPoint.pos = pos;
+        colorPoint.color.set(color);
+        points.add(colorPoint);
 
-	private void resetPoints () {
-		// need to guarantee at least one point
-		points = new Array<>();
-		ColorPoint colorPoint = new ColorPoint();
-		colorPoint.pos = 0;
-		colorPoint.color.set(255 / 255f, 68 / 255f, 26 / 255f, 1f);
-		points.add(colorPoint);
-	}
+        points.sort(comparator);
 
-	public ColorPoint createPoint (Color color, float pos) {
-		ColorPoint colorPoint = new ColorPoint();
-		colorPoint.pos = pos;
-		colorPoint.color.set(color);
-		points.add(colorPoint);
+        return colorPoint;
+    }
 
-		points.sort(comparator);
+    public void removePoint(int hitIndex) {
+        if (points.size <= 1)
+            return;
+        points.removeIndex(hitIndex);
+    }
 
-		return colorPoint;
-	}
+    public Color getPosColor(float pos) {
 
-	public void removePoint (int hitIndex) {
-		if (points.size <= 1)
-			return;
-		points.removeIndex(hitIndex);
-	}
+        if (pos <= points.get(0).pos) {
+            tmpColor.set(points.get(0).color);
+        }
 
-	public Color getPosColor (float pos) {
+        if (pos >= points.get(points.size - 1).pos) {
+            tmpColor.set(points.get(points.size - 1).color);
+        }
 
-		if (pos <= points.get(0).pos) {
-			tmpColor.set(points.get(0).color);
-		}
+        for (int i = 0; i < points.size - 1; i++) {
+            if (points.get(i).pos < pos && points.get(i + 1).pos > pos) {
+                // found it
 
-		if (pos >= points.get(points.size - 1).pos) {
-			tmpColor.set(points.get(points.size - 1).color);
-		}
+                if (points.get(i + 1).pos == points.get(i).pos) {
+                    tmpColor.set(points.get(i).color);
+                } else {
+                    float localAlpha = (pos - points.get(i).pos) / (points.get(i + 1).pos - points.get(i).pos);
+                    tmpColor.r = Interpolation.linear.apply(points.get(i).color.r, points.get(i + 1).color.r, localAlpha);
+                    tmpColor.g = Interpolation.linear.apply(points.get(i).color.g, points.get(i + 1).color.g, localAlpha);
+                    tmpColor.b = Interpolation.linear.apply(points.get(i).color.b, points.get(i + 1).color.b, localAlpha);
+                }
+                break;
+            }
+        }
 
-		for (int i = 0; i < points.size - 1; i++) {
-			if (points.get(i).pos < pos && points.get(i + 1).pos > pos) {
-				// found it
+        return tmpColor;
+    }
 
-				if (points.get(i + 1).pos == points.get(i).pos) {
-					tmpColor.set(points.get(i).color);
-				} else {
-					float localAlpha = (pos - points.get(i).pos) / (points.get(i + 1).pos - points.get(i).pos);
-					tmpColor.r = Interpolation.linear.apply(points.get(i).color.r, points.get(i + 1).color.r, localAlpha);
-					tmpColor.g = Interpolation.linear.apply(points.get(i).color.g, points.get(i + 1).color.g, localAlpha);
-					tmpColor.b = Interpolation.linear.apply(points.get(i).color.b, points.get(i + 1).color.b, localAlpha);
-				}
-				break;
-			}
-		}
-
-		return tmpColor;
-	}
-
-	public void setPoints (Array<ColorPoint> from) {
-		points.clear();
-		for (ColorPoint fromPoint : from) {
-			ColorPoint point = new ColorPoint(fromPoint.color, fromPoint.pos);
-			points.add(point);
-		}
-	}
-
-	@Override
-	public void write (Json json) {
-		super.write(json);
-		Array<ColorPoint> points = getPoints();
-		json.writeArrayStart("points");
-		for (ColorPoint point : points) {
+    @Override
+    public void write(Json json) {
+        super.write(json);
+        Array<ColorPoint> points = getPoints();
+        json.writeArrayStart("points");
+        for (ColorPoint point : points) {
             json.writeObjectStart();
             json.writeValue("r", point.color.r);
             json.writeValue("g", point.color.g);
             json.writeValue("b", point.color.b);
             json.writeValue("pos", point.pos);
             json.writeObjectEnd();
-		}
-		json.writeArrayEnd();
-	}
+        }
+        json.writeArrayEnd();
+    }
 
-	@Override
-	public void read (Json json, JsonValue jsonData) {
-		super.read(json, jsonData);
+    @Override
+    public void read(Json json, JsonValue jsonData) {
+        super.read(json, jsonData);
         points.clear();
         final JsonValue jsonPpoints = jsonData.get("points");
         for (JsonValue point : jsonPpoints) {

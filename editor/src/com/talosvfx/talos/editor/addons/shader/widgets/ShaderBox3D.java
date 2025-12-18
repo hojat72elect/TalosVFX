@@ -2,7 +2,11 @@ package com.talosvfx.talos.editor.addons.shader.widgets;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
@@ -12,17 +16,16 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.talosvfx.talos.editor.utils.WavefrontReader;
 import com.talosvfx.talos.runtime.vfx.shaders.ShaderBuilder;
+
 public class ShaderBox3D extends ShaderBox {
 
-    private FrameBuffer frameBuffer;
     private final Mesh mesh;
-    private ShaderProgram spriteShader;
     public PerspectiveCamera cam;
-    private TextureRegion region;
-
-    private float a = 0;
-
     protected Texture white;
+    private final FrameBuffer frameBuffer;
+    private final ShaderProgram spriteShader;
+    private final TextureRegion region;
+    private float a = 0;
 
     public ShaderBox3D() {
         white = new Texture(Gdx.files.internal("white.png")); //TODO: not cool
@@ -31,7 +34,7 @@ public class ShaderBox3D extends ShaderBox {
         frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, 512, 512, true, false);
         cam = new PerspectiveCamera(67, 3, 3);
         cam.position.set(1f, 1f, 1f);
-        cam.lookAt(0,0,0);
+        cam.lookAt(0, 0, 0);
         cam.near = 0f;
         cam.far = 10f;
         cam.update();
@@ -61,7 +64,7 @@ public class ShaderBox3D extends ShaderBox {
     @Override
     public void draw(Batch batch, float parentAlpha) {
         a += Gdx.graphics.getDeltaTime();
-        cam.position.set(MathUtils.cos(a) * 1f, MathUtils.sin(a) * 1f, 1f);
+        cam.position.set(MathUtils.cos(a), MathUtils.sin(a), 1f);
         cam.lookAt(0, 0, 0);
         cam.near = 0.01f;
         cam.far = 100f;
@@ -78,8 +81,8 @@ public class ShaderBox3D extends ShaderBox {
     }
 
     @Override
-    protected void drawCall (Batch batch) {
-        if (shaderProgram== null) return;
+    protected void drawCall(Batch batch) {
+        if (shaderProgram == null) return;
 
         batch.end();
 
@@ -108,8 +111,10 @@ public class ShaderBox3D extends ShaderBox {
         batch.setShader(spriteShader);
         batch.begin();
         region.setTexture(colorBufferTexture);
-        region.setU(0);region.setV(0);
-        region.setU2(1);region.setV2(1);
-        batch.draw(region, getX(), getY(), getWidth()/2f, getHeight()/2f, getWidth(), getHeight(), 1f, -1f, 0);
+        region.setU(0);
+        region.setV(0);
+        region.setU2(1);
+        region.setV2(1);
+        batch.draw(region, getX(), getY(), getWidth() / 2f, getHeight() / 2f, getWidth(), getHeight(), 1f, -1f, 0);
     }
 }

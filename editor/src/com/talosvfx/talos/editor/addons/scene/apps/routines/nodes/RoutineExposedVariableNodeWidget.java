@@ -25,19 +25,19 @@ public class RoutineExposedVariableNodeWidget extends RoutineNodeWidget {
 
 
     @Override
-    protected void writeProperties (Json json) {
+    protected void writeProperties(Json json) {
         super.writeProperties(json);
         json.writeValue("index", index);
     }
 
     @Override
-    protected void readProperties (JsonValue properties) {
+    protected void readProperties(JsonValue properties) {
         super.readProperties(properties);
         index = properties.getInt("index", index);
     }
 
     @Override
-    public void constructNode (XmlReader.Element module) {
+    public void constructNode(XmlReader.Element module) {
         super.constructNode(module);
         TextValueWidget textValueWidget = (TextValueWidget) getWidget("key");
         textValueWidget.setTouchable(Touchable.disabled);

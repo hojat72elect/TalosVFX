@@ -16,12 +16,8 @@
 
 package com.talosvfx.talos.runtime.vfx.modules;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.talosvfx.talos.runtime.RuntimeContext;
@@ -35,107 +31,104 @@ import com.talosvfx.talos.runtime.vfx.values.ModuleValue;
 public class SpriteMaterialModule extends MaterialModule implements GameResourceOwner<AtlasSprite>, GameAsset.GameAssetUpdateListener {
 
 
-	private transient TextureAtlas.AtlasSprite region;
+    public GameAsset<AtlasSprite> asset;
+    private transient TextureAtlas.AtlasSprite region;
+    /**
+     * To be removed, here for backwards compatibility
+     */
+    @Deprecated
+    private String assetIdentifier = "white";
+    private ModuleValue<SpriteMaterialModule> moduleOutput;
 
-	public GameAsset<AtlasSprite> asset;
+    @Override
+    protected void defineSlots() {
+        moduleOutput = new ModuleValue<>();
+        moduleOutput.setModule(this);
 
-	/**
-	 * To be removed, here for backwards compatibility
-	 */
-	@Deprecated
-	private String assetIdentifier = "white";
-	private ModuleValue<SpriteMaterialModule> moduleOutput;
+        createOutputSlot(MATERIAL_MODULE, moduleOutput);
+    }
 
-	@Override
-	protected void defineSlots () {
-		moduleOutput = new ModuleValue<>();
-		moduleOutput.setModule(this);
+    @Override
+    public void processCustomValues() {
+    }
 
-		createOutputSlot(MATERIAL_MODULE, moduleOutput);
-	}
+    @Override
+    public void write(Json json) {
+        super.write(json);
 
-	@Override
-	public void processCustomValues () {
-	}
+        GameResourceOwner.writeGameAsset(json, this);
+    }
 
-	@Override
-	public void write (Json json) {
-		super.write(json);
+    @Override
+    public void read(Json json, JsonValue jsonData) {
+        super.read(json, jsonData);
 
-		GameResourceOwner.writeGameAsset(json, this);
-	}
+        //deprecated
+        assetIdentifier = jsonData.getString("asset", "white");
 
-	@Override
-	public void read (Json json, JsonValue jsonData) {
-		super.read(json, jsonData);
+        GameAsset<AtlasSprite> asset = GameResourceOwner.readAsset(json, jsonData);
+        setGameAsset(asset);
+    }
 
-		//deprecated
-		assetIdentifier = jsonData.getString("asset", "white");
+    public void setToDefault() {
+        BaseAssetRepository baseAssetRepository = RuntimeContext.getInstance().getEditorContext().getBaseAssetRepository();
+        GameAsset<AtlasSprite> defaultValue = baseAssetRepository.getAssetForIdentifier("white", GameAssetType.SPRITE);
+        setGameAsset(defaultValue);
+    }
 
-		GameAsset<AtlasSprite> asset = GameResourceOwner.readAsset(json, jsonData);
-		setGameAsset(asset);
-	}
+    @Override
+    public void onUpdate() {
+        if (asset != null && !asset.isBroken()) {
+            region = new TextureAtlas.AtlasSprite(asset.getResource());
+        }
+    }
 
-	public void setToDefault () {
-		BaseAssetRepository baseAssetRepository = RuntimeContext.getInstance().getEditorContext().getBaseAssetRepository();
-		GameAsset<AtlasSprite> defaultValue = baseAssetRepository.getAssetForIdentifier("white", GameAssetType.SPRITE);
-		setGameAsset(defaultValue);
-	}
+    @Override
+    public void remove() {
+        super.remove();
+        if (asset != null) {
+            asset.listeners.removeValue(this, true);
+        }
+    }
 
-	@Override
-	public void onUpdate () {
-		if (asset != null && !asset.isBroken()) {
-			region = new TextureAtlas.AtlasSprite(asset.getResource());
-		}
-	}
+    @Override
+    public GameAssetType getGameAssetType() {
+        return GameAssetType.SPRITE;
+    }
 
-	@Override
-	public void remove () {
-		super.remove();
-		if (asset != null) {
-			asset.listeners.removeValue(this, true);
-		}
-	}
+    @Override
+    public GameAsset<AtlasSprite> getGameResource() {
+        return asset;
+    }
 
-	@Override
-	public GameAssetType getGameAssetType () {
-		return GameAssetType.SPRITE;
-	}
+    @Override
+    public void setGameAsset(GameAsset<AtlasSprite> gameAsset) {
+        if (this.asset != null) {
+            //Remove from old game asset, it might be the same, but it may also have changed
+            this.asset.listeners.removeValue(this, true);
+        }
 
-	@Override
-	public GameAsset<AtlasSprite> getGameResource () {
-		return asset;
-	}
+        this.asset = gameAsset;
+        asset.listeners.add(this);
 
-	@Override
-	public void setGameAsset (GameAsset<AtlasSprite> gameAsset) {
-		if (this.asset != null) {
-			//Remove from old game asset, it might be the same, but it may also have changed
-			this.asset.listeners.removeValue(this, true);
-		}
+        if (asset != null && !asset.isBroken()) {
+            region = new TextureAtlas.AtlasSprite(asset.getResource());
+        } else {
+            System.out.println("Sprite material asset broken " + asset.nameIdentifier);
+        }
+    }
 
-		this.asset = gameAsset;
-		asset.listeners.add(this);
+    @Override
+    public void clearResource() {
+        if (asset != null) {
+            asset.listeners.removeValue(this, true);
+            asset = null;
+        }
+        region = null;
+        moduleOutput = null;
+    }
 
-		if (asset != null && !asset.isBroken()) {
-			region = new TextureAtlas.AtlasSprite(asset.getResource());
-		} else {
-			System.out.println("Sprite material asset broken " + asset.nameIdentifier);
-		}
-	}
-
-	@Override
-	public void clearResource () {
-		if (asset != null) {
-			asset.listeners.removeValue(this, true);
-			asset = null;
-		}
-		region = null;
-		moduleOutput = null;
-	}
-
-	public TextureAtlas.AtlasSprite getTextureRegion () {
-		return region;
-	}
-
+    public TextureAtlas.AtlasSprite getTextureRegion() {
+        return region;
+    }
 }

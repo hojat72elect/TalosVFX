@@ -1,37 +1,40 @@
 package com.talosvfx.talos.editor.addons.scene.apps.spriteeditor;
 
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.FocusListener;
-import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.addons.scene.SceneEditorWorkspace;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
 
 public class NumberPanel extends Table {
 
+    private final Table editing;
+    private final Table main;
     private float value;
     private float minValue;
     private float maxValue;
     private float step = 0.01f;
-    private Vector2 current = new Vector2();
-    private Vector2 last = new Vector2();
-    private Vector2 delta = new Vector2();
-    private Vector2 tmp = new Vector2();
-
-    private final Table editing;
-    private final Table main;
-
+    private final Vector2 current = new Vector2();
+    private final Vector2 last = new Vector2();
+    private final Vector2 delta = new Vector2();
+    private final Vector2 tmp = new Vector2();
     private Label valueLabel;
     private TextField textField;
 
     private boolean isSelected;
     private boolean isHover;
 
-    private Table content = new Table();
+    private final Table content = new Table();
 
     private NumberPanel.NumberPanelListener numberPanelListener;
 
@@ -86,7 +89,7 @@ public class NumberPanel extends Table {
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 super.exit(event, x, y, pointer, toActor);
                 isHover = false;
-                if(pointer == -1 && !isDragging) {
+                if (pointer == -1 && !isDragging) {
                     setBackgrounds();
                 }
             }
@@ -131,7 +134,7 @@ public class NumberPanel extends Table {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
-                if(!dragged) {
+                if (!dragged) {
                     showEditMode();
                 }
             }
@@ -152,19 +155,19 @@ public class NumberPanel extends Table {
             @Override
             public void keyboardFocusChanged(FocusEvent event, Actor actor, boolean focused) {
                 super.keyboardFocusChanged(event, actor, focused);
-                if(!focused) {
+                if (!focused) {
                     hideEditMode();
                 }
             }
         });
     }
 
-    public void setListener (NumberPanelListener listener) {
+    public void setListener(NumberPanelListener listener) {
         this.numberPanelListener = listener;
     }
 
     private void showEditMode() {
-        if(editing.isVisible()) return;
+        if (editing.isVisible()) return;
 
         getStage().setKeyboardFocus(textField);
         textField.selectAll();
@@ -197,12 +200,12 @@ public class NumberPanel extends Table {
         setBackgrounds();
     }
 
-    private void setBackgrounds () {
+    private void setBackgrounds() {
         String shape = ColorLibrary.SHAPE_SQUIRCLE;
 
         ColorLibrary.BackgroundColor color = ColorLibrary.BackgroundColor.LIGHT_GRAY;
 
-        if(isSelected) {
+        if (isSelected) {
             color = ColorLibrary.BackgroundColor.MID_GRAY;
         } else {
             if (isHover) {
@@ -213,9 +216,22 @@ public class NumberPanel extends Table {
         setBackground(ColorLibrary.obtainBackground(getSkin(), shape, color));
     }
 
+    public void setRange(float min, float max) {
+        this.minValue = min;
+        this.maxValue = max;
+    }
+
+    public void setStep(float step) {
+        this.step = step;
+    }
+
+    public Float getValue() {
+        return value;
+    }
+
     public void setValue(float value) {
-        if(value > maxValue) value = maxValue;
-        if(value < minValue) value = minValue;
+        if (value > maxValue) value = maxValue;
+        if (value < minValue) value = minValue;
 
         this.value = value;
 
@@ -230,22 +246,11 @@ public class NumberPanel extends Table {
         textField.setText(text);
     }
 
-    public void setRange(float min, float max) {
-        this.minValue = min;
-        this.maxValue = max;
-    }
-
-    public void setStep(float step) {
-        this.step = step;
-    }
-
-    public Float getValue () {
-        return value;
-    }
-
     public abstract static class NumberPanelListener {
         public abstract void typed(float before, float after);
+
         public abstract void dragged(float before, float after);
+
         public abstract void dragStop();
     }
 }

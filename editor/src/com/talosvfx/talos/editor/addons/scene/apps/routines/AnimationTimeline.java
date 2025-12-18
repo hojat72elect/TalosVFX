@@ -8,7 +8,7 @@ import com.talosvfx.talos.editor.widgets.ui.timeline.TimelineWidget;
 
 public class AnimationTimeline extends TimelineWidget<RoutineExecuteNodeWidget> {
 
-    private Array<TrackRow> tracks = new Array<TrackRow>();
+    private final Array<TrackRow> tracks = new Array<TrackRow>();
 
     public AnimationTimeline(Skin skin) {
         super(skin);

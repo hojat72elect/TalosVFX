@@ -2,6 +2,7 @@ package com.talosvfx.talos.runtime.routine.nodes;
 
 import com.talosvfx.talos.runtime.routine.AsyncRoutineNodeState;
 import com.talosvfx.talos.runtime.scene.GameObject;
+
 public class DelayNode extends AsyncRoutineNode<GameObject, AsyncRoutineNodeState<GameObject>> {
 
     @Override

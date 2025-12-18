@@ -12,24 +12,24 @@ public abstract class PropertyNumberWrapper<T extends Number> extends PropertyWr
     public boolean isRanged;
 
     @Override
-    public void collectAttributes (Array<String> attributes) {
+    public void collectAttributes(Array<String> attributes) {
         super.collectAttributes(attributes);
-        for (int i = 0; i < attributes.size; i+=2) {
+        for (int i = 0; i < attributes.size; i += 2) {
             String type = attributes.get(i);
             if (type.equals("minValue")) {
-                minValue = parseValueFromString(attributes.get(i+1));
+                minValue = parseValueFromString(attributes.get(i + 1));
             }
             if (type.equals("maxValue")) {
-                maxValue = parseValueFromString(attributes.get(i+1));
+                maxValue = parseValueFromString(attributes.get(i + 1));
             }
             if (type.equals("step")) {
-                step = parseValueFromString(attributes.get(i+1));
+                step = parseValueFromString(attributes.get(i + 1));
             }
         }
     }
 
     @Override
-    public PropertyNumberWrapper<T> clone () {
+    public PropertyNumberWrapper<T> clone() {
         PropertyNumberWrapper<T> clone = (PropertyNumberWrapper<T>) super.clone();
         clone.maxValue = this.maxValue;
         clone.minValue = this.minValue;
@@ -39,7 +39,7 @@ public abstract class PropertyNumberWrapper<T extends Number> extends PropertyWr
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("minValue", minValue);
         json.writeValue("maxValue", maxValue);

@@ -2,7 +2,11 @@ package com.talosvfx.talos.editor.nodes;
 
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.*;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.talosvfx.talos.editor.project2.SharedResources;
@@ -12,12 +16,12 @@ public abstract class EmptyWindow extends Table {
     private static final Vector2 tmpPosition = new Vector2();
     private static final Vector2 tmpSize = new Vector2();
     private static final int MOVE = 32;
+    protected int edge;
+    protected boolean dragging;
     boolean isMovable;
     boolean isModal;
     boolean isResizable;
     int resizeBorder;
-    protected int edge;
-    protected boolean dragging;
 
     public EmptyWindow() {
 
@@ -48,7 +52,7 @@ public abstract class EmptyWindow extends Table {
             float lastY;
 
             private void updateEdge(float x, float y) {
-                float border = (float)EmptyWindow.this.resizeBorder / 2.0F;
+                float border = (float) EmptyWindow.this.resizeBorder / 2.0F;
                 float width = EmptyWindow.this.getWidth();
                 float height = EmptyWindow.this.getHeight();
                 float padLeft = EmptyWindow.this.getPadLeft();
@@ -96,7 +100,6 @@ public abstract class EmptyWindow extends Table {
                 if (EmptyWindow.this.isMovable && EmptyWindow.this.edge == 0 && y <= height && y >= height - getDragPadTop() && x >= padLeft && x <= right) {
                     EmptyWindow.this.edge = 32;
                 }
-
             }
 
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
@@ -190,7 +193,7 @@ public abstract class EmptyWindow extends Table {
                         height += amountY;
                     }
 
-                    EmptyWindow.this.setBounds((float)Math.round(windowX), (float)Math.round(windowY), (float)Math.round(width), (float)Math.round(height));
+                    EmptyWindow.this.setBounds((float) Math.round(windowX), (float) Math.round(windowY), (float) Math.round(width), (float) Math.round(height));
                 }
             }
 
@@ -236,10 +239,10 @@ public abstract class EmptyWindow extends Table {
                 if (hit != null && hit != this) {
                     if (y <= height && y >= height - this.getPadTop() && x >= 0.0F && x <= this.getWidth()) {
                         Object current;
-                        for(current = hit; ((Actor)current).getParent() != this; current = ((Actor)current).getParent()) {
+                        for (current = hit; ((Actor) current).getParent() != this; current = ((Actor) current).getParent()) {
                         }
 
-                        if (this.getCell((Actor)current) != null) {
+                        if (this.getCell((Actor) current) != null) {
                             return this;
                         }
                     }

@@ -7,10 +7,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 public class DynamicSlider extends Slider {
 
-    private Skin skin;
-
     private final Drawable knobDrawable;
-
+    private Skin skin;
     private float dataSize;
     private float windowSize;
 
@@ -18,7 +16,7 @@ public class DynamicSlider extends Slider {
         super(0, 100, 1, vertical, skin);
         setSkin(skin);
 
-        String drawableName = "timeline-slider-" + (vertical? "vertical" : "horizontal");
+        String drawableName = "timeline-slider-" + (vertical ? "vertical" : "horizontal");
         knobDrawable = getSkin().newDrawable(drawableName);
         SliderStyle style = new SliderStyle();
         setStyle(style);
@@ -32,24 +30,23 @@ public class DynamicSlider extends Slider {
         getStyle().knobAfter = getSkin().getDrawable("timeline-slider-bg");
 
         knobDrawable.setMinWidth(0);
-
     }
 
     public void updateConfig(float dataSize, float windowSize) {
         this.dataSize = dataSize;
         this.windowSize = windowSize;
 
-        float sliderSizePercent = windowSize/dataSize;
+        float sliderSizePercent = windowSize / dataSize;
         sliderSizePercent = MathUtils.clamp(sliderSizePercent, 0, 1);
 
         knobDrawable.setMinWidth(sliderSizePercent * getWidth());
     }
 
-    private void setSkin(Skin skin) {
-        this.skin = skin;
-    }
-
     private Skin getSkin() {
         return skin;
+    }
+
+    private void setSkin(Skin skin) {
+        this.skin = skin;
     }
 }

@@ -16,10 +16,13 @@
 
 package com.talosvfx.talos.editor.wrappers;
 
-import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.runtime.vfx.Slot;
-
-import com.talosvfx.talos.runtime.vfx.modules.*;
+import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
+import com.talosvfx.talos.runtime.vfx.modules.CurveModule;
+import com.talosvfx.talos.runtime.vfx.modules.GradientColorModule;
+import com.talosvfx.talos.runtime.vfx.modules.ParticleModule;
+import com.talosvfx.talos.runtime.vfx.modules.StaticValueModule;
+import com.talosvfx.talos.runtime.vfx.modules.Vector3Module;
 
 public class ParticleModuleWrapper extends ModuleWrapper<ParticleModule> {
 
@@ -43,7 +46,7 @@ public class ParticleModuleWrapper extends ModuleWrapper<ParticleModule> {
 
         addSeparator(true);
 
-        addInputSlot("life",  ParticleModule.LIFE);
+        addInputSlot("life", ParticleModule.LIFE);
 
         addSeparator(true);
 
@@ -62,22 +65,21 @@ public class ParticleModuleWrapper extends ModuleWrapper<ParticleModule> {
         addInputSlot("forces", ParticleModule.FORCES);
         addInputSlot("drag", ParticleModule.DRAG);
 
-        addInputSlot("color",  ParticleModule.COLOR);
-        addInputSlot("transparency",  ParticleModule.TRANSPARENCY);
+        addInputSlot("color", ParticleModule.COLOR);
+        addInputSlot("transparency", ParticleModule.TRANSPARENCY);
 
-        addInputSlot("pivot",  ParticleModule.PIVOT);
-        addInputSlot("position override",  ParticleModule.POSITION_OVERRIDE);
-        addInputSlot("rotation override",  ParticleModule.ROTATION_OVERRIDE);
-
+        addInputSlot("pivot", ParticleModule.PIVOT);
+        addInputSlot("position override", ParticleModule.POSITION_OVERRIDE);
+        addInputSlot("rotation override", ParticleModule.ROTATION_OVERRIDE);
     }
 
     @Override
-    public Class<? extends AbstractModule>  getSlotsPreferredModule(Slot slot) {
+    public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
 
-        if(slot.getIndex() == ParticleModule.LIFE) return StaticValueModule.class;
-        if(slot.getIndex() == ParticleModule.PIVOT) return Vector3Module.class;
-        if(slot.getIndex() == ParticleModule.COLOR) return GradientColorModule.class;
-        if(slot.getIndex() == ParticleModule.TRANSPARENCY) return CurveModule.class;
+        if (slot.getIndex() == ParticleModule.LIFE) return StaticValueModule.class;
+        if (slot.getIndex() == ParticleModule.PIVOT) return Vector3Module.class;
+        if (slot.getIndex() == ParticleModule.COLOR) return GradientColorModule.class;
+        if (slot.getIndex() == ParticleModule.TRANSPARENCY) return CurveModule.class;
 
         /*
         //Mode
@@ -98,6 +100,4 @@ public class ParticleModuleWrapper extends ModuleWrapper<ParticleModule> {
 
         return null;
     }
-
-
 }

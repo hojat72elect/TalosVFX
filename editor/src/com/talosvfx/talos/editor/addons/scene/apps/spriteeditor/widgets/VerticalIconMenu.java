@@ -9,9 +9,10 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.Pools;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
-import lombok.Getter;
 
 import java.util.ArrayList;
+
+import lombok.Getter;
 
 public class VerticalIconMenu<T extends Actor, W extends Actor> extends Table {
     @Getter
@@ -20,6 +21,7 @@ public class VerticalIconMenu<T extends Actor, W extends Actor> extends Table {
     private final ArrayList<T> tabs;
 
     private final Table container;
+
     public VerticalIconMenu() {
         this.tabWindowMap = new ObjectMap<>();
         this.tabs = new ArrayList<>();
@@ -34,11 +36,11 @@ public class VerticalIconMenu<T extends Actor, W extends Actor> extends Table {
         add().expandY();
     }
 
-    public W getWindow (T tab) {
+    public W getWindow(T tab) {
         return tabWindowMap.get(tab);
     }
 
-    public Cell addTab (T tab, W window) {
+    public Cell addTab(T tab, W window) {
         tabs.add(tab);
         tabWindowMap.put(tab, window);
         tab.addListener(new ClickListener() {

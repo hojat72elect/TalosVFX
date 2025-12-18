@@ -26,7 +26,7 @@ public class AboutTalosDialog extends AWindowDialog implements Observer {
         return table;
     }
 
-    private void addVersionRow (Table table) {
+    private void addVersionRow(Table table) {
         // version info
         Label version = new Label("Version:", SharedResources.skin);
         Label versionNumber = new Label(TALOS_BUILD.getVersion(), SharedResources.skin);

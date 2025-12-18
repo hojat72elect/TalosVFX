@@ -11,12 +11,11 @@ import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
 
 public class ActionRow<U> extends BasicRow<U> {
 
-    private boolean isItemVisible = true;
-
     private final Image eye;
     private final EditableLabel label;
     private final Cell<Button> actionCell;
     private final Button selectorBox;
+    private boolean isItemVisible = true;
 
     public ActionRow(TimelineWidget timeline) {
         super(timeline);
@@ -33,7 +32,7 @@ public class ActionRow<U> extends BasicRow<U> {
 
         eye.addListener(new ClickListener() {
             @Override
-            public void clicked (InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 event.cancel();
 
                 isItemVisible = !isItemVisible;
@@ -50,7 +49,7 @@ public class ActionRow<U> extends BasicRow<U> {
 
         label.setListener(new EditableLabel.EditableLabelChangeListener() {
             @Override
-            public void editModeStarted () {
+            public void editModeStarted() {
             }
 
             @Override
@@ -88,7 +87,7 @@ public class ActionRow<U> extends BasicRow<U> {
         clearActions();
     }
 
-    public float getActionCellWidth () {
+    public float getActionCellWidth() {
         return actionCell.getPrefWidth() + actionCell.getPadLeft() + actionCell.getPadRight();
     }
 

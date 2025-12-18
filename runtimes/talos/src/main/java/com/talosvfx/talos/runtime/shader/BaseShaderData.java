@@ -1,22 +1,21 @@
 package com.talosvfx.talos.runtime.shader;
 
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
-import com.talosvfx.talos.runtime.routine.RoutineInstance;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
 
 public interface BaseShaderData {
-	Array<PropertyWrapper<?>> getPropertyWrappers ();
+    Array<PropertyWrapper<?>> getPropertyWrappers();
 
-	JsonValue getJsonNodes ();
+    JsonValue getJsonNodes();
 
-	JsonValue getJsonConnections ();
+    JsonValue getJsonConnections();
 
-	ShaderInstance createInstance (boolean external);
+    ShaderInstance createInstance(boolean external);
 
-	String getShaderVertexSource ();
-	String getShaderFragmentSource ();
+    String getShaderVertexSource();
 
-	ShaderInstance getShaderInstance ();
+    String getShaderFragmentSource();
+
+    ShaderInstance getShaderInstance();
 }

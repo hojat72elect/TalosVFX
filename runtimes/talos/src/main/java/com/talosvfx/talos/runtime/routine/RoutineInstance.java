@@ -2,7 +2,13 @@ package com.talosvfx.talos.runtime.routine;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.IntMap;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.Pool;
+import com.badlogic.gdx.utils.Pools;
+import com.badlogic.gdx.utils.XmlReader;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.talosvfx.talos.runtime.assets.TalosContextProvider;
@@ -12,48 +18,37 @@ import com.talosvfx.talos.runtime.routine.serialization.BaseRoutineData;
 import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.SavableContainer;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
 
 public class RoutineInstance implements Pool.Poolable, RoutineEventListener, TalosContextProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(RoutineInstance.class);
-
-    @Getter
-    private ObjectMap<String, RoutineNode> customLookup = new ObjectMap<>();
-
-    private ObjectMap<String, RoutineNode> lookup = new ObjectMap<>();
-
-    @Getter
-    private ObjectMap<String, PropertyWrapper> properties = new ObjectMap<>();
-
-    private Array<TickableNode> tickableNodes = new Array<>();
-    private Array<OnEventNode> onEventNodes = new Array<>();
-
     public IntMap<RoutineNode> lowLevelLookup = new IntMap<>();
-
-    private RoutineConfigMap config;
-
     public Array<DrawableQuad> drawableQuads = new Array<>();
-
     public ObjectMap<String, Object> memory = new ObjectMap<>();
-
     public ObjectMap<String, Object> globalMap = new ObjectMap<>();
-
     public Array<Integer> scopeNumbers = new Array<>();
+    public boolean configured = false;
+    @Getter
+    private final ObjectMap<String, RoutineNode> customLookup = new ObjectMap<>();
+    private final ObjectMap<String, RoutineNode> lookup = new ObjectMap<>();
+    @Getter
+    private final ObjectMap<String, PropertyWrapper> properties = new ObjectMap<>();
+    private final Array<TickableNode> tickableNodes = new Array<>();
+    private final Array<OnEventNode> onEventNodes = new Array<>();
+    private RoutineConfigMap config;
     private float requesterId;
-
     @Getter
     private transient boolean isDirty = true;
-
-    @Getter@Setter
+    @Getter
+    @Setter
     private float timeScale = 1f;
-
-    public boolean configured = false;
-
     @Getter
     private Array<PropertyWrapper<?>> parentPropertyWrappers;
 
@@ -63,13 +58,18 @@ public class RoutineInstance implements Pool.Poolable, RoutineEventListener, Tal
     @Setter
     private RoutineListenerAdapter listener;
 
-    @Getter@Setter
+    @Getter
+    @Setter
     private SavableContainer container;
     private GameObject cameraGO;
     private boolean paused = false;
 
-    private Array<RoutineEventInterface> routineEventListeners = new Array<>();
+    private final Array<RoutineEventInterface> routineEventListeners = new Array<>();
     private transient String talosIdentifier;
+
+    public RoutineInstance() {
+        Pools.get(DrawableQuad.class, 100);
+    }
 
     @Override
     public void reset() {
@@ -89,7 +89,7 @@ public class RoutineInstance implements Pool.Poolable, RoutineEventListener, Tal
     public <T extends RoutineNode> Array<T> getNodesByClass(Class<T> clazz) {
         Array<T> result = new Array<>();
         for (IntMap.Entry<RoutineNode> entry : lowLevelLookup) {
-            if(entry.value.getClass().isAssignableFrom(clazz)) {
+            if (entry.value.getClass().isAssignableFrom(clazz)) {
                 result.add((T) entry.value);
             }
         }
@@ -98,8 +98,8 @@ public class RoutineInstance implements Pool.Poolable, RoutineEventListener, Tal
     }
 
     public void complete() {
-        if(listener != null) {
-            if(!listener.isTerminated()) {
+        if (listener != null) {
+            if (!listener.isTerminated()) {
                 listener.onComplete();
             }
         }
@@ -139,54 +139,16 @@ public class RoutineInstance implements Pool.Poolable, RoutineEventListener, Tal
     }
 
     @Override
-    public String getTalosIdentifier () {
+    public String getTalosIdentifier() {
         return talosIdentifier;
     }
 
     @Override
-    public void setTalosIdentifier (String identifier) {
+    public void setTalosIdentifier(String identifier) {
         this.talosIdentifier = identifier;
     }
 
-    public static class RoutineListenerAdapter implements RoutineListener {
-
-        @Getter
-        private boolean terminated = false;
-
-        @Override
-        public void onSignalSent(int nodeId, String port) {
-
-        }
-
-        @Override
-        public void onInputFetched(int nodeId, String port) {
-
-        }
-
-        @Override
-        public void onComplete() {
-
-        }
-
-        public void terminate() {
-            terminated = true;
-        }
-    }
-
-    public interface RoutineListener {
-        void onSignalSent(int nodeId, String port);
-
-        void onInputFetched(int nodeId, String port);
-
-        void onComplete();
-    }
-
-    public RoutineInstance() {
-        Pools.get(DrawableQuad.class, 100);
-    }
-
-
-    public void loadFrom (BaseRoutineData routineStageData, RoutineConfigMap config) {
+    public void loadFrom(BaseRoutineData routineStageData, RoutineConfigMap config) {
         this.config = config;
         this.isDirty = true;
 
@@ -202,7 +164,7 @@ public class RoutineInstance implements Pool.Poolable, RoutineEventListener, Tal
         IntMap<RoutineNode> idMap = new IntMap<>();
 
         String nodePackageName = "com.talosvfx.talos.runtime.routine.nodes.";
-        for(JsonValue nodeData: list) {
+        for (JsonValue nodeData : list) {
             String nodeName = nodeData.getString("name");
             int id = nodeData.getInt("id");
 
@@ -215,15 +177,15 @@ public class RoutineInstance implements Pool.Poolable, RoutineEventListener, Tal
                 lowLevelLookup.put(routineNode.uniqueId, routineNode);
 
                 JsonValue properties = nodeData.get("properties");
-                if(properties != null) {
-                    if(properties.has("id")) {
+                if (properties != null) {
+                    if (properties.has("id")) {
                         lookup.put(properties.getString("id"), routineNode);
                     }
                 }
 
                 idMap.put(id, routineNode);
 
-                if(routineNode instanceof TickableNode) {
+                if (routineNode instanceof TickableNode) {
                     tickableNodes.add((TickableNode) routineNode);
                 }
 
@@ -237,11 +199,9 @@ public class RoutineInstance implements Pool.Poolable, RoutineEventListener, Tal
         }
 
         configureConnections(connections, idMap);
-
-
     }
 
-    public void postEventToNodes (String eventName, Array<PropertyWrapper<?>> propertyWrappers) {
+    public void postEventToNodes(String eventName, Array<PropertyWrapper<?>> propertyWrappers) {
         for (OnEventNode onEventNode : onEventNodes) {
             if (onEventNode.getEventName().equals(eventName)) {
                 onEventNode.fireEvent(propertyWrappers);
@@ -251,7 +211,7 @@ public class RoutineInstance implements Pool.Poolable, RoutineEventListener, Tal
 
     private void configureConnections(JsonValue connections, IntMap<RoutineNode> idMap) {
         boolean configured = checkConfigured();
-        if(configured) {
+        if (configured) {
             for (JsonValue connectionJson : connections) {
                 int fromId = connectionJson.getInt("fromNode");
                 int toId = connectionJson.getInt("toNode");
@@ -292,7 +252,7 @@ public class RoutineInstance implements Pool.Poolable, RoutineEventListener, Tal
         requesterId = id;
     }
 
-    public void beginDepth () {
+    public void beginDepth() {
         scopeNumbers.add(0);
     }
 
@@ -305,7 +265,7 @@ public class RoutineInstance implements Pool.Poolable, RoutineEventListener, Tal
     }
 
     public void clearMemory() {
-        for(DrawableQuad quad: drawableQuads) {
+        for (DrawableQuad quad : drawableQuads) {
             Pools.free(quad);
         }
 
@@ -337,7 +297,7 @@ public class RoutineInstance implements Pool.Poolable, RoutineEventListener, Tal
         return globalMap.get(name);
     }
 
-    public PropertyWrapper<?> getPropertyWrapperWithIndex (int index) {
+    public PropertyWrapper<?> getPropertyWrapperWithIndex(int index) {
         for (PropertyWrapper<?> propertyWrapper : parentPropertyWrappers) {
             if (propertyWrapper.index == index) {
                 return propertyWrapper;
@@ -352,8 +312,8 @@ public class RoutineInstance implements Pool.Poolable, RoutineEventListener, Tal
     }
 
     public void tick(float delta) {
-        if(checkConfigured()) {
-            if(!paused) {
+        if (checkConfigured()) {
+            if (!paused) {
                 for (TickableNode node : tickableNodes) {
                     node.tick(delta * timeScale);
                 }
@@ -362,22 +322,21 @@ public class RoutineInstance implements Pool.Poolable, RoutineEventListener, Tal
     }
 
     public void onSignalSent(int nodeId, String portName) {
-        if(listener != null) {
+        if (listener != null) {
             listener.onSignalSent(nodeId, portName);
         }
     }
 
-
     public void onInputFetched(int nodeId, String portName) {
-        if(listener != null) {
+        if (listener != null) {
             listener.onInputFetched(nodeId, portName);
         }
     }
 
     public boolean checkConfigured() {
-        if(!configured) {
+        if (!configured) {
             for (IntMap.Entry<RoutineNode> entry : lowLevelLookup) {
-                if(!entry.value.isConfigured()) {
+                if (!entry.value.isConfigured()) {
                     return false;
                 }
             }
@@ -396,5 +355,38 @@ public class RoutineInstance implements Pool.Poolable, RoutineEventListener, Tal
 
     public void stop() {
         reset();
+    }
+
+    public interface RoutineListener {
+        void onSignalSent(int nodeId, String port);
+
+        void onInputFetched(int nodeId, String port);
+
+        void onComplete();
+    }
+
+    public static class RoutineListenerAdapter implements RoutineListener {
+
+        @Getter
+        private boolean terminated = false;
+
+        @Override
+        public void onSignalSent(int nodeId, String port) {
+
+        }
+
+        @Override
+        public void onInputFetched(int nodeId, String port) {
+
+        }
+
+        @Override
+        public void onComplete() {
+
+        }
+
+        public void terminate() {
+            terminated = true;
+        }
     }
 }

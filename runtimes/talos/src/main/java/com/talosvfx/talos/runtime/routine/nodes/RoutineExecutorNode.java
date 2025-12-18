@@ -16,15 +16,15 @@ public class RoutineExecutorNode extends RoutineNode {
     public void receiveSignal(String portName) {
         SavableContainer container = routineInstanceRef.getContainer();
 
-        if(container == null) return;
+        if (container == null) return;
 
         gameObjects.clear();
         Object signalPayload = routineInstanceRef.getSignalPayload();
-        if(signalPayload != null && signalPayload instanceof GameObject) {
+        if (signalPayload != null && signalPayload instanceof GameObject) {
             gameObjects.add((GameObject) signalPayload);
         }
 
-        if(gameObjects.isEmpty()) {
+        if (gameObjects.isEmpty()) {
             String target = fetchStringValue("target");
             if (target == null) {
                 gameObjects = container.findGameObjects("");
@@ -35,7 +35,7 @@ public class RoutineExecutorNode extends RoutineNode {
 
         routineInstanceRef.storeGlobal("executedTargets", gameObjects);
 
-        for(GameObject gameObject: gameObjects) {
+        for (GameObject gameObject : gameObjects) {
             // make sure sendSignal supports payloads
             routineInstanceRef.setSignalPayload(gameObject);
             sendSignal("outSignal");
@@ -45,7 +45,7 @@ public class RoutineExecutorNode extends RoutineNode {
     @Override
     protected void configureNode(JsonValue properties) {
         super.configureNode(properties);
-        if(!configured) return;
+        if (!configured) return;
 
         Object val = inputs.get("title").valueOverride;
         String title = val != null ? (String) val : "";

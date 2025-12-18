@@ -27,32 +27,21 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.talosvfx.talos.runtime.vfx.values.ColorPoint;
 import com.talosvfx.talos.editor.widgets.ui.GradientImage;
 import com.talosvfx.talos.runtime.vfx.modules.GradientColorModule;
+import com.talosvfx.talos.runtime.vfx.values.ColorPoint;
 
 public class GradientWidget extends Actor {
 
-    private Vector2 tmp = new Vector2();
-
-    private Vector2 areaPos = new Vector2();
-    private Vector2 areaSize = new Vector2();
-
-    private GradientColorModule module;
-
-    private Skin skin;
-
-    private GradientWidgetListener listener;
-
-    private GradientImage gradientImage;
-
-    private Color tmpColor = new Color();
-
     private final String TRIANGLE = "triangle";
-
-    public interface GradientWidgetListener {
-        public void colorPickerShow(ColorPoint point);
-    }
+    private final Vector2 tmp = new Vector2();
+    private final Vector2 areaPos = new Vector2();
+    private final Vector2 areaSize = new Vector2();
+    private GradientColorModule module;
+    private final Skin skin;
+    private GradientWidgetListener listener;
+    private final GradientImage gradientImage;
+    private final Color tmpColor = new Color();
 
     public GradientWidget(Skin skin) {
         this.skin = skin;
@@ -70,11 +59,11 @@ public class GradientWidget extends Actor {
             public int hit(float x, float y) {
                 Array<ColorPoint> points = module.getPoints();
 
-                for(int i = 0; i < points.size; i++) {
+                for (int i = 0; i < points.size; i++) {
                     ColorPoint colorPoint = points.get(i);
                     float pos = areaPos.x + areaSize.x * colorPoint.pos;
 
-                    if(Math.abs(x - pos) < 10) {
+                    if (Math.abs(x - pos) < 10) {
                         return i;
                     }
                 }
@@ -85,22 +74,22 @@ public class GradientWidget extends Actor {
             public void setPosToMouse(float x, float y) {
                 Array<ColorPoint> points = module.getPoints();
 
-                float pos = (x - areaPos.x)/areaSize.x;
+                float pos = (x - areaPos.x) / areaSize.x;
 
                 float leftBound = 0f;
                 float rightBound = 1f;
 
-                if(points.size - 1 >= draggingPoint + 1) {
-                    rightBound = points.get(draggingPoint+1).pos;
+                if (points.size - 1 >= draggingPoint + 1) {
+                    rightBound = points.get(draggingPoint + 1).pos;
                 }
-                if(draggingPoint > 0) {
-                    leftBound = points.get(draggingPoint-1).pos;
+                if (draggingPoint > 0) {
+                    leftBound = points.get(draggingPoint - 1).pos;
                 }
 
-                if(pos < leftBound) {
+                if (pos < leftBound) {
                     pos = leftBound;
                 }
-                if(pos > rightBound) {
+                if (pos > rightBound) {
                     pos = rightBound;
                 }
 
@@ -111,8 +100,8 @@ public class GradientWidget extends Actor {
 
             private void doubleClick(float x, float y) {
                 int hitIndex = hit(x, y);
-                if(hitIndex >= 0) {
-                    if(module.getPoints().size > 1) {
+                if (hitIndex >= 0) {
+                    if (module.getPoints().size > 1) {
                         module.removePoint(hitIndex);
                         updateGradientData();
                         justRemoved = true;
@@ -122,8 +111,8 @@ public class GradientWidget extends Actor {
 
             private void rightClick(InputEvent event, float x, float y) {
                 int hit = hit(x, y);
-                if(hit >= 0) {
-                    if(listener != null) {
+                if (hit >= 0) {
+                    if (listener != null) {
                         listener.colorPickerShow(module.getPoints().get(hit));
                     }
                     event.handle();
@@ -145,7 +134,7 @@ public class GradientWidget extends Actor {
 
                 justRemoved = false;
 
-                if(now - clickTime < 200 && button == 0) {
+                if (now - clickTime < 200 && button == 0) {
                     // this is a doubleClick
                     doubleClick(x, y);
                 }
@@ -154,7 +143,7 @@ public class GradientWidget extends Actor {
 
                 draggingPoint = hit(x, y);
 
-                if(!justRemoved) {
+                if (!justRemoved) {
                     if (draggingPoint == -1) {
                         float pos = (x - areaPos.x) / areaSize.x;
                         ColorPoint point = module.createPoint(gePosColor(pos), pos);
@@ -172,7 +161,7 @@ public class GradientWidget extends Actor {
                 super.touchDragged(event, x, y, pointer);
 
 
-                if(draggingPoint >= 0) {
+                if (draggingPoint >= 0) {
                     setPosToMouse(x, y);
                 }
             }
@@ -180,7 +169,6 @@ public class GradientWidget extends Actor {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 super.touchUp(event, x, y, pointer, button);
-
 
 
                 draggingPoint = -1;
@@ -208,7 +196,7 @@ public class GradientWidget extends Actor {
         super.act(delta);
 
         areaPos.set(11, 15);
-        areaSize.set(getWidth() - 20, getHeight()-10);
+        areaSize.set(getWidth() - 20, getHeight() - 10);
     }
 
     public Skin getSkin() {
@@ -238,11 +226,14 @@ public class GradientWidget extends Actor {
 
         Array<ColorPoint> points = module.getPoints();
 
-        for(int i = 0; i < points.size; i++) {
+        for (int i = 0; i < points.size; i++) {
             Drawable backgroundFrame = getSkin().getDrawable(TRIANGLE);
             batch.setColor(points.get(i).color);
             backgroundFrame.draw(batch, getX() + areaPos.x + areaSize.x * points.get(i).pos - 9, getY() + areaPos.y - 16f, 18f, 16f);
         }
+    }
 
+    public interface GradientWidgetListener {
+        void colorPickerShow(ColorPoint point);
     }
 }

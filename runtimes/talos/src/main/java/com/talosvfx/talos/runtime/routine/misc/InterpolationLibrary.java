@@ -10,9 +10,9 @@ public class InterpolationLibrary {
     public static ObjectMap<String, Interpolation> map = new ObjectMap<>();
 
     public static Interpolation get(String name) {
-        if(map.isEmpty()) {
+        if (map.isEmpty()) {
             Field[] declaredFields = Interpolation.class.getDeclaredFields();
-            for(Field field: declaredFields) {
+            for (Field field : declaredFields) {
                 try {
                     map.put(field.getName(), (Interpolation) field.get(null));
                 } catch (Exception e) {
@@ -21,7 +21,7 @@ public class InterpolationLibrary {
             }
         }
 
-        if(name == null || !map.containsKey(name)) {
+        if (name == null || !map.containsKey(name)) {
             return Interpolation.linear;
         }
 
@@ -30,8 +30,8 @@ public class InterpolationLibrary {
 
     private static Interpolation parseInterpolation(String name) {
         Field[] declaredFields = Interpolation.class.getDeclaredFields();
-        for(Field field: declaredFields) {
-            if(field.getName().equals(name)) {
+        for (Field field : declaredFields) {
+            if (field.getName().equals(name)) {
                 try {
                     return (Interpolation) field.get(null);
                 } catch (Exception e) {

@@ -24,7 +24,9 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
@@ -39,28 +41,21 @@ import com.talosvfx.talos.editor.widgets.ui.EditableLabel;
 import com.talosvfx.talos.editor.widgets.ui.ModuleBoardWidget;
 import com.talosvfx.talos.editor.wrappers.ModuleWrapper;
 
-public class ModuleWrapperGroup extends Group implements Json.Serializable{
-
-    private ObjectSet<ModuleWrapper> wrappers = new ObjectSet();
-
-    private Vector2 pos = new Vector2();
-
-    private Vector2 size = new Vector2();
+public class ModuleWrapperGroup extends Group implements Json.Serializable {
 
     private final int PADDING = 20;
     private final int TOP_BAR = 34;
-
-    private Skin skin;
-
-    private Vector2 posMin = new Vector2();
-    private Vector2 posMax = new Vector2();
-
     Image frameImage;
     EditableLabel title;
     ImageButton settings;
     Actor topHit;
-
     PopupMenu settingsPopup;
+    private ObjectSet<ModuleWrapper> wrappers = new ObjectSet();
+    private final Vector2 pos = new Vector2();
+    private final Vector2 size = new Vector2();
+    private Skin skin;
+    private final Vector2 posMin = new Vector2();
+    private final Vector2 posMax = new Vector2();
     private ModuleBoardWidget moduleBoardWidget;
 
     public ModuleWrapperGroup() {
@@ -68,14 +63,14 @@ public class ModuleWrapperGroup extends Group implements Json.Serializable{
     }
 
     public ModuleWrapperGroup(Skin skin) {
-       init(skin);
+        init(skin);
     }
 
     public void init(Skin skin) {
         this.skin = skin;
 
         frameImage = new Image(skin.getDrawable("group_frame"));
-        frameImage.setColor(44/255f, 140/255f, 209/255f, 1f);
+        frameImage.setColor(44 / 255f, 140 / 255f, 209 / 255f, 1f);
         addActor(frameImage);
 
         topHit = new Actor();
@@ -125,15 +120,16 @@ public class ModuleWrapperGroup extends Group implements Json.Serializable{
 
         topHit.addListener(new ClickListener() {
 
-            Vector2 tmp = new Vector2();
-            Vector2 pos = new Vector2();
-            Vector2 diff = new Vector2();
+            final Vector2 tmp = new Vector2();
+            final Vector2 pos = new Vector2();
+            final Vector2 diff = new Vector2();
 
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 pos.set(x, y);
                 topHit.localToStageCoordinates(pos);
-                moduleBoardWidget.setSelectedWrappers(wrappers); return true;
+                moduleBoardWidget.setSelectedWrappers(wrappers);
+                return true;
             }
 
             @Override
@@ -171,7 +167,6 @@ public class ModuleWrapperGroup extends Group implements Json.Serializable{
                 posMax.x = wrapper.getX() + wrapper.getWidth();
             if (wrapper.getY() + wrapper.getHeight() > posMax.y)
                 posMax.y = wrapper.getY() + wrapper.getHeight();
-
         }
 
         pos.set(posMin).sub(PADDING, PADDING);
@@ -201,25 +196,29 @@ public class ModuleWrapperGroup extends Group implements Json.Serializable{
     }
 
     private void moveGroupBy(float x, float y) {
-        for(ModuleWrapper wrapper: wrappers) {
+        for (ModuleWrapper wrapper : wrappers) {
             wrapper.moveBy(x, y);
         }
     }
 
     public void removeWrappers(ObjectSet<ModuleWrapper> wrappersToRemove) {
-        for(ModuleWrapper wrapper: wrappersToRemove) {
-            if(wrappers.contains(wrapper)) {
+        for (ModuleWrapper wrapper : wrappersToRemove) {
+            if (wrappers.contains(wrapper)) {
                 wrappers.remove(wrapper);
             }
         }
 
-        if(wrappers.size == 0) {
+        if (wrappers.size == 0) {
             moduleBoardWidget.removeGroup(this);
         }
     }
 
     public String getText() {
         return title.getText();
+    }
+
+    public void setText(String text) {
+        title.setText(text);
     }
 
     public ObjectSet<ModuleWrapper> getModuleWrappers() {
@@ -237,13 +236,9 @@ public class ModuleWrapperGroup extends Group implements Json.Serializable{
 
     public void removeWrapper(ModuleWrapper wrapper) {
         wrappers.remove(wrapper);
-        if(wrappers.size == 0) {
+        if (wrappers.size == 0) {
             moduleBoardWidget.removeGroup(this);
         }
-    }
-
-    public void setText(String text) {
-        title.setText(text);
     }
 
     @Override
@@ -273,7 +268,7 @@ public class ModuleWrapperGroup extends Group implements Json.Serializable{
         setColor(color);
     }
 
-    public void setModuleBoardReference (ModuleBoardWidget moduleBoardWidget) {
+    public void setModuleBoardReference(ModuleBoardWidget moduleBoardWidget) {
         this.moduleBoardWidget = moduleBoardWidget;
     }
 }

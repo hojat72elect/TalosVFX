@@ -27,7 +27,7 @@ public class VectorSplitModuleWrapper extends ModuleWrapper<VectorSplitModule> i
 
 
     @Override
-    protected float reportPrefWidth () {
+    protected float reportPrefWidth() {
         return 180;
     }
 }

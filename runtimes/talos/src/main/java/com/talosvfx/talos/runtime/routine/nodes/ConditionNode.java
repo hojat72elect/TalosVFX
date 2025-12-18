@@ -14,19 +14,18 @@ public class ConditionNode extends RoutineNode {
 
         boolean result = false;
 
-        if(condition.equals("equal")) {
-            if(input == compare) result = true;
-        } else if(condition.equals("bigger")) {
-            if(input > compare) result = true;
-        } else if(condition.equals("smaller")) {
-            if(input < compare) result = true;
+        if (condition.equals("equal")) {
+            if (input == compare) result = true;
+        } else if (condition.equals("bigger")) {
+            if (input > compare) result = true;
+        } else if (condition.equals("smaller")) {
+            if (input < compare) result = true;
         }
 
-        if(result) {
+        if (result) {
             sendSignal("trueOutput");
         } else {
             sendSignal("falseOutput");
         }
-
     }
 }

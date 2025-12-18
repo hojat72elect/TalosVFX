@@ -10,6 +10,7 @@ import com.badlogic.gdx.utils.XmlReader;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.events.MenuPopupOpenCommand;
 import com.talosvfx.talos.editor.project2.SharedResources;
+
 import lombok.Getter;
 
 public class MenuTab extends Table {
@@ -43,7 +44,7 @@ public class MenuTab extends Table {
     @Override
     public void act(float delta) {
 
-        if(isActive) {
+        if (isActive) {
             setBackground(SharedResources.skin.getDrawable("top-menu-selected"));
         } else {
             if (clickListener.isOver()) {
@@ -57,7 +58,7 @@ public class MenuTab extends Table {
     }
 
     public void open() {
-        if(!isActive) {
+        if (!isActive) {
             isActive = true;
 
             Notifications.fireEvent(Notifications.obtainEvent(MenuPopupOpenCommand.class).set(id, getPreferredPopupPosition()));
@@ -65,7 +66,7 @@ public class MenuTab extends Table {
     }
 
     public void collapse() {
-        if(isActive) {
+        if (isActive) {
             isActive = false;
 
             mainMenu.collapseHierarchyOf(id);

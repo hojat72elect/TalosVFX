@@ -20,7 +20,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
@@ -48,113 +47,113 @@ import com.talosvfx.talos.editor.dialogs.SettingsDialog;
 import com.talosvfx.talos.editor.dialogs.TemporaryTextureSelectDialog;
 import com.talosvfx.talos.editor.filesystem.FileChooserListener;
 import com.talosvfx.talos.editor.filesystem.FileSystemInteraction;
-import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.project2.SharedStage;
-import com.talosvfx.talos.editor.widgets.ui.*;
+import com.talosvfx.talos.editor.widgets.ui.EmitterList;
+import com.talosvfx.talos.editor.widgets.ui.FileTab;
+import com.talosvfx.talos.editor.widgets.ui.MainMenuLegacy;
+import com.talosvfx.talos.editor.widgets.ui.ModuleListPopup;
+import com.talosvfx.talos.editor.widgets.ui.Preview3D;
+import com.talosvfx.talos.editor.widgets.ui.PreviewWidget;
 import com.talosvfx.talos.editor.wrappers.WrapperRegistry;
 import com.talosvfx.talos.runtime.vfx.ParticleEmitterDescriptor;
 import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
 import com.talosvfx.talos.runtime.vfx.modules.Vector2Module;
 import com.talosvfx.talos.runtime.vfx.modules.Vector3Module;
-import lombok.Getter;
 
 import java.util.Comparator;
 
+import lombok.Getter;
+
 public class UIStage {
 
-	private final Stage stage;
-	private final Skin skin;
-	private final DragAndDrop dragAndDrop;
+    private final Stage stage;
+    private final Skin skin;
+    private final DragAndDrop dragAndDrop;
+    public PreviewWidget previewWidget;
+    public SettingsDialog settingsDialog;
+    public TemporaryTextureSelectDialog temporaryTextureDialog;
+    public NewProjectDialog newProjectDialog;
+    public TabbedPane tabbedPane;
+    Table fullScreenTable;
+    BatchConvertDialog batchConvertDialog;
+    ColorPicker colorPicker;
 
-	Table fullScreenTable;
+    ModuleListPopup moduleListPopup;
+    private EmitterList emitterList;
+    private VisSplitPane bottomPane;
+    private Table leftTable;
+    private Table rightTable;
+    private Table bottomTable;
 
-	private EmitterList emitterList;
-	public PreviewWidget previewWidget;
-	BatchConvertDialog batchConvertDialog;
-	public SettingsDialog settingsDialog;
-	public TemporaryTextureSelectDialog temporaryTextureDialog;
-	public NewProjectDialog newProjectDialog;
+    private Table bottomContainer;
+    private Cell<PreviewWidget> previewWidgetCell;
+    private Table previewWidgetContainer;
+    private MainMenuLegacy mainMenu;
+    private VisSplitPane horizontalPane;
+    private VisSplitPane verticalPane;
+    private Table mainLayout;
+    private Table customLayout;
 
-	ColorPicker colorPicker;
+    @Getter
+    private Preview3D innerTertiumActor;
 
-	ModuleListPopup moduleListPopup;
+    private boolean isIn3DMode;
 
-	public TabbedPane tabbedPane;
+    public UIStage(Skin skin) {
+        this.stage = new SharedStage(new ScreenViewport(), new PolygonSpriteBatchMultiTextureMULTIBIND());
+        this.skin = skin;
+        this.dragAndDrop = new DragAndDrop();
+    }
 
-	private VisSplitPane bottomPane;
-	private Table leftTable;
-	private Table rightTable;
-	private Table bottomTable;
+    public void init() {
+        fullScreenTable = new Table();
+        fullScreenTable.setFillParent(true);
 
-	private Table bottomContainer;
-	private Cell<PreviewWidget> previewWidgetCell;
-	private Table previewWidgetContainer;
-	private MainMenuLegacy mainMenu;
-	private VisSplitPane horizontalPane;
-	private VisSplitPane verticalPane;
-	private Table mainLayout;
-	private Table customLayout;
+        stage.addActor(fullScreenTable);
 
-	@Getter
-	private Preview3D innerTertiumActor;
+        defaults();
+        constructMenu();
+        constructTabPane();
 
-	private boolean isIn3DMode;
+        constructSplitPanes();
 
-	public UIStage (Skin skin) {
-		this.stage = new SharedStage(new ScreenViewport(), new PolygonSpriteBatchMultiTextureMULTIBIND());
-		this.skin = skin;
-		this.dragAndDrop = new DragAndDrop();
-	}
+        batchConvertDialog = new BatchConvertDialog();
+        settingsDialog = new SettingsDialog();
+        newProjectDialog = new NewProjectDialog();
+        temporaryTextureDialog = new TemporaryTextureSelectDialog();
 
-	public void init () {
-		fullScreenTable = new Table();
-		fullScreenTable.setFillParent(true);
+        FileHandle list = Gdx.files.internal("modules.xml");
+        XmlReader xmlReader = new XmlReader();
+        XmlReader.Element root = xmlReader.parse(list);
+        WrapperRegistry.map.clear();
+        moduleListPopup = new ModuleListPopup(root);
 
-		stage.addActor(fullScreenTable);
+        colorPicker = new ColorPicker();
+        colorPicker.padTop(32);
+        colorPicker.padLeft(16);
+        colorPicker.setHeight(330);
+        colorPicker.setWidth(430);
+        colorPicker.padRight(26);
+    }
 
-		defaults();
-		constructMenu();
-		constructTabPane();
+    public boolean isIn3DMode() {
+        return isIn3DMode;
+    }
 
-		constructSplitPanes();
+    public Stage getStage() {
+        return stage;
+    }
 
-		batchConvertDialog = new BatchConvertDialog();
-		settingsDialog = new SettingsDialog();
-		newProjectDialog = new NewProjectDialog();
-		temporaryTextureDialog = new TemporaryTextureSelectDialog();
+    private void defaults() {
+        fullScreenTable.top().left();
+    }
 
-		FileHandle list = Gdx.files.internal("modules.xml");
-		XmlReader xmlReader = new XmlReader();
-		XmlReader.Element root = xmlReader.parse(list);
-		WrapperRegistry.map.clear();
-		moduleListPopup = new ModuleListPopup(root);
-
-		colorPicker = new ColorPicker();
-		colorPicker.padTop(32);
-		colorPicker.padLeft(16);
-		colorPicker.setHeight(330);
-		colorPicker.setWidth(430);
-		colorPicker.padRight(26);
-	}
-
-	public boolean isIn3DMode () {
-		return isIn3DMode;
-	}
-
-	public Stage getStage () {
-		return stage;
-	}
-
-	private void defaults () {
-		fullScreenTable.top().left();
-	}
-
-	public void fileDrop (String[] paths, float x, float y) {
-		// let's see what this can mean by extension
-		for(String path: paths) {
-			FileHandle handle = Gdx.files.absolute(path);
-			if(handle.exists()) {
-				String extension = handle.extension();
+    public void fileDrop(String[] paths, float x, float y) {
+        // let's see what this can mean by extension
+        for (String path : paths) {
+            FileHandle handle = Gdx.files.absolute(path);
+            if (handle.exists()) {
+                String extension = handle.extension();
 //				if(extension.equals("tls") && TalosMain.Instance().ProjectController().getProject() != SceneEditorAddon.SE) {
 //					// load project file
 //					TalosMain.Instance().ProjectController().setProject(ProjectController.TLS);
@@ -171,102 +170,102 @@ public class UIStage {
 ////					IAddon addon = TalosMain.Instance().Addons().projectFileDrop(handle);
 ////					if (addon != null) {
 ////						continue;
-////					}
+////                    }
 //				}
-			}
-		}
+            }
+        }
 
-		if(previewWidget.getStage() != null) {
-			previewWidget.fileDrop(x, y, paths);
-		}
-	}
+        if (previewWidget.getStage() != null) {
+            previewWidget.fileDrop(x, y, paths);
+        }
+    }
 
-	private void constructMenu () {
-		mainMenu = new MainMenuLegacy(this);
-		mainMenu.build();
-		fullScreenTable.add(mainMenu).growX();
-	}
+    private void constructMenu() {
+        mainMenu = new MainMenuLegacy(this);
+        mainMenu.build();
+        fullScreenTable.add(mainMenu).growX();
+    }
 
 
-	private void constructTabPane() {
-		tabbedPane = new TabbedPane();
-		fullScreenTable.row();
-		fullScreenTable.add(tabbedPane.getTable()).left().expandX().fillX().growX();
+    private void constructTabPane() {
+        tabbedPane = new TabbedPane();
+        fullScreenTable.row();
+        fullScreenTable.add(tabbedPane.getTable()).left().expandX().fillX().growX();
 
-		tabbedPane.addListener(new TabbedPaneListener() {
-			@Override
-			public void switchedTab(Tab tab) {
-				TalosMain.Instance().ProjectController().loadFromTab((FileTab) tab);
-			}
+        tabbedPane.addListener(new TabbedPaneListener() {
+            @Override
+            public void switchedTab(Tab tab) {
+                TalosMain.Instance().ProjectController().loadFromTab((FileTab) tab);
+            }
 
-			@Override
-			public void removedTab(Tab tab) {
-				TalosMain.Instance().ProjectController().removeTab((FileTab) tab);
-				if(tabbedPane.getTabs().size == 0) {
+            @Override
+            public void removedTab(Tab tab) {
+                TalosMain.Instance().ProjectController().removeTab((FileTab) tab);
+                if (tabbedPane.getTabs().size == 0) {
 //					TalosMain.Instance().ProjectController().newProject(ProjectController.TLS);
-				}
-			}
+                }
+            }
 
-			@Override
-			public void removedAllTabs() {
+            @Override
+            public void removedAllTabs() {
 
-			}
-		});
-	}
+            }
+        });
+    }
 
-	public PopupMenu createModuleListPopup() {
+    public PopupMenu createModuleListPopup() {
 //		OrthographicCamera cam = (OrthographicCamera) TalosMain.Instance().NodeStage().getStage().getCamera();
 //		Vector2 location = new Vector2(cam.position.x, cam.position.y);
 
-		Vector2 location = new Vector2();
+        Vector2 location = new Vector2();
 
-		PopupMenu menu = new PopupMenu();
-		Array<Class> temp = new Array<>();
-		for (Class registeredModule : ParticleEmitterDescriptor.getRegisteredModules()) {
-			temp.add(registeredModule);
-		}
-		temp.sort(new Comparator<Class>() {
-			@Override
-			public int compare (Class o1, Class o2) {
-				return o1.getSimpleName().compareTo(o2.getSimpleName());
-			}
-		});
-		for(final Class clazz : temp) {
-			String className = clazz.getSimpleName();
-			MenuItem menuItem = new MenuItem(className);
-			menu.addItem(menuItem);
+        PopupMenu menu = new PopupMenu();
+        Array<Class> temp = new Array<>();
+        for (Class registeredModule : ParticleEmitterDescriptor.getRegisteredModules()) {
+            temp.add(registeredModule);
+        }
+        temp.sort(new Comparator<Class>() {
+            @Override
+            public int compare(Class o1, Class o2) {
+                return o1.getSimpleName().compareTo(o2.getSimpleName());
+            }
+        });
+        for (final Class clazz : temp) {
+            String className = clazz.getSimpleName();
+            MenuItem menuItem = new MenuItem(className);
+            menu.addItem(menuItem);
 
-			final Vector2 finalLocation = location;
-			menuItem.addListener(new ClickListener() {
-				@Override
-				public void clicked (InputEvent event, float x, float y) {
+            final Vector2 finalLocation = location;
+            menuItem.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
 //					TalosMain.Instance().NodeStage().moduleBoardWidget.createModule( clazz, finalLocation.x, finalLocation.y);
-				}
-			});
-		}
+                }
+            });
+        }
 
-		return menu;
-	}
+        return menu;
+    }
 
-	public void createModuleListAdvancedPopup(Vector2 location) {
+    public void createModuleListAdvancedPopup(Vector2 location) {
 //		moduleListPopup.showPopup(stage, location);
-	}
+    }
 
 
-	public void newProjectAction() {
+    public void newProjectAction() {
 //		TalosMain.Instance().ProjectController().newProject(ProjectController.TLS);
-	}
+    }
 
-	public void openProjectAction() {
+    public void openProjectAction() {
 //		openProjectAction(ProjectController.TLS);
-	}
+    }
 
-	public void legacyBatchConvertAction() {
-		// show dialog for batch convert
-		stage.addActor((batchConvertDialog.fadeIn()));
-	}
+    public void legacyBatchConvertAction() {
+        // show dialog for batch convert
+        stage.addActor((batchConvertDialog.fadeIn()));
+    }
 
-	private void buildPreviewController () {
+    private void buildPreviewController() {
 //		previewController = new PreviewImageControllerWidget(SharedResources.skin) {
 //			@Override
 //			public void removeImage () {
@@ -280,215 +279,213 @@ public class UIStage {
 //				previewWidget.gridSizeChanged(size);
 //			}
 //		};
-	}
+    }
 
-	private void constructSplitPanes () {
-		buildPreviewController();
+    private void constructSplitPanes() {
+        buildPreviewController();
 //		innerTertiumActor = new Preview3D(previewController);
 
-		emitterList = new EmitterList(skin);
+        emitterList = new EmitterList(skin);
 
-		Table midTable = new Table();
-		bottomTable = new Table();
-		bottomTable.setSkin(skin);
-		bottomTable.setBackground(skin.getDrawable("button-main-menu"));
+        Table midTable = new Table();
+        bottomTable = new Table();
+        bottomTable.setSkin(skin);
+        bottomTable.setBackground(skin.getDrawable("button-main-menu"));
 
-		bottomContainer = new Table();
-		Table libraryContainer = new Table();
+        bottomContainer = new Table();
+        Table libraryContainer = new Table();
 
-		libraryContainer.addListener(new ClickListener(0) { //Quick hack for library container intercepting touch as its an empty table currently
-			@Override
-			public void clicked (InputEvent event, float x, float y) {
-			}
-		});
-		libraryContainer.addListener(new ClickListener(1) { //Quick hack for library container intercepting touch as its an empty table currently
-			@Override
-			public void clicked (InputEvent event, float x, float y) {
-			}
-		});
-		libraryContainer.setTouchable(Touchable.enabled);
-		bottomPane = new VisSplitPane(bottomContainer, libraryContainer, false);
-		bottomPane.setSplitAmount(1f); // remove this line when the bottom-right panel content will be implemented (which is the library container)
-		bottomContainer.add(emitterList).grow().expand().fill();
-		bottomTable.add(bottomPane).expand().grow();
+        libraryContainer.addListener(new ClickListener(0) { //Quick hack for library container intercepting touch as its an empty table currently
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+            }
+        });
+        libraryContainer.addListener(new ClickListener(1) { //Quick hack for library container intercepting touch as its an empty table currently
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+            }
+        });
+        libraryContainer.setTouchable(Touchable.enabled);
+        bottomPane = new VisSplitPane(bottomContainer, libraryContainer, false);
+        bottomPane.setSplitAmount(1f); // remove this line when the bottom-right panel content will be implemented (which is the library container)
+        bottomContainer.add(emitterList).grow().expand().fill();
+        bottomTable.add(bottomPane).expand().grow();
 
-		verticalPane = new VisSplitPane(midTable, bottomTable, true);
-		verticalPane.setMaxSplitAmount(0.70f);
-		verticalPane.setMinSplitAmount(0.3f);
-		verticalPane.setSplitAmount(0.7f);
+        verticalPane = new VisSplitPane(midTable, bottomTable, true);
+        verticalPane.setMaxSplitAmount(0.70f);
+        verticalPane.setMinSplitAmount(0.3f);
+        verticalPane.setSplitAmount(0.7f);
 
-		previewWidgetContainer = new Table();
-		previewWidgetCell = previewWidgetContainer.add(previewWidget).expand().grow();
-		previewWidgetCell.setActor(previewWidget);
+        previewWidgetContainer = new Table();
+        previewWidgetCell = previewWidgetContainer.add(previewWidget).expand().grow();
+        previewWidgetCell.setActor(previewWidget);
 
-		leftTable = new Table();
-		leftTable.setSkin(skin);
-		leftTable.add(previewWidgetContainer).grow();
-		leftTable.row();
+        leftTable = new Table();
+        leftTable.setSkin(skin);
+        leftTable.add(previewWidgetContainer).grow();
+        leftTable.row();
 //		leftTable.add(previewController).growX();
 //
-		rightTable = new Table(); rightTable.setSkin(skin);
-		rightTable.add().grow();
-		horizontalPane = new VisSplitPane(leftTable, rightTable, false);
-		midTable.add(horizontalPane).expand().grow().fill();
-		horizontalPane.setMaxSplitAmount(0.8f);
-		horizontalPane.setMinSplitAmount(0.2f);
-		horizontalPane.setSplitAmount(0.3f);
+        rightTable = new Table();
+        rightTable.setSkin(skin);
+        rightTable.add().grow();
+        horizontalPane = new VisSplitPane(leftTable, rightTable, false);
+        midTable.add(horizontalPane).expand().grow().fill();
+        horizontalPane.setMaxSplitAmount(0.8f);
+        horizontalPane.setMinSplitAmount(0.2f);
+        horizontalPane.setSplitAmount(0.3f);
 
-		fullScreenTable.row();
+        fullScreenTable.row();
 //		fullScreenTable.add(layoutContainer).grow();
 
-		mainLayout.add(verticalPane).grow();
-	}
+        mainLayout.add(verticalPane).grow();
+    }
 
-	public void showCustomLayout(Table table) {
-		mainLayout.setVisible(false);
-		customLayout.setVisible(true);
+    public void showCustomLayout(Table table) {
+        mainLayout.setVisible(false);
+        customLayout.setVisible(true);
 
-		customLayout.clearChildren();
-		customLayout.add(table).grow();
-	}
+        customLayout.clearChildren();
+        customLayout.add(table).grow();
+    }
 
-	public void hideCustomLayout() {
-		mainLayout.setVisible(true);
-		customLayout.setVisible(false);
-	}
+    public void hideCustomLayout() {
+        mainLayout.setVisible(true);
+        customLayout.setVisible(false);
+    }
 
-	public void swapToAddonContent(Table left, Table right, Table bottom) {
-		leftTable.clearChildren();
-		rightTable.clearChildren();
-		bottomTable.clearChildren();
-		TalosMain.Instance().disableNodeStage();
+    public void swapToAddonContent(Table left, Table right, Table bottom) {
+        leftTable.clearChildren();
+        rightTable.clearChildren();
+        bottomTable.clearChildren();
+        TalosMain.Instance().disableNodeStage();
 
-		leftTable.add(left).grow();
-		rightTable.add(right).grow();
-		bottomTable.add(bottom).expand().grow();
+        leftTable.add(left).grow();
+        rightTable.add(right).grow();
+        bottomTable.add(bottom).expand().grow();
 
-		if(left == null && right == null && bottom != null) {
-			horizontalPane.setVisible(false);
-		}
+        if (left == null && right == null && bottom != null) {
+            horizontalPane.setVisible(false);
+        }
 
-		if(left == null && right == null && bottom == null) {
-			horizontalPane.setVisible(false);
-			verticalPane.setVisible(false);
-		}
+        if (left == null && right == null && bottom == null) {
+            horizontalPane.setVisible(false);
+            verticalPane.setVisible(false);
+        }
+    }
 
-	}
+    public void swapToTalosContent() {
+        hideCustomLayout();
+        verticalPane.setVisible(true);
+        horizontalPane.setVisible(true);
 
-	public void swapToTalosContent() {
-		hideCustomLayout();
-		verticalPane.setVisible(true);
-		horizontalPane.setVisible(true);
+        leftTable.clearChildren();
+        rightTable.clearChildren();
+        bottomTable.clearChildren();
+        previewWidgetContainer.clearChildren();
 
-		leftTable.clearChildren();
-		rightTable.clearChildren();
-		bottomTable.clearChildren();
-		previewWidgetContainer.clearChildren();
+        previewWidgetCell = previewWidgetContainer.add(previewWidget).expand().grow();
 
-		previewWidgetCell = previewWidgetContainer.add(previewWidget).expand().grow();
-
-		leftTable.add(previewWidgetContainer).grow();
-		leftTable.row();
+        leftTable.add(previewWidgetContainer).grow();
+        leftTable.row();
 //		leftTable.add(previewController).growX();
 
-		previewWidgetCell.setActor(previewWidget);
-		bottomTable.add(bottomPane).expand().grow();
-		TalosMain.Instance().enableNodeStage();
+        previewWidgetCell.setActor(previewWidget);
+        bottomTable.add(bottomPane).expand().grow();
+        TalosMain.Instance().enableNodeStage();
 
-		TalosMain.Instance().UIStage().getStage().setKeyboardFocus(rightTable);
-		hideCustomLayout();
+        TalosMain.Instance().UIStage().getStage().setKeyboardFocus(rightTable);
+        hideCustomLayout();
 
-		mainMenu.restore();
-	}
+        mainMenu.restore();
+    }
 
-	public void swapDimensions() {
-		if (previewWidget == innerTertiumActor) {
+    public void swapDimensions() {
+        if (previewWidget == innerTertiumActor) {
 //			previewController.dimensionChanged(false);
-			isIn3DMode = false;
-		} else {
-			previewWidget = innerTertiumActor;
+            isIn3DMode = false;
+        } else {
+            previewWidget = innerTertiumActor;
 //			previewController.dimensionChanged(true);
-			isIn3DMode = true;
-		}
+            isIn3DMode = true;
+        }
 
-		previewWidgetCell.setActor(previewWidget);
-	}
+        previewWidgetCell.setActor(previewWidget);
+    }
 
-	public void initExampleList (PopupMenu examples) {
-		FileHandle list = Gdx.files.internal("samples/list.xml");
-		XmlReader xmlReader = new XmlReader();
-		XmlReader.Element root = xmlReader.parse(list);
-		Array<XmlReader.Element> samples = root.getChildrenByName("sample");
-		for (XmlReader.Element sample : samples) {
-			String name = sample.getAttribute("name");
-			final String fileName = sample.getAttribute("file");
-			MenuItem item = new MenuItem(name);
-			examples.addItem(item);
+    public void initExampleList(PopupMenu examples) {
+        FileHandle list = Gdx.files.internal("samples/list.xml");
+        XmlReader xmlReader = new XmlReader();
+        XmlReader.Element root = xmlReader.parse(list);
+        Array<XmlReader.Element> samples = root.getChildrenByName("sample");
+        for (XmlReader.Element sample : samples) {
+            String name = sample.getAttribute("name");
+            final String fileName = sample.getAttribute("file");
+            MenuItem item = new MenuItem(name);
+            examples.addItem(item);
 
-			item.addListener(new ClickListener() {
-				@Override
-				public void clicked (InputEvent event, float x, float y) {
-					super.clicked(event, x, y);
-					//openProject(fileName);
-					TalosMain.Instance().ProjectController().lastDirTrackingDisable();
+            item.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    super.clicked(event, x, y);
+                    //openProject(fileName);
+                    TalosMain.Instance().ProjectController().lastDirTrackingDisable();
 //					TalosMain.Instance().ProjectController().setProject(ProjectController.TLS);
-					TalosMain.Instance().ProjectController().loadProject(Gdx.files.internal("samples/" + fileName));
-					TalosMain.Instance().ProjectController().lastDirTrackingEnable();
-					TalosMain.Instance().ProjectController().unbindFromFile();
-				}
-			});
-		}
-	}
+                    TalosMain.Instance().ProjectController().loadProject(Gdx.files.internal("samples/" + fileName));
+                    TalosMain.Instance().ProjectController().lastDirTrackingEnable();
+                    TalosMain.Instance().ProjectController().unbindFromFile();
+                }
+            });
+        }
+    }
 
-	public EmitterList Timeline() {
-		return emitterList;
-	}
+    public EmitterList Timeline() {
+        return emitterList;
+    }
 
-	public void resize (int width, int height) {
-		stage.getViewport().update(width, height, true);
-	}
+    public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+    }
 
-	public void setEmitters (Array<ParticleEmitterWrapper> emitterWrappers) {
-		emitterList.setEmitters(emitterWrappers);
-	}
+    public void setEmitters(Array<ParticleEmitterWrapper> emitterWrappers) {
+        emitterList.setEmitters(emitterWrappers);
+    }
 
-	public void showColorPicker(ColorPickerListener listener) {
-		colorPicker.setListener(listener);
-		TalosMain.Instance().UIStage().getStage().addActor(colorPicker.fadeIn());
-	}
+    public void showColorPicker(ColorPickerListener listener) {
+        colorPicker.setListener(listener);
+        TalosMain.Instance().UIStage().getStage().addActor(colorPicker.fadeIn());
+    }
 
-	public void showColorPicker(Color color, ColorPickerListener listener) {
+    public void showColorPicker(Color color, ColorPickerListener listener) {
 
-	}
+    }
 
-	public PreviewWidget PreviewWidget() {
-		return previewWidget;
-	}
+    public PreviewWidget PreviewWidget() {
+        return previewWidget;
+    }
 
-	public MainMenuLegacy Menu() {
-		return mainMenu;
-	}
+    public MainMenuLegacy Menu() {
+        return mainMenu;
+    }
 
-	public Skin getSkin() {
-		return skin;
-	}
+    public Skin getSkin() {
+        return skin;
+    }
 
-	public void showSaveFileChooser(String extension, FileChooserListener listener) {
-		FileSystemInteraction.instance().showSaveFileChooser(extension, listener);
-	}
+    public void showSaveFileChooser(String extension, FileChooserListener listener) {
+        FileSystemInteraction.instance().showSaveFileChooser(extension, listener);
+    }
 
-	public void showFileChooser(String extension, FileChooserListener listener) {
-		FileSystemInteraction.instance().showFileChooser(extension, listener);
-	}
-
-
-	public Class<? extends AbstractModule> getPreferred3DVectorClass () {
-		if (isIn3DMode) {
-			return Vector3Module.class;
-		} else {
-			return Vector2Module.class;
-		}
-	}
+    public void showFileChooser(String extension, FileChooserListener listener) {
+        FileSystemInteraction.instance().showFileChooser(extension, listener);
+    }
 
 
+    public Class<? extends AbstractModule> getPreferred3DVectorClass() {
+        if (isIn3DMode) {
+            return Vector3Module.class;
+        } else {
+            return Vector2Module.class;
+        }
+    }
 }

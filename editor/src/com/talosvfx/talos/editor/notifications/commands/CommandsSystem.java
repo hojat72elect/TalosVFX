@@ -6,7 +6,6 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
-import com.kotcrab.vis.ui.FocusManager;
 import com.kotcrab.vis.ui.widget.VisValidatableTextField;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.TalosEvent;
@@ -17,19 +16,21 @@ import com.talosvfx.talos.editor.notifications.events.commands.ICommandEvent;
 import com.talosvfx.talos.editor.project2.AppManager;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.utils.Toasts;
-import lombok.Getter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import lombok.Getter;
 
 
 public class CommandsSystem extends InputAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(CommandsSystem.class);
 
-    private CommandParser commandParser;
+    private final CommandParser commandParser;
 
     @Getter
-    private Array<ICommand> allCommands = new Array<>();
+    private final Array<ICommand> allCommands = new Array<>();
 
     public CommandsSystem() {
         commandParser = new CommandParser();
@@ -38,6 +39,7 @@ public class CommandsSystem extends InputAdapter {
             allCommands.addAll(entry.value);
         }
     }
+
     private boolean checkCommandState() {
         boolean isRun = false;
         for (ICommand command : allCommands) {

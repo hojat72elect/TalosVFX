@@ -3,7 +3,11 @@ package com.talosvfx.talos.editor.addons.scene.widgets.gizmos;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -34,17 +38,16 @@ import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 
 public class PaintSurfaceGizmo extends Gizmo implements Observer, GameAsset.GameAssetUpdateListener {
 
-    private PaintToolsPane paintToolsPane;
     private final ShapeRenderer shapeRenderer;
-
-    private Color color = new Color(Color.WHITE);
+    private PaintToolsPane paintToolsPane;
+    private final Color color = new Color(Color.WHITE);
 
     private Texture brushTexture;
 
     private FrameBuffer frameBuffer;
-    private Batch innerBatch;
+    private final Batch innerBatch;
 
-    private Vector2 mouseCordsOnScene = new Vector2();
+    private final Vector2 mouseCordsOnScene = new Vector2();
 
     private Actor previousKeyboardFocus;
 
@@ -176,7 +179,7 @@ public class PaintSurfaceGizmo extends Gizmo implements Observer, GameAsset.Game
         updateAssetFromPixmap(pixmap, true);
     }
 
-    private void updateAssetFromPixmap (Pixmap pixmap, boolean updateListeners) {
+    private void updateAssetFromPixmap(Pixmap pixmap, boolean updateListeners) {
         final PaintSurfaceComponent surface = gameObject.getComponent(PaintSurfaceComponent.class);
         final GameAsset<AtlasSprite> gameAsset = surface.gameAsset;
 
@@ -226,7 +229,7 @@ public class PaintSurfaceGizmo extends Gizmo implements Observer, GameAsset.Game
         }
     }
 
-    private boolean canDraw () {
+    private boolean canDraw() {
         return frameBuffer != null && brushTexture != null;
     }
 
@@ -291,7 +294,7 @@ public class PaintSurfaceGizmo extends Gizmo implements Observer, GameAsset.Game
         }
     }
 
-     public void createBrushTexture () {
+    public void createBrushTexture() {
         int size = paintToolsPane.getSize();
         float opacity = paintToolsPane.getOpacity();
         float hardness = paintToolsPane.getHardness();

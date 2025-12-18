@@ -9,15 +9,15 @@ import com.talosvfx.talos.runtime.scene.components.MapComponent;
 
 public class MapComponentRenderer extends ComponentRenderer<MapComponent> {
 
-	private TalosMapRenderer talosMapRenderer;
+    private final TalosMapRenderer talosMapRenderer;
 
-	public MapComponentRenderer (GameObjectRenderer gameObjectRenderer) {
-		super(gameObjectRenderer);
-		talosMapRenderer = new TalosMapRenderer();
-	}
+    public MapComponentRenderer(GameObjectRenderer gameObjectRenderer) {
+        super(gameObjectRenderer);
+        talosMapRenderer = new TalosMapRenderer();
+    }
 
-	@Override
-	public void render (Batch batch, Camera camera, GameObject parent, MapComponent rendererComponent) {
-		talosMapRenderer.render(gameObjectRenderer, batch, parent, rendererComponent);
-	}
+    @Override
+    public void render(Batch batch, Camera camera, GameObject parent, MapComponent rendererComponent) {
+        talosMapRenderer.render(gameObjectRenderer, batch, parent, rendererComponent);
+    }
 }

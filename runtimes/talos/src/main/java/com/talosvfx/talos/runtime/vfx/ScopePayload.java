@@ -38,9 +38,9 @@ public class ScopePayload {
 
     private Particle processingParticleRef;
 
-    private IntMap<NumericalValue> map = new IntMap<>();
+    private final IntMap<NumericalValue> map = new IntMap<>();
 
-    private IntMap<NumericalValue> dynamicValues = new IntMap<>();
+    private final IntMap<NumericalValue> dynamicValues = new IntMap<>();
 
     private int currentRequestMode = -1;
     private int currentRequester = -1;
@@ -48,10 +48,10 @@ public class ScopePayload {
 
 
     public ScopePayload() {
-        for(int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             map.put(i, new NumericalValue());
         }
-        for(int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             dynamicValues.put(i, new NumericalValue());
         }
     }
@@ -93,7 +93,7 @@ public class ScopePayload {
     }
 
     public void reset() {
-        for(int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             map.get(i).set(0);
         }
     }
@@ -122,22 +122,23 @@ public class ScopePayload {
         dynamicValues.get(key).set(val);
     }
 
-    public int getRequestMode () {
+    public int getRequestMode() {
         return currentRequestMode;
     }
-    public void setCurrentRequestMode (int requestMode) {
+
+    public void setCurrentRequestMode(int requestMode) {
         this.currentRequestMode = requestMode;
     }
 
-    public int getRequesterID () {
+    public int getRequesterID() {
         return currentRequester;
     }
 
-    public void setCurrentRequesterID (int currentRequester) {
+    public void setCurrentRequesterID(int currentRequester) {
         this.currentRequester = currentRequester;
     }
 
-    public int newParticleRequester () {
+    public int newParticleRequester() {
         freeRequesterID++;
         if (freeRequesterID == 0) {
             freeRequesterID = 100;

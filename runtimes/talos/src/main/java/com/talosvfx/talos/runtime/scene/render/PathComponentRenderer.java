@@ -12,7 +12,7 @@ import com.talosvfx.talos.runtime.scene.components.PathRendererComponent;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 
 
-public class PathComponentRenderer extends ComponentRenderer<PathRendererComponent>{
+public class PathComponentRenderer extends ComponentRenderer<PathRendererComponent> {
     Array<Vector2> points = new Array<>();
 
     Pool<Vector2> vectorPool = new Pool<Vector2>() {
@@ -21,6 +21,7 @@ public class PathComponentRenderer extends ComponentRenderer<PathRendererCompone
             return new Vector2();
         }
     };
+
     public PathComponentRenderer(GameObjectRenderer gameObjectRenderer) {
         super(gameObjectRenderer);
     }

@@ -17,48 +17,48 @@ public class MathModule extends RoutineNode {
         Object valueB = fetchValue("valueB");
 
         // todo: this all needs a rethink to by type safe and fast
-        if(valueA instanceof String && valueB instanceof Float) {
+        if (valueA instanceof String && valueB instanceof Float) {
             valueA = Float.parseFloat((String) valueA);
         }
-        if(valueB instanceof String && valueA instanceof Float) {
+        if (valueB instanceof String && valueA instanceof Float) {
             valueB = Float.parseFloat((String) valueB);
         }
-        if(valueA instanceof String && valueB instanceof Integer) {
-            if (((String) valueA).contains(".")) valueA = (int)Float.parseFloat((String) valueA);
+        if (valueA instanceof String && valueB instanceof Integer) {
+            if (((String) valueA).contains(".")) valueA = (int) Float.parseFloat((String) valueA);
             else valueA = Integer.parseInt((String) valueA);
         }
-        if(valueB instanceof String && valueA instanceof Integer) {
-            if (((String) valueB).contains(".")) valueB = (int)Float.parseFloat((String) valueB);
+        if (valueB instanceof String && valueA instanceof Integer) {
+            if (((String) valueB).contains(".")) valueB = (int) Float.parseFloat((String) valueB);
             else valueB = Integer.parseInt((String) valueB);
         }
 
-        if(valueA instanceof Integer && valueB instanceof Float) {
-            valueA = (float)((int)valueA);
+        if (valueA instanceof Integer && valueB instanceof Float) {
+            valueA = (float) ((int) valueA);
         }
-        if(valueB instanceof Integer && valueA instanceof Float) {
-            valueB = (float)((int)valueB);
+        if (valueB instanceof Integer && valueA instanceof Float) {
+            valueB = (float) ((int) valueB);
         }
 
-        if(valueA instanceof Float && valueB instanceof Float) {
-            return performOperation(operation, (float)valueA, (float)valueB);
-        } else if(valueA instanceof Integer && valueB instanceof Integer) {
-            return performOperation(operation, (int)valueA, (int)valueB);
-        }else if(valueA instanceof Vector2 && valueB instanceof Vector2) {
-            return performOperation(operation, (Vector2)valueA, (Vector2)valueB);
+        if (valueA instanceof Float && valueB instanceof Float) {
+            return performOperation(operation, (float) valueA, (float) valueB);
+        } else if (valueA instanceof Integer && valueB instanceof Integer) {
+            return performOperation(operation, (int) valueA, (int) valueB);
+        } else if (valueA instanceof Vector2 && valueB instanceof Vector2) {
+            return performOperation(operation, (Vector2) valueA, (Vector2) valueB);
         }
 
         return super.queryValue(targetPortName);
     }
 
     private float performOperation(String operation, float a, float b) {
-        if(operation.equals("ADD")) {
+        if (operation.equals("ADD")) {
             return a + b;
         } else if (operation.equals("SUB")) {
             return a - b;
         } else if (operation.equals("MUL")) {
             return a * b;
         } else if (operation.equals("DIV")) {
-            if(b == 0) return  0;
+            if (b == 0) return 0;
             return a / b;
         } else if (operation.equals("POW")) {
             return (float) Math.pow(a, b);

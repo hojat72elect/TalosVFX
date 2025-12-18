@@ -6,8 +6,6 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
-
-import com.talosvfx.talos.runtime.RuntimeContext;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.runtime.assets.GameResourceOwner;
@@ -17,31 +15,24 @@ import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.ISizableComponent;
 import com.talosvfx.talos.runtime.scene.ValueProperty;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.UUID;
 
 
 public class RoutineRendererComponent<T extends BaseRoutineData> extends RendererComponent implements Json.Serializable, GameResourceOwner<T>, ISizableComponent {
 
-    GameAsset<T> routineResource;
-
-    GameAsset.GameAssetUpdateListener updateListener;
-
     public Color color = new Color(Color.WHITE);
-
     @ValueProperty(prefix = {"W", "H"})
     public Vector2 viewportSize = new Vector2(6, 4);
-
-    @ValueProperty(min = 0, max = 999, step=0.1f)
+    @ValueProperty(min = 0, max = 999, step = 0.1f)
     public float cacheCoolDown = 0.1f;
-
     public transient RoutineInstance routineInstance;
-
     public Array<PropertyWrapper<?>> propertyWrappers = new Array<>();
-
-    @Setter@Getter
+    GameAsset<T> routineResource;
+    GameAsset.GameAssetUpdateListener updateListener;
+    @Setter
+    @Getter
     private boolean requiresWrite;
 
     @Getter
@@ -71,9 +62,8 @@ public class RoutineRendererComponent<T extends BaseRoutineData> extends Rendere
     }
 
 
-
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
 
         propertyWrappers.clear();
@@ -96,7 +86,7 @@ public class RoutineRendererComponent<T extends BaseRoutineData> extends Rendere
         cacheCoolDown = jsonData.getFloat("cache", 0.1f);
 
         color = json.readValue(Color.class, jsonData.get("color"));
-        if(color == null) color = new Color(Color.WHITE);
+        if (color == null) color = new Color(Color.WHITE);
     }
 
 
@@ -106,7 +96,7 @@ public class RoutineRendererComponent<T extends BaseRoutineData> extends Rendere
         color.set(Color.WHITE);
     }
 
-    public void updatePropertyWrappers (boolean tryToMerge) {
+    public void updatePropertyWrappers(boolean tryToMerge) {
         Array<PropertyWrapper<?>> copyWrappers = new Array<>();
         copyWrappers.addAll(propertyWrappers);
 
@@ -148,7 +138,7 @@ public class RoutineRendererComponent<T extends BaseRoutineData> extends Rendere
         }
     }
 
-    private boolean needsToUpdate (Array<PropertyWrapper<?>> existingWrappers, Array<PropertyWrapper<?>> truthWrappers) {
+    private boolean needsToUpdate(Array<PropertyWrapper<?>> existingWrappers, Array<PropertyWrapper<?>> truthWrappers) {
         for (int i = 0; i < truthWrappers.size; i++) {
             PropertyWrapper<?> truthWrapper = truthWrappers.get(i);
             int indexToFind = truthWrapper.index;
@@ -170,7 +160,7 @@ public class RoutineRendererComponent<T extends BaseRoutineData> extends Rendere
         return false;
     }
 
-    private PropertyWrapper<?> getWrapperForIndex (int index, Array<PropertyWrapper<?>> wrappers) {
+    private PropertyWrapper<?> getWrapperForIndex(int index, Array<PropertyWrapper<?>> wrappers) {
         for (int i = 0; i < wrappers.size; i++) {
             PropertyWrapper<?> propertyWrapper = wrappers.get(i);
             if (propertyWrapper.index == index) {
@@ -210,7 +200,7 @@ public class RoutineRendererComponent<T extends BaseRoutineData> extends Rendere
     }
 
     @Override
-    public void clearResource () {
+    public void clearResource() {
         if (routineResource != null) {
             routineResource.listeners.removeValue(updateListener, true);
             routineResource = null;
@@ -219,7 +209,7 @@ public class RoutineRendererComponent<T extends BaseRoutineData> extends Rendere
     }
 
     @Override
-    public boolean allowsMultipleOfTypeOnGameObject () {
+    public boolean allowsMultipleOfTypeOnGameObject() {
         return false;
     }
 
@@ -229,13 +219,13 @@ public class RoutineRendererComponent<T extends BaseRoutineData> extends Rendere
     }
 
     @Override
-    public float getHeight() {
-        return viewportSize.y;
+    public void setWidth(float width) {
+        viewportSize.x = width;
     }
 
     @Override
-    public void setWidth(float width) {
-        viewportSize.x = width;
+    public float getHeight() {
+        return viewportSize.y;
     }
 
     @Override

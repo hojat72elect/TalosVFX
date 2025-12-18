@@ -6,8 +6,8 @@ import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
 public class RoutineDefaultEventInterface implements RoutineEventInterface {
 
 
-	@Override
-	public void onEventFromRoutines (String eventName, Array<PropertyWrapper<?>> properties) {
+    @Override
+    public void onEventFromRoutines(String eventName, Array<PropertyWrapper<?>> properties) {
 
-	}
+    }
 }

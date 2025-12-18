@@ -21,81 +21,81 @@ public class DynamicGridPropertyProvider implements GridPropertyProvider {
 
     Color backgroundColor = new Color(Color.BROWN);
 
-    private Array<GridLine> gridLines = new Array<>();
+    private final Array<GridLine> gridLines = new Array<>();
     private boolean highlightZero = true;
 
     @Override
-    public Array<GridLine> getGridLines () {
+    public Array<GridLine> getGridLines() {
         return gridLines;
     }
 
     @Override
-    public Color getBackgroundColor () {
+    public Color getBackgroundColor() {
         return backgroundColor;
     }
 
     @Override
-    public float getUnitX () {
+    public float getUnitX() {
         return gridUnit;
     }
 
     @Override
-    public float getUnitY () {
+    public float getUnitY() {
         return gridUnit;
     }
 
     @Override
-    public float getWorldHeight () {
+    public float getWorldHeight() {
         return -1;
     }
 
     @Override
-    public float getWorldWidth () {
+    public float getWorldWidth() {
         return -1;
     }
 
     @Override
-    public float getGridStartX () {
+    public float getGridStartX() {
         return gridXStart;
     }
 
     @Override
-    public float getGridEndX () {
+    public float getGridEndX() {
         return gridXEnd;
     }
 
     @Override
-    public float getGridStartY () {
+    public float getGridStartY() {
         return gridYStart;
     }
 
     @Override
-    public float getGridEndY () {
+    public float getGridEndY() {
         return gridYEnd;
     }
 
     @Override
-    public void setLineThickness (float thickness) {
+    public void setLineThickness(float thickness) {
         this.thickness = thickness;
     }
 
     @Override
-    public boolean shouldHighlightCursorHover () {
+    public boolean shouldHighlightCursorHover() {
         return false;
     }
 
     @Override
-    public boolean shouldHighlightCursorSelect () {
+    public boolean shouldHighlightCursorSelect() {
         return false;
     }
 
     @Override
-    public void setHighlightCursorHover (boolean shouldHighlight) {
+    public void setHighlightCursorHover(boolean shouldHighlight) {
 
     }
 
     @Override
-    public void setHighlightCursorSelect (boolean shouldHighlight) {
+    public void setHighlightCursorSelect(boolean shouldHighlight) {
 
     }
 
@@ -105,7 +105,7 @@ public class DynamicGridPropertyProvider implements GridPropertyProvider {
     }
 
     @Override
-    public void update (OrthographicCamera camera, float parentAlpha) {
+    public void update(OrthographicCamera camera, float parentAlpha) {
         gridLines.clear();
 
         float zeroAlpha = 0.2f;
@@ -134,14 +134,14 @@ public class DynamicGridPropertyProvider implements GridPropertyProvider {
 
         // configure colors
         Color gridMainLineColor = Color.valueOf(SharedResources.currentProject.getGridColor());
-        gridMainLineColor.a =  mainLinesAlpha * parentAlpha;
+        gridMainLineColor.a = mainLinesAlpha * parentAlpha;
 
         Color comingLinesColor = Color.valueOf(SharedResources.currentProject.getGridColor());
-        comingLinesColor.a =  linesToAppearAlpha * parentAlpha;
+        comingLinesColor.a = linesToAppearAlpha * parentAlpha;
 
         Color smallLinesColor = Color.valueOf(SharedResources.currentProject.getGridColor());
         smallLinesColor.set(Color.GRAY);
-        smallLinesColor.a =  smallLinesAlpha * parentAlpha;
+        smallLinesColor.a = smallLinesAlpha * parentAlpha;
 
         Color zeroColor = new Color();
         zeroColor.set(Color.CYAN);
@@ -153,7 +153,7 @@ public class DynamicGridPropertyProvider implements GridPropertyProvider {
         gridLines.add(new GridLine(new Vector2(visibleStartX, 0), new Vector2(visibleEndX, 0), shouldHighlightZero() ? zeroColor : gridMainLineColor, thickness * thicknessFactor));
         gridLines.add(new GridLine(new Vector2(0, visibleStartY), new Vector2(0, visibleEndY), shouldHighlightZero() ? zeroColor : gridMainLineColor, thickness * thicknessFactor));
 
-        gridXStart = gridUnit * MathUtils.floor(visibleStartX / gridUnit) ;
+        gridXStart = gridUnit * MathUtils.floor(visibleStartX / gridUnit);
 
         // creating vertical lines
         for (float i = gridXStart; i < visibleEndX; i += gridUnit) {
@@ -188,7 +188,7 @@ public class DynamicGridPropertyProvider implements GridPropertyProvider {
                 for (int k = 0; k < baseLineDivisor; k++) {
                     float nextUnitSize = (gridUnit / baseLineDivisor) / baseLineDivisor;
                     gridLines.add(new GridLine(new Vector2(cameraX - visibleWidth / 2, y1 + k * nextUnitSize),
-                            new Vector2(cameraX + visibleWidth / 2, y1 + k * nextUnitSize), comingLinesColor, thickness  * thicknessFactor));
+                            new Vector2(cameraX + visibleWidth / 2, y1 + k * nextUnitSize), comingLinesColor, thickness * thicknessFactor));
                 }
 
                 gridLines.add(new GridLine(new Vector2(cameraX - visibleWidth / 2, y1),
@@ -202,7 +202,7 @@ public class DynamicGridPropertyProvider implements GridPropertyProvider {
         }
     }
 
-    private float nextPowerOfTwo (float value) {
+    private float nextPowerOfTwo(float value) {
         boolean negative = false;
         boolean smallerOne = false;
         if (value < 0) {
@@ -210,7 +210,7 @@ public class DynamicGridPropertyProvider implements GridPropertyProvider {
             value *= -1;
         }
 
-        if (value < 1 ) {
+        if (value < 1) {
             value = 1 / value;
             smallerOne = true;
         }

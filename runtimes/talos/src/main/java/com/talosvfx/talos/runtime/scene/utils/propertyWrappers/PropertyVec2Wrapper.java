@@ -6,18 +6,18 @@ import com.badlogic.gdx.utils.JsonValue;
 
 public class PropertyVec2Wrapper extends PropertyWrapper<Vector2> {
 
-    @Override
-    public Vector2 parseValueFromString (String value) {
-        return null;
-    }
-
     public PropertyVec2Wrapper() {
         defaultValue = new Vector2();
         value = new Vector2();
     }
 
     @Override
-    public PropertyWrapper<Vector2> clone () {
+    public Vector2 parseValueFromString(String value) {
+        return null;
+    }
+
+    @Override
+    public PropertyWrapper<Vector2> clone() {
         PropertyVec2Wrapper clone = new PropertyVec2Wrapper();
         clone.value.set(value);
         clone.defaultValue.set(defaultValue);
@@ -28,7 +28,7 @@ public class PropertyVec2Wrapper extends PropertyWrapper<Vector2> {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         defaultValue.setZero();
         value.setZero();
@@ -47,7 +47,7 @@ public class PropertyVec2Wrapper extends PropertyWrapper<Vector2> {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("value", value);
         json.writeValue("defaultValue", defaultValue);

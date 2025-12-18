@@ -4,56 +4,55 @@ import net.mostlyoriginal.api.event.common.Event;
 
 public abstract class CustomFunctionEventListener<T extends Event> implements CustomEventListenerAbstraction {
 
-	private final Class<T> clazz;
-	private final int priority;
-	private final boolean skipCancelledEvents;
+    private final Class<T> clazz;
+    private final int priority;
+    private final boolean skipCancelledEvents;
 
-	public abstract boolean evaluate (T event);
-
-
-	public CustomFunctionEventListener (Class<T> clazz, int priority, boolean skipCancelled) {
-		this.clazz = clazz;
-		this.priority = priority;
-		this.skipCancelledEvents = skipCancelled;
-	}
-
-	public CustomFunctionEventListener (Class<T> clazz, int priority) {
-		this(clazz, priority, false);
-	}
-
-	public CustomFunctionEventListener (Class<T> clazz) {
-		this(clazz, 0, false);
-	}
+    public CustomFunctionEventListener(Class<T> clazz, int priority, boolean skipCancelled) {
+        this.clazz = clazz;
+        this.priority = priority;
+        this.skipCancelledEvents = skipCancelled;
+    }
 
 
-	@Override
-	public Object owner () {
-		return this;
-	}
+    public CustomFunctionEventListener(Class<T> clazz, int priority) {
+        this(clazz, priority, false);
+    }
 
-	@Override
-	public boolean handle (Event event) {
-		return evaluate((T)event);
-	}
+    public CustomFunctionEventListener(Class<T> clazz) {
+        this(clazz, 0, false);
+    }
 
-	@Override
-	public int priority () {
-		return priority;
-	}
+    public abstract boolean evaluate(T event);
 
-	@Override
-	public boolean skipCancelledEvents () {
-		return skipCancelledEvents;
-	}
+    @Override
+    public Object owner() {
+        return this;
+    }
 
-	@Override
-	public Class<?> getParameterType () {
-		return clazz;
-	}
+    @Override
+    public boolean handle(Event event) {
+        return evaluate((T) event);
+    }
 
-	@Override
-	public int compareTo (CustomEventListenerAbstraction o) {
-		// Sort by priority descending.
-		return o.priority() - priority;
-	}
+    @Override
+    public int priority() {
+        return priority;
+    }
+
+    @Override
+    public boolean skipCancelledEvents() {
+        return skipCancelledEvents;
+    }
+
+    @Override
+    public Class<?> getParameterType() {
+        return clazz;
+    }
+
+    @Override
+    public int compareTo(CustomEventListenerAbstraction o) {
+        // Sort by priority descending.
+        return o.priority() - priority;
+    }
 }

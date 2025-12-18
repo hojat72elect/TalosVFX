@@ -7,29 +7,29 @@ import com.talosvfx.talos.editor.widgets.propertyWidgets.PropertyWidget;
 
 public class RoutinePropertyProvider implements IPropertyProvider {
 
-	private final RoutineStageData routineStageData;
+    private final RoutineStageData routineStageData;
 
-	public RoutinePropertyProvider (RoutineStageData routineStageData) {
-		this.routineStageData = routineStageData;
-	}
+    public RoutinePropertyProvider(RoutineStageData routineStageData) {
+        this.routineStageData = routineStageData;
+    }
 
-	@Override
-	public Array<PropertyWidget> getListOfProperties () {
-		return null;
-	}
+    @Override
+    public Array<PropertyWidget> getListOfProperties() {
+        return null;
+    }
 
-	@Override
-	public String getPropertyBoxTitle () {
-		return "Routine Properties";
-	}
+    @Override
+    public String getPropertyBoxTitle() {
+        return "Routine Properties";
+    }
 
-	@Override
-	public int getPriority () {
-		return 0;
-	}
+    @Override
+    public int getPriority() {
+        return 0;
+    }
 
-	@Override
-	public Class<? extends IPropertyProvider> getType () {
-		return getClass();
-	}
+    @Override
+    public Class<? extends IPropertyProvider> getType() {
+        return getClass();
+    }
 }

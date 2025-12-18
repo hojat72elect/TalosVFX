@@ -24,20 +24,16 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.kotcrab.vis.ui.VisUI;
-import com.kotcrab.vis.ui.widget.VisSelectBox;
-import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.addons.scene.assets.AssetRepository;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.events.deprecatedparticles.RegisterDragPoints;
 import com.talosvfx.talos.editor.notifications.events.deprecatedparticles.UnRegisterDragPoints;
-import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.serialization.VFXProjectData;
 import com.talosvfx.talos.editor.widgets.ui.DragPoint;
-import com.talosvfx.talos.editor.widgets.ui.PreviewWidget;
+import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.SelectBoxWithZoom;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.vfx.modules.GlobalScopeModule;
 import com.talosvfx.talos.runtime.vfx.values.NumericalValue;
-import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.SelectBoxWithZoom;
 
 public class GlobalScopeModuleWrapper extends ModuleWrapper<GlobalScopeModule> implements IDragPointProvider {
 
@@ -53,8 +49,8 @@ public class GlobalScopeModuleWrapper extends ModuleWrapper<GlobalScopeModule> i
 
         Array<String> array = new Array<>();
 
-        for(int i = 0; i < 10; i++) {
-            array.add(i+"");
+        for (int i = 0; i < 10; i++) {
+            array.add(i + "");
         }
 
         selectBox = addSelectBox(array);
@@ -64,7 +60,7 @@ public class GlobalScopeModuleWrapper extends ModuleWrapper<GlobalScopeModule> i
 
 
     @Override
-    public void onGraphSet () {
+    public void onGraphSet() {
         super.onGraphSet();
         NumericalValue value = getModule().getScope().getDynamicValue(module.getKey());
         dragPoint.set(value.get(0), value.get(1));
@@ -137,7 +133,7 @@ public class GlobalScopeModuleWrapper extends ModuleWrapper<GlobalScopeModule> i
     public void read(Json json, JsonValue jsonData) {
         loading = true;
         super.read(json, jsonData);
-        selectBox.setSelected(module.getKey()+"");
+        selectBox.setSelected(module.getKey() + "");
         loading = false;
     }
 }

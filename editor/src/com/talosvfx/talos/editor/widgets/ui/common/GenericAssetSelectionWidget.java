@@ -10,12 +10,13 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Pools;
 import com.badlogic.gdx.utils.Predicate;
-import com.talosvfx.talos.runtime.assets.GameAsset;
-import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.editor.addons.scene.widgets.AssetListPopup;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.ui.FilteredTree;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.LabelWithZoom;
+import com.talosvfx.talos.runtime.assets.GameAsset;
+import com.talosvfx.talos.runtime.assets.GameAssetType;
+
 import lombok.Setter;
 
 
@@ -39,7 +40,7 @@ public class GenericAssetSelectionWidget<T> extends Table {
         assetListPopup = new AssetListPopup<>();
         this.filter = new Predicate<FilteredTree.Node<GameAsset<T>>>() {
             @Override
-            public boolean evaluate (FilteredTree.Node<GameAsset<T>> node) {
+            public boolean evaluate(FilteredTree.Node<GameAsset<T>> node) {
                 if (node.getObject() == null) return false;
                 return node.getObject().type == type;
             }
@@ -48,11 +49,16 @@ public class GenericAssetSelectionWidget<T> extends Table {
         add(getSubWidget()).growX().right().expandX();
     }
 
-    public GameAsset<T> getValue () {
+    public GameAsset<T> getValue() {
         return gameAsset;
     }
 
-    public Actor getSubWidget () {
+    public void setValue(GameAsset<T> value) {
+        gameAsset = value;
+        nameLabel.setText(value.nameIdentifier);
+    }
+
+    public Actor getSubWidget() {
         Table table = new Table();
         Skin skin = SharedResources.skin;
         final SquareButton button = new SquareButton(skin, skin.getDrawable("ic-file-edit"), "Select asset");
@@ -67,8 +73,8 @@ public class GenericAssetSelectionWidget<T> extends Table {
 
         button.addListener(new ClickListener() {
             @Override
-            public void clicked (InputEvent event, float x, float y) {
-                Vector2 pos = new Vector2(button.getWidth()/2f, button.getHeight()/2f);
+            public void clicked(InputEvent event, float x, float y) {
+                Vector2 pos = new Vector2(button.getWidth() / 2f, button.getHeight() / 2f);
                 button.localToStageCoordinates(pos);
 
                 assetListPopup.showPopup(getStage(), pos, filter, new FilteredTree.ItemListener<GameAsset<T>>() {
@@ -93,8 +99,8 @@ public class GenericAssetSelectionWidget<T> extends Table {
         return table;
     }
 
-    public void updateWidget (GameAsset<T> value) {
-        if(value == null) {
+    public void updateWidget(GameAsset<T> value) {
+        if (value == null) {
             nameLabel.setText("No Asset");
             gameAsset = null;
             return;
@@ -121,10 +127,5 @@ public class GenericAssetSelectionWidget<T> extends Table {
         }
 
         return var2;
-    }
-
-    public void setValue(GameAsset<T> value) {
-        gameAsset = value;
-        nameLabel.setText(value.nameIdentifier);
     }
 }

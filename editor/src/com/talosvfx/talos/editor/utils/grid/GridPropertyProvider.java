@@ -6,15 +6,15 @@ import com.badlogic.gdx.utils.Array;
 
 public interface GridPropertyProvider {
 
-    void update (OrthographicCamera camera, float alpha);
+    void update(OrthographicCamera camera, float alpha);
 
-    Array<GridLine> getGridLines ();
+    Array<GridLine> getGridLines();
 
-    Color getBackgroundColor ();
+    Color getBackgroundColor();
 
-    float getUnitX ();
+    float getUnitX();
 
-    float getUnitY ();
+    float getUnitY();
 
     /**
      * @return boundary for world width, where -1 indicates infinity
@@ -26,25 +26,25 @@ public interface GridPropertyProvider {
      */
     float getWorldHeight();
 
-    float getGridStartX ();
+    float getGridStartX();
 
-    float getGridEndX ();
+    float getGridEndX();
 
-    float getGridStartY ();
+    float getGridStartY();
 
-    float getGridEndY ();
+    float getGridEndY();
 
-    void setLineThickness (float thickness);
+    void setLineThickness(float thickness);
 
-    boolean shouldHighlightCursorHover ();
+    boolean shouldHighlightCursorHover();
 
-    boolean shouldHighlightCursorSelect ();
+    boolean shouldHighlightCursorSelect();
 
-    void setHighlightCursorHover (boolean shouldHighlight);
-    void setHighlightCursorSelect (boolean shouldHighlight);
+    void setHighlightCursorHover(boolean shouldHighlight);
+
+    void setHighlightCursorSelect(boolean shouldHighlight);
 
     boolean shouldHighlightZero();
-
 }
 
 

@@ -1,6 +1,7 @@
 package com.talosvfx.talos.editor.project2.apps.preferences;
 
 import com.talosvfx.talos.editor.widgets.ui.ViewportViewSettings;
+
 import lombok.Data;
 
 @Data

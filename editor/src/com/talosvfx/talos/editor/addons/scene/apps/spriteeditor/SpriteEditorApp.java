@@ -12,7 +12,7 @@ import com.talosvfx.talos.runtime.assets.GameAsset;
 public class SpriteEditorApp extends AppManager.BaseApp<AtlasSprite> implements GameAsset.GameAssetUpdateListener {
     private final SpriteEditor spriteEditor;
 
-    public SpriteEditorApp () {
+    public SpriteEditorApp() {
 
         spriteEditor = new SpriteEditor();
         DummyLayoutApp<AtlasSprite> spriteEditorApp = new DummyLayoutApp<AtlasSprite>(SharedResources.skin, this, getAppName()) {
@@ -28,7 +28,7 @@ public class SpriteEditorApp extends AppManager.BaseApp<AtlasSprite> implements 
             }
 
             @Override
-            public Actor getMainContent () {
+            public Actor getMainContent() {
                 return spriteEditor;
             }
         };
@@ -37,7 +37,7 @@ public class SpriteEditorApp extends AppManager.BaseApp<AtlasSprite> implements 
     }
 
     @Override
-    public void updateForGameAsset (GameAsset<AtlasSprite> gameAsset) {
+    public void updateForGameAsset(GameAsset<AtlasSprite> gameAsset) {
         super.updateForGameAsset(gameAsset);
 
         // TODO: 23.02.23 dummy refactor
@@ -53,7 +53,7 @@ public class SpriteEditorApp extends AppManager.BaseApp<AtlasSprite> implements 
     }
 
     @Override
-    public String getAppName () {
+    public String getAppName() {
         if (gameAsset != null) {
             return "Sprite - " + gameAsset.nameIdentifier;
         } else {
@@ -62,12 +62,12 @@ public class SpriteEditorApp extends AppManager.BaseApp<AtlasSprite> implements 
     }
 
     @Override
-    public void onUpdate () {
+    public void onUpdate() {
         getGridAppReference().updateTabName(getAppName());
     }
 
     @Override
-    public void onRemove () {
+    public void onRemove() {
         gameAsset.listeners.removeValue(this, true);
     }
 }

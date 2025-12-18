@@ -1,8 +1,6 @@
 package com.talosvfx.talos.runtime.routine.nodes;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
 import com.badlogic.gdx.utils.Pools;
 import com.talosvfx.talos.runtime.assets.AMetadata;
@@ -39,7 +37,7 @@ public class RenderQuadNode extends RoutineNode {
         AMetadata metaData = rawAsset.metaData;
         if (metaData instanceof SpriteMetadata) {
             SpriteMetadata sData = (SpriteMetadata) metaData;
-            if(sData.borderData != null) {
+            if (sData.borderData != null) {
                 // this is a nine patch;
                 drawableQuad.metadata = sData;
             }
@@ -53,13 +51,13 @@ public class RenderQuadNode extends RoutineNode {
 
         drawableQuad.rotation = fetchFloatValue("rotation");
         drawableQuad.color.set(fetchColorValue("color"));
-        if(drawableQuad.color == null) {
+        if (drawableQuad.color == null) {
             drawableQuad.color = Color.WHITE;
         }
         drawableQuad.aspect = fetchBooleanValue("aspect");
         String mode = fetchStringValue("mode");
-        if(mode == null) mode = "simple";
-        drawableQuad.renderMode = SpriteRendererComponent.RenderMode.simple.valueOf(mode);
+        if (mode == null) mode = "simple";
+        drawableQuad.renderMode = SpriteRendererComponent.RenderMode.valueOf(mode);
 
         routineInstanceRef.drawableQuads.add(drawableQuad);
     }

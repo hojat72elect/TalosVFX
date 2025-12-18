@@ -8,22 +8,22 @@ import com.talosvfx.talos.editor.widgets.propertyWidgets.ButtonPropertyWidget;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.IPropertyProvider;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.LabelWidget;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.PropertyWidget;
-
 import com.talosvfx.talos.runtime.utils.Supplier;
+
 import java.util.regex.Pattern;
 
 public class FilePropertyProvider implements IPropertyProvider {
 
     private static final Pattern imageRegExp = Pattern.compile("(?i)(jpe?g|png|gif|bmp)");
 
-    private FileHandle fileHandle;
+    private final FileHandle fileHandle;
 
     public FilePropertyProvider(FileHandle fileHandle) {
         this.fileHandle = fileHandle;
     }
 
     @Override
-    public Array<PropertyWidget> getListOfProperties () {
+    public Array<PropertyWidget> getListOfProperties() {
         Array<PropertyWidget> properties = new Array<>();
 
         LabelWidget nameWidget = new LabelWidget("Name", new Supplier<String>() {
@@ -56,7 +56,7 @@ public class FilePropertyProvider implements IPropertyProvider {
         String ext = fileHandle.extension();
         boolean isImage = imageRegExp.matcher(ext).matches();
         if (isImage) {
-             LabelWidget dimensionsWidget = new LabelWidget("Dimensions", new Supplier<String>() {
+            LabelWidget dimensionsWidget = new LabelWidget("Dimensions", new Supplier<String>() {
                 @Override
                 public String get() {
                     Texture texture = new Texture(fileHandle);
@@ -68,7 +68,7 @@ public class FilePropertyProvider implements IPropertyProvider {
 
         ButtonPropertyWidget<String> actionWidget = new ButtonPropertyWidget<String>("action", "Open", new ButtonPropertyWidget.ButtonListener<String>() {
             @Override
-            public void clicked (ButtonPropertyWidget<String> widget) {
+            public void clicked(ButtonPropertyWidget<String> widget) {
                 AssetImporter.fileOpen(fileHandle);
             }
         });
@@ -78,17 +78,17 @@ public class FilePropertyProvider implements IPropertyProvider {
     }
 
     @Override
-    public String getPropertyBoxTitle () {
+    public String getPropertyBoxTitle() {
         return "File";
     }
 
     @Override
-    public int getPriority () {
+    public int getPriority() {
         return -2;
     }
 
     @Override
-    public Class<? extends IPropertyProvider> getType () {
+    public Class<? extends IPropertyProvider> getType() {
         return getClass();
     }
 }

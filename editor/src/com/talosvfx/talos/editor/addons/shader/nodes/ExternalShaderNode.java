@@ -22,12 +22,12 @@ public class ExternalShaderNode extends AbstractShaderNode {
     private Table customContainer;
 
     @Override
-    public void prepareDeclarations (ShaderBuilder shaderBuilder) {
+    public void prepareDeclarations(ShaderBuilder shaderBuilder) {
 
     }
 
     @Override
-    public String writeOutputCode (String slotId) {
+    public String writeOutputCode(String slotId) {
         return codeArea.getText();
     }
 
@@ -37,12 +37,12 @@ public class ExternalShaderNode extends AbstractShaderNode {
     }
 
     @Override
-    protected String getPreviewLine (String expression) {
+    protected String getPreviewLine(String expression) {
         return null;
     }
 
     @Override
-    public void constructNode (XmlReader.Element module) {
+    public void constructNode(XmlReader.Element module) {
         // add the inputs here
         customContainer = new Table();
         widgetContainer.add(customContainer).growX().row();
@@ -56,7 +56,7 @@ public class ExternalShaderNode extends AbstractShaderNode {
 
         codeArea.addListener(new FileActorBinder.FileEventListener() {
             @Override
-            public void onFileSet (FileHandle fileHandle) {
+            public void onFileSet(FileHandle fileHandle) {
                 String data = fileHandle.readString();
 
                 data = processAnnotations(data);
@@ -76,11 +76,11 @@ public class ExternalShaderNode extends AbstractShaderNode {
         codeArea.setText(defaultText);
     }
 
-    private String processAnnotations (String data) {
-        String lines[] = data.split("\n");
+    private String processAnnotations(String data) {
+        String[] lines = data.split("\n");
         String result = "";
         customContainer.clear(); // todo: also clear maps for uniform inputs
-        for(int i = 0; i < lines.length; i++) {
+        for (int i = 0; i < lines.length; i++) {
             String line = lines[i].trim();
             // that is a very specific check we have here.. oh boi
             if (line.startsWith("@") && i < lines.length - 1 && lines[i + 1].trim().startsWith("uniform")) {
@@ -93,13 +93,12 @@ public class ExternalShaderNode extends AbstractShaderNode {
                     // now look for method and arguments
 
                     String method = line.substring(line.indexOf("[") + 1, line.indexOf("("));
-                    String args[] = line.substring(line.indexOf("(") + 1, line.indexOf(")")).split(",");
-                    for(int j = 0; j < args.length; j++) {
+                    String[] args = line.substring(line.indexOf("(") + 1, line.indexOf(")")).split(",");
+                    for (int j = 0; j < args.length; j++) {
                         args[j] = args[j].trim();
                     }
 
                     addUniformInput(uniformName, method, args);
-
                 } catch (Exception e) {
                     System.out.println("error processing this annotation");
                 }
@@ -111,7 +110,7 @@ public class ExternalShaderNode extends AbstractShaderNode {
         return result;
     }
 
-    private void addUniformInput (String uniformName, String method, String[] args) {
+    private void addUniformInput(String uniformName, String method, String[] args) {
         String xml = "<value port=\"input\" name=\"" + uniformName + "\" type=\"float\">" + uniformName + "</value>";
         XmlReader reader = new XmlReader();
         XmlReader.Element elem = reader.parse(xml);
@@ -129,7 +128,7 @@ public class ExternalShaderNode extends AbstractShaderNode {
     }
 
     @Override
-    protected void showShaderBox () {
+    protected void showShaderBox() {
 
     }
 }

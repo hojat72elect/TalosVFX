@@ -3,27 +3,26 @@ package com.talosvfx.talos.runtime.scene.components;
 import com.talosvfx.talos.runtime.scene.GameObject;
 
 public abstract class AComponent {
-	private transient GameObject gameObject;
+    private transient GameObject gameObject;
 
-	public void setGameObject (GameObject gameObject) {
-		this.gameObject = gameObject;
-	}
+    public GameObject getGameObject() {
+        return gameObject;
+    }
 
-	public GameObject getGameObject () {
-		return gameObject;
-	}
+    public void setGameObject(GameObject gameObject) {
+        this.gameObject = gameObject;
+    }
 
-	public void reset () {
-	}
+    public void reset() {
+    }
 
-	public void remove () {
-		if (gameObject != null) {
-			gameObject.removeComponent(this);
-		}
-	}
+    public void remove() {
+        if (gameObject != null) {
+            gameObject.removeComponent(this);
+        }
+    }
 
-	public boolean allowsMultipleOfTypeOnGameObject () {
-		return false;
-	}
-
+    public boolean allowsMultipleOfTypeOnGameObject() {
+        return false;
+    }
 }

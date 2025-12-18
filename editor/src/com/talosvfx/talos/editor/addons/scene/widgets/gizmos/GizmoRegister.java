@@ -24,7 +24,7 @@ public class GizmoRegister {
 
                 XmlReader.Element gizmosContainer = component.getChildByName("gizmos");
                 Array<Class<? extends Gizmo>> list = new Array<>();
-                if(gizmosContainer != null) {
+                if (gizmosContainer != null) {
                     Array<XmlReader.Element> gizmos = gizmosContainer.getChildrenByName("gizmo");
 
                     for (XmlReader.Element gizmo : gizmos) {
@@ -43,15 +43,16 @@ public class GizmoRegister {
 
     /**
      * todo: this needs pooling later, bot not super important
+     *
      * @param component
      * @return
      */
-    public static Array<Gizmo> makeGizmosFor (AComponent component) {
+    public static Array<Gizmo> makeGizmosFor(AComponent component) {
         Array<Gizmo> list = new Array<>();
-        if(map.containsKey(component.getClass())) {
+        if (map.containsKey(component.getClass())) {
             Array<Class<? extends Gizmo>> classes = map.get(component.getClass());
 
-            for(Class clazz: classes) {
+            for (Class clazz : classes) {
                 try {
                     Gizmo instance = (Gizmo) ClassReflection.newInstance(clazz);
                     list.add(instance);

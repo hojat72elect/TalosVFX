@@ -10,7 +10,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.kotcrab.vis.ui.util.dialog.Dialogs;
-import com.kotcrab.vis.ui.widget.*;
+import com.kotcrab.vis.ui.widget.Menu;
+import com.kotcrab.vis.ui.widget.MenuBar;
+import com.kotcrab.vis.ui.widget.MenuItem;
+import com.kotcrab.vis.ui.widget.PopupMenu;
+import com.kotcrab.vis.ui.widget.VisDialog;
 import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.UIStage;
 
@@ -54,7 +58,7 @@ public class MainMenuLegacy extends Table {
 
         about.addListener(new ClickListener() {
             @Override
-            public void clicked (InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
                 VisDialog dialog = Dialogs.showOKDialog(stage.getStage(), "About Talos 1.5.0", "Talos is a an open source node based FX and Shader editor");
             }
@@ -74,7 +78,7 @@ public class MainMenuLegacy extends Table {
         final MenuItem openProject = new MenuItem("Open TalosProject", icon("ic-folder"));
         MenuItem openRecent = new MenuItem("Open Recent", icon("ic-folder-recent"));
         saveProject = new MenuItem("Save", icon("ic-save"));
-        export = new MenuItem("Export" , icon("ic-download"));
+        export = new MenuItem("Export", icon("ic-download"));
         exportAs = new MenuItem("Export As");
         MenuItem examples = new MenuItem("Examples");
 
@@ -138,7 +142,7 @@ public class MainMenuLegacy extends Table {
 
         newProject.addListener(new ClickListener() {
             @Override
-            public void clicked (InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
                 stage.newProjectAction();
             }
@@ -146,7 +150,7 @@ public class MainMenuLegacy extends Table {
 
         openProject.addListener(new ClickListener() {
             @Override
-            public void clicked (InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
                 stage.openProjectAction();
             }
@@ -154,7 +158,7 @@ public class MainMenuLegacy extends Table {
 
         legacyBatchImportItem.addListener(new ClickListener() {
             @Override
-            public void clicked (InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
                 stage.legacyBatchConvertAction();
             }
@@ -162,7 +166,7 @@ public class MainMenuLegacy extends Table {
 
         exitApp.addListener(new ClickListener() {
             @Override
-            public void clicked (InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
                 Gdx.app.exit();
             }
@@ -182,13 +186,13 @@ public class MainMenuLegacy extends Table {
         stage.getStage().addListener(new InputListener() {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
-                if(keycode == Input.Keys.N && Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
-                    if(!newProject.isDisabled()) {
+                if (keycode == Input.Keys.N && Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
+                    if (!newProject.isDisabled()) {
 //                        TalosMain.Instance().ProjectController().newProject(ProjectController.TLS);
                     }
                 }
-                if(keycode == Input.Keys.O && Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
-                    if(!openProject.isDisabled()) {
+                if (keycode == Input.Keys.O && Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
+                    if (!openProject.isDisabled()) {
                         stage.openProjectAction();
                     }
                 }
@@ -225,16 +229,16 @@ public class MainMenuLegacy extends Table {
     public void updateRecentsList(Array<String> list) {
         openRecentPopup.clear();
 
-        for(String path: list) {
+        for (String path : list) {
             final FileHandle handle = Gdx.files.absolute(path);
-            if(!handle.exists()) continue;;
+            if (!handle.exists()) continue;
             String name = handle.name();
             MenuItem item = new MenuItem(name);
             item.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
                     super.clicked(event, x, y);
-                    if(handle.extension().equals("tls")) {
+                    if (handle.extension().equals("tls")) {
 //                        TalosMain.Instance().ProjectController().setProject(ProjectController.TLS);
                         TalosMain.Instance().ProjectController().loadProject(handle);
                     } else {

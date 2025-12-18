@@ -25,34 +25,29 @@ import java.util.Comparator;
 
 public class RoutineRenderer {
 
-    private Comparator<? super DrawableQuad> zComparator;
-
-    private float renderCoolDown = 0f;
-    private TextureRegion textureRegion = new TextureRegion();
-
-    public RoutineRenderer () {
-        zComparator = new Comparator<DrawableQuad>() {
-            @Override
-            public int compare(DrawableQuad o2, DrawableQuad o1) {
-                int result = (int) (o1.z*10000 - o2.z*10000);
-                if(result == 0) {
-                    result = (int) (o1.position.x*10000 - o2.position.x*10000);
-                }
-                if(result == 0) {
-                    result = (int) (o1.position.y*10000 - o2.position.y*10000);
-                }
-                return result;
-            }
-        };
-    }
-
-
     private final Rectangle cameraViewportRect = new Rectangle();
     private final Rectangle objectViewportRect = new Rectangle();
     private final Rectangle intersectionRect = new Rectangle();
     private final Vector2 positionTemp = new Vector2();
     private final Vector2 sizeTemp = new Vector2();
-
+    private final Comparator<? super DrawableQuad> zComparator;
+    private float renderCoolDown = 0f;
+    private final TextureRegion textureRegion = new TextureRegion();
+    public RoutineRenderer() {
+        zComparator = new Comparator<DrawableQuad>() {
+            @Override
+            public int compare(DrawableQuad o2, DrawableQuad o1) {
+                int result = (int) (o1.z * 10000 - o2.z * 10000);
+                if (result == 0) {
+                    result = (int) (o1.position.x * 10000 - o2.position.x * 10000);
+                }
+                if (result == 0) {
+                    result = (int) (o1.position.y * 10000 - o2.position.y * 10000);
+                }
+                return result;
+            }
+        };
+    }
 
     public void render(Batch batch, Camera camera, GameObject gameObject, RoutineRendererComponent<?> routineRendererComponent) {
         RoutineInstance routineInstance = routineRendererComponent.routineInstance;
@@ -70,7 +65,7 @@ public class RoutineRenderer {
 
         boolean reset = false;
 
-        if(renderCoolDown <= 0f && routineInstance.isDirty()) {
+        if (renderCoolDown <= 0f && routineInstance.isDirty()) {
             renderCoolDown = routineRendererComponent.cacheCoolDown;
             reset = true;
         }
@@ -83,7 +78,7 @@ public class RoutineRenderer {
 
             float zoom = 1f;
             if (camera instanceof OrthographicCamera) {
-                zoom = ((OrthographicCamera)camera).zoom;
+                zoom = ((OrthographicCamera) camera).zoom;
             }
             cameraViewportRect.setSize(camera.viewportWidth * zoom, camera.viewportHeight * zoom).setCenter(camera.position.x, camera.position.y);
 
@@ -107,19 +102,19 @@ public class RoutineRenderer {
             renderRoutineNode.viewportSize.set(cameraViewportRect.width, cameraViewportRect.height);
             renderRoutineNode.gameObject = gameObject;
 
-            if(routineRendererComponent.cacheCoolDown == 0) {
-                reset  = true;
-            }
-
-            if(routineInstance.isDirty() && routineInstance.drawableQuads.size == 0) {
+            if (routineRendererComponent.cacheCoolDown == 0) {
                 reset = true;
             }
 
-            if(!configured) {
+            if (routineInstance.isDirty() && routineInstance.drawableQuads.size == 0) {
+                reset = true;
+            }
+
+            if (!configured) {
                 reset = false;
             }
 
-            if(reset) {
+            if (reset) {
                 routineInstance.clearMemory();
                 routineInstance.getProperties().clear();
 
@@ -134,7 +129,7 @@ public class RoutineRenderer {
             }
 
             for (DrawableQuad drawableQuad : routineInstance.drawableQuads) {
-                if(drawableQuad.renderMode == SpriteRendererComponent.RenderMode.sliced) {
+                if (drawableQuad.renderMode == SpriteRendererComponent.RenderMode.sliced) {
                     drawSliced(gameObject, batch, drawableQuad);
                 } else {
                     boolean aspect = drawableQuad.aspect;
@@ -162,22 +157,20 @@ public class RoutineRenderer {
     private SavableContainer findContainer(GameObject go) {
         GameObject root = findRootGO(go);
         GameObjectContainer container = root.getGameObjectContainerRoot();
-        if(container instanceof SavableContainer) {
+        if (container instanceof SavableContainer) {
             return (SavableContainer) container;
         }
         return null;
-
     }
 
     private GameObject findRootGO(GameObject go) {
-        if(go.getParent() != null) {
+        if (go.getParent() != null) {
             return findRootGO(go.getParent());
         }
         return go;
-
     }
 
-    private void drawSliced (GameObject gameObject, Batch batch, DrawableQuad drawableQuad) {
+    private void drawSliced(GameObject gameObject, Batch batch, DrawableQuad drawableQuad) {
         String talosIdentifier = gameObject.getTalosIdentifier();
         RuntimeContext.TalosContext talosContext = RuntimeContext.getInstance().getTalosContext(talosIdentifier);
         BaseAssetRepository baseAssetRepository = talosContext.getBaseAssetRepository();

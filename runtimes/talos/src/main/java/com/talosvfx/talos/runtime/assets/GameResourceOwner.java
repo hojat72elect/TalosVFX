@@ -9,13 +9,7 @@ import java.util.UUID;
 
 public interface GameResourceOwner<U> {
 
-    GameAssetType getGameAssetType ();
-
-    GameAsset<U> getGameResource ();
-
-    void setGameAsset (GameAsset<U> gameAsset);
-
-    static <U> void writeGameAsset (String name, Json json, GameAsset<U> gameResource) {
+    static <U> void writeGameAsset(String name, Json json, GameAsset<U> gameResource) {
         if (gameResource != null) {
             json.writeValue(name, gameResource.nameIdentifier);
             if (!gameResource.isBroken()) {
@@ -30,15 +24,15 @@ public interface GameResourceOwner<U> {
         }
     }
 
-    static <U> void writeGameAsset (String name, Json json, GameResourceOwner<U> owner) {
+    static <U> void writeGameAsset(String name, Json json, GameResourceOwner<U> owner) {
         writeGameAsset(name, json, owner.getGameResource());
     }
 
-    static <U> void writeGameAsset (Json json, GameResourceOwner<U> owner) {
+    static <U> void writeGameAsset(Json json, GameResourceOwner<U> owner) {
         writeGameAsset("gameResource", json, owner);
     }
 
-    static <U> GameAsset<U> readAsset (Json json, JsonValue jsonValue) {
+    static <U> GameAsset<U> readAsset(Json json, JsonValue jsonValue) {
         String identifier = readGameResourceFromComponent(jsonValue);
         GameAssetType type = readAssetType(json, jsonValue);
         UUID uuid = readGameResourceUUIDFromComponent(jsonValue);
@@ -72,7 +66,7 @@ public interface GameResourceOwner<U> {
         }
     }
 
-    static <U> GameAsset<U> readAssetForceType (Json json, JsonValue jsonValue, GameAssetType type) {
+    static <U> GameAsset<U> readAssetForceType(Json json, JsonValue jsonValue, GameAssetType type) {
         String identifier = readGameResourceFromComponent(jsonValue);
         UUID uuid = readGameResourceUUIDFromComponent(jsonValue);
         String talosIdentifier = readTalosIdentifier(jsonValue);
@@ -107,18 +101,19 @@ public interface GameResourceOwner<U> {
 
     static GameAssetType readAssetType(Json json, JsonValue jsonValue) {
         GameAssetType type = json.readValue("type", GameAssetType.class, jsonValue);
-        if(type == null) return GameAssetType.SPRITE;
+        if (type == null) return GameAssetType.SPRITE;
         return type;
     }
-    static String readTalosIdentifier (JsonValue value) {
+
+    static String readTalosIdentifier(JsonValue value) {
         return value.getString("talosIdentifier", "default");
     }
 
-    static String readGameResourceFromComponent (JsonValue component) {
+    static String readGameResourceFromComponent(JsonValue component) {
         return component.getString("gameResource", "broken");
     }
 
-    static UUID readGameResourceUUIDFromComponent (JsonValue jsonValue) {
+    static UUID readGameResourceUUIDFromComponent(JsonValue jsonValue) {
         String uuid = jsonValue.getString("gameResourceUUID", null);
         if (uuid == null) {
             return null;
@@ -127,5 +122,11 @@ public interface GameResourceOwner<U> {
         }
     }
 
-    void clearResource ();
+    GameAssetType getGameAssetType();
+
+    GameAsset<U> getGameResource();
+
+    void setGameAsset(GameAsset<U> gameAsset);
+
+    void clearResource();
 }

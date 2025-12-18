@@ -4,9 +4,8 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.XmlReader;
 import com.talosvfx.talos.editor.addons.scene.apps.shader.workspace.ShaderNodeStage;
-import com.talosvfx.talos.runtime.assets.GameAsset;
-import com.talosvfx.talos.runtime.vfx.shaders.ShaderBuilder;
 import com.talosvfx.talos.editor.addons.shader.widgets.ShaderBox;
+import com.talosvfx.talos.runtime.vfx.shaders.ShaderBuilder;
 
 public class ColorOutput extends AbstractShaderNode {
 
@@ -19,12 +18,12 @@ public class ColorOutput extends AbstractShaderNode {
     private ShaderBox.Blending blending = ShaderBox.Blending.NORMAL;
 
     @Override
-    public void constructNode (XmlReader.Element module) {
+    public void constructNode(XmlReader.Element module) {
         super.constructNode(module);
 
         widgetMap.get(BLENDING).addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent changeEvent, Actor actor) {
+            public void changed(ChangeEvent changeEvent, Actor actor) {
                 String blendingValue = (String) widgetMap.get(BLENDING).getValue();
 
                 if (blendingValue.equals("NORMAL")) {
@@ -43,7 +42,7 @@ public class ColorOutput extends AbstractShaderNode {
         buildFragmentShader(previewBuilder);
     }
 
-    public void prepareDeclarations (ShaderBuilder shaderBuilder) {
+    public void prepareDeclarations(ShaderBuilder shaderBuilder) {
 
     }
 
@@ -55,7 +54,7 @@ public class ColorOutput extends AbstractShaderNode {
 
         String color = getExpression(INPUT_RGBA);
 
-        if(color == null || color.equals("0.0")) {
+        if (color == null || color.equals("0.0")) {
             color = "vec4(0.0, 0.0, 0.0, 1.0)";
         }
 
@@ -63,7 +62,7 @@ public class ColorOutput extends AbstractShaderNode {
     }
 
     @Override
-    public void graphUpdated () {
+    public void graphUpdated() {
         buildFragmentShader(previewBuilder);
 
         ShaderNodeStage nodeStage = (ShaderNodeStage) nodeBoard.getNodeStage();
@@ -74,12 +73,12 @@ public class ColorOutput extends AbstractShaderNode {
 
 
     @Override
-    protected void updatePreview () {
+    protected void updatePreview() {
         shaderBox.setShader(previewBuilder);
     }
 
     @Override
-    protected String getPreviewOutputName () {
+    protected String getPreviewOutputName() {
         return null;
     }
 

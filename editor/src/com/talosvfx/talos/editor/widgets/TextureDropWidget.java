@@ -59,29 +59,28 @@ public class TextureDropWidget<F extends AbstractModule> extends Table {
         stack.setTouchable(Touchable.enabled);
         stack.addListener(new ClickListener() {
             @Override
-            public void clicked (InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
                 imageClicked();
             }
         });
     }
 
-    public void imageClicked () {
+    public void imageClicked() {
         final UIStage uistage = TalosMain.Instance().UIStage();
         final Stage stage = uistage.getStage();
 
         uistage.temporaryTextureDialog.setListener(new TemporaryTextureSelectDialog.OnTextureSelected() {
             @Override
-            public void onSelected (TemporaryTextureSelectDialog.TextureSelection textureSelection) {
+            public void onSelected(TemporaryTextureSelectDialog.TextureSelection textureSelection) {
                 onTextureSelected(textureSelection);
             }
         });
 
         stage.addActor(uistage.temporaryTextureDialog.fadeIn());
-
     }
 
-    public void onTextureSelected (TemporaryTextureSelectDialog.TextureSelection textureSelection) {
+    public void onTextureSelected(TemporaryTextureSelectDialog.TextureSelection textureSelection) {
         final Texture texture = textureSelection.getTexture();
         setDrawable(new TextureRegionDrawable(new TextureRegion(texture)));
     }

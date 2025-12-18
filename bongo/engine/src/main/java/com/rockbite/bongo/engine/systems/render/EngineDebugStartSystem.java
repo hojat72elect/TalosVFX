@@ -12,65 +12,62 @@ import com.badlogic.gdx.InputProcessor;
 import com.rockbite.bongo.engine.Bongo;
 import com.rockbite.bongo.engine.input.InputInterceptor;
 import com.rockbite.bongo.engine.input.InputProvider;
+
 import net.mostlyoriginal.api.Singleton;
 
 
 public class EngineDebugStartSystem extends BaseSystem implements InputProvider {
 
-	private final InputInterceptor interceptor;
-	private EntitySubscription allEntities;
-
-	public EngineDebugStartSystem () {
-		interceptor = new InputInterceptor();
-
-		Bongo.imguiPlatform.init();
-
-	}
-
-	@Override
-	protected void initialize () {
-		super.initialize();
-		allEntities = world.getAspectSubscriptionManager().get(Aspect.all());
-	}
+    final Bag fillBag = new Bag();
+    final Bag singletons = new Bag();
+    private final InputInterceptor interceptor;
+    private EntitySubscription allEntities;
 
 
-	final Bag fillBag = new Bag();
-	final Bag singletons = new Bag();
+    public EngineDebugStartSystem() {
+        interceptor = new InputInterceptor();
 
-	public void postInit () {
+        Bongo.imguiPlatform.init();
+    }
 
-		final IntBag entities = allEntities.getEntities();
-		for (int i = 0; i < entities.size(); i++) {
-			final int entityID = entities.get(i);
-			final Entity entity = world.getEntity(entityID);
-			fillBag.clear();
-			entity.getComponents(fillBag);
-			if (fillBag.size() > 0) {
-				for (int j = 0; j < fillBag.size(); j++) {
-					final Component component = (Component)fillBag.get(j);
-					if (ClassReflection.isAnnotationPresent(component.getClass(), Singleton.class)) {
-						singletons.add(component);
-					}
-				}
-			}
-		}
+    @Override
+    protected void initialize() {
+        super.initialize();
+        allEntities = world.getAspectSubscriptionManager().get(Aspect.all());
+    }
 
-	}
+    public void postInit() {
 
-
-	@Override
-	protected void processSystem () {
-
-		Bongo.imguiPlatform.newFrame();
-		boolean shouldCapture = Bongo.imguiPlatform.renderDebug(world, allEntities, singletons);
-
-		interceptor.setBlockTouch(shouldCapture);
-
-	}
+        final IntBag entities = allEntities.getEntities();
+        for (int i = 0; i < entities.size(); i++) {
+            final int entityID = entities.get(i);
+            final Entity entity = world.getEntity(entityID);
+            fillBag.clear();
+            entity.getComponents(fillBag);
+            if (fillBag.size() > 0) {
+                for (int j = 0; j < fillBag.size(); j++) {
+                    final Component component = (Component) fillBag.get(j);
+                    if (ClassReflection.isAnnotationPresent(component.getClass(), Singleton.class)) {
+                        singletons.add(component);
+                    }
+                }
+            }
+        }
+    }
 
 
-	@Override
-	public InputProcessor getInputProcessor () {
-		return interceptor;
-	}
+    @Override
+    protected void processSystem() {
+
+        Bongo.imguiPlatform.newFrame();
+        boolean shouldCapture = Bongo.imguiPlatform.renderDebug(world, allEntities, singletons);
+
+        interceptor.setBlockTouch(shouldCapture);
+    }
+
+
+    @Override
+    public InputProcessor getInputProcessor() {
+        return interceptor;
+    }
 }

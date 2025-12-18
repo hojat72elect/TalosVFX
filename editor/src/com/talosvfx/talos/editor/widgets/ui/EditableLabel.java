@@ -22,7 +22,12 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.talosvfx.talos.editor.addons.scene.SceneEditorWorkspace;
@@ -31,32 +36,21 @@ import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.TextFieldWithZoom
 
 public class EditableLabel extends Table implements ActorCloneable {
 
-    private Table labelTable;
-    private Table inputTable;
+    private final Table labelTable;
+    private final Table inputTable;
 
-    private Label label;
-    private TextField textField;
+    private final Label label;
+    private final TextField textField;
 
     private EditableLabelChangeListener listener;
 
-    private Vector2 tmpVec = new Vector2();
+    private final Vector2 tmpVec = new Vector2();
 
     private boolean editMode = false;
     private boolean editable = true;
 
-    private Cell<Label> labelCell;
+    private final Cell<Label> labelCell;
     private Actor keyboardFocus;
-
-    public void setEditable (boolean editable) {
-        this.editable = editable;
-    }
-
-    public interface EditableLabelChangeListener {
-        void editModeStarted ();
-        void changed(String newText);
-    }
-
-
 
     public EditableLabel(String text, Skin skin) {
         super(skin);
@@ -75,9 +69,9 @@ public class EditableLabel extends Table implements ActorCloneable {
         label.setEllipsis(true);
         labelCell = labelTable.add(label).width(0).growX();
 
-		TextField.TextFieldStyle textFieldStyle = getSkin().get("no-bg", TextField.TextFieldStyle.class);
-		TextField.TextFieldStyle style = new TextField.TextFieldStyle(textFieldStyle);
-		textField = new TextFieldWithZoom(text, style);
+        TextField.TextFieldStyle textFieldStyle = getSkin().get("no-bg", TextField.TextFieldStyle.class);
+        TextField.TextFieldStyle style = new TextField.TextFieldStyle(textFieldStyle);
+        textField = new TextFieldWithZoom(text, style);
         inputTable.add(textField).width(0).growX();
 
         addListener(new ClickListener() {
@@ -88,7 +82,7 @@ public class EditableLabel extends Table implements ActorCloneable {
             public void clicked(InputEvent event, float x, float y) {
                 long time = TimeUtils.millis();
 
-                if(time - clickTime < 200 && editable) {
+                if (time - clickTime < 200 && editable) {
                     setEditMode();
                 }
 
@@ -101,7 +95,7 @@ public class EditableLabel extends Table implements ActorCloneable {
         textField.addListener(new InputListener() {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
-                if(SceneEditorWorkspace.isEnterPressed(keycode)) {
+                if (SceneEditorWorkspace.isEnterPressed(keycode)) {
                     finishTextEdit();
                 }
 
@@ -114,12 +108,17 @@ public class EditableLabel extends Table implements ActorCloneable {
         setStaticMode();
     }
 
-    public void finishTextEdit () {
+    public void setEditable(boolean editable) {
+        this.editable = editable;
+    }
+
+    public void finishTextEdit() {
         finishTextEdit(false);
     }
-    public void finishTextEdit (boolean skipFocusChanges) {
+
+    public void finishTextEdit(boolean skipFocusChanges) {
         setStaticMode(skipFocusChanges);
-        if(listener != null) {
+        if (listener != null) {
             listener.changed(label.getText().toString());
         }
     }
@@ -148,7 +147,7 @@ public class EditableLabel extends Table implements ActorCloneable {
         textField.selectAll();
     }
 
-    public void setStaticMode () {
+    public void setStaticMode() {
         setStaticMode(false);
     }
 
@@ -170,21 +169,20 @@ public class EditableLabel extends Table implements ActorCloneable {
     }
 
     @Override
-    public void setColor (Color color) {
+    public void setColor(Color color) {
         super.setColor(color);
         textField.setColor(color);
         label.setColor(color);
-		textField.getStyle().fontColor.set(color);
+        textField.getStyle().fontColor.set(color);
     }
 
     @Override
-    public void setColor (float r, float g, float b, float a) {
+    public void setColor(float r, float g, float b, float a) {
         super.setColor(r, g, b, a);
         textField.setColor(r, g, b, a);
         label.setColor(r, g, b, a);
-		textField.getStyle().fontColor.set(r, g, b, a);
-
-	}
+        textField.getStyle().fontColor.set(r, g, b, a);
+    }
 
     public String getText() {
         return label.getText().toString();
@@ -198,28 +196,37 @@ public class EditableLabel extends Table implements ActorCloneable {
         return editMode;
     }
 
-    public void setAlignment (int alignment) {
+    public void setAlignment(int alignment) {
         label.setAlignment(alignment);
         textField.setAlignment(alignment);
     }
 
     @Override
-    public Actor copyActor (Actor copyFrom) {
+    public Actor copyActor(Actor copyFrom) {
         Label label = new LabelWithZoom(this.label.getText(), getSkin());
         return label;
     }
+
     public Label getLabel() {
         return label;
     }
 
-    public TextField getTextField() { return textField; }
+    public TextField getTextField() {
+        return textField;
+    }
 
     public Cell<Label> getLabelCell() {
         return labelCell;
     }
 
     @Override
-    public float getPrefWidth () {
+    public float getPrefWidth() {
         return Math.max(getTextField().getPrefWidth(), getLabelCell().getPrefWidth());
+    }
+
+    public interface EditableLabelChangeListener {
+        void editModeStarted();
+
+        void changed(String newText);
     }
 }

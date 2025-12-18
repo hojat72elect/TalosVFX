@@ -10,61 +10,61 @@ import com.talosvfx.talos.runtime.vfx.modules.ParticleModule;
 
 public interface IEmitter {
 
-    Array<ParticlePointGroup> pointData ();
+    Array<ParticlePointGroup> pointData();
 
-    void init ();
+    void init();
 
-    float getAlpha ();
+    float getAlpha();
 
-    ParticleModule getParticleModule ();
+    ParticleModule getParticleModule();
 
-    EmitterModule getEmitterModule ();
+    EmitterModule getEmitterModule();
 
-    DrawableModule getDrawableModule ();
+    DrawableModule getDrawableModule();
 
-    Vector3 getEffectPosition ();
+    Vector3 getEffectPosition();
 
-    float getWorldRotation ();
+    float getWorldRotation();
 
-    Vector2 getWorldScale ();
+    Vector2 getWorldScale();
 
-    int getEffectUniqueID ();
+    int getEffectUniqueID();
 
-    ScopePayload getScope ();
+    ScopePayload getScope();
 
-    Color getTint ();
+    void setScope(ScopePayload scope);
 
-    void setScope (ScopePayload scope);
+    Color getTint();
 
-    int getActiveParticleCount ();
+    int getActiveParticleCount();
 
-    boolean isContinuous ();
+    boolean isContinuous();
 
-    boolean isComplete ();
+    boolean isComplete();
 
-    void stop ();
+    void stop();
 
-    void pause ();
+    void pause();
 
-    void resume ();
+    void resume();
 
-    void restart ();
+    void restart();
 
-    void reset ();
+    void reset();
 
-    float getDelayRemaining ();
+    float getDelayRemaining();
 
-    void update (float delta);
+    void update(float delta);
 
-    ParticleEmitterDescriptor getEmitterGraph ();
+    ParticleEmitterDescriptor getEmitterGraph();
 
-    void setVisible (boolean isVisible);
+    boolean isVisible();
 
-    boolean isVisible ();
+    void setVisible(boolean isVisible);
 
-    boolean isAdditive ();
+    boolean isAdditive();
 
-    boolean isBlendAdd ();
+    boolean isBlendAdd();
 
-    Array<Particle> getActiveParticles ();
+    Array<Particle> getActiveParticles();
 }

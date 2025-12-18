@@ -38,7 +38,7 @@ public class RandomInputModuleWrapper extends ModuleWrapper<RandomInputModule> {
     }
 
     private void loadSlots() {
-        if(module != null) {
+        if (module != null) {
             leftWrapper.clearChildren();
             IntMap<Slot> list = module.getInputSlots();
             int tmpCount = list.size;
@@ -56,7 +56,7 @@ public class RandomInputModuleWrapper extends ModuleWrapper<RandomInputModule> {
     @Override
     public void setSlotInactive(int slotTo, boolean isInput) {
         super.setSlotInactive(slotTo, isInput);
-        if(isInput) {
+        if (isInput) {
             removeSlot(slotTo, true);
         }
     }
@@ -64,16 +64,16 @@ public class RandomInputModuleWrapper extends ModuleWrapper<RandomInputModule> {
     protected void removeSlot(int slot, boolean isInput) {
 
         IntMap<Slot> list = module.getInputSlots();
-        if(!isInput) {
+        if (!isInput) {
             list = module.getOutputSlots();
         }
         //remove this slot from module
-        for(int i = slot; i >= 0; i++) { // don't do this kids
-            if(list.get(i+1) == null) {
+        for (int i = slot; i >= 0; i++) { // don't do this kids
+            if (list.get(i + 1) == null) {
                 list.remove(i);
                 break;
             }
-            list.put(i,list.get(i+1));
+            list.put(i, list.get(i + 1));
             list.get(i).setIndex(i);
         }
         module.slotCount--;
@@ -82,7 +82,7 @@ public class RandomInputModuleWrapper extends ModuleWrapper<RandomInputModule> {
     }
 
     private void addNewInputSlot() {
-        addInputSlot((module.slotCount) + ": ", module.slotCount-1);
+        addInputSlot((module.slotCount) + ": ", module.slotCount - 1);
     }
 
 

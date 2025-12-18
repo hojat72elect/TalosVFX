@@ -7,6 +7,7 @@ import com.talosvfx.talos.runtime.routine.RoutineNode;
 import com.talosvfx.talos.runtime.routine.TickableNode;
 import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
+
 import lombok.Getter;
 
 public class MoveTowardsNode extends RoutineNode implements TickableNode {
@@ -14,7 +15,7 @@ public class MoveTowardsNode extends RoutineNode implements TickableNode {
     @Getter
     protected Array<AsyncRoutineNodeState<GameObject>> states = new Array<>();
 
-    private Array<GameObject> tmpArr = new Array<>();
+    private final Array<GameObject> tmpArr = new Array<>();
 
     private boolean modifyingX;
     private boolean modifyingY;
@@ -24,8 +25,8 @@ public class MoveTowardsNode extends RoutineNode implements TickableNode {
         modifyingX = isPortConnected("x");
         modifyingY = isPortConnected("y");
 
-        GameObject signalPayload = (GameObject)routineInstanceRef.getSignalPayload();
-        AsyncRoutineNodeState<GameObject> state =  Pools.obtain(AsyncRoutineNodeState.class);
+        GameObject signalPayload = (GameObject) routineInstanceRef.getSignalPayload();
+        AsyncRoutineNodeState<GameObject> state = Pools.obtain(AsyncRoutineNodeState.class);
         state.setTarget(signalPayload);
         state.alpha = 0;
 
@@ -35,7 +36,7 @@ public class MoveTowardsNode extends RoutineNode implements TickableNode {
     public void tick(float delta) {
         if (states.isEmpty()) return;
 
-        for(int i = states.size - 1; i >= 0; i--) {
+        for (int i = states.size - 1; i >= 0; i--) {
             AsyncRoutineNodeState<GameObject> state = states.get(i);
 
             GameObject target = state.getTarget();
@@ -46,36 +47,36 @@ public class MoveTowardsNode extends RoutineNode implements TickableNode {
             boolean reachedX = false;
             boolean reachedY = false;
 
-            if(modifyingX) {
+            if (modifyingX) {
                 float curr = component.position.x;
                 float end = fetchFloatValue("x");
                 float direction = curr >= end ? -1 : 1;
                 component.position.x += direction * speed * delta;
-                if((curr < end && component.position.x >= end) || (curr > end && component.position.x <= end)) {
+                if ((curr < end && component.position.x >= end) || (curr > end && component.position.x <= end)) {
                     component.position.x = end;
                     reachedX = true;
                 }
             }
 
-            if(modifyingY) {
+            if (modifyingY) {
                 float curr = component.position.y;
                 float end = fetchFloatValue("y");
                 float direction = curr >= end ? -1 : 1;
                 component.position.y += direction * speed * delta;
-                if((curr < end && component.position.y >= end) || (curr > end && component.position.y <= end)) {
+                if ((curr < end && component.position.y >= end) || (curr > end && component.position.y <= end)) {
                     component.position.y = end;
                     reachedY = true;
                 }
             }
 
-            if((modifyingX && modifyingY) == (reachedX && reachedY)) {
-                if(reachedX || reachedY) {
+            if ((modifyingX && modifyingY) == (reachedX && reachedY)) {
+                if (reachedX || reachedY) {
                     freeState(i);
                 }
             }
         }
 
-        for(GameObject target: tmpArr) {
+        for (GameObject target : tmpArr) {
             // this now needs to send signal to next guy
             routineInstanceRef.setSignalPayload(target);
             sendSignal("onComplete");
@@ -94,7 +95,7 @@ public class MoveTowardsNode extends RoutineNode implements TickableNode {
     @Override
     public void reset() {
         super.reset();
-        for(int i = states.size - 1; i >= 0; i--) {
+        for (int i = states.size - 1; i >= 0; i--) {
             AsyncRoutineNodeState<GameObject> state = states.get(i);
             Pools.free(state);
         }

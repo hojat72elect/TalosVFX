@@ -22,7 +22,11 @@ public class AttachmentPoint implements Json.Serializable {
     /**
      * attached to static numeric value
      */
-    private NumericalValue numericalValue = new NumericalValue();
+    private final NumericalValue numericalValue = new NumericalValue();
+
+    public AttachmentPoint() {
+        setTypeStatic(numericalValue, 0);
+    }
 
     public boolean isStatic() {
         return type == Type.STATIC;
@@ -36,35 +40,16 @@ public class AttachmentPoint implements Json.Serializable {
         return attachmentType;
     }
 
+    public void setAttachmentType(AttachmentType attachmentType) {
+        this.attachmentType = attachmentType;
+    }
+
     public NumericalValue getStaticValue() {
         return numericalValue;
     }
 
-    public void setBoneScale (float scale) {
+    public void setBoneScale(float scale) {
         this.boneScale = scale;
-    }
-
-
-    public enum Type {
-        STATIC,
-        ATTACHED
-    }
-
-    public enum AttachmentType {
-        POSITION,
-        ROTATION,
-        TRANSPARENCY,
-        COLOR;
-
-        private static AttachmentType[] vals = values();
-        public AttachmentType next()
-        {
-            return vals[(this.ordinal()+1) % vals.length];
-        }
-    }
-
-    public AttachmentPoint() {
-        setTypeStatic(numericalValue, 0);
     }
 
     public void setTypeAttached(String bone, int toSlot) {
@@ -83,7 +68,7 @@ public class AttachmentPoint implements Json.Serializable {
     public void setTypeAttached() {
         type = Type.ATTACHED;
         attachmentType = AttachmentType.POSITION;
-        if(boneName == null || boneName.isEmpty()) boneName = "root";
+        if (boneName == null || boneName.isEmpty()) boneName = "root";
     }
 
     public void setTypeStatic() {
@@ -91,7 +76,7 @@ public class AttachmentPoint implements Json.Serializable {
     }
 
     public void setTypeAttached(AttachmentType attachmentType) {
-        if(type == Type.ATTACHED) {
+        if (type == Type.ATTACHED) {
             this.attachmentType = attachmentType;
         }
     }
@@ -99,7 +84,6 @@ public class AttachmentPoint implements Json.Serializable {
     public void setBone(String name) {
         boneName = name;
     }
-
 
     @Override
     public int hashCode() {
@@ -110,11 +94,11 @@ public class AttachmentPoint implements Json.Serializable {
         offset.set(offsetX, offsetY);
     }
 
-    public float getWorldOffsetX () {
+    public float getWorldOffsetX() {
         return offset.x * boneScale;
     }
 
-    public float getWorldOffsetY () {
+    public float getWorldOffsetY() {
         return offset.y * boneScale;
     }
 
@@ -126,21 +110,33 @@ public class AttachmentPoint implements Json.Serializable {
         return attachedToSlot;
     }
 
+    public void setSlotId(int id) {
+        attachedToSlot = id;
+    }
+
     public float getOffsetX() {
         return offset.x;
+    }
+
+    public void setOffsetX(float offsetX) {
+        offset.x = offsetX;
     }
 
     public float getOffsetY() {
         return offset.y;
     }
 
+    public void setOffsetY(float offsetY) {
+        offset.y = offsetY;
+    }
+
     @Override
     public void write(Json json) {
-        if(attachedToSlot >= 0) {
+        if (attachedToSlot >= 0) {
             json.writeValue("slotId", attachedToSlot);
         }
         json.writeValue("type", type.name());
-        if(type == Type.ATTACHED) {
+        if (type == Type.ATTACHED) {
             json.writeValue("attachmentType", attachmentType.name());
             json.writeValue("boneName", boneName);
             json.writeValue("offset", offset);
@@ -158,7 +154,7 @@ public class AttachmentPoint implements Json.Serializable {
         attachedToSlot = jsonData.getInt("slotId", -1);
         type = Type.valueOf(jsonData.getString("type", Type.STATIC.name()));
 
-        if(type == Type.ATTACHED) {
+        if (type == Type.ATTACHED) {
             attachmentType = AttachmentType.valueOf(jsonData.getString("attachmentType", AttachmentType.POSITION.name()));
             boneName = jsonData.getString("boneName");
             offset = json.readValue(Vector2.class, jsonData.get("offset"));
@@ -176,24 +172,25 @@ public class AttachmentPoint implements Json.Serializable {
         return offset.angle();
     }
 
-    
-    public void setAttachmentType(AttachmentType attachmentType) {
-        this.attachmentType =attachmentType;
-    }
-
-    public void setOffsetX (float offsetX) {
-        offset.x = offsetX;
-    }
-
-    public void setOffsetY (float offsetY) {
-        offset.y = offsetY;
-    }
-
     public Type getType() {
         return type;
     }
 
-    public void setSlotId(int id) {
-        attachedToSlot = id;
+    public enum Type {
+        STATIC,
+        ATTACHED
+    }
+
+    public enum AttachmentType {
+        POSITION,
+        ROTATION,
+        TRANSPARENCY,
+        COLOR;
+
+        private static final AttachmentType[] vals = values();
+
+        public AttachmentType next() {
+            return vals[(this.ordinal() + 1) % vals.length];
+        }
     }
 }

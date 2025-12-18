@@ -9,31 +9,31 @@ public class UniformNode extends AbstractShaderNode implements ShaderBuilder.IVa
     private String uniformName;
 
     @Override
-    public void prepareDeclarations (ShaderBuilder shaderBuilder) {
+    public void prepareDeclarations(ShaderBuilder shaderBuilder) {
         shaderBuilder.declareUniform(uniformName, ShaderBuilder.Type.FLOAT, this);
     }
 
     @Override
-    public String writeOutputCode (String slotId) {
+    public String writeOutputCode(String slotId) {
         return null;
     }
 
 
     @Override
-    public Object getValue () {
+    public Object getValue() {
         return widgetMap.get("val").getValue();
     }
 
     public void setValue(float value) {
         AbstractWidget val = widgetMap.get("val");
-        if(val instanceof ValueWidget) {
+        if (val instanceof ValueWidget) {
             ValueWidget valueWidget = (ValueWidget) val;
             valueWidget.setValue(value);
         }
     }
 
     @Override
-    public String getValueDescriptor () {
+    public String getValueDescriptor() {
         return null;
     }
 

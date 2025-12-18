@@ -4,13 +4,13 @@ import net.mostlyoriginal.api.event.common.Event;
 
 public interface CustomEventListenerAbstraction extends Comparable<CustomEventListenerAbstraction> {
 
-	Object owner ();
+    Object owner();
 
-	boolean handle (Event event);
+    boolean handle(Event event);
 
-	int priority ();
+    int priority();
 
-	boolean skipCancelledEvents ();
+    boolean skipCancelledEvents();
 
-	Class<?> getParameterType ();
+    Class<?> getParameterType();
 }

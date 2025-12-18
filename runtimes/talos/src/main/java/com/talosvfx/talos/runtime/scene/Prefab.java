@@ -9,13 +9,13 @@ public class Prefab extends SavableContainer {
     public static String PREFIX = "Prefab_";
 
     public transient String name;
-    private transient String talosIdentifier;
     public transient String cachedRootGoJson;
+    private transient String talosIdentifier;
 
-    public Prefab () {
+    public Prefab() {
     }
 
-    public Prefab (String jsonContent, String name) {
+    public Prefab(String jsonContent, String name) {
         loadFromString(jsonContent);
         setName(name);
     }
@@ -58,12 +58,12 @@ public class Prefab extends SavableContainer {
     }
 
     @Override
-    public String getTalosIdentifier () {
+    public String getTalosIdentifier() {
         return talosIdentifier;
     }
 
     @Override
-    public void setTalosIdentifier (String identifier) {
+    public void setTalosIdentifier(String identifier) {
         talosIdentifier = identifier;
     }
 }

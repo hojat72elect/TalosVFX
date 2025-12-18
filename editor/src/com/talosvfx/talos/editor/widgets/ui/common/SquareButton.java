@@ -1,6 +1,10 @@
 package com.talosvfx.talos.editor.widgets.ui.common;
 
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
 
@@ -31,8 +35,8 @@ public class SquareButton extends Button {
         setSkin(skin);
         ButtonStyle square = skin.get("square", ButtonStyle.class);
         setStyle(square);
-        if(!toggle) {
-           setDisabled(true);
+        if (!toggle) {
+            setDisabled(true);
         }
         setSize(24, 24);
 

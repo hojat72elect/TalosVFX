@@ -2,8 +2,14 @@ package com.talosvfx.talos.editor.nodes.widgets;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.FocusListener;
 import com.badlogic.gdx.utils.Json;
@@ -17,41 +23,25 @@ import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.TextFieldWithZoom
 
 public class ValueWidget extends AbstractWidget<Float> {
 
-    private Table editing;
-    private Table main;
-    private Table progressContainer;
-    private Table progress;
+    private final Table editing;
+    private final Table main;
+    private final Table progressContainer;
+    private final Table progress;
     private LabelWithZoom label;
     private LabelWithZoom valueLabel;
     private TextField textField;
     private ClippedNinePatchDrawable progressDrawable;
     private ColorLibrary.BackgroundColor mainBgColor = ColorLibrary.BackgroundColor.LIGHT_GRAY;
-
-    public void setMainColor(ColorLibrary.BackgroundColor color) {
-        mainBgColor = color;
-        setBackgrounds();
-    }
-
-    public enum Type {
-        NORMAL, TOP, MID, BOTTOM
-    }
-
     private Type type = Type.MID;
     private boolean isSelected;
     private boolean isHover;
-
     private float minValue = -9999;
     private float maxValue = 9999;
     private float step = 0.01f;
-
     private float value;
-
     private boolean showProgress;
-
-    private Vector2 tmpVec = new Vector2();
-
+    private final Vector2 tmpVec = new Vector2();
     private boolean isDragging = false;
-
     private boolean isDisabled;
 
     public ValueWidget() {
@@ -64,6 +54,11 @@ public class ValueWidget extends AbstractWidget<Float> {
     public ValueWidget(Skin skin) {
         this();
         init(skin);
+    }
+
+    public void setMainColor(ColorLibrary.BackgroundColor color) {
+        mainBgColor = color;
+        setBackgrounds();
     }
 
     @Override
@@ -94,7 +89,7 @@ public class ValueWidget extends AbstractWidget<Float> {
 
         progressContainer.add(progress).grow().left();
 
-        if(!showProgress) {
+        if (!showProgress) {
             progressContainer.setVisible(false);
         }
 
@@ -123,16 +118,16 @@ public class ValueWidget extends AbstractWidget<Float> {
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 super.exit(event, x, y, pointer, toActor);
                 isHover = false;
-                if(pointer == -1 && !isDragging) {
+                if (pointer == -1 && !isDragging) {
                     setBackgrounds();
                 }
             }
 
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                if(event.getTarget() == portBorder) return false;
+                if (event.getTarget() == portBorder) return false;
 
-                if(isDisabled) return false;
+                if (isDisabled) return false;
                 dragged = false;
                 lastPos = x;
 
@@ -152,8 +147,8 @@ public class ValueWidget extends AbstractWidget<Float> {
 
                 float localStep = step;
                 // if we are showing progress, step is auto calculated
-                if(showProgress) {
-                    localStep = (maxValue - minValue)/getWidth();
+                if (showProgress) {
+                    localStep = (maxValue - minValue) / getWidth();
                 }
 
                 float change = diff * localStep;
@@ -161,7 +156,6 @@ public class ValueWidget extends AbstractWidget<Float> {
                 setValue(value + change, true);
 
                 lastPos = x;
-
             }
 
             @Override
@@ -177,7 +171,7 @@ public class ValueWidget extends AbstractWidget<Float> {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
-                if(!dragged) {
+                if (!dragged) {
                     showEditMode();
                 }
             }
@@ -199,7 +193,7 @@ public class ValueWidget extends AbstractWidget<Float> {
             @Override
             public void keyboardFocusChanged(FocusEvent event, Actor actor, boolean focused) {
                 super.keyboardFocusChanged(event, actor, focused);
-                if(!focused) {
+                if (!focused) {
                     hideEditMode();
                 }
             }
@@ -207,8 +201,8 @@ public class ValueWidget extends AbstractWidget<Float> {
     }
 
     private void showEditMode() {
-        if(isDisabled) return;
-        if(editing.isVisible()) return;
+        if (isDisabled) return;
+        if (editing.isVisible()) return;
 
         getStage().setKeyboardFocus(textField);
         textField.selectAll();
@@ -232,7 +226,7 @@ public class ValueWidget extends AbstractWidget<Float> {
 
         editing.setVisible(false);
         main.setVisible(true);
-        if(showProgress) {
+        if (showProgress) {
             progressContainer.setVisible(true);
         }
 
@@ -253,12 +247,12 @@ public class ValueWidget extends AbstractWidget<Float> {
         return shape;
     }
 
-    private void setBackgrounds () {
+    private void setBackgrounds() {
         String shape = getShape();
 
         ColorLibrary.BackgroundColor color = mainBgColor;
 
-        if(isSelected) {
+        if (isSelected) {
             color = ColorLibrary.BackgroundColor.MID_GRAY;
         } else {
             if (isHover) {
@@ -276,13 +270,9 @@ public class ValueWidget extends AbstractWidget<Float> {
         label.setText(text);
     }
 
-    public void setValue(float value) {
-        setValue(value, false);
-    }
-
     public void setValue(float value, boolean notify) {
-        if(value > maxValue) value = maxValue;
-        if(value < minValue) value = minValue;
+        if (value > maxValue) value = maxValue;
+        if (value < minValue) value = minValue;
 
         float precision = 1 / step;
         value = MathUtils.round((value) * precision) / precision;
@@ -305,7 +295,7 @@ public class ValueWidget extends AbstractWidget<Float> {
     }
 
     private void updateProgress() {
-        float alpha = (value - minValue)/(maxValue - minValue);
+        float alpha = (value - minValue) / (maxValue - minValue);
         progressDrawable.setMaskScale(alpha, 1f);
     }
 
@@ -320,7 +310,7 @@ public class ValueWidget extends AbstractWidget<Float> {
 
     public void setShowProgress(boolean showProgress) {
         this.showProgress = showProgress;
-        if(showProgress) {
+        if (showProgress) {
             progressContainer.setVisible(true);
         }
     }
@@ -343,22 +333,26 @@ public class ValueWidget extends AbstractWidget<Float> {
         setLabel(text);
     }
 
-    public boolean isFastChange () {
+    public boolean isFastChange() {
         return isDragging || isSelected;
     }
 
     @Override
-    public Float getValue () {
+    public Float getValue() {
         return value;
     }
 
+    public void setValue(float value) {
+        setValue(value, false);
+    }
+
     @Override
-    public void read (Json json, JsonValue jsonValue) {
+    public void read(Json json, JsonValue jsonValue) {
         setValue(jsonValue.asFloat(), false);
     }
 
     @Override
-    public void write (Json json, String name) {
+    public void write(Json json, String name) {
         json.writeValue(name, getValue());
     }
 
@@ -371,11 +365,15 @@ public class ValueWidget extends AbstractWidget<Float> {
         valueLabel.setText("-");
     }
 
+    public boolean isDisabled() {
+        return isDisabled;
+    }
+
     public void setDisabled(boolean isDisabled) {
         this.isDisabled = isDisabled;
     }
 
-    public boolean isDisabled() {
-        return isDisabled;
+    public enum Type {
+        NORMAL, TOP, MID, BOTTOM
     }
 }

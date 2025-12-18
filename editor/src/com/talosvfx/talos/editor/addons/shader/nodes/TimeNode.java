@@ -10,36 +10,36 @@ public class TimeNode extends AbstractShaderNode {
     private float time = 0;
 
     @Override
-    public void act (float delta) {
+    public void act(float delta) {
         super.act(delta);
 
         time += delta;
     }
 
     @Override
-    public void constructNode (XmlReader.Element module) {
+    public void constructNode(XmlReader.Element module) {
         super.constructNode(module);
 
         timeProvider = new ShaderBuilder.IValueProvider<Float>() {
             @Override
-            public Float getValue () {
+            public Float getValue() {
                 return time;
             }
 
             @Override
-            public String getValueDescriptor () {
+            public String getValueDescriptor() {
                 return "";
             }
         };
     }
 
     @Override
-    public void prepareDeclarations (ShaderBuilder shaderBuilder) {
+    public void prepareDeclarations(ShaderBuilder shaderBuilder) {
         shaderBuilder.declareUniform("u_time", ShaderBuilder.Type.FLOAT, timeProvider);
     }
 
     @Override
-    public String writeOutputCode (String slotId) {
+    public String writeOutputCode(String slotId) {
         return "u_time";
     }
 }

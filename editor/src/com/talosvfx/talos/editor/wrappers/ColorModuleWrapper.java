@@ -26,7 +26,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
-import com.kotcrab.vis.ui.widget.VisTextField;
 import com.kotcrab.vis.ui.widget.color.ColorPickerAdapter;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.runtime.vfx.modules.ColorModule;
@@ -34,16 +33,14 @@ import com.talosvfx.talos.runtime.vfx.modules.ColorModule;
 
 public class ColorModuleWrapper extends ModuleWrapper<ColorModule> {
 
-    private Image colorBtn;
-
     TextField rField;
     TextField gField;
     TextField bField;
-
     Color tmpClr = new Color();
     Vector2 vec = new Vector2();
+    private Image colorBtn;
 
-    public ColorModuleWrapper () {
+    public ColorModuleWrapper() {
 
     }
 
@@ -61,7 +58,7 @@ public class ColorModuleWrapper extends ModuleWrapper<ColorModule> {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 float r = floatFromText(rField);
-                module.setR(r/255f);
+                module.setR(r / 255f);
                 update();
             }
         });
@@ -70,7 +67,7 @@ public class ColorModuleWrapper extends ModuleWrapper<ColorModule> {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 float g = floatFromText(gField);
-                module.setG(g/255f);
+                module.setG(g / 255f);
                 update();
             }
         });
@@ -79,7 +76,7 @@ public class ColorModuleWrapper extends ModuleWrapper<ColorModule> {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 float b = floatFromText(bField);
-                module.setB(b/255f);
+                module.setB(b / 255f);
                 update();
             }
         });
@@ -100,11 +97,11 @@ public class ColorModuleWrapper extends ModuleWrapper<ColorModule> {
                     @Override
                     public void changed(Color newColor) {
                         super.changed(newColor);
-                        if(colorBtn != null) {
+                        if (colorBtn != null) {
                             colorBtn.setColor(newColor);
-                            rField.setText(""+(int)(newColor.r * 255f));
-                            gField.setText(""+(int)(newColor.g * 255f));
-                            bField.setText(""+(int)(newColor.b * 255f));
+                            rField.setText("" + (int) (newColor.r * 255f));
+                            gField.setText("" + (int) (newColor.g * 255f));
+                            bField.setText("" + (int) (newColor.b * 255f));
 
                             module.setR(newColor.r);
                             module.setG(newColor.g);
@@ -127,20 +124,20 @@ public class ColorModuleWrapper extends ModuleWrapper<ColorModule> {
 
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
 
         final Color color = module.getColor();
         tmpClr.set(color);
 
         colorBtn.setColor(tmpClr);
-        rField.setText(""+(int)(color.r * 255f));
-        gField.setText(""+(int)(color.g * 255f));
-        bField.setText(""+(int)(color.b * 255f));
+        rField.setText("" + (int) (color.r * 255f));
+        gField.setText("" + (int) (color.g * 255f));
+        bField.setText("" + (int) (color.b * 255f));
     }
 
     @Override
-    public void act (float delta) {
+    public void act(float delta) {
         super.act(delta);
     }
 }

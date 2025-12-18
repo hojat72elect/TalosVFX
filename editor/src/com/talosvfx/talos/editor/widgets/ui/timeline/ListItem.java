@@ -11,14 +11,14 @@ public abstract class ListItem<U> extends Table implements Pool.Poolable {
 
     private U identifier;
 
-    private int index =  -1;
+    private int index = -1;
 
     public void setFrom(TimelineItemDataProvider<U> dataProvider) {
         identifier = dataProvider.getIdentifier();
         index = dataProvider.getIndex();
     }
 
-    public boolean isSelected () {
+    public boolean isSelected() {
         return isSelected;
     }
 
@@ -44,7 +44,7 @@ public abstract class ListItem<U> extends Table implements Pool.Poolable {
         return Objects.hash(identifier);
     }
 
-    public U getIdentifier () {
+    public U getIdentifier() {
         return identifier;
     }
 
@@ -52,7 +52,7 @@ public abstract class ListItem<U> extends Table implements Pool.Poolable {
         return index;
     }
 
-    public void setIndex (int index) {
+    public void setIndex(int index) {
         this.index = index;
     }
 }

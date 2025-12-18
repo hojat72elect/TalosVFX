@@ -28,14 +28,14 @@ public class DynamicTable extends VisTable {
 
     public Cell addRow(Actor actor, boolean left) {
         Cell cell;
-        if(left) {
+        if (left) {
             cell = add(actor).left().expandX();
         } else {
             cell = add(actor).right().expandX();
         }
         row();
 
-        if(!rows.contains(actor, true)) {
+        if (!rows.contains(actor, true)) {
             rows.add(actor);
             align.add(left);
         }
@@ -49,9 +49,8 @@ public class DynamicTable extends VisTable {
         rows.removeIndex(index);
         align.removeIndex(index);
 
-        for(int i = 0; i < rows.size; i++) {
+        for (int i = 0; i < rows.size; i++) {
             addRow(rows.get(i), align.get(i));
         }
     }
-
 }

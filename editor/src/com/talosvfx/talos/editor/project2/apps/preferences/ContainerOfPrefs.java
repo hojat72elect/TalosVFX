@@ -7,7 +7,8 @@ public interface ContainerOfPrefs<T extends AppPrefs.AppPreference> {
 
     /**
      * Get current preference. App should query the state of its widget and update preferences to be stored.
-     * @see  com.talosvfx.talos.editor.project2.apps.SceneEditorApp for example implementation.
+     *
+     * @see com.talosvfx.talos.editor.project2.apps.SceneEditorApp for example implementation.
      */
     T getPrefs();
 }

@@ -17,6 +17,8 @@
 package com.talosvfx.talos.editor.widgets.ui;
 
 
+import static com.talosvfx.talos.editor.utils.InputUtils.ctrlPressed;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.MathUtils;
@@ -37,11 +39,10 @@ import com.badlogic.gdx.scenes.scene2d.utils.UIUtils;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Predicate;
-import info.debatty.java.stringsimilarity.JaroWinkler;
 
 import java.util.Comparator;
 
-import static com.talosvfx.talos.editor.utils.InputUtils.ctrlPressed;
+import info.debatty.java.stringsimilarity.JaroWinkler;
 
 /**
  * A tree widget where each node has an icon, actor, and child nodes.
@@ -55,94 +56,44 @@ import static com.talosvfx.talos.editor.utils.InputUtils.ctrlPressed;
  */
 public class FilteredTree<T> extends WidgetGroup {
 
-    TreeStyle style;
     final Array<Node<T>> rootNodes = new Array();
     final Selection<Node<T>> selection;
-
+    public boolean draggable;
+    TreeStyle style;
     float ySpacing = 4, iconSpacingLeft = 2, iconSpacingRight = 2, padding = 0, indentSpacing;
+    Node<T> overNode, rangeStart;
     private float leftColumnWidth, prefWidth, prefHeight;
     private boolean sizeInvalid = true;
     private Node<T> foundNode;
-    Node<T> overNode, rangeStart;
     private ClickListener clickListener;
-
-    private DragAndDrop rootDrag = new DragAndDrop();
-
+    private final DragAndDrop rootDrag = new DragAndDrop();
     private Skin skin;
-
-    public boolean draggable;
     private int autoSelectionIndex = 0;
 
     private SearchFilteredTree<?> searchFilteredTree;
+    private final Array<ItemListener<T>> itemListeners = new Array<>();
+    private Node<T> previousSelected;
+    private boolean holdingItem = false;
+    private final Comparator<Node<T>> alphabeticalSorter = new Comparator<Node<T>>() {
+        @Override
+        public int compare(Node<T> o1, Node<T> o2) {
+            return o1.name.compareTo(o2.name);
+        }
+    };
 
-    public FilteredTree (Skin skin) {
+    public FilteredTree(Skin skin) {
         this(skin.get(TreeStyle.class));
         this.skin = skin;
     }
 
-    private Array<ItemListener<T>> itemListeners = new Array<>();
-
-    public void addItemListener (ItemListener<T> itemListener) {
-        itemListeners.add(itemListener);
-    }
-
-    public void removeItemListener (ItemListener<T> filterTreeListener) {
-        boolean b = itemListeners.removeValue(filterTreeListener, true);
-    }
-
-    public void setSearchFilteredTree(SearchFilteredTree<?> searchFilteredTree) {
-        this.searchFilteredTree = searchFilteredTree;
-    }
-
-    private void onItemHold() {
-        if (searchFilteredTree != null) {
-            searchFilteredTree.onItemHold();
-        }
-    }
-
-    public static abstract class ItemListener<T> {
-        public void selected(Node<T> node) {
-
-        }
-
-        public void addedIntoSelection(Node<T> node) {
-
-        }
-
-        public void removedFromSelection (Node<T> node) {
-
-        }
-
-        public void rightClick (Node<T> node) {
-
-        }
-
-        public void mouseMoved (Node<T> node) {
-
-        }
-
-        public void delete (Array<FilteredTree.Node<T>> nodes) {
-
-        }
-
-        public void onNodeMove (Node<T> parentToMoveTo, Node<T> childThatHasMoved, int indexInParent, int indexOfPayloadInPayloadBefore) {
-
-        }
-
-        public void clearSelection () {
-
-        }
-    }
-
-
-    public FilteredTree (Skin skin, String styleName) {
+    public FilteredTree(Skin skin, String styleName) {
         this(skin.get(styleName, TreeStyle.class));
         this.skin = skin;
     }
 
-    public FilteredTree (TreeStyle style) {
+    public FilteredTree(TreeStyle style) {
         selection = new Selection<Node<T>>() {
-            protected void changed () {
+            protected void changed() {
                 switch (size()) {
                     case 0:
                         rangeStart = null;
@@ -160,20 +111,75 @@ public class FilteredTree<T> extends WidgetGroup {
         initialize();
     }
 
+    static <T> boolean findExpandedObjects(Array<Node<T>> nodes, Array<T> objects) {
+        boolean expanded = false;
+        for (int i = 0, n = nodes.size; i < n; i++) {
+            Node<T> node = nodes.get(i);
+            if (node.expanded && !findExpandedObjects(node.children, objects))
+                objects.add(node.object);
+        }
+        return expanded;
+    }
+
+    static <T> Node<T> findNode(Array<Node<T>> nodes, T object) {
+        for (int i = 0, n = nodes.size; i < n; i++) {
+            Node node = nodes.get(i);
+            if (object.equals(node.object))
+                return node;
+        }
+        for (int i = 0, n = nodes.size; i < n; i++) {
+            Node node = nodes.get(i);
+            Node found = findNode(node.children, object);
+            if (found != null)
+                return found;
+        }
+        return null;
+    }
+
+    static <T> void collapseAll(Array<Node<T>> nodes) {
+        for (int i = 0, n = nodes.size; i < n; i++) {
+            Node<T> node = nodes.get(i);
+            node.setExpanded(false);
+            collapseAll(node.children);
+        }
+    }
+
+    static <T> void expandAll(Array<Node<T>> nodes) {
+        for (int i = 0, n = nodes.size; i < n; i++)
+            nodes.get(i).expandAll();
+    }
+
+    public void addItemListener(ItemListener<T> itemListener) {
+        itemListeners.add(itemListener);
+    }
+
+    public void removeItemListener(ItemListener<T> filterTreeListener) {
+        boolean b = itemListeners.removeValue(filterTreeListener, true);
+    }
+
+    public void setSearchFilteredTree(SearchFilteredTree<?> searchFilteredTree) {
+        this.searchFilteredTree = searchFilteredTree;
+    }
+
+    private void onItemHold() {
+        if (searchFilteredTree != null) {
+            searchFilteredTree.onItemHold();
+        }
+    }
+
     public void reportUserEnter() {
         Array<Node<T>> result = new Array<>();
         collectFilteredNodes(rootNodes, result);
 
-        if(result.size == 0) return;
+        if (result.size == 0) return;
 
         for (ItemListener<T> itemListener : itemListeners) {
             itemListener.selected(result.get(autoSelectionIndex));
         }
-
     }
 
     // Discards all selected nodes
-    public void clearSelection (boolean notifyListeners) {
+    public void clearSelection(boolean notifyListeners) {
         if (selection.isEmpty()) {
             return;
         }
@@ -189,7 +195,7 @@ public class FilteredTree<T> extends WidgetGroup {
     }
 
     // Adds multiple nodes to already selected ones
-    public void addNodesToSelection (Array<Node<T>> nodes, boolean notify) {
+    public void addNodesToSelection(Array<Node<T>> nodes, boolean notify) {
         for (Node<T> node : nodes) {
             selection.add(node);
             if (notify) {
@@ -203,7 +209,7 @@ public class FilteredTree<T> extends WidgetGroup {
     }
 
     // Adds a single node to the selection
-    public void addNodeToSelection (Node<T> node) {
+    public void addNodeToSelection(Node<T> node) {
         selection.add(node);
         for (int i = 0; i < itemListeners.size; i++) {
             ItemListener<T> tItemListener = itemListeners.get(i);
@@ -219,7 +225,7 @@ public class FilteredTree<T> extends WidgetGroup {
     }
 
     // Removes a single node from selection
-    public void removeNodeFromSelection (Node<T> node) {
+    public void removeNodeFromSelection(Node<T> node) {
         if (!selection.contains(node)) {
             return;
         }
@@ -231,8 +237,7 @@ public class FilteredTree<T> extends WidgetGroup {
         selection.fireChangeEvent();
     }
 
-
-    private void selectSingleNode (Node<T> node, boolean notifyListeners) {
+    private void selectSingleNode(Node<T> node, boolean notifyListeners) {
         clearSelection(notifyListeners);
         addNodeToSelection(node);
         if (notifyListeners) {
@@ -243,10 +248,10 @@ public class FilteredTree<T> extends WidgetGroup {
         }
     }
 
-    private void initialize () {
+    private void initialize() {
         addListener(clickListener = new ClickListener() {
             @Override
-            public void clicked (InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
 
                 // No node found, bye bye
@@ -299,7 +304,7 @@ public class FilteredTree<T> extends WidgetGroup {
                 }
 
                 // Deselect node from already selected ones but keep others
-                if (selection.contains(node) && ctrlPressed()){
+                if (selection.contains(node) && ctrlPressed()) {
                     removeNodeFromSelection(node);
                     return;
                 }
@@ -313,11 +318,10 @@ public class FilteredTree<T> extends WidgetGroup {
 
                 if (!selection.isEmpty())
                     rangeStart = node;
-
             }
 
             @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 Node<T> node = getNodeAt(y);
                 if (itemListeners.size > 0) {
                     if (button == 1) {
@@ -331,7 +335,7 @@ public class FilteredTree<T> extends WidgetGroup {
                 return super.touchDown(event, x, y, pointer, button);
             }
 
-            public boolean mouseMoved (InputEvent event, float x, float y) {
+            public boolean mouseMoved(InputEvent event, float x, float y) {
                 setOverNode(getNodeAt(y));
                 for (ItemListener<T> itemListener : itemListeners) {
                     itemListener.mouseMoved(getNodeAt(y));
@@ -340,7 +344,7 @@ public class FilteredTree<T> extends WidgetGroup {
                 return true;
             }
 
-            public void exit (InputEvent event, float x, float y, int pointer, Actor toActor) {
+            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 super.exit(event, x, y, pointer, toActor);
                 if (toActor == null || !toActor.isDescendantOf(FilteredTree.this))
                     setOverNode(null);
@@ -348,22 +352,13 @@ public class FilteredTree<T> extends WidgetGroup {
         });
     }
 
-    public void setStyle (TreeStyle style) {
-        this.style = style;
-        indentSpacing = Math.max(style.plus.getMinWidth(), style.minus.getMinWidth()) + iconSpacingLeft;
-    }
-
-    public void add (Node<T> node) {
+    public void add(Node<T> node) {
         insert(rootNodes.size, node);
 
         if (draggable) {
             addSource(node);
         }
     }
-
-    private Node<T> previousSelected;
-
-    private boolean holdingItem = false;
 
     @Override
     public void act(float delta) {
@@ -373,12 +368,12 @@ public class FilteredTree<T> extends WidgetGroup {
         }
     }
 
-    public void addSource (final Node<T> node) {
+    public void addSource(final Node<T> node) {
         node.actor.setUserObject(node);
         if (node.draggable) {
             DragAndDrop.Source dragSource = new DragAndDrop.Source(node.actor) {
                 @Override
-                public DragAndDrop.Payload dragStart (InputEvent inputEvent, float v, float v1, int i) {
+                public DragAndDrop.Payload dragStart(InputEvent inputEvent, float v, float v1, int i) {
 
                     if (!selection.contains(node)) {
                         if (!ctrlPressed()) {
@@ -416,7 +411,7 @@ public class FilteredTree<T> extends WidgetGroup {
         }
         DragAndDrop.Target targetSource = new DragAndDrop.Target(node.actor) {
             @Override
-            public boolean drag (DragAndDrop.Source source, DragAndDrop.Payload payload, float x, float y, int pointer) {
+            public boolean drag(DragAndDrop.Source source, DragAndDrop.Payload payload, float x, float y, int pointer) {
 
                 Actor actor = getActor();
 
@@ -434,8 +429,8 @@ public class FilteredTree<T> extends WidgetGroup {
                     float yAlpha = y / getActor().getHeight();
 
                     if (yAlpha > 0.3f && yAlpha < 0.7f) {
-                        if(payloadNode.draggableInLayerOnly) {
-                           return false;
+                        if (payloadNode.draggableInLayerOnly) {
+                            return false;
                         }
                         //We are adding as a child, if we are not draggable, we ignore
                         if (previousSelected != null) {
@@ -463,14 +458,14 @@ public class FilteredTree<T> extends WidgetGroup {
             }
 
             @Override
-            public void drop (DragAndDrop.Source source, DragAndDrop.Payload payload, float x, float y, int pointer) {
+            public void drop(DragAndDrop.Source source, DragAndDrop.Payload payload, float x, float y, int pointer) {
                 Actor targetActor = getActor();
                 Object userObject = targetActor.getUserObject();
 
                 Node<T> node = ((Node) userObject);
                 Node<T> parent = node.getParent();
 
-                if(selection.contains(node)){
+                if (selection.contains(node)) {
                     return;
                 }
 
@@ -497,7 +492,7 @@ public class FilteredTree<T> extends WidgetGroup {
                         parentNode = parentNode.parent;
                     }
 
-                    if(isChild){
+                    if (isChild) {
                         continue;
                     }
 
@@ -560,7 +555,7 @@ public class FilteredTree<T> extends WidgetGroup {
                         }
                     } else {
                         //Always put it as a child
-                        if(!node.draggableInLayerOnly) {
+                        if (!node.draggableInLayerOnly) {
                             node.insert(0, payloadNode);
                             node.setExpanded(true);
 
@@ -571,7 +566,7 @@ public class FilteredTree<T> extends WidgetGroup {
             }
 
             @Override
-            public void reset (DragAndDrop.Source source, DragAndDrop.Payload payload) {
+            public void reset(DragAndDrop.Source source, DragAndDrop.Payload payload) {
                 if (previousSelected != null) {
                     previousSelected.underline = false;
                     previousSelected = null;
@@ -584,7 +579,7 @@ public class FilteredTree<T> extends WidgetGroup {
         }
     }
 
-    private Actor createPayloadFor (Selection<Node<T>> selection) {
+    private Actor createPayloadFor(Selection<Node<T>> selection) {
         Table mainTable = new Table();
         mainTable.defaults().left().pad(1);
 
@@ -598,7 +593,7 @@ public class FilteredTree<T> extends WidgetGroup {
             nameTable.setBackground("panel_button_bg");
             Label name = new Label(item.getName(), skin);
             if (i > 3) {
-                nameTable.getColor().a = MathUtils.lerp(1, 0.2f, (i-3) / 3f);
+                nameTable.getColor().a = MathUtils.lerp(1, 0.2f, (i - 3) / 3f);
             }
             nameTable.add(name).grow();
 
@@ -610,14 +605,13 @@ public class FilteredTree<T> extends WidgetGroup {
         return mainTable;
     }
 
-    protected void onNodeMove (Node<T> parentToMoveTo, Node<T> childThatHasMoved, int indexInParent, int indexOfPayloadInPayloadBefore) {
+    protected void onNodeMove(Node<T> parentToMoveTo, Node<T> childThatHasMoved, int indexInParent, int indexOfPayloadInPayloadBefore) {
         for (ItemListener<T> itemListener : itemListeners) {
             itemListener.onNodeMove(parentToMoveTo, childThatHasMoved, indexInParent, indexOfPayloadInPayloadBefore);
         }
     }
 
-
-    private int getIndexInParent (Node<T> node, Node<T> parent) {
+    private int getIndexInParent(Node<T> node, Node<T> parent) {
         int indexInParent = -1;
 
         if (parent != null) {
@@ -649,7 +643,7 @@ public class FilteredTree<T> extends WidgetGroup {
         return indexInParent;
     }
 
-    public void insert (int index, Node node) {
+    public void insert(int index, Node node) {
         remove(node);
         node.parent = null;
         rootNodes.insert(index, node);
@@ -661,7 +655,7 @@ public class FilteredTree<T> extends WidgetGroup {
         return rootNodes.get(index);
     }
 
-    public void remove (Node node) {
+    public void remove(Node node) {
         if (node.parent != null) {
             node.parent.remove(node);
             return;
@@ -674,28 +668,28 @@ public class FilteredTree<T> extends WidgetGroup {
     /**
      * Removes all tree nodes.
      */
-    public void clearChildren () {
+    public void clearChildren() {
         super.clearChildren();
         setOverNode(null);
         rootNodes.clear();
         selection.clear();
     }
 
-    public Array<Node<T>> getNodes () {
+    public Array<Node<T>> getNodes() {
         return rootNodes;
     }
 
-    public void invalidate () {
+    public void invalidate() {
         super.invalidate();
         sizeInvalid = true;
     }
 
     @Override
-    protected void sizeChanged () {
+    protected void sizeChanged() {
         super.sizeChanged();
     }
 
-    private void computeSize () {
+    private void computeSize() {
         sizeInvalid = false;
         prefWidth = style.plus.getMinWidth();
         prefWidth = Math.max(prefWidth, style.minus.getMinWidth());
@@ -707,7 +701,7 @@ public class FilteredTree<T> extends WidgetGroup {
         prefWidth += leftColumnWidth + padding;
     }
 
-    private void computeSize (Array<Node<T>> nodes, float indent) {
+    private void computeSize(Array<Node<T>> nodes, float indent) {
         float ySpacing = this.ySpacing;
         float spacing = iconSpacingLeft + iconSpacingRight;
         for (int i = 0, n = nodes.size; i < n; i++) {
@@ -719,7 +713,7 @@ public class FilteredTree<T> extends WidgetGroup {
             float rowWidth = indent + iconSpacingRight;
             Actor actor = node.actor;
             if (actor instanceof Layout) {
-                Layout layout = (Layout)actor;
+                Layout layout = (Layout) actor;
                 rowWidth += layout.getPrefWidth();
                 node.height = layout.getPrefHeight();
                 layout.pack();
@@ -738,17 +732,17 @@ public class FilteredTree<T> extends WidgetGroup {
         }
     }
 
-    public void layout () {
+    public void layout() {
         if (sizeInvalid)
             computeSize();
         layout(rootNodes, leftColumnWidth + indentSpacing + iconSpacingRight, getHeight() - ySpacing / 2);
     }
 
-    public void filter (String filter) {
+    public void filter(String filter) {
         filter(filter, false);
     }
 
-    public void filter (String filter, boolean endsWithLogic) {
+    public void filter(String filter, boolean endsWithLogic) {
         filter(rootNodes, filter.toLowerCase(), endsWithLogic);
         expandAll();
 
@@ -770,21 +764,21 @@ public class FilteredTree<T> extends WidgetGroup {
         Array<Node<T>> result = new Array<>();
         collectFilteredNodes(rootNodes, result);
 
-        if(result.size == 0) return;
+        if (result.size == 0) return;
 
-        if(autoSelectionIndex < 0) autoSelectionIndex = result.size - 1;
-        if(autoSelectionIndex > result.size - 1) autoSelectionIndex = 0;
+        if (autoSelectionIndex < 0) autoSelectionIndex = result.size - 1;
+        if (autoSelectionIndex > result.size - 1) autoSelectionIndex = 0;
 
         Node node = result.get(autoSelectionIndex);
         selectSingleNode(node, false);
-        if(node.parent != null) node.parent.setExpanded(true);
+        if (node.parent != null) node.parent.setExpanded(true);
     }
 
     public void collectFilteredNodes(Array<Node<T>> nodes, Array<Node<T>> result) {
         for (int i = 0; i < nodes.size; i++) {
             Node node = nodes.get(i);
-            if(node.children.size == 0) {
-                if(node.parent != null) {
+            if (node.children.size == 0) {
+                if (node.parent != null) {
                     if (!node.filtered) {
                         // select it!
                         result.add(node);
@@ -793,37 +787,6 @@ public class FilteredTree<T> extends WidgetGroup {
             } else {
                 collectFilteredNodes(node.children, result);
             }
-        }
-    }
-
-    private class MatchingNode<C> {
-        public Node<C> node;
-        public double score;
-        public boolean contained;
-        public MatchingNode(Node<C> node, double score, boolean contained) {
-            this.node = node;
-            this.score = score;
-            this.contained = contained;
-        }
-
-        @Override
-        public int hashCode() {
-            return node.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return super.equals(obj);
-        }
-
-        public boolean filterPositive() {
-            if(contained) return true;
-
-            if(score > 0.7f) {
-                return true;
-            }
-
-            return false;
         }
     }
 
@@ -840,8 +803,7 @@ public class FilteredTree<T> extends WidgetGroup {
         return value;
     }
 
-
-    public void gatherMatchingScores (Array<Node<T>> nodes, String filter, Array<MatchingNode<T>> results, double parentScore) {
+    public void gatherMatchingScores(Array<Node<T>> nodes, String filter, Array<MatchingNode<T>> results, double parentScore) {
         for (int i = 0; i < nodes.size; i++) {
             Node<T> nodeToCheck = nodes.get(i);
             double similarityScore = getSimilarityScore(nodeToCheck.getName().toLowerCase(), filter.toLowerCase());
@@ -850,7 +812,7 @@ public class FilteredTree<T> extends WidgetGroup {
 
             MatchingNode<T> mNode = new MatchingNode<>(nodeToCheck, totalScore,
                     nodeToCheck.getName().toLowerCase().contains(filter.toLowerCase()));
-            if(!results.contains(mNode, false)) {
+            if (!results.contains(mNode, false)) {
                 results.add(mNode);
             }
             gatherMatchingScores(nodeToCheck.children, filter, results, similarityScore);
@@ -881,7 +843,7 @@ public class FilteredTree<T> extends WidgetGroup {
         }
     }
 
-    private void smartFilter (Array<MatchingNode<T>> nodes) {
+    private void smartFilter(Array<MatchingNode<T>> nodes) {
         for (int i = 0; i < nodes.size; i++) {
             MatchingNode<T> matchingNode = nodes.get(i);
             if (matchingNode.filterPositive()) {
@@ -896,15 +858,15 @@ public class FilteredTree<T> extends WidgetGroup {
         }
     }
 
-    public void filter (Array<Node<T>> nodes, String filter) {
+    public void filter(Array<Node<T>> nodes, String filter) {
         filter(nodes, filter, false);
     }
 
-
-    public void filterAll (Predicate<Node<T>> predicate) {
+    public void filterAll(Predicate<Node<T>> predicate) {
         this.filter(this.rootNodes, predicate);
     }
-    public void filter (Array<Node<T>> nodes, Predicate<Node<T>> predicate) {
+
+    public void filter(Array<Node<T>> nodes, Predicate<Node<T>> predicate) {
         for (int i = 0; i < nodes.size; i++) {
             Node<T> testNode = nodes.get(i);
 
@@ -921,10 +883,11 @@ public class FilteredTree<T> extends WidgetGroup {
             }
         }
     }
-    public void filter (Array<Node<T>> nodes, String filter, boolean endsWithLogic) {
+
+    public void filter(Array<Node<T>> nodes, String filter, boolean endsWithLogic) {
         for (int i = 0; i < nodes.size; i++) {
             boolean statement = nodes.get(i).name.toLowerCase().contains(filter);
-            if(endsWithLogic) {
+            if (endsWithLogic) {
                 statement = nodes.get(i).name.toLowerCase().endsWith(filter);
             }
             if (statement) {
@@ -939,11 +902,10 @@ public class FilteredTree<T> extends WidgetGroup {
                 nodes.get(i).setVisible(false);
                 filter(nodes.get(i).children, filter, endsWithLogic);
             }
-
         }
     }
 
-    private void setAllChildrenNotFiltered (Node<T> node) {
+    private void setAllChildrenNotFiltered(Node<T> node) {
         for (int i = 0; i < node.children.size; i++) {
             node.children.get(i).filtered = false;
             node.children.get(i).setVisible(true);
@@ -951,7 +913,7 @@ public class FilteredTree<T> extends WidgetGroup {
         }
     }
 
-    private void setAllParentsNotFiltered (Node node) {
+    private void setAllParentsNotFiltered(Node node) {
         Node parent;
         while ((parent = node.parent) != null) {
             parent.filtered = false;
@@ -960,7 +922,7 @@ public class FilteredTree<T> extends WidgetGroup {
         }
     }
 
-    private float layout (Array<Node<T>> nodes, float indent, float y) {
+    private float layout(Array<Node<T>> nodes, float indent, float y) {
         float ySpacing = this.ySpacing;
         for (int i = 0, n = nodes.size; i < n; i++) {
             Node<T> node = nodes.get(i);
@@ -985,7 +947,7 @@ public class FilteredTree<T> extends WidgetGroup {
         return y;
     }
 
-    public void draw (Batch batch, float parentAlpha) {
+    public void draw(Batch batch, float parentAlpha) {
         Color color = getColor();
         batch.setColor(color.r, color.g, color.b, color.a * parentAlpha);
         if (style.background != null) {
@@ -999,7 +961,6 @@ public class FilteredTree<T> extends WidgetGroup {
                 if (style.companionBackground != null) {
                     style.companionBackground.draw(batch, getX(), getY(), companionWidth, getHeight());
                 }
-
             }
         }
 
@@ -1010,7 +971,7 @@ public class FilteredTree<T> extends WidgetGroup {
     /**
      * Draws selection, icons, and expand icons.
      */
-    private void draw (Batch batch, Array<Node<T>> nodes, float indent) {
+    private void draw(Batch batch, Array<Node<T>> nodes, float indent) {
         Drawable plus = style.plus, minus = style.minus;
         float x = getX(), y = getY();
         for (int i = 0, n = nodes.size; i < n; i++) {
@@ -1028,7 +989,6 @@ public class FilteredTree<T> extends WidgetGroup {
                 } else {
                     style.underline.draw(batch, x + node.actor.getX() - iconSpacingRight, y + actor.getY() - ySpacing / 2, getWidth() - node.actor.getX() - iconSpacingRight, node.height + ySpacing);
                 }
-
             }
 
             if (selection.contains(node) && style.selection != null) {
@@ -1063,13 +1023,13 @@ public class FilteredTree<T> extends WidgetGroup {
     /**
      * @return May be null.
      */
-    public Node<T> getNodeAt (float y) {
+    public Node<T> getNodeAt(float y) {
         foundNode = null;
         getNodeAt(rootNodes, y, getHeight());
         return foundNode;
     }
 
-    private float getNodeAt (Array<Node<T>> nodes, float y, float rowY) {
+    private float getNodeAt(Array<Node<T>> nodes, float y, float rowY) {
         for (int i = 0, n = nodes.size; i < n; i++) {
             Node node = nodes.get(i);
             if (node.filtered)
@@ -1089,7 +1049,7 @@ public class FilteredTree<T> extends WidgetGroup {
         return rowY;
     }
 
-    void findAndSelectNodes (Array<Node<T>> nodes, float low, float high) {
+    void findAndSelectNodes(Array<Node<T>> nodes, float low, float high) {
         for (int i = 0, n = nodes.size; i < n; i++) {
             Node<T> node = nodes.get(i);
             if (node.actor.getY() < low)
@@ -1100,43 +1060,37 @@ public class FilteredTree<T> extends WidgetGroup {
                 continue;
             if (node.actor.getY() <= high)
                 addNodeToSelection(node);
-
         }
     }
 
-
-    public Selection<Node<T>> getSelection () {
+    public Selection<Node<T>> getSelection() {
         return selection;
     }
 
-    public TreeStyle getStyle () {
+    public TreeStyle getStyle() {
         return style;
     }
 
-    public Array<Node<T>> getRootNodes () {
+    public void setStyle(TreeStyle style) {
+        this.style = style;
+        indentSpacing = Math.max(style.plus.getMinWidth(), style.minus.getMinWidth()) + iconSpacingLeft;
+    }
+
+    public Array<Node<T>> getRootNodes() {
         return rootNodes;
     }
 
     /**
      * @return May be null.
      */
-    public Node<T> getOverNode () {
+    public Node<T> getOverNode() {
         return overNode;
-    }
-
-    /**
-     * @return May be null.
-     */
-    public Object getOverObject () {
-        if (overNode == null)
-            return null;
-        return overNode.getObject();
     }
 
     /**
      * @param overNode May be null.
      */
-    public void setOverNode (Node overNode) {
+    public void setOverNode(Node overNode) {
         if (this.overNode != null) {
             this.overNode.over = false;
         }
@@ -1147,55 +1101,64 @@ public class FilteredTree<T> extends WidgetGroup {
     }
 
     /**
+     * @return May be null.
+     */
+    public Object getOverObject() {
+        if (overNode == null)
+            return null;
+        return overNode.getObject();
+    }
+
+    /**
      * Sets the amount of horizontal space between the nodes and the left/right edges of the tree.
      */
-    public void setPadding (float padding) {
+    public void setPadding(float padding) {
         this.padding = padding;
     }
 
     /**
      * Returns the amount of horizontal space for indentation level.
      */
-    public float getIndentSpacing () {
+    public float getIndentSpacing() {
         return indentSpacing;
+    }
+
+    public float getYSpacing() {
+        return ySpacing;
     }
 
     /**
      * Sets the amount of vertical space between nodes.
      */
-    public void setYSpacing (float ySpacing) {
+    public void setYSpacing(float ySpacing) {
         this.ySpacing = ySpacing;
-    }
-
-    public float getYSpacing () {
-        return ySpacing;
     }
 
     /**
      * Sets the amount of horizontal space between the node actors and icons.
      */
-    public void setIconSpacing (float left, float right) {
+    public void setIconSpacing(float left, float right) {
         this.iconSpacingLeft = left;
         this.iconSpacingRight = right;
     }
 
-    public float getPrefWidth () {
+    public float getPrefWidth() {
         if (sizeInvalid)
             computeSize();
         return prefWidth;
     }
 
-    public float getPrefHeight () {
+    public float getPrefHeight() {
         if (sizeInvalid)
             computeSize();
         return prefHeight;
     }
 
-    public void findExpandedObjects (Array<T> objects) {
+    public void findExpandedObjects(Array<T> objects) {
         findExpandedObjects(rootNodes, objects);
     }
 
-    public void restoreExpandedObjects (Array<T> objects) {
+    public void restoreExpandedObjects(Array<T> objects) {
         for (int i = 0, n = objects.size; i < n; i++) {
             Node<T> node = findNode(objects.get(i));
             if (node != null) {
@@ -1205,69 +1168,31 @@ public class FilteredTree<T> extends WidgetGroup {
         }
     }
 
-    static <T> boolean findExpandedObjects (Array<Node<T>> nodes, Array<T> objects) {
-        boolean expanded = false;
-        for (int i = 0, n = nodes.size; i < n; i++) {
-            Node<T> node = nodes.get(i);
-            if (node.expanded && !findExpandedObjects(node.children, objects))
-                objects.add(node.object);
-        }
-        return expanded;
-    }
-
     /**
      * Returns the node with the specified object, or null.
      */
-    public Node<T> findNode (T object) {
+    public Node<T> findNode(T object) {
         if (object == null)
             throw new IllegalArgumentException("object cannot be null.");
         return findNode(rootNodes, object);
     }
 
-    static <T> Node<T> findNode (Array<Node<T>> nodes, T object) {
-        for (int i = 0, n = nodes.size; i < n; i++) {
-            Node node = nodes.get(i);
-            if (object.equals(node.object))
-                return node;
-        }
-        for (int i = 0, n = nodes.size; i < n; i++) {
-            Node node = nodes.get(i);
-            Node found = findNode(node.children, object);
-            if (found != null)
-                return found;
-        }
-        return null;
-    }
-
-    public void collapseAll () {
+    public void collapseAll() {
         collapseAll(rootNodes);
     }
 
-    static <T> void collapseAll (Array<Node<T>> nodes) {
-        for (int i = 0, n = nodes.size; i < n; i++) {
-            Node<T> node = nodes.get(i);
-            node.setExpanded(false);
-            collapseAll(node.children);
-        }
-    }
-
-    public void expandAll () {
+    public void expandAll() {
         expandAll(rootNodes);
-    }
-
-    static <T> void expandAll (Array<Node<T>> nodes) {
-        for (int i = 0, n = nodes.size; i < n; i++)
-            nodes.get(i).expandAll();
     }
 
     /**
      * Returns the click listener the tree uses for clicking on nodes and the over node.
      */
-    public ClickListener getClickListener () {
+    public ClickListener getClickListener() {
         return clickListener;
     }
 
-    public void sortAlphabetical () {
+    public void sortAlphabetical() {
         rootNodes.sort(alphabeticalSorter);
 
         for (int i = 0; i < rootNodes.size; i++) {
@@ -1275,14 +1200,7 @@ public class FilteredTree<T> extends WidgetGroup {
         }
     }
 
-    private Comparator<Node<T>> alphabeticalSorter = new Comparator<Node<T>>() {
-        @Override
-        public int compare (Node<T> o1, Node<T> o2) {
-            return o1.name.compareTo(o2.name);
-        }
-    };
-
-    private void sortChildrenAlphabetical (Node<T> node) {
+    private void sortChildrenAlphabetical(Node<T> node) {
         node.children.sort(alphabeticalSorter);
 
         Array<Node<T>> children = node.getChildren();
@@ -1292,38 +1210,162 @@ public class FilteredTree<T> extends WidgetGroup {
         }
     }
 
+    public static abstract class ItemListener<T> {
+        public void selected(Node<T> node) {
+
+        }
+
+        public void addedIntoSelection(Node<T> node) {
+
+        }
+
+        public void removedFromSelection(Node<T> node) {
+
+        }
+
+        public void rightClick(Node<T> node) {
+
+        }
+
+        public void mouseMoved(Node<T> node) {
+
+        }
+
+        public void delete(Array<FilteredTree.Node<T>> nodes) {
+
+        }
+
+        public void onNodeMove(Node<T> parentToMoveTo, Node<T> childThatHasMoved, int indexInParent, int indexOfPayloadInPayloadBefore) {
+
+        }
+
+        public void clearSelection() {
+
+        }
+    }
+
     static public class Node<T> {
+        public final Array<Node<T>> children = new Array<>(0);
         final Actor actor;
+        public String name;
+        public boolean draggable;
+        public boolean draggableInLayerOnly;
+        public boolean canDelete = true;
+        public boolean over;
         Actor companionActor;
         Node<T> parent;
-        public final Array<Node<T>> children = new Array<>(0);
         boolean selectable = true;
         boolean expanded;
         Drawable icon;
         float height;
         T object;
-        public String name;
         boolean filtered = false;
         boolean underline = false;
         float yAlpha = 0f;
-        public boolean draggable;
-        public boolean draggableInLayerOnly;
 
-        public boolean canDelete = true;
-        public boolean over;
-
-        public Node (String name, Actor actor) {
+        public Node(String name, Actor actor) {
             if (actor == null)
                 throw new IllegalArgumentException("actor cannot be null.");
             this.name = name;
             this.actor = actor;
         }
 
-        public void setCompanionActor (Actor companionActor) {
+        public void setCompanionActor(Actor companionActor) {
             this.companionActor = companionActor;
         }
 
-        public void setExpanded (boolean expanded) {
+        /**
+         * Called to add the actor to the tree when the node's parent is expanded.
+         */
+        protected void addToTree(FilteredTree tree) {
+            tree.addActor(actor);
+            if (companionActor != null) {
+                tree.addActor(companionActor);
+            }
+            if (!expanded)
+                return;
+            for (int i = 0, n = children.size; i < n; i++)
+                children.get(i).addToTree(tree);
+        }
+
+        /**
+         * Called to remove the actor from the tree when the node's parent is collapsed.
+         */
+        protected void removeFromTree(FilteredTree tree) {
+            tree.removeActor(actor);
+            if (companionActor != null) {
+                tree.removeActor(companionActor);
+            }
+            if (!expanded)
+                return;
+            Object[] children = this.children.items;
+            for (int i = 0, n = this.children.size; i < n; i++)
+                ((Node) children[i]).removeFromTree(tree);
+        }
+
+        public void add(Node node) {
+            insert(children.size, node);
+        }
+
+        public void addAll(Array<Node> nodes) {
+            for (int i = 0, n = nodes.size; i < n; i++)
+                insert(children.size, nodes.get(i));
+        }
+
+        public void insert(int index, Node node) {
+            node.parent = this;
+            children.insert(index, node);
+            updateChildren();
+        }
+
+        public void remove() {
+            FilteredTree tree = getTree();
+            if (tree != null)
+                tree.remove(this);
+            else if (parent != null) //
+                parent.remove(this);
+        }
+
+        public void remove(Node node) {
+            children.removeValue(node, true);
+            if (!expanded)
+                return;
+            FilteredTree tree = getTree();
+            if (tree == null)
+                return;
+            node.removeFromTree(tree);
+            if (children.size == 0)
+                expanded = false;
+        }
+
+        public void removeAll() {
+            FilteredTree tree = getTree();
+            if (tree != null) {
+                for (int i = 0, n = children.size; i < n; i++)
+                    children.get(i).removeFromTree(tree);
+            }
+            children.clear();
+        }
+
+        /**
+         * Returns the tree this node is currently in, or null.
+         */
+        public FilteredTree getTree() {
+            Group parent = actor.getParent();
+            if (!(parent instanceof FilteredTree))
+                return null;
+            return (FilteredTree) parent;
+        }
+
+        public Actor getActor() {
+            return actor;
+        }
+
+        public boolean isExpanded() {
+            return expanded;
+        }
+
+        public void setExpanded(boolean expanded) {
             if (expanded == this.expanded)
                 return;
             this.expanded = expanded;
@@ -1343,104 +1385,13 @@ public class FilteredTree<T> extends WidgetGroup {
         }
 
         /**
-         * Called to add the actor to the tree when the node's parent is expanded.
-         */
-        protected void addToTree (FilteredTree tree) {
-            tree.addActor(actor);
-            if (companionActor != null) {
-                tree.addActor(companionActor);
-            }
-            if (!expanded)
-                return;
-            for (int i = 0, n = children.size; i < n; i++)
-                children.get(i).addToTree(tree);
-        }
-
-        /**
-         * Called to remove the actor from the tree when the node's parent is collapsed.
-         */
-        protected void removeFromTree (FilteredTree tree) {
-            tree.removeActor(actor);
-            if (companionActor != null) {
-                tree.removeActor(companionActor);
-            }
-            if (!expanded)
-                return;
-            Object[] children = this.children.items;
-            for (int i = 0, n = this.children.size; i < n; i++)
-                ((Node)children[i]).removeFromTree(tree);
-        }
-
-        public void add (Node node) {
-            insert(children.size, node);
-        }
-
-        public void addAll (Array<Node> nodes) {
-            for (int i = 0, n = nodes.size; i < n; i++)
-                insert(children.size, nodes.get(i));
-        }
-
-        public void insert (int index, Node node) {
-            node.parent = this;
-            children.insert(index, node);
-            updateChildren();
-        }
-
-        public void remove () {
-            FilteredTree tree = getTree();
-            if (tree != null)
-                tree.remove(this);
-            else if (parent != null) //
-                parent.remove(this);
-        }
-
-        public void remove (Node node) {
-            children.removeValue(node, true);
-            if (!expanded)
-                return;
-            FilteredTree tree = getTree();
-            if (tree == null)
-                return;
-            node.removeFromTree(tree);
-            if (children.size == 0)
-                expanded = false;
-        }
-
-        public void removeAll () {
-            FilteredTree tree = getTree();
-            if (tree != null) {
-                for (int i = 0, n = children.size; i < n; i++)
-                    children.get(i).removeFromTree(tree);
-            }
-            children.clear();
-        }
-
-        /**
-         * Returns the tree this node is currently in, or null.
-         */
-        public FilteredTree getTree () {
-            Group parent = actor.getParent();
-            if (!(parent instanceof FilteredTree))
-                return null;
-            return (FilteredTree)parent;
-        }
-
-        public Actor getActor () {
-            return actor;
-        }
-
-        public boolean isExpanded () {
-            return expanded;
-        }
-
-        /**
          * If the children order is changed, {@link #updateChildren()} must be called.
          */
-        public Array<Node<T>> getChildren () {
+        public Array<Node<T>> getChildren() {
             return children;
         }
 
-        public void updateChildren () {
+        public void updateChildren() {
             if (!expanded)
                 return;
             FilteredTree tree = getTree();
@@ -1453,33 +1404,33 @@ public class FilteredTree<T> extends WidgetGroup {
         /**
          * @return May be null.
          */
-        public Node<T> getParent () {
+        public Node<T> getParent() {
             return parent;
         }
 
-        /**
-         * Sets an icon that will be drawn to the left of the actor.
-         */
-        public void setIcon (Drawable icon) {
-            this.icon = icon;
-        }
-
-        public T getObject () {
+        public T getObject() {
             return object;
         }
 
         /**
          * Sets an application specific object for this node.
          */
-        public void setObject (T object) {
+        public void setObject(T object) {
             this.object = object;
         }
 
-        public Drawable getIcon () {
+        public Drawable getIcon() {
             return icon;
         }
 
-        public int getLevel () {
+        /**
+         * Sets an icon that will be drawn to the left of the actor.
+         */
+        public void setIcon(Drawable icon) {
+            this.icon = icon;
+        }
+
+        public int getLevel() {
             int level = 0;
             Node current = this;
             do {
@@ -1492,7 +1443,7 @@ public class FilteredTree<T> extends WidgetGroup {
         /**
          * Returns this node or the child node with the specified object, or null.
          */
-        public Node<T> findNode (T object) {
+        public Node<T> findNode(T object) {
             if (object == null)
                 throw new IllegalArgumentException("object cannot be null.");
             if (object.equals(this.object))
@@ -1503,7 +1454,7 @@ public class FilteredTree<T> extends WidgetGroup {
         /**
          * Collapses all nodes under and including this node.
          */
-        public void collapseAll () {
+        public void collapseAll() {
             setExpanded(false);
             FilteredTree.collapseAll(children);
         }
@@ -1511,7 +1462,7 @@ public class FilteredTree<T> extends WidgetGroup {
         /**
          * Expands all nodes under and including this node.
          */
-        public void expandAll () {
+        public void expandAll() {
             setExpanded(true);
             if (children.size > 0)
                 FilteredTree.expandAll(children);
@@ -1520,7 +1471,7 @@ public class FilteredTree<T> extends WidgetGroup {
         /**
          * Expands all parent nodes of this node.
          */
-        public void expandTo () {
+        public void expandTo() {
             Node node = parent;
             while (node != null) {
                 node.setExpanded(true);
@@ -1528,20 +1479,20 @@ public class FilteredTree<T> extends WidgetGroup {
             }
         }
 
-        public boolean isSelectable () {
+        public boolean isSelectable() {
             return selectable && !filtered;
         }
 
-        public void setSelectable (boolean selectable) {
+        public void setSelectable(boolean selectable) {
             this.selectable = selectable;
         }
 
-        public void findExpandedObjects (Array<T> objects) {
+        public void findExpandedObjects(Array<T> objects) {
             if (expanded && !FilteredTree.findExpandedObjects(children, objects))
                 objects.add(object);
         }
 
-        public void restoreExpandedObjects (Array<T> objects) {
+        public void restoreExpandedObjects(Array<T> objects) {
             for (int i = 0, n = objects.size; i < n; i++) {
                 Node<T> node = findNode(objects.get(i));
                 if (node != null) {
@@ -1551,11 +1502,11 @@ public class FilteredTree<T> extends WidgetGroup {
             }
         }
 
-        public String getName () {
+        public String getName() {
             return name;
         }
 
-        public void setVisible (boolean visible) {
+        public void setVisible(boolean visible) {
             this.actor.setVisible(visible);
             if (this.companionActor != null) {
                 this.companionActor.setVisible(visible);
@@ -1575,19 +1526,47 @@ public class FilteredTree<T> extends WidgetGroup {
          */
         public Drawable over, selection, background, companionBackground, underline;
 
-        public TreeStyle () {
+        public TreeStyle() {
         }
 
-        public TreeStyle (Drawable plus, Drawable minus, Drawable selection) {
+        public TreeStyle(Drawable plus, Drawable minus, Drawable selection) {
             this.plus = plus;
             this.minus = minus;
             this.selection = selection;
         }
 
-        public TreeStyle (TreeStyle style) {
+        public TreeStyle(TreeStyle style) {
             this.plus = style.plus;
             this.minus = style.minus;
             this.selection = style.selection;
+        }
+    }
+
+    private class MatchingNode<C> {
+        public Node<C> node;
+        public double score;
+        public boolean contained;
+
+        public MatchingNode(Node<C> node, double score, boolean contained) {
+            this.node = node;
+            this.score = score;
+            this.contained = contained;
+        }
+
+        @Override
+        public int hashCode() {
+            return node.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return super.equals(obj);
+        }
+
+        public boolean filterPositive() {
+            if (contained) return true;
+
+            return score > 0.7f;
         }
     }
 }

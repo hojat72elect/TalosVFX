@@ -20,14 +20,13 @@ import com.badlogic.gdx.math.Vector2;
 
 public class Curve {
 
-    private Vector2 from = new Vector2();
-    private Vector2 to = new Vector2();
-
     boolean reverse = false;
+    private final Vector2 from = new Vector2();
+    private final Vector2 to = new Vector2();
 
     public Curve(float x, float y, float toX, float toY, boolean reverse) {
         this.reverse = reverse;
-        if(reverse) {
+        if (reverse) {
             to.set(x, y);
             from.set(toX, toY);
         } else {
@@ -37,7 +36,7 @@ public class Curve {
     }
 
     public void setTo(float toX, float toY) {
-        if(reverse) {
+        if (reverse) {
             from.set(toX, toY);
         } else {
             to.set(toX, toY);
@@ -45,7 +44,7 @@ public class Curve {
     }
 
     public void setFrom(float toX, float toY) {
-        if(reverse) {
+        if (reverse) {
             to.set(toX, toY);
         } else {
             from.set(toX, toY);

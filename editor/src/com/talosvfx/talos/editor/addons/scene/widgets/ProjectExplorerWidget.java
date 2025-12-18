@@ -1,12 +1,18 @@
 package com.talosvfx.talos.editor.addons.scene.widgets;
 
+import static com.talosvfx.talos.editor.utils.InputUtils.ctrlPressed;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.SplitPane;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Selection;
 import com.badlogic.gdx.utils.Array;
@@ -38,7 +44,7 @@ import com.talosvfx.talos.editor.widgets.ui.FilteredTree;
 import com.talosvfx.talos.runtime.maps.TilePaletteData;
 import com.talosvfx.talos.runtime.utils.NamingUtils;
 import com.talosvfx.talos.runtime.utils.Supplier;
-import lombok.Getter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,27 +53,23 @@ import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static com.talosvfx.talos.editor.utils.InputUtils.ctrlPressed;
+import lombok.Getter;
 
 public class ProjectExplorerWidget extends Table implements Observer {
 
     private static final Logger logger = LoggerFactory.getLogger(ProjectExplorerWidget.class);
-
-    private final FilteredTree<String> directoryTree;
     public static FileFilter fileFilter;
+    private final FilteredTree<String> directoryTree;
     private final DirectoryViewWidget directoryViewWidget;
-    private ObjectMap<String, FilteredTree.Node<String>> nodes = new ObjectMap<>();
-
-    private ContextualMenu contextualMenu;
-    private FilteredTree.Node<String> rootNode;
-
     public boolean isCutting = false;
     public Array<FileHandle> filesToManipulate = new Array<>();
-
+    private final ObjectMap<String, FilteredTree.Node<String>> nodes = new ObjectMap<>();
+    private final ContextualMenu contextualMenu;
+    private FilteredTree.Node<String> rootNode;
     @Getter
-    private SplitPane splitPane;
+    private final SplitPane splitPane;
 
-    public ProjectExplorerWidget () {
+    public ProjectExplorerWidget() {
         Skin skin = SharedResources.skin;
         Notifications.registerObserver(this);
 
@@ -109,21 +111,19 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
         fileFilter = new FileFilter() {
             @Override
-            public boolean accept (File pathname) {
+            public boolean accept(File pathname) {
 
                 if (pathname.getAbsolutePath().endsWith(".tse")) return false;
                 if (pathname.getName().equals(".DS_Store")) return false;
                 if (pathname.getAbsolutePath().endsWith(".meta")) return false;
-                if (pathname.getAbsolutePath().endsWith(".p")) return false;
-
-                return true;
+                return !pathname.getAbsolutePath().endsWith(".p");
             }
         };
 
         directoryTree.addItemListener(new FilteredTree.ItemListener<String>() {
 
             @Override
-            public void onNodeMove (FilteredTree.Node<String> parentToMoveTo, FilteredTree.Node<String> childThatHasMoved, int indexInParent, int indexOfPayloadInPayloadBefore) {
+            public void onNodeMove(FilteredTree.Node<String> parentToMoveTo, FilteredTree.Node<String> childThatHasMoved, int indexInParent, int indexOfPayloadInPayloadBefore) {
                 if (parentToMoveTo != null) {
                     String parentPath = parentToMoveTo.getObject();
                     String childPath = childThatHasMoved.getObject();
@@ -139,22 +139,21 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
                     //Its always folders
                     AssetRepository.getInstance().moveFile(childHandle, parentHandle, false);
-
                 }
             }
 
             @Override
-            public void selected (FilteredTree.Node node) {
+            public void selected(FilteredTree.Node node) {
                 select(node);
             }
 
             @Override
-            public void addedIntoSelection (FilteredTree.Node<String> node) {
+            public void addedIntoSelection(FilteredTree.Node<String> node) {
                 super.addedIntoSelection(node);
             }
 
             @Override
-            public void rightClick (FilteredTree.Node<String> node) {
+            public void rightClick(FilteredTree.Node<String> node) {
                 if (node != null) {
                     //select(node);
                     Array<FileHandle> contextualFile = new Array<>();
@@ -165,10 +164,10 @@ public class ProjectExplorerWidget extends Table implements Observer {
             }
 
             @Override
-            public void delete (Array<FilteredTree.Node<String>> nodes) {
+            public void delete(Array<FilteredTree.Node<String>> nodes) {
                 if (nodes.isEmpty()) return;
 
-                String path = (String) nodes.first().getObject();
+                String path = nodes.first().getObject();
                 Array<String> paths = new Array<>();
                 paths.add(path);
                 deletePath(paths);
@@ -178,20 +177,20 @@ public class ProjectExplorerWidget extends Table implements Observer {
         directoryTree.expandAll();
     }
 
-    private String getCurrSelectedPath () {
+    private String getCurrSelectedPath() {
         Selection<FilteredTree.Node<String>> selection = directoryTree.getSelection();
         if (selection.size() > 0) {
-            return (String) selection.first().getObject();
+            return selection.first().getObject();
         }
 
         return null;
     }
 
 
-    public void deletePath (Array<String> paths) {
+    public void deletePath(Array<String> paths) {
         Runnable runnable = new Runnable() {
             @Override
-            public void run () {
+            public void run() {
                 if (paths.isEmpty()) {
                     // nothing no remove
                     return;
@@ -223,17 +222,17 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
         showYesNoDialog("Delete files?", message, runnable, new Runnable() {
             @Override
-            public void run () {
+            public void run() {
 
             }
         });
     }
 
-    public ObjectMap<String, FilteredTree.Node<String>> getNodes () {
+    public ObjectMap<String, FilteredTree.Node<String>> getNodes() {
         return nodes;
     }
 
-    public void showContextMenu (boolean directoryView) {
+    public void showContextMenu(boolean directoryView) {
         Array<FileHandle> list = new Array<>();
         Array<FilteredTree.Node<String>> nodes = directoryTree.getSelection().toArray();
         for (FilteredTree.Node<String> node : nodes) {
@@ -245,7 +244,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
         showContextMenu(list, directoryView);
     }
 
-    public void showContextMenu (Array<FileHandle> files, boolean directory) {
+    public void showContextMenu(Array<FileHandle> files, boolean directory) {
         // protect editable=false nodes from rename operation
         // protect canDelete=false nodes from cut, delete operation
         boolean canRename = true;
@@ -270,20 +269,20 @@ public class ProjectExplorerWidget extends Table implements Observer {
         if (canDelete) {
             contextualMenu.addItem("Cut", new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
                     invokeCut(files);
                 }
             });
         }
         contextualMenu.addItem("Copy", new ClickListener() {
             @Override
-            public void clicked (InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 invokeCopy(files);
             }
         });
         contextualMenu.addItem("Paste", new ClickListener() {
             @Override
-            public void clicked (InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 FileHandle destination = files.first();
                 invokePaste(destination);
             }
@@ -296,7 +295,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
         if (canRename) {
             contextualMenu.addItem("Rename", new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
                     String path = files.first().path();
                     if (path != null) {
                         FileHandle handle = Gdx.files.absolute(path);
@@ -318,7 +317,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
         if (canDelete) {
             contextualMenu.addItem("Delete", new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
                     Array<String> paths = new Array<>();
                     for (FileHandle file : files) {
                         paths.add(file.path());
@@ -335,14 +334,14 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
             createSubMenuItem(popupMenu, "New Directory", new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
                     String path = files.first().path();
                     if (path != null) {
                         FileHandle handle = Gdx.files.absolute(path);
                         if (handle.isDirectory()) {
                             String name = NamingUtils.getNewName("New Directory", new Supplier<Collection<String>>() {
                                 @Override
-                                public Collection<String> get () {
+                                public Collection<String> get() {
                                     FileHandle[] list = handle.list();
                                     ArrayList<String> names = new ArrayList<>();
                                     for (FileHandle fileHandle : list) {
@@ -369,7 +368,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
                             Gdx.app.postRunnable(new Runnable() {
                                 @Override
-                                public void run () {
+                                public void run() {
                                     directoryViewWidget.scrollTo(newHandle);
                                 }
                             });
@@ -380,7 +379,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
             createSubMenuItem(popupMenu, "New Scene", new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
                     FileHandle currentFolder = getCurrentFolder();
                     FileHandle sceneFileHandle = AssetRepository.getInstance().copySampleSceneToProject(currentFolder);
                     // TODO: refactor directory view widget to update itself
@@ -388,7 +387,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
                     Gdx.app.postRunnable(new Runnable() {
                         @Override
-                        public void run () {
+                        public void run() {
                             directoryViewWidget.scrollTo(sceneFileHandle);
                         }
                     });
@@ -397,7 +396,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
             createSubMenuItem(popupMenu, "Particle Effect", new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
 
                     FileHandle currentFolder = getCurrentFolder();
                     FileHandle effectFileHandle = AssetRepository.getInstance().copySampleParticleToProject(currentFolder);
@@ -407,7 +406,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
                     Gdx.app.postRunnable(new Runnable() {
                         @Override
-                        public void run () {
+                        public void run() {
                             directoryViewWidget.scrollTo(effectFileHandle);
                         }
                     });
@@ -416,7 +415,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
             createSubMenuItem(popupMenu, "Script", new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
 
                     FileHandle currentFolder = getCurrentFolder();
 
@@ -435,7 +434,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
                     Gdx.app.postRunnable(new Runnable() {
                         @Override
-                        public void run () {
+                        public void run() {
                             directoryViewWidget.scrollTo(newScriptDestination);
                         }
                     });
@@ -444,7 +443,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
             createSubMenuItem(popupMenu, "Routine", new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
 
                     FileHandle currentFolder = getCurrentFolder();
 
@@ -459,7 +458,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
                     Gdx.app.postRunnable(new Runnable() {
                         @Override
-                        public void run () {
+                        public void run() {
                             directoryViewWidget.scrollTo(newScriptDestination);
                         }
                     });
@@ -468,7 +467,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
             createSubMenuItem(popupMenu, "Shader", new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
 
                     FileHandle currentFolder = getCurrentFolder();
 
@@ -483,7 +482,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
                     Gdx.app.postRunnable(new Runnable() {
                         @Override
-                        public void run () {
+                        public void run() {
                             directoryViewWidget.scrollTo(newShaderDestination);
                         }
                     });
@@ -492,7 +491,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
             createSubMenuItem(popupMenu, "Palette", new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
                     FileHandle currentFolder = getCurrentFolder();
                     FileHandle newPaletteDestination = AssetImporter.suggestNewNameForFileHandle(currentFolder.path(), "New_Palette", "ttp");
 
@@ -508,7 +507,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
                     Gdx.app.postRunnable(new Runnable() {
                         @Override
-                        public void run () {
+                        public void run() {
                             directoryViewWidget.scrollTo(newPaletteDestination);
                         }
                     });
@@ -517,7 +516,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
             createSubMenuItem(popupMenu, "Empty Sprite PNG", new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
 
                     FileHandle currentFolder = getCurrentFolder();
                     FileHandle destination = AssetImporter.suggestNewNameForFileHandle(currentFolder.path(), "new-sprite", "png");
@@ -530,7 +529,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
                     select(getCurrentFolder().path());
                     Gdx.app.postRunnable(new Runnable() {
                         @Override
-                        public void run () {
+                        public void run() {
                             directoryViewWidget.scrollTo(destination);
                         }
                     });
@@ -540,7 +539,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
             MenuItem createMenu = contextualMenu.addItem("Create", new ClickListener() {
                 @Override
-                public void clicked (InputEvent event, float x, float y) {
+                public void clicked(InputEvent event, float x, float y) {
                     super.clicked(event, x, y);
                 }
             });
@@ -552,13 +551,13 @@ public class ProjectExplorerWidget extends Table implements Observer {
         contextualMenu.show(getStage());
     }
 
-    private void createSubMenuItem (PopupMenu popupMenu, String name, ClickListener listener) {
+    private void createSubMenuItem(PopupMenu popupMenu, String name, ClickListener listener) {
         MenuItem item = new MenuItem(name);
         item.addListener(listener);
         popupMenu.addItem(item);
     }
 
-    public void select (FilteredTree.Node node) {
+    public void select(FilteredTree.Node node) {
         if (ctrlPressed()) {
             directoryTree.getSelection().add(node);
         } else {
@@ -568,12 +567,12 @@ public class ProjectExplorerWidget extends Table implements Observer {
         }
     }
 
-    public void select (String path) {
+    public void select(String path) {
         if (nodes.containsKey(path)) {
             directoryTree.getSelection().clear();
             directoryTree.getSelection().add(nodes.get(path));
             expand(path);
-            String pathToSet = (String) nodes.get(path).getObject();
+            String pathToSet = nodes.get(path).getObject();
             directoryViewWidget.openDirectory(pathToSet);
         } else {
             directoryTree.getSelection().clear();
@@ -583,11 +582,11 @@ public class ProjectExplorerWidget extends Table implements Observer {
         }
     }
 
-    public void expand () {
+    public void expand() {
         directoryTree.expandAll();
     }
 
-    public void expand (String path) {
+    public void expand(String path) {
         if (nodes.containsKey(path)) {
             nodes.get(path).setExpanded(true);
             FilteredTree.Node parent = nodes.get(path).getParent();
@@ -598,7 +597,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
         }
     }
 
-    public void loadDirectoryTree (String path) {
+    public void loadDirectoryTree(String path) {
         nodes.clear();
         directoryTree.clearChildren();
         FileHandle root = Gdx.files.absolute(path);
@@ -618,7 +617,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
         rootNode.expandAll();
     }
 
-    private void traversePath (FileHandle path, int currDepth, int maxDepth, FilteredTree.Node node) {
+    private void traversePath(FileHandle path, int currDepth, int maxDepth, FilteredTree.Node node) {
         if (path.isDirectory() && currDepth <= maxDepth) {
             FileHandle[] list = path.list(fileFilter);
             for (int i = 0; i < list.length; i++) {
@@ -641,12 +640,12 @@ public class ProjectExplorerWidget extends Table implements Observer {
 
                 label.setListener(new EditableLabel.EditableLabelChangeListener() {
                     @Override
-                    public void editModeStarted () {
+                    public void editModeStarted() {
 
                     }
 
                     @Override
-                    public void changed (String newText) {
+                    public void changed(String newText) {
                         String path = (String) newNode.getObject();
                         FileHandle fileHandle = Gdx.files.absolute(path);
 
@@ -663,7 +662,7 @@ public class ProjectExplorerWidget extends Table implements Observer {
         }
     }
 
-    public void notifyRename (FileHandle old, FileHandle newFile) {
+    public void notifyRename(FileHandle old, FileHandle newFile) {
         FilteredTree.Node node = nodes.get(old.path());
         if (node != null) {
             node.setObject(newFile.path());
@@ -675,25 +674,113 @@ public class ProjectExplorerWidget extends Table implements Observer {
         }
     }
 
-    public FileHandle getCurrentFolder () {
+    public FileHandle getCurrentFolder() {
         return directoryViewWidget.getCurrentFolder();
     }
 
-    public void reload () {
+    public void reload() {
         // TODO: refactor directory view widget to update itself
         select(getCurrentFolder().path());
     }
 
+    public void invokeCut(Array<FileHandle> files) {
+        filesToManipulate.clear();
+        filesToManipulate.addAll(files);
+        isCutting = true;
+    }
+
+    public void invokeCopy(Array<FileHandle> files) {
+        filesToManipulate.clear();
+        filesToManipulate.addAll(files);
+        isCutting = false;
+    }
+
+    public void invokePaste(FileHandle destination) {
+        if (destination.isDirectory()) {
+            for (FileHandle file : filesToManipulate) {
+                if (isCutting) {
+                    AssetImporter.moveFile(file, destination, false);
+                } else {
+                    AssetImporter.copyFile(file, destination);
+                }
+            }
+        }
+
+        loadDirectoryTree(rootNode.getObject());
+
+        expand(destination.path());
+        select(destination.path());
+    }
+
+    public DirectoryViewWidget getDirectoryViewWidget() {
+        return directoryViewWidget;
+    }
+
+    @EventHandler
+    public void onProjectLoad(ProjectLoadedEvent event) {
+        TalosProjectData projectData = event.getProjectData();
+        loadDirectoryTree(projectData.rootProjectDir().path());
+    }
+
+    @EventHandler
+    public void onDirectoryContentsChanged(DirectoryChangedEvent event) {
+        if (getCurrentFolder() != null && getCurrentFolder().path().equals(event.getDirectoryPath())) {
+            reload();
+        }
+    }
+
+    @EventHandler
+    public void onDirectoryChange(AssetChangeDirectoryEvent assetChangeDirectoryEvent) {
+        select(assetChangeDirectoryEvent.getPath().path());
+    }
+
+    @EventHandler
+    public void onAssetColorFillEvent(AssetColorFillEvent event) {
+        directoryViewWidget.changeAssetPreview(event.getFileHandle());
+    }
+
+    @EventHandler
+    public void onAssetResolutionChange(AssetResolutionChanged event) {
+        directoryViewWidget.changeAssetPreview(event.getFileHandle());
+    }
+
+    @EventHandler
+    public void onDirectoryMovedEvent(DirectoryMovedEvent event) {
+        loadDirectoryTree(rootNode.getObject());
+        select(event.getNewHandle().path());
+    }
+
+    /**
+     * Use for short messages.
+     */
+    public void showYesNoDialog(String title, String message, Runnable yes, Runnable no) {
+        YesNoDialog yesNoDialog = new YesNoDialog(title, message, yes, no);
+        getStage().addActor(yesNoDialog.fadeIn());
+    }
+
+    /**
+     * Use for long messages.
+     */
+    public void showYesNoDialog(String title, String[] message, Runnable yes, Runnable no) {
+        YesNoDialog yesNoDialog = new YesNoDialog(title, message, yes, no);
+        getStage().addActor(yesNoDialog.fadeIn());
+    }
+
+    public void showKeepStopReplaceDialog(String title, String message, Runnable keep, Runnable stop, Runnable replace) {
+        KeepStopReplaceDialog keepStopReplaceDialog = new KeepStopReplaceDialog(title, message, keep, stop, replace);
+        getStage().addActor(keepStopReplaceDialog.fadeIn());
+    }
+
     public static class RowWidget extends Table implements ActorCloneable<RowWidget> {
         private final EditableLabel label;
-        private FileHandle fileHandle;
         private final boolean editable;
+        private FileHandle fileHandle;
 
-        public RowWidget (FileHandle fileHandle) {
+        public RowWidget(FileHandle fileHandle) {
             this(fileHandle, true);
         }
 
-        public RowWidget (FileHandle fileHandle, boolean editable) {
+        public RowWidget(FileHandle fileHandle, boolean editable) {
             this.fileHandle = fileHandle;
             this.editable = editable;
             Image icon;
@@ -710,112 +797,23 @@ public class ProjectExplorerWidget extends Table implements Observer {
             add(label).growX().padLeft(5).width(250);
         }
 
-        public void set (FileHandle fileHandle) {
+        public void set(FileHandle fileHandle) {
             this.fileHandle = fileHandle;
             label.setText(fileHandle.name());
         }
 
-        public FileHandle getFileHandle () {
+        public FileHandle getFileHandle() {
             return fileHandle;
         }
 
-        public EditableLabel getLabel () {
+        public EditableLabel getLabel() {
             return label;
         }
 
         @Override
-        public RowWidget copyActor (RowWidget copyFrom) {
+        public RowWidget copyActor(RowWidget copyFrom) {
             RowWidget widget = new RowWidget(fileHandle, editable);
             return widget;
         }
-    }
-
-
-    public void invokeCut (Array<FileHandle> files) {
-        filesToManipulate.clear();
-        filesToManipulate.addAll(files);
-        isCutting = true;
-    }
-
-    public void invokeCopy (Array<FileHandle> files) {
-        filesToManipulate.clear();
-        filesToManipulate.addAll(files);
-        isCutting = false;
-    }
-
-    public void invokePaste (FileHandle destination) {
-        if (destination.isDirectory()) {
-            for (FileHandle file : filesToManipulate) {
-                if (isCutting) {
-                    AssetImporter.moveFile(file, destination, false);
-                } else {
-                    AssetImporter.copyFile(file, destination);
-                }
-            }
-        }
-
-        loadDirectoryTree((String) rootNode.getObject());
-
-        expand(destination.path());
-        select(destination.path());
-    }
-
-    public DirectoryViewWidget getDirectoryViewWidget () {
-        return directoryViewWidget;
-    }
-
-    @EventHandler
-    public void onProjectLoad (ProjectLoadedEvent event) {
-        TalosProjectData projectData = event.getProjectData();
-        loadDirectoryTree(projectData.rootProjectDir().path());
-    }
-
-    @EventHandler
-    public void onDirectoryContentsChanged (DirectoryChangedEvent event) {
-        if (getCurrentFolder() != null && getCurrentFolder().path().equals(event.getDirectoryPath())) {
-            reload();
-        }
-    }
-
-    @EventHandler
-    public void onDirectoryChange (AssetChangeDirectoryEvent assetChangeDirectoryEvent) {
-        select(assetChangeDirectoryEvent.getPath().path());
-    }
-
-    @EventHandler
-    public void onAssetColorFillEvent (AssetColorFillEvent event) {
-        directoryViewWidget.changeAssetPreview(event.getFileHandle());
-    }
-
-    @EventHandler
-    public void onAssetResolutionChange (AssetResolutionChanged event) {
-        directoryViewWidget.changeAssetPreview(event.getFileHandle());
-    }
-
-    @EventHandler
-    public void onDirectoryMovedEvent (DirectoryMovedEvent event) {
-        loadDirectoryTree(rootNode.getObject());
-        select(event.getNewHandle().path());
-    }
-
-    /**
-     * Use for short messages.
-     */
-    public void showYesNoDialog (String title, String message, Runnable yes, Runnable no) {
-        YesNoDialog yesNoDialog = new YesNoDialog(title, message, yes, no);
-        getStage().addActor(yesNoDialog.fadeIn());
-    }
-
-    /**
-     * Use for long messages.
-     */
-    public void showYesNoDialog (String title, String[] message, Runnable yes, Runnable no) {
-        YesNoDialog yesNoDialog = new YesNoDialog(title, message, yes, no);
-        getStage().addActor(yesNoDialog.fadeIn());
-    }
-
-    public void showKeepStopReplaceDialog (String title, String message, Runnable keep, Runnable stop, Runnable replace) {
-        KeepStopReplaceDialog keepStopReplaceDialog = new KeepStopReplaceDialog(title, message, keep, stop, replace);
-        getStage().addActor(keepStopReplaceDialog.fadeIn());
     }
 }

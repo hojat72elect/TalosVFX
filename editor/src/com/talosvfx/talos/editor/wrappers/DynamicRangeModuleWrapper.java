@@ -51,7 +51,7 @@ public class DynamicRangeModuleWrapper extends ModuleWrapper<DynamicRangeModule>
     @Override
     public void setSlotInactive(int slotTo, boolean isInput) {
         super.setSlotInactive(slotTo, isInput);
-        if(!isInput) {
+        if (!isInput) {
             lowInput.setFlavour(NumericalValue.Flavour.REGULAR);
             highInput.setFlavour(NumericalValue.Flavour.REGULAR);
         }
@@ -59,7 +59,7 @@ public class DynamicRangeModuleWrapper extends ModuleWrapper<DynamicRangeModule>
 
     @Override
     public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
-        if(slot.getIndex() == DynamicRangeModule.ALPHA) return InputModule.class;
+        if (slot.getIndex() == DynamicRangeModule.ALPHA) return InputModule.class;
 
         return null;
     }
@@ -117,19 +117,19 @@ public class DynamicRangeModuleWrapper extends ModuleWrapper<DynamicRangeModule>
     }
 
     @Override
-	public void read (Json json, JsonValue jsonData) {
-		super.read(json, jsonData);
+    public void read(Json json, JsonValue jsonData) {
+        super.read(json, jsonData);
 
         lowInput.getEqualsButton().setChecked(jsonData.getBoolean("lowEquals"));
         lowInput.getMirrorButton().setChecked(jsonData.getBoolean("lowMirror"));
         highInput.getEqualsButton().setChecked(jsonData.getBoolean("highEquals"));
         highInput.getMirrorButton().setChecked(jsonData.getBoolean("highMirror"));
 
-		lowInput.setValue(module.getLowMin(), module.getLowMax());
-		highInput.setValue(module.getHightMin(), module.getHightMax());
+        lowInput.setValue(module.getLowMin(), module.getLowMax());
+        highInput.setValue(module.getHightMin(), module.getHightMax());
 
-		updateValues();
-	}
+        updateValues();
+    }
 
 
     @Override
@@ -147,7 +147,7 @@ public class DynamicRangeModuleWrapper extends ModuleWrapper<DynamicRangeModule>
         highInput.setValue(highMin, highMax);
 
         module.getPoints().clear();
-        for(Vector2 point: points) {
+        for (Vector2 point : points) {
             module.createPoint(point.x, point.y);
         }
 
@@ -156,20 +156,20 @@ public class DynamicRangeModuleWrapper extends ModuleWrapper<DynamicRangeModule>
 
     @Override
     public Array<Vector2> getPoints() {
-        if(module == null) return null;
+        if (module == null) return null;
 
         return module.getPoints();
     }
 
     @Override
     public void removePoint(int index) {
-        if(module == null) return;
+        if (module == null) return;
         module.removePoint(index);
     }
 
     @Override
     public int createPoint(float x, float y) {
-        if(module == null) return 0;
+        if (module == null) return 0;
         return module.createPoint(x, y);
     }
 }

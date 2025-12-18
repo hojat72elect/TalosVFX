@@ -25,11 +25,10 @@ public class CartToRadModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
         tmp.set(position.get(0), position.get(1));
 
         angle.set(tmp.angle());
         length.set(tmp.len());
     }
-
 }

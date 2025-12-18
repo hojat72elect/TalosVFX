@@ -20,7 +20,7 @@ public class ClippedNinePatch {
     public static final int BOTTOM_RIGHT = 8;
 
     private static final Color tmpDrawColor = new Color();
-
+    private final Color color = new Color(Color.WHITE);
     private Texture texture;
     private int bottomLeft = -1, bottomCenter = -1, bottomRight = -1;
     private int middleLeft = -1, middleCenter = -1, middleRight = -1;
@@ -28,31 +28,34 @@ public class ClippedNinePatch {
     private float leftWidth, rightWidth, middleWidth, middleHeight, topHeight, bottomHeight;
     private float[] vertices = new float[9 * 4 * 5];
     private int idx;
-    private final Color color = new Color(Color.WHITE);
     private float padLeft = -1, padRight = -1, padTop = -1, padBottom = -1;
     private TextureRegion[] patches;
     private float maskScaleX = 1;
     private float maskScaleY = 1;
 
-    /** Create a ninepatch by cutting up the given texture into nine patches. The subsequent parameters define the 4 lines that
+    /**
+     * Create a ninepatch by cutting up the given texture into nine patches. The subsequent parameters define the 4 lines that
      * will cut the texture region into 9 pieces.
      *
-     * @param left Pixels from left edge.
-     * @param right Pixels from right edge.
-     * @param top Pixels from top edge.
-     * @param bottom Pixels from bottom edge. */
-    public ClippedNinePatch (Texture texture, int left, int right, int top, int bottom) {
+     * @param left   Pixels from left edge.
+     * @param right  Pixels from right edge.
+     * @param top    Pixels from top edge.
+     * @param bottom Pixels from bottom edge.
+     */
+    public ClippedNinePatch(Texture texture, int left, int right, int top, int bottom) {
         this(new TextureRegion(texture), left, right, top, bottom);
     }
 
-    /** Create a ninepatch by cutting up the given texture region into nine patches. The subsequent parameters define the 4 lines
+    /**
+     * Create a ninepatch by cutting up the given texture region into nine patches. The subsequent parameters define the 4 lines
      * that will cut the texture region into 9 pieces.
      *
-     * @param left Pixels from left edge.
-     * @param right Pixels from right edge.
-     * @param top Pixels from top edge.
-     * @param bottom Pixels from bottom edge. */
-    public ClippedNinePatch (TextureRegion region, int left, int right, int top, int bottom) {
+     * @param left   Pixels from left edge.
+     * @param right  Pixels from right edge.
+     * @param top    Pixels from top edge.
+     * @param bottom Pixels from bottom edge.
+     */
+    public ClippedNinePatch(TextureRegion region, int left, int right, int top, int bottom) {
         if (region == null) throw new IllegalArgumentException("region cannot be null.");
         final int middleWidth = region.getRegionWidth() - left - right;
         final int middleHeight = region.getRegionHeight() - top - bottom;
@@ -96,26 +99,34 @@ public class ClippedNinePatch {
         load(patches);
     }
 
-    /** Construct a degenerate "nine" patch with only a center component. */
-    public ClippedNinePatch (Texture texture, Color color) {
+    /**
+     * Construct a degenerate "nine" patch with only a center component.
+     */
+    public ClippedNinePatch(Texture texture, Color color) {
         this(texture);
         setColor(color);
     }
 
-    /** Construct a degenerate "nine" patch with only a center component. */
-    public ClippedNinePatch (Texture texture) {
+    /**
+     * Construct a degenerate "nine" patch with only a center component.
+     */
+    public ClippedNinePatch(Texture texture) {
         this(new TextureRegion(texture));
     }
 
-    /** Construct a degenerate "nine" patch with only a center component. */
-    public ClippedNinePatch (TextureRegion region, Color color) {
+    /**
+     * Construct a degenerate "nine" patch with only a center component.
+     */
+    public ClippedNinePatch(TextureRegion region, Color color) {
         this(region);
         setColor(color);
     }
 
-    /** Construct a degenerate "nine" patch with only a center component. */
-    public ClippedNinePatch (TextureRegion region) {
-        load(new TextureRegion[] {
+    /**
+     * Construct a degenerate "nine" patch with only a center component.
+     */
+    public ClippedNinePatch(TextureRegion region) {
+        load(new TextureRegion[]{
                 //
                 null, null, null, //
                 null, region, null, //
@@ -123,10 +134,12 @@ public class ClippedNinePatch {
         });
     }
 
-    /** Construct a nine patch from the given nine texture regions. The provided patches must be consistently sized (e.g., any left
+    /**
+     * Construct a nine patch from the given nine texture regions. The provided patches must be consistently sized (e.g., any left
      * edge textures must have the same width, etc). Patches may be <code>null</code>. Patch indices are specified via the public
-     * members {@link #TOP_LEFT}, {@link #TOP_CENTER}, etc. */
-    public ClippedNinePatch (TextureRegion... patches) {
+     * members {@link #TOP_LEFT}, {@link #TOP_CENTER}, etc.
+     */
+    public ClippedNinePatch(TextureRegion... patches) {
         if (patches == null || patches.length != 9) throw new IllegalArgumentException("NinePatch needs nine TextureRegions");
 
         load(patches);
@@ -160,11 +173,11 @@ public class ClippedNinePatch {
         }
     }
 
-    public ClippedNinePatch (ClippedNinePatch ninePatch) {
+    public ClippedNinePatch(ClippedNinePatch ninePatch) {
         this(ninePatch, ninePatch.color);
     }
 
-    public ClippedNinePatch (ClippedNinePatch ninePatch, Color color) {
+    public ClippedNinePatch(ClippedNinePatch ninePatch, Color color) {
         texture = ninePatch.texture;
 
         bottomLeft = ninePatch.bottomLeft;
@@ -195,7 +208,7 @@ public class ClippedNinePatch {
         this.color.set(color);
     }
 
-    private void load (TextureRegion[] patches) {
+    private void load(TextureRegion[] patches) {
         idx = 0;
         final float color = Color.WHITE.toFloatBits(); // placeholder color, overwritten at draw time
 
@@ -251,7 +264,7 @@ public class ClippedNinePatch {
         }
     }
 
-    private int add (TextureRegion region, float color, boolean isStretchW, boolean isStretchH) {
+    private int add(TextureRegion region, float color, boolean isStretchW, boolean isStretchH) {
         if (texture == null)
             texture = region.getTexture();
         else if (texture != region.getTexture()) //
@@ -267,12 +280,12 @@ public class ClippedNinePatch {
         // of the texel where the neighboring pixel has 0% contribution in linear blending mode.
         if (texture.getMagFilter() == Texture.TextureFilter.Linear || texture.getMinFilter() == Texture.TextureFilter.Linear) {
             if (isStretchW) {
-                float halfTexelWidth = 0.5f * 1.0f / texture.getWidth();
+                float halfTexelWidth = 0.5f / texture.getWidth();
                 u += halfTexelWidth;
                 u2 -= halfTexelWidth;
             }
             if (isStretchH) {
-                float halfTexelHeight = 0.5f * 1.0f / texture.getHeight();
+                float halfTexelHeight = 0.5f / texture.getHeight();
                 v -= halfTexelHeight;
                 v2 += halfTexelHeight;
             }
@@ -300,8 +313,10 @@ public class ClippedNinePatch {
         return idx - 20;
     }
 
-    /** Set the coordinates and color of a ninth of the patch. */
-    private void set (int idx, float x, float y, float width, float height, float color, float uScale, float vScale) {
+    /**
+     * Set the coordinates and color of a ninth of the patch.
+     */
+    private void set(int idx, float x, float y, float width, float height, float color, float uScale, float vScale) {
         final float fx2 = x + width;
         final float fy2 = y + height;
         final float[] vertices = this.vertices;
@@ -338,7 +353,7 @@ public class ClippedNinePatch {
         vertices[idx + 18] = newU2;
     }
 
-    private void prepareVertices (Batch batch, float x, float y, float width, float height) {
+    private void prepareVertices(Batch batch, float x, float y, float width, float height) {
         final float centerColumnX = x + leftWidth;
         final float rightColumnX = x + width - rightWidth;
         final float middleRowY = y + bottomHeight;
@@ -364,27 +379,28 @@ public class ClippedNinePatch {
         float rightScaleX = MathUtils.clamp((x + limitX - rightColumnX) / (x + width - rightColumnX), 0, 1);
         float rightResultWidth = (x + width - rightColumnX) * rightScaleX;
 
-        if (bottomLeft != -1) set(bottomLeft, x, y, leftResultWidth, bottomResultHeight, c, leftScaleX,bottomScaleY);
-        if (bottomCenter != -1) set(bottomCenter, centerColumnX, y, centerResultWidth, bottomResultHeight, c, centerScaleX,bottomScaleY);
-        if (bottomRight != -1) set(bottomRight, rightColumnX, y, rightResultWidth, bottomResultHeight, c, rightScaleX,bottomScaleY);
+        if (bottomLeft != -1) set(bottomLeft, x, y, leftResultWidth, bottomResultHeight, c, leftScaleX, bottomScaleY);
+        if (bottomCenter != -1) set(bottomCenter, centerColumnX, y, centerResultWidth, bottomResultHeight, c, centerScaleX, bottomScaleY);
+        if (bottomRight != -1) set(bottomRight, rightColumnX, y, rightResultWidth, bottomResultHeight, c, rightScaleX, bottomScaleY);
 
 
-        if (middleLeft != -1) set(middleLeft, x, middleRowY, leftResultWidth, middleResultHeight, c, leftScaleX,middleScaleY);
-        if (middleCenter != -1) set(middleCenter, centerColumnX, middleRowY, centerResultWidth, middleResultHeight, c, centerScaleX,middleScaleY);
-        if (middleRight != -1) set(middleRight, rightColumnX, middleRowY, rightResultWidth, middleResultHeight, c, rightScaleX,middleScaleY);
+        if (middleLeft != -1) set(middleLeft, x, middleRowY, leftResultWidth, middleResultHeight, c, leftScaleX, middleScaleY);
+        if (middleCenter != -1) set(middleCenter, centerColumnX, middleRowY, centerResultWidth, middleResultHeight, c, centerScaleX, middleScaleY);
+        if (middleRight != -1) set(middleRight, rightColumnX, middleRowY, rightResultWidth, middleResultHeight, c, rightScaleX, middleScaleY);
 
-        if (topLeft != -1) set(topLeft, x, topRowY, leftResultWidth, topResultHeight, c, leftScaleX,topScaleY);
-        if (topCenter != -1) set(topCenter, centerColumnX, topRowY, centerResultWidth, topResultHeight, c, centerScaleX,topScaleY);
-        if (topRight != -1) set(topRight, rightColumnX, topRowY, rightResultWidth, topResultHeight, c, rightScaleX,topScaleY);
+        if (topLeft != -1) set(topLeft, x, topRowY, leftResultWidth, topResultHeight, c, leftScaleX, topScaleY);
+        if (topCenter != -1) set(topCenter, centerColumnX, topRowY, centerResultWidth, topResultHeight, c, centerScaleX, topScaleY);
+        if (topRight != -1) set(topRight, rightColumnX, topRowY, rightResultWidth, topResultHeight, c, rightScaleX, topScaleY);
     }
-    public void draw (Batch batch, float x, float y, float width, float height) {
+
+    public void draw(Batch batch, float x, float y, float width, float height) {
         load(patches);
         prepareVertices(batch, x, y, width, height);
         batch.draw(texture, vertices, 0, idx);
     }
 
-    public void draw (Batch batch, float x, float y, float originX, float originY, float width, float height, float scaleX,
-                      float scaleY, float rotation) {
+    public void draw(Batch batch, float x, float y, float originX, float originY, float width, float height, float scaleX,
+                     float scaleY, float rotation) {
         prepareVertices(batch, x, y, width, height);
         float worldOriginX = x + originX, worldOriginY = y + originY;
         int n = this.idx;
@@ -405,137 +421,171 @@ public class ClippedNinePatch {
         batch.draw(texture, vertices, 0, n);
     }
 
-    /** Copy given color. The color will be blended with the batch color, then combined with the texture colors at
-     * {@link com.badlogic.gdx.graphics.g2d.NinePatch#draw(Batch, float, float, float, float) draw} time. Default is {@link Color#WHITE}. */
-    public void setColor (Color color) {
-        this.color.set(color);
-    }
-
-    public Color getColor () {
+    public Color getColor() {
         return color;
     }
 
-    public float getLeftWidth () {
+    /**
+     * Copy given color. The color will be blended with the batch color, then combined with the texture colors at
+     * {@link com.badlogic.gdx.graphics.g2d.NinePatch#draw(Batch, float, float, float, float) draw} time. Default is {@link Color#WHITE}.
+     */
+    public void setColor(Color color) {
+        this.color.set(color);
+    }
+
+    public float getLeftWidth() {
         return leftWidth;
     }
 
-    /** Set the draw-time width of the three left edge patches */
-    public void setLeftWidth (float leftWidth) {
+    /**
+     * Set the draw-time width of the three left edge patches
+     */
+    public void setLeftWidth(float leftWidth) {
         this.leftWidth = leftWidth;
     }
 
-    public float getRightWidth () {
+    public float getRightWidth() {
         return rightWidth;
     }
 
-    /** Set the draw-time width of the three right edge patches */
-    public void setRightWidth (float rightWidth) {
+    /**
+     * Set the draw-time width of the three right edge patches
+     */
+    public void setRightWidth(float rightWidth) {
         this.rightWidth = rightWidth;
     }
 
-    public float getTopHeight () {
+    public float getTopHeight() {
         return topHeight;
     }
 
-    /** Set the draw-time height of the three top edge patches */
-    public void setTopHeight (float topHeight) {
+    /**
+     * Set the draw-time height of the three top edge patches
+     */
+    public void setTopHeight(float topHeight) {
         this.topHeight = topHeight;
     }
 
-    public float getBottomHeight () {
+    public float getBottomHeight() {
         return bottomHeight;
     }
 
-    /** Set the draw-time height of the three bottom edge patches */
-    public void setBottomHeight (float bottomHeight) {
+    /**
+     * Set the draw-time height of the three bottom edge patches
+     */
+    public void setBottomHeight(float bottomHeight) {
         this.bottomHeight = bottomHeight;
     }
 
-    public float getMiddleWidth () {
+    public float getMiddleWidth() {
         return middleWidth;
     }
 
-    /** Set the width of the middle column of the patch. At render time, this is implicitly the requested render-width of the
+    /**
+     * Set the width of the middle column of the patch. At render time, this is implicitly the requested render-width of the
      * entire nine patch, minus the left and right width. This value is only used for computing the {@link #getTotalWidth() default
-     * total width}. */
-    public void setMiddleWidth (float middleWidth) {
+     * total width}.
+     */
+    public void setMiddleWidth(float middleWidth) {
         this.middleWidth = middleWidth;
     }
 
-    public float getMiddleHeight () {
+    public float getMiddleHeight() {
         return middleHeight;
     }
 
-    /** Set the height of the middle row of the patch. At render time, this is implicitly the requested render-height of the entire
+    /**
+     * Set the height of the middle row of the patch. At render time, this is implicitly the requested render-height of the entire
      * nine patch, minus the top and bottom height. This value is only used for computing the {@link #getTotalHeight() default
-     * total height}. */
-    public void setMiddleHeight (float middleHeight) {
+     * total height}.
+     */
+    public void setMiddleHeight(float middleHeight) {
         this.middleHeight = middleHeight;
     }
 
-    public float getTotalWidth () {
+    public float getTotalWidth() {
         return leftWidth + middleWidth + rightWidth;
     }
 
-    public float getTotalHeight () {
+    public float getTotalHeight() {
         return topHeight + middleHeight + bottomHeight;
     }
 
-    /** Set the padding for content inside this ninepatch. By default the padding is set to match the exterior of the ninepatch, so
-     * the content should fit exactly within the middle patch. */
-    public void setPadding (float left, float right, float top, float bottom) {
+    /**
+     * Set the padding for content inside this ninepatch. By default the padding is set to match the exterior of the ninepatch, so
+     * the content should fit exactly within the middle patch.
+     */
+    public void setPadding(float left, float right, float top, float bottom) {
         this.padLeft = left;
         this.padRight = right;
         this.padTop = top;
         this.padBottom = bottom;
     }
 
-    /** Returns the left padding if set, else returns {@link #getLeftWidth()}. */
-    public float getPadLeft () {
+    /**
+     * Returns the left padding if set, else returns {@link #getLeftWidth()}.
+     */
+    public float getPadLeft() {
         if (padLeft == -1) return getLeftWidth();
         return padLeft;
     }
 
-    /** See {@link #setPadding(float, float, float, float)} */
-    public void setPadLeft (float left) {
+    /**
+     * See {@link #setPadding(float, float, float, float)}
+     */
+    public void setPadLeft(float left) {
         this.padLeft = left;
     }
 
-    /** Returns the right padding if set, else returns {@link #getRightWidth()}. */
-    public float getPadRight () {
+    /**
+     * Returns the right padding if set, else returns {@link #getRightWidth()}.
+     */
+    public float getPadRight() {
         if (padRight == -1) return getRightWidth();
         return padRight;
     }
 
-    /** See {@link #setPadding(float, float, float, float)} */
-    public void setPadRight (float right) {
+    /**
+     * See {@link #setPadding(float, float, float, float)}
+     */
+    public void setPadRight(float right) {
         this.padRight = right;
     }
 
-    /** Returns the top padding if set, else returns {@link #getTopHeight()}. */
-    public float getPadTop () {
+    /**
+     * Returns the top padding if set, else returns {@link #getTopHeight()}.
+     */
+    public float getPadTop() {
         if (padTop == -1) return getTopHeight();
         return padTop;
     }
 
-    /** See {@link #setPadding(float, float, float, float)} */
-    public void setPadTop (float top) {
+    /**
+     * See {@link #setPadding(float, float, float, float)}
+     */
+    public void setPadTop(float top) {
         this.padTop = top;
     }
 
-    /** Returns the bottom padding if set, else returns {@link #getBottomHeight()}. */
-    public float getPadBottom () {
+    /**
+     * Returns the bottom padding if set, else returns {@link #getBottomHeight()}.
+     */
+    public float getPadBottom() {
         if (padBottom == -1) return getBottomHeight();
         return padBottom;
     }
 
-    /** See {@link #setPadding(float, float, float, float)} */
-    public void setPadBottom (float bottom) {
+    /**
+     * See {@link #setPadding(float, float, float, float)}
+     */
+    public void setPadBottom(float bottom) {
         this.padBottom = bottom;
     }
 
-    /** Multiplies the top/left/bottom/right sizes and padding by the specified amount. */
-    public void scale (float scaleX, float scaleY) {
+    /**
+     * Multiplies the top/left/bottom/right sizes and padding by the specified amount.
+     */
+    public void scale(float scaleX, float scaleY) {
         leftWidth *= scaleX;
         rightWidth *= scaleX;
         topHeight *= scaleY;
@@ -548,11 +598,11 @@ public class ClippedNinePatch {
         if (padBottom != -1) padBottom *= scaleY;
     }
 
-    public Texture getTexture () {
+    public Texture getTexture() {
         return texture;
     }
 
-    public void setMaskScale(float maskScaleX, float maskScaleY){
+    public void setMaskScale(float maskScaleX, float maskScaleY) {
         this.maskScaleX = maskScaleX;
         this.maskScaleY = maskScaleY;
     }

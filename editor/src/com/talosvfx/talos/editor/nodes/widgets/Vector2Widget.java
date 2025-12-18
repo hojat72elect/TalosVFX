@@ -12,7 +12,7 @@ import com.talosvfx.talos.editor.project2.SharedResources;
 
 public class Vector2Widget extends AbstractWidget<Vector2> {
 
-    private Vector2 val = new Vector2();
+    private final Vector2 val = new Vector2();
     private ValueWidget xWidget;
     private ValueWidget yWidget;
 
@@ -53,7 +53,7 @@ public class Vector2Widget extends AbstractWidget<Vector2> {
 
     @Override
     public void loadFromXML(XmlReader.Element element) {
-            // todo: impl later
+        // todo: impl later
     }
 
     @Override

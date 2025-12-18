@@ -2,10 +2,14 @@ package com.talosvfx.talos.editor.addons.scene.apps.routines.nodes;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.XmlReader;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.ui.types.ATypeWidget;
@@ -22,7 +26,7 @@ import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
 import java.util.Locale;
 
 public class EventNodeWidget extends RoutineNodeWidget {
-    private Array<PropertyWrapper<?>> propertyWrappers = new Array<>();
+    private final Array<PropertyWrapper<?>> propertyWrappers = new Array<>();
     private Table fieldTable;
 
     @Override
@@ -41,7 +45,7 @@ public class EventNodeWidget extends RoutineNodeWidget {
 
         plusButton.addListener(new ClickListener() {
             private BasicPopup<PropertyType> popup;
-            private Vector2 temp = new Vector2();
+            private final Vector2 temp = new Vector2();
 
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -186,8 +190,8 @@ public class EventNodeWidget extends RoutineNodeWidget {
 
                 @Override
                 public void collapse(CustomVarChangeEvent event, Actor actor) {
-                                                                            reportNodeDataModified(false);
-                                                                                                           }
+                    reportNodeDataModified(false);
+                }
             });
 
             innerWidget.updateFromPropertyWrapper(propertyWrapper);

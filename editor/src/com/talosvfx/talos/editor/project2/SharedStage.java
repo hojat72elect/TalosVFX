@@ -7,15 +7,16 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class SharedStage extends Stage {
 
-    public SharedStage () {
+    public SharedStage() {
         super();
     }
-    public SharedStage (Viewport viewport) {
-       super(viewport);
+
+    public SharedStage(Viewport viewport) {
+        super(viewport);
     }
 
-    public SharedStage (Viewport viewport, Batch batch) {
-       super(viewport, batch);
+    public SharedStage(Viewport viewport, Batch batch) {
+        super(viewport, batch);
     }
 
     @Override

@@ -21,11 +21,23 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.*;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup;
+import com.badlogic.gdx.math.Bezier;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Group;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.scenes.scene2d.ui.WidgetGroup;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.badlogic.gdx.utils.IntMap;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.ObjectSet;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.talosvfx.talos.editor.Curve;
@@ -35,57 +47,54 @@ import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.project2.TalosVFXUtils;
 import com.talosvfx.talos.editor.project2.apps.ParticleNodeEditorApp;
 import com.talosvfx.talos.editor.render.Render;
-import com.talosvfx.talos.editor.utils.InputUtils;
-import com.talosvfx.talos.runtime.vfx.serialization.ConnectionData;
 import com.talosvfx.talos.editor.serialization.EmitterData;
-import com.talosvfx.talos.editor.wrappers.*;
-import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
+import com.talosvfx.talos.editor.utils.InputUtils;
+import com.talosvfx.talos.editor.wrappers.EmitterModuleWrapper;
+import com.talosvfx.talos.editor.wrappers.ModuleWrapper;
+import com.talosvfx.talos.editor.wrappers.ParticleModuleWrapper;
+import com.talosvfx.talos.editor.wrappers.WrapperRegistry;
 import com.talosvfx.talos.runtime.vfx.ParticleEmitterDescriptor;
 import com.talosvfx.talos.runtime.vfx.Slot;
-import lombok.Getter;
-import org.slf4j.LoggerFactory;
+import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
+import com.talosvfx.talos.runtime.vfx.serialization.ConnectionData;
+
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import lombok.Getter;
 
 public class ModuleBoardWidget extends WidgetGroup {
 
-    private static Logger logger = LoggerFactory.getLogger(ModuleBoardWidget.class);
+    private static final Logger logger = LoggerFactory.getLogger(ModuleBoardWidget.class);
     public ParticleNodeEditorApp app;
-    ShapeRenderer shapeRenderer;
-
     public ObjectMap<ParticleEmitterWrapper, Array<ModuleWrapper>> moduleWrappers = new ObjectMap<>();
     public ObjectMap<ParticleEmitterWrapper, Array<NodeConnection>> nodeConnections = new ObjectMap<>();
     public ParticleEmitterWrapper currentEmitterWrapper;
-    @Getter
-    private ParticleEmitterDescriptor currentEmitterGraph;
-    private ObjectSet<ModuleWrapper> selectedWrappers = new ObjectSet<>();
-
-    private ObjectMap<ParticleEmitterWrapper, Array<ModuleWrapperGroup>> groups = new ObjectMap<>();
-
+    public Vector2 gridPos = new Vector2();
+    public boolean ccCurrentlyRemoving = false;
+    ShapeRenderer shapeRenderer;
     Group groupContainer = new Group();
     Group moduleContainer = new Group();
-
-    public Vector2 gridPos = new Vector2();
     Vector2 tmp = new Vector2();
     Vector2 tmp2 = new Vector2();
     Vector2 prev = new Vector2();
-
+    @Getter
+    private ParticleEmitterDescriptor currentEmitterGraph;
+    private final ObjectSet<ModuleWrapper> selectedWrappers = new ObjectSet<>();
+    private final ObjectMap<ParticleEmitterWrapper, Array<ModuleWrapperGroup>> groups = new ObjectMap<>();
     private Curve activeCurve;
-
-    private Bezier<Vector2> bezier = new Bezier<>();
-    private Vector2[] curvePoints = new Vector2[4];
-
+    private final Bezier<Vector2> bezier = new Bezier<>();
+    private final Vector2[] curvePoints = new Vector2[4];
     private ModuleWrapper wasWrapperSelectedOnDown = null;
     private ModuleWrapper wasWrapperDragged = null;
-
     private ModuleWrapper ccFromWrapper = null;
     private int ccFromSlot = 0;
     private boolean ccCurrentIsInput = false;
-    public boolean ccCurrentlyRemoving = false;
-
     private Image selectionRect;
 
     private Stage uiStage;
-    public ModuleBoardWidget (ParticleNodeEditorApp app) {
+
+    public ModuleBoardWidget(ParticleNodeEditorApp app) {
         super();
 
         this.app = app;
@@ -103,14 +112,14 @@ public class ModuleBoardWidget extends WidgetGroup {
         shapeRenderer = Render.instance().shapeRenderer();
     }
 
-    public void init () {
+    public void init() {
         selectionRect = new Image(SharedResources.skin.getDrawable("orange_row"));
         selectionRect.setSize(0, 0);
         selectionRect.setVisible(false);
         addActor(selectionRect);
     }
 
-    public Array<NodeConnection> getCurrentConnections () {
+    public Array<NodeConnection> getCurrentConnections() {
         // TODO: 23.02.23 dummmy refactor
         if (currentEmitterWrapper == null) {
             return new Array<>();
@@ -125,7 +134,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         return arr;
     }
 
-    public Array<ModuleWrapper> getModuleWrappers () {
+    public Array<ModuleWrapper> getModuleWrappers() {
         // TODO: 23.02.23 dummy refactor
         if (currentEmitterWrapper == null) {
             return new Array<>();
@@ -140,7 +149,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         return arr;
     }
 
-    public NodeConnection findConnection (ModuleWrapper moduleWrapper, boolean isInput, int key) {
+    public NodeConnection findConnection(ModuleWrapper moduleWrapper, boolean isInput, int key) {
         NodeConnection nodeToFind = null;
         for (NodeConnection nodeConnection : getCurrentConnections()) {
             if ((isInput && nodeConnection.toSlot == key && moduleWrapper == nodeConnection.toModule) ||
@@ -153,7 +162,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         return nodeToFind;
     }
 
-    public void removeConnection (NodeConnection connection, boolean shouldSave) {
+    public void removeConnection(NodeConnection connection, boolean shouldSave) {
         getCurrentConnections().removeValue(connection, true);
 
         connection.fromModule.setSlotInactive(connection.fromSlot, false);
@@ -167,7 +176,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         }
     }
 
-    public void setCurrentEmitter (ParticleEmitterWrapper currentEmitterWrapper) {
+    public void setCurrentEmitter(ParticleEmitterWrapper currentEmitterWrapper) {
         this.currentEmitterWrapper = currentEmitterWrapper;
         this.currentEmitterGraph = currentEmitterWrapper.getGraph();
 
@@ -187,18 +196,18 @@ public class ModuleBoardWidget extends WidgetGroup {
         resetCameraToWorkspace();
     }
 
-    public void removeEmitter (ParticleEmitterWrapper wrapper) {
+    public void removeEmitter(ParticleEmitterWrapper wrapper) {
         moduleWrappers.remove(wrapper);
         nodeConnections.remove(wrapper);
     }
 
-    public void clearAll () {
+    public void clearAll() {
         moduleWrappers.clear();
         nodeConnections.clear();
         groups.clear();
     }
 
-    public void loadEmitterToBoard (ParticleEmitterWrapper emitterWrapper, EmitterData emitterData) {
+    public void loadEmitterToBoard(ParticleEmitterWrapper emitterWrapper, EmitterData emitterData) {
         IntMap<ModuleWrapper> map = new IntMap<>();
         if (!moduleWrappers.containsKey(emitterWrapper)) {
             moduleWrappers.put(emitterWrapper, new Array<ModuleWrapper>());
@@ -216,11 +225,11 @@ public class ModuleBoardWidget extends WidgetGroup {
         }
     }
 
-    public Array<ModuleWrapperGroup> getGroups (ParticleEmitterWrapper emitterModuleWrapper) {
+    public Array<ModuleWrapperGroup> getGroups(ParticleEmitterWrapper emitterModuleWrapper) {
         return groups.get(emitterModuleWrapper);
     }
 
-    public Array<ModuleWrapperGroup> getGroups () {
+    public Array<ModuleWrapperGroup> getGroups() {
         // TODO: 23.02.23 dummy refactor
         if (currentEmitterWrapper == null) {
             return new Array<>();
@@ -235,12 +244,12 @@ public class ModuleBoardWidget extends WidgetGroup {
         return arr;
     }
 
-    public void removeGroup (ModuleWrapperGroup moduleWrapperGroup) {
+    public void removeGroup(ModuleWrapperGroup moduleWrapperGroup) {
         getGroups().removeValue(moduleWrapperGroup, true);
         moduleWrapperGroup.remove();
     }
 
-    private Array<ModuleWrapperGroup> getSelectedGroups () {
+    private Array<ModuleWrapperGroup> getSelectedGroups() {
         Array<ModuleWrapperGroup> groups = getGroups();
         Array<ModuleWrapperGroup> selectedGroups = new Array<>();
         ObjectSet<ModuleWrapper> wrappers = getSelectedWrappers();
@@ -261,7 +270,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         return selectedGroups;
     }
 
-    private Array<NodeConnection> getSelectedConnections () {
+    private Array<NodeConnection> getSelectedConnections() {
         Array<NodeConnection> arr = new Array<>();
         ObjectSet<ModuleWrapper> wrappers = getSelectedWrappers();
         Array<NodeConnection> connections = getCurrentConnections();
@@ -274,11 +283,11 @@ public class ModuleBoardWidget extends WidgetGroup {
         return arr;
     }
 
-    public void sendInStage (Stage stage) {
+    public void sendInStage(Stage stage) {
 
         stage.addListener(new InputListener() {
             @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 super.touchDown(event, x, y, pointer, button);
 
                 if (!event.isHandled()) {
@@ -297,13 +306,13 @@ public class ModuleBoardWidget extends WidgetGroup {
         });
 
         stage.addListener(new InputListener() {
-            boolean dragged = false;
             final Vector2 startPos = new Vector2();
             final Vector2 tmp = new Vector2();
             final Rectangle rectangle = new Rectangle();
+            boolean dragged = false;
 
             @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 dragged = false;
                 boolean shouldHandle = false;
 
@@ -318,20 +327,20 @@ public class ModuleBoardWidget extends WidgetGroup {
             }
 
             @Override
-            public void touchDragged (InputEvent event, float x, float y, int pointer) {
+            public void touchDragged(InputEvent event, float x, float y, int pointer) {
                 super.touchDragged(event, x, y, pointer);
 
                 dragged = true;
 
-                if(selectionRect.isVisible()) {
+                if (selectionRect.isVisible()) {
                     tmp.set(x, y);
                     tmp.sub(startPos);
-                    if(tmp.x < 0) {
+                    if (tmp.x < 0) {
                         rectangle.setX(x);
                     } else {
                         rectangle.setX(startPos.x);
                     }
-                    if(tmp.y < 0) {
+                    if (tmp.y < 0) {
                         rectangle.setY(y);
                     } else {
                         rectangle.setY(startPos.y);
@@ -345,7 +354,7 @@ public class ModuleBoardWidget extends WidgetGroup {
             }
 
             @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 if (selectionRect.isVisible()) {
                     userSelectionApply(rectangle);
                     selectionRect.setVisible(false);
@@ -354,30 +363,11 @@ public class ModuleBoardWidget extends WidgetGroup {
         });
     }
 
-    public void sendInUIStage (Stage stage) {
+    public void sendInUIStage(Stage stage) {
         uiStage = stage;
-
     }
 
-    public static class ClipboardPayload {
-        Array<NodeConnection> connections;
-        ObjectSet<ModuleWrapper> wrappers;
-        Array<ModuleWrapperGroup> groups;
-
-        public Vector2 cameraPositionAtCopy = new Vector2();
-
-        public ClipboardPayload () {
-
-        }
-
-        public ClipboardPayload (ObjectSet<ModuleWrapper> wrappers, Array<NodeConnection> connections, Array<ModuleWrapperGroup> groups) {
-            this.wrappers = wrappers;
-            this.connections = connections;
-            this.groups = groups;
-        }
-    }
-
-    public void copySelectedModules () {
+    public void copySelectedModules() {
         Array<NodeConnection> connections = getSelectedConnections();
         ObjectSet<ModuleWrapper> wrappers = getSelectedWrappers();
         Array<ModuleWrapperGroup> groups = getSelectedGroups();
@@ -393,7 +383,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         Gdx.app.getClipboard().setContents(clipboard);
     }
 
-    public void cutSelectionModules () {
+    public void cutSelectionModules() {
         Array<NodeConnection> connections = getSelectedConnections();
         ObjectSet<ModuleWrapper> wrappers = getSelectedWrappers();
         Array<ModuleWrapperGroup> groups = getSelectedGroups();
@@ -411,7 +401,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         deleteSelectedWrappers();
     }
 
-    public void pasteFromClipboard () {
+    public void pasteFromClipboard() {
         String clipboard = Gdx.app.getClipboard().getContents();
 
         ObjectMap<Integer, ModuleWrapper> previousWrapperIdMap = new ObjectMap<>();
@@ -479,7 +469,6 @@ public class ModuleBoardWidget extends WidgetGroup {
                 ModuleWrapperGroup newGroup = createGroupForWrappers(newWrappers);
                 newGroup.setText(group.getText());
                 newGroup.setColor(group.getColor());
-
             }
 
             setSelectedWrappers(copiedWrappers);
@@ -488,11 +477,11 @@ public class ModuleBoardWidget extends WidgetGroup {
         }
     }
 
-    public void clearCC () {
+    public void clearCC() {
         ccFromWrapper = null;
     }
 
-    public void userSelectionApply (Rectangle rectangle) {
+    public void userSelectionApply(Rectangle rectangle) {
         clearSelection();
         Array<ModuleWrapper> wrappers = getModuleWrappers();
         Rectangle moduleRect = new Rectangle();
@@ -511,7 +500,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         }
     }
 
-    public void selectAllModules () {
+    public void selectAllModules() {
         ObjectSet<ModuleWrapper> wrappers = new ObjectSet<>();
         for (ModuleWrapper wrapper : getModuleWrappers()) {
             wrappers.add(wrapper);
@@ -519,15 +508,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         setSelectedWrappers(wrappers);
     }
 
-
-    public static class NodeConnection {
-        public ModuleWrapper fromModule;
-        public ModuleWrapper toModule;
-        public int fromSlot;
-        public int toSlot;
-    }
-
-    public void showPopup () {
+    public void showPopup() {
         ParticleEmitterDescriptor moduleGraph = getCurrentEmitterGraph();
 
         if (moduleGraph == null) return;
@@ -540,7 +521,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         }
     }
 
-    public void deleteSelectedWrappers () {
+    public void deleteSelectedWrappers() {
         try {
             deleteWrappers(getSelectedWrappers());
         } catch (Exception e) {
@@ -550,7 +531,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         clearSelection();
     }
 
-    public void deleteWrappers (ObjectSet<ModuleWrapper> selectedWrappers) {
+    public void deleteWrappers(ObjectSet<ModuleWrapper> selectedWrappers) {
         final Array<ModuleWrapper> moduleWrappers = getModuleWrappers();
         final Array<NodeConnection> currentConnections = getCurrentConnections();
 
@@ -574,7 +555,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         app.dataModified();
     }
 
-    public <T extends AbstractModule, U extends ModuleWrapper<T>> U createModule (Class<T> clazz, float screenX, float screenY) {
+    public <T extends AbstractModule, U extends ModuleWrapper<T>> U createModule(Class<T> clazz, float screenX, float screenY) {
         final T module;
         try {
             module = ClassReflection.newInstance(clazz);
@@ -590,7 +571,7 @@ public class ModuleBoardWidget extends WidgetGroup {
                 // save here
                 app.dataModified();
 
-                return (U) moduleWrapper;
+                return moduleWrapper;
             } else {
                 System.out.println("Did not create module: " + clazz.getSimpleName());
                 return null;
@@ -600,7 +581,6 @@ public class ModuleBoardWidget extends WidgetGroup {
         }
     }
 
-
     /**
      * @param module
      * @param screenX in screen coordinate space
@@ -609,7 +589,7 @@ public class ModuleBoardWidget extends WidgetGroup {
      * @param <U>
      * @return
      */
-    public <T extends AbstractModule, U extends ModuleWrapper<T>> U createModuleWrapper (T module, float screenX, float screenY) {
+    public <T extends AbstractModule, U extends ModuleWrapper<T>> U createModuleWrapper(T module, float screenX, float screenY) {
         ModuleWrapper<T> moduleWrapper = null;
 
         if (module == null) return null;
@@ -634,7 +614,6 @@ public class ModuleBoardWidget extends WidgetGroup {
             moduleWrapper.setPosition(tmp.x - moduleWrapper.getWidth() / 2f, tmp.y - moduleWrapper.getHeight() / 2f);
             getModuleWrappers().add(moduleWrapper);
             moduleContainer.addActor(moduleWrapper);
-
         } catch (ReflectionException e) {
             e.printStackTrace();
         }
@@ -647,7 +626,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         return (U) moduleWrapper;
     }
 
-    private <T extends AbstractModule> void tryAndConnectLasCC (ModuleWrapper<T> moduleWrapper) {
+    private <T extends AbstractModule> void tryAndConnectLasCC(ModuleWrapper<T> moduleWrapper) {
         if (ccFromWrapper != null) {
             Class fromClass;
             Slot fromSlotObject;
@@ -691,7 +670,7 @@ public class ModuleBoardWidget extends WidgetGroup {
     }
 
     @Override
-    public void draw (Batch batch, float parentAlpha) {
+    public void draw(Batch batch, float parentAlpha) {
         batch.end();
         shapeRenderer.setProjectionMatrix(getStage().getCamera().combined);
         Gdx.gl.glEnable(GL20.GL_BLEND);
@@ -703,7 +682,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         super.draw(batch, parentAlpha);
     }
 
-    private void drawCurves () {
+    private void drawCurves() {
         if (currentEmitterWrapper == null) return;
 
         // draw active curve
@@ -725,7 +704,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         }
     }
 
-    private void drawCurve (float x, float y, float toX, float toY) {
+    private void drawCurve(float x, float y, float toX, float toY) {
         //shapeRenderer.setColor(1, 1, 1, 1f);
         //shapeRenderer.rectLine(x, y, toX, toY, 2f);
 
@@ -757,7 +736,7 @@ public class ModuleBoardWidget extends WidgetGroup {
     }
 
     @Override
-    public void act (float delta) {
+    public void act(float delta) {
 
         //center pos
 //        tmp.x = gridPos.x+getStage().getWidth()/2f;
@@ -773,21 +752,21 @@ public class ModuleBoardWidget extends WidgetGroup {
     }
 
     @Override
-    public void layout () {
+    public void layout() {
         super.layout();
     }
 
-    public void setActiveCurve (float x, float y, float toX, float toY, boolean isInput) {
+    public void setActiveCurve(float x, float y, float toX, float toY, boolean isInput) {
         activeCurve = new Curve(x, y, toX, toY, isInput);
     }
 
-    public void updateActiveCurve (float toX, float toY) {
+    public void updateActiveCurve(float toX, float toY) {
         if (activeCurve != null) {
             activeCurve.setTo(toX, toY);
         }
     }
 
-    public void addConnectionCurve (ModuleWrapper from, ModuleWrapper to, int slotForm, int slotTo) {
+    public void addConnectionCurve(ModuleWrapper from, ModuleWrapper to, int slotForm, int slotTo) {
         NodeConnection connection = new NodeConnection();
         connection.fromModule = from;
         connection.toModule = to;
@@ -800,16 +779,15 @@ public class ModuleBoardWidget extends WidgetGroup {
         to.setSlotActive(slotTo, true);
     }
 
-    public void makeConnection (ModuleWrapper from, ModuleWrapper to, int slotFrom, int slotTo) {
+    public void makeConnection(ModuleWrapper from, ModuleWrapper to, int slotFrom, int slotTo) {
         currentEmitterGraph.connectNode(from.getModule(), to.getModule(), slotFrom, slotTo);
         addConnectionCurve(from, to, slotFrom, slotTo);
 
         from.attachModuleToMyOutput(to, slotFrom, slotTo);
         to.attachModuleToMyInput(from, slotTo, slotFrom);
-
     }
 
-    public void connectNodeIfCan (ModuleWrapper currentWrapper, int currentSlot, boolean currentIsInput) {
+    public void connectNodeIfCan(ModuleWrapper currentWrapper, int currentSlot, boolean currentIsInput) {
         int[] result = new int[2];
         ModuleWrapper targetWrapper = null;
         boolean targetIsInput = false;
@@ -821,11 +799,7 @@ public class ModuleBoardWidget extends WidgetGroup {
                 if (result[0] >= 0) {
                     // found match
                     targetWrapper = moduleWrapper;
-                    if (result[1] == 0) {
-                        targetIsInput = true;
-                    } else {
-                        targetIsInput = false;
-                    }
+                    targetIsInput = result[1] == 0;
                     break;
                 }
             }
@@ -838,7 +812,6 @@ public class ModuleBoardWidget extends WidgetGroup {
             // show popup (but maybe not in case of removing of existing curve)
             if (activeCurve.getFrom().dst(activeCurve.getTo()) > 20 && !ccCurrentlyRemoving) {
                 final Vector2 vec = new Vector2(Gdx.input.getX(), Gdx.input.getY());
-
 
 
                 ccFromWrapper = currentWrapper;
@@ -873,11 +846,11 @@ public class ModuleBoardWidget extends WidgetGroup {
         removeActiveCurve();
     }
 
-    public void removeActiveCurve () {
+    public void removeActiveCurve() {
         activeCurve = null;
     }
 
-    public int getUniqueIdForModuleWrapper () {
+    public int getUniqueIdForModuleWrapper() {
         int maxId = -1;
         for (ModuleWrapper wrapper : moduleWrappers.get(currentEmitterWrapper)) {
             if (wrapper.getId() > maxId) {
@@ -888,37 +861,37 @@ public class ModuleBoardWidget extends WidgetGroup {
         return maxId + 1;
     }
 
-    public void selectWrapper (ModuleWrapper wrapper) {
+    public void selectWrapper(ModuleWrapper wrapper) {
         clearSelection();
         addWrapperToSelection(wrapper);
     }
 
-    public void addWrapperToSelection (ModuleWrapper wrapper) {
+    public void addWrapperToSelection(ModuleWrapper wrapper) {
         selectedWrappers.add(wrapper);
         updateSelectionBackgrounds();
     }
 
-    public void removeWrapperFromSelection (ModuleWrapper wrapper) {
+    public void removeWrapperFromSelection(ModuleWrapper wrapper) {
         selectedWrappers.remove(wrapper);
         updateSelectionBackgrounds();
     }
 
-    public ObjectSet<ModuleWrapper> getSelectedWrappers () {
+    public ObjectSet<ModuleWrapper> getSelectedWrappers() {
         return selectedWrappers;
     }
 
-    public void setSelectedWrappers (ObjectSet<ModuleWrapper> wrappers) {
+    public void setSelectedWrappers(ObjectSet<ModuleWrapper> wrappers) {
         selectedWrappers.clear();
         selectedWrappers.addAll(wrappers);
         updateSelectionBackgrounds();
     }
 
-    public void clearSelection () {
+    public void clearSelection() {
         selectedWrappers.clear();
         updateSelectionBackgrounds();
     }
 
-    public void updateSelectionBackgrounds () {
+    public void updateSelectionBackgrounds() {
         for (ModuleWrapper wrapper : getModuleWrappers()) {
             if (getSelectedWrappers().contains(wrapper)) {
                 wrapper.setBackground("window-blue");
@@ -930,7 +903,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         }
     }
 
-    public void wrapperClicked (ModuleWrapper wrapper) {
+    public void wrapperClicked(ModuleWrapper wrapper) {
         wasWrapperDragged = null;
         if (selectedWrappers.contains(wrapper)) {
             wasWrapperSelectedOnDown = wrapper;
@@ -947,7 +920,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         }
     }
 
-    public void wrapperMovedBy (ModuleWrapper wrapper, float x, float y) {
+    public void wrapperMovedBy(ModuleWrapper wrapper, float x, float y) {
         wasWrapperDragged = wrapper;
         if (selectedWrappers.size > 1) {
             for (ModuleWrapper other : selectedWrappers) {
@@ -958,10 +931,10 @@ public class ModuleBoardWidget extends WidgetGroup {
         }
     }
 
-    public void wrapperClickedUp (ModuleWrapper wrapper) {
+    public void wrapperClickedUp(ModuleWrapper wrapper) {
 
         if (wasWrapperDragged != null) {
-              app.dataModified();
+            app.dataModified();
         } else {
             // on mouse up when no drag happens this wrapper should be selected unless shift was pressed
             if (!Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
@@ -976,7 +949,7 @@ public class ModuleBoardWidget extends WidgetGroup {
         }
     }
 
-    public ModuleWrapperGroup createGroupForWrappers (ObjectSet<ModuleWrapper> wrappers) {
+    public ModuleWrapperGroup createGroupForWrappers(ObjectSet<ModuleWrapper> wrappers) {
         if (wrappers == null || wrappers.size == 0) return null;
 
         for (ModuleWrapperGroup other : getGroups()) {
@@ -996,12 +969,11 @@ public class ModuleBoardWidget extends WidgetGroup {
         return group;
     }
 
-
-    public void createGroupFromSelectedWrappers () {
+    public void createGroupFromSelectedWrappers() {
         createGroupForWrappers(getSelectedWrappers());
     }
 
-    public void ungroupWrappers (ObjectSet<ModuleWrapper> wrappers) {
+    public void ungroupWrappers(ObjectSet<ModuleWrapper> wrappers) {
         if (wrappers == null || wrappers.size == 0) return;
 
         for (ModuleWrapperGroup other : getGroups()) {
@@ -1012,11 +984,11 @@ public class ModuleBoardWidget extends WidgetGroup {
         app.dataModified();
     }
 
-    public void ungroupSelectedWrappers () {
+    public void ungroupSelectedWrappers() {
         ungroupWrappers(getSelectedWrappers());
     }
 
-    public void resetCameraToWorkspace () {
+    public void resetCameraToWorkspace() {
         Array<ModuleWrapper> wrappers = getModuleWrappers();
         ModuleWrapper particleWrapper = null;
         ModuleWrapper emitterWrapper = null;
@@ -1042,8 +1014,30 @@ public class ModuleBoardWidget extends WidgetGroup {
             tmp.set(finalWrapper.getX() + finalWrapper.getWidth() / 2f, finalWrapper.getY() + finalWrapper.getHeight() / 2f);
             tmp.add(moduleContainer.getX(), moduleContainer.getY());
             localToStageCoordinates(tmp);
-
         }
     }
 
+    public static class ClipboardPayload {
+        public Vector2 cameraPositionAtCopy = new Vector2();
+        Array<NodeConnection> connections;
+        ObjectSet<ModuleWrapper> wrappers;
+        Array<ModuleWrapperGroup> groups;
+
+        public ClipboardPayload() {
+
+        }
+
+        public ClipboardPayload(ObjectSet<ModuleWrapper> wrappers, Array<NodeConnection> connections, Array<ModuleWrapperGroup> groups) {
+            this.wrappers = wrappers;
+            this.connections = connections;
+            this.groups = groups;
+        }
+    }
+
+    public static class NodeConnection {
+        public ModuleWrapper fromModule;
+        public ModuleWrapper toModule;
+        public int fromSlot;
+        public int toSlot;
+    }
 }

@@ -14,20 +14,17 @@ import java.util.Iterator;
 public class Simple3DBatch {
 
 
-    private Mesh mesh;
-    private ShaderProgram shader;
-
-    private float[] vertexBuffer;
-
-    private int maxVertsInMesh;
-    private int vertsInBuffer;
-    private int vertexSize;
-
     int blendSrc;
     int blendDst;
+    private final Mesh mesh;
+    private ShaderProgram shader;
+    private final float[] vertexBuffer;
+    private final int maxVertsInMesh;
+    private int vertsInBuffer;
+    private final int vertexSize;
+    private Texture lastTexture = null;
 
-
-    public Simple3DBatch (int size, VertexAttributes vertexAttributes) {
+    public Simple3DBatch(int size, VertexAttributes vertexAttributes) {
         mesh = new Mesh(false, size * 6, size * 6, vertexAttributes);
         maxVertsInMesh = size;
 
@@ -46,25 +43,22 @@ public class Simple3DBatch {
         mesh.setIndices(indices);
     }
 
-    public ShaderProgram getShader () {
+    public ShaderProgram getShader() {
         return shader;
     }
 
-    public Mesh getMesh () {
+    public Mesh getMesh() {
         return mesh;
     }
 
-
-
-    public void begin (Camera camera, ShaderProgram shaderProgram) {
+    public void begin(Camera camera, ShaderProgram shaderProgram) {
         shader = shaderProgram;
 
         shader.bind();
         shader.setUniformMatrix("u_projTrans", camera.combined);
-
     }
 
-    public void flush () {
+    public void flush() {
         if (vertsInBuffer > 0) {
             if (lastTexture != null) {
                 lastTexture.bind(0);
@@ -73,12 +67,10 @@ public class Simple3DBatch {
             mesh.render(shader, GL20.GL_TRIANGLES, 0, vertsInBuffer);
 
             vertsInBuffer = 0;
-
         }
     }
 
-    private Texture lastTexture = null;
-    public void render (float[] subMesh, Texture texture) {
+    public void render(float[] subMesh, Texture texture) {
 
         if (lastTexture != null) {
             if (lastTexture != texture) {
@@ -88,7 +80,7 @@ public class Simple3DBatch {
 
         lastTexture = texture;
 
-        int incomingVertCount = subMesh.length/vertexSize;
+        int incomingVertCount = subMesh.length / vertexSize;
 
         if (vertsInBuffer + incomingVertCount > maxVertsInMesh) {
             flush();
@@ -96,16 +88,15 @@ public class Simple3DBatch {
 
         System.arraycopy(subMesh, 0, vertexBuffer, vertsInBuffer * vertexSize, subMesh.length);
         vertsInBuffer += incomingVertCount;
-
     }
 
 
-    public void end () {
+    public void end() {
         flush();
         lastTexture = null;
     }
 
-    public void setBlendFunction (int src, int dst) {
+    public void setBlendFunction(int src, int dst) {
         if (blendSrc != src || blendDst != dst) {
             flush();
         }
@@ -114,7 +105,7 @@ public class Simple3DBatch {
         Gdx.gl.glBlendFuncSeparate(src, dst, src, dst);
     }
 
-    public void render (float[] verts, int vertCount, short[] tris, int triCount, Texture texture) {
+    public void render(float[] verts, int vertCount, short[] tris, int triCount, Texture texture) {
         if (lastTexture != null) {
             if (lastTexture != texture) {
                 flush();
@@ -123,7 +114,7 @@ public class Simple3DBatch {
 
         lastTexture = texture;
 
-        int incomingVertCount = vertCount/vertexSize;
+        int incomingVertCount = vertCount / vertexSize;
 
         if (vertsInBuffer + incomingVertCount > maxVertsInMesh) {
             flush();
@@ -131,7 +122,5 @@ public class Simple3DBatch {
 
         System.arraycopy(verts, 0, vertexBuffer, vertsInBuffer * vertexSize, vertCount);
         vertsInBuffer += incomingVertCount;
-
-
     }
 }

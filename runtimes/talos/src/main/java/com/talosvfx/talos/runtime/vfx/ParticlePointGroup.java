@@ -4,8 +4,8 @@ import com.badlogic.gdx.utils.Array;
 
 public class ParticlePointGroup {
 
-	public Array<ParticlePointData> pointDataArray = new Array<>();
+    public Array<ParticlePointData> pointDataArray = new Array<>();
 
-	public int requester;
-	public float seed;
+    public int requester;
+    public float seed;
 }

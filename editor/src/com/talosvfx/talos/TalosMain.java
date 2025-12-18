@@ -16,7 +16,11 @@
 
 package com.talosvfx.talos;
 
-import com.badlogic.gdx.*;
+import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
+import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -37,215 +41,202 @@ import com.talosvfx.talos.runtime.vfx.ScopePayload;
 
 public class TalosMain extends ApplicationAdapter {
 
-	private static boolean focused = true;
-
-	private UIStage uiStage;
-
-
-	private WorkplaceStage currentWorkplaceStage;
-
-	private ProjectController projectController;
-
-	private Skin skin;
-
-	private static TalosMain instance;
+    private static final boolean focused = true;
+    private static TalosMain instance;
+    public ScopePayload globalScope = new ScopePayload();
+    public ErrorReporting errorReporting;
+    private UIStage uiStage;
+    private WorkplaceStage currentWorkplaceStage;
 
 
 //	public ObjectMap<Class, String> moduleNames = new ObjectMap<>();
+    private ProjectController projectController;
+    private Skin skin;
+    private Preferences preferences;
+    private final FileTracker fileTracker = new FileTracker();
+    private InputMultiplexer inputMultiplexer;
+    private ScreenshotService screenshotService;
+    private final Array<InputProcessor> inputProcessors = new Array<>();
+    private final Array<InputProcessor> customInputProcessors = new Array<>();
 
-	public static TalosMain Instance () {
-		return instance;
-	}
+    public TalosMain() {
 
-	public ScopePayload globalScope = new ScopePayload();
+    }
 
-	public UIStage UIStage () {
-		return uiStage;
-	}
+    public static TalosMain Instance() {
+        return instance;
+    }
 
-	public ErrorReporting errorReporting;
+    public static boolean isOsX() {
+        String osName = System.getProperty("os.name").toLowerCase();
+        boolean isMacOs = osName.startsWith("mac os x");
+        return isMacOs;
+    }
 
-	private Preferences preferences;
+    public UIStage UIStage() {
+        return uiStage;
+    }
 
-	private FileTracker fileTracker = new FileTracker();
+    public IProject Project() {
+        return projectController.getProject();
+    }
 
-	private InputMultiplexer inputMultiplexer;
+    public ProjectController ProjectController() {
+        return projectController;
+    }
 
-	public IProject Project() {
-		return projectController.getProject();
-	}
+    public Preferences Prefs() {
+        return preferences;
+    }
 
-	public ProjectController ProjectController () {
-		return projectController;
-	}
+    public ScreenshotService Screeshot() {
+        return screenshotService;
+    }
 
-	public Preferences Prefs() {
-		return preferences;
-	}
+    @Override
+    public void create() {
 
-	public ScreenshotService Screeshot() {
-		return screenshotService;
-	}
+        TalosMain.instance = this;
 
-	private ScreenshotService screenshotService;
-
-	private Array<InputProcessor> inputProcessors = new Array<>();
-	private Array<InputProcessor> customInputProcessors = new Array<>();
-
-	public TalosMain () {
-
-	}
-
-	public static boolean isOsX() {
-		String osName = System.getProperty("os.name").toLowerCase();
-		boolean isMacOs = osName.startsWith("mac os x");
-		return isMacOs;
-	}
-
-	@Override
-	public void create () {
-
-		TalosMain.instance = this;
-
-		screenshotService = new ScreenshotService();
+        screenshotService = new ScreenshotService();
 
 
-		preferences = Gdx.app.getPreferences("talos-preferences");
+        preferences = Gdx.app.getPreferences("talos-preferences");
 
-		TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("skin/uiskin.atlas"));
-		skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
-		skin.addRegions(atlas);
+        TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("skin/uiskin.atlas"));
+        skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
+        skin.addRegions(atlas);
 
-		VisUI.load(skin);
+        VisUI.load(skin);
 
-		uiStage = new UIStage(skin);
+        uiStage = new UIStage(skin);
 
-		errorReporting = new ErrorReporting();
+        errorReporting = new ErrorReporting();
 
 
-		projectController = new ProjectController();
+        projectController = new ProjectController();
 
 
 //		inputProcessors.add(uiStage.getStage(), currentWorkplaceStage.getStage());
 
-		inputMultiplexer = new InputMultiplexer();
-		setInputProcessors();
+        inputMultiplexer = new InputMultiplexer();
+        setInputProcessors();
 
-		uiStage.init();
+        uiStage.init();
 
 
-		Gdx.input.setInputProcessor(inputMultiplexer);
+        Gdx.input.setInputProcessor(inputMultiplexer);
 
-		// final init after all is done
-	}
+        // final init after all is done
+    }
 
-	private void setInputProcessors() {
-		inputMultiplexer.clear();
-		for(InputProcessor processor: inputProcessors) {
-			inputMultiplexer.addProcessor(processor);
-		}
-		for(InputProcessor processor: customInputProcessors) {
-			inputMultiplexer.addProcessor(processor);
-		}
-	}
+    private void setInputProcessors() {
+        inputMultiplexer.clear();
+        for (InputProcessor processor : inputProcessors) {
+            inputMultiplexer.addProcessor(processor);
+        }
+        for (InputProcessor processor : customInputProcessors) {
+            inputMultiplexer.addProcessor(processor);
+        }
+    }
 
-	public void addCustomInputProcessor(InputProcessor inputProcessor) {
-		customInputProcessors.add(inputProcessor);
-		setInputProcessors();
-	}
+    public void addCustomInputProcessor(InputProcessor inputProcessor) {
+        customInputProcessors.add(inputProcessor);
+        setInputProcessors();
+    }
 
-	public void setPerFrameCursorTypeEnabled () {
+    public void setPerFrameCursorTypeEnabled() {
 
-	}
+    }
 
-	public void disableNodeStage() {
-		currentWorkplaceStage = null;
-	}
+    public void disableNodeStage() {
+        currentWorkplaceStage = null;
+    }
 
-	public void setThirdPartyStage(WorkplaceStage stage) {
-		currentWorkplaceStage = stage;
-		inputProcessors.clear();
-		inputProcessors.add(uiStage.getStage());
+    public void setThirdPartyStage(WorkplaceStage stage) {
+        currentWorkplaceStage = stage;
+        inputProcessors.clear();
+        inputProcessors.add(uiStage.getStage());
 //		inputProcessors.add(currentWorkplaceStage.getStage());
-		setInputProcessors();
-	}
+        setInputProcessors();
+    }
 
-	public void enableNodeStage() {
-		inputProcessors.clear();
-		inputProcessors.add(uiStage.getStage());
+    public void enableNodeStage() {
+        inputProcessors.clear();
+        inputProcessors.add(uiStage.getStage());
 //		inputProcessors.add(currentWorkplaceStage.getStage());
-		setInputProcessors();
-	}
+        setInputProcessors();
+    }
 
-	@Override
-	public void render () {
-		CursorUtil.checkAndReset();
+    @Override
+    public void render() {
+        CursorUtil.checkAndReset();
 
 
-		try {
-			Thread.sleep(16);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+        try {
+            Thread.sleep(16);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-		if (currentWorkplaceStage != null) {
+        if (currentWorkplaceStage != null) {
 //			Gdx.gl.glClearColor(currentWorkplaceStage.getBgColor().r, currentWorkplaceStage.getBgColor().g, currentWorkplaceStage.getBgColor().b, 1);
-		} else {
-			Gdx.gl.glClearColor(0.15f, 0.15f, 0.15f, 1);
-		}
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        } else {
+            Gdx.gl.glClearColor(0.15f, 0.15f, 0.15f, 1);
+        }
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-		if (currentWorkplaceStage != null) {
-			currentWorkplaceStage.act();
+        if (currentWorkplaceStage != null) {
+            currentWorkplaceStage.act();
 //			currentWorkplaceStage.getStage().act();
 //			currentWorkplaceStage.getStage().draw();
-		}
+        }
 
-		fileTracker.update();
+        fileTracker.update();
 
-		uiStage.getStage().act();
-		uiStage.getStage().draw();
+        uiStage.getStage().act();
+        uiStage.getStage().draw();
 
-		screenshotService.postRender();
-	}
+        screenshotService.postRender();
+    }
 
-	public void reportException(Throwable e) {
-		errorReporting.reportException(e);
-	}
+    public void reportException(Throwable e) {
+        errorReporting.reportException(e);
+    }
 
-	public void resize (int width, int height) {
-		if(currentWorkplaceStage != null) {
-			currentWorkplaceStage.resize(width, height);
-		}
-		uiStage.resize(width, height);
-	}
+    public void resize(int width, int height) {
+        if (currentWorkplaceStage != null) {
+            currentWorkplaceStage.resize(width, height);
+        }
+        uiStage.resize(width, height);
+    }
 
-	@Override
-	public void dispose () {
+    @Override
+    public void dispose() {
 //		if(currentWorkplaceStage != null && currentWorkplaceStage.getStage() != null) {
 //			currentWorkplaceStage.getStage().dispose();
 //		}
-		uiStage.getStage().dispose();
-		Render.instance().dispose();
-		SocketServer.dispose();
-	}
+        uiStage.getStage().dispose();
+        Render.instance().dispose();
+        SocketServer.dispose();
+    }
 
-	public Skin getSkin() {
-		return skin;
-	}
+    public Skin getSkin() {
+        return skin;
+    }
 
-	public CameraController getCameraController() {
-		if(currentWorkplaceStage == null) return null;
+    public CameraController getCameraController() {
+        if (currentWorkplaceStage == null) return null;
 
-		return null;
+        return null;
 //		return currentWorkplaceStage.getCameraController();
-	}
+    }
 
-	public FileTracker FileTracker() {
-		return fileTracker;
-	}
+    public FileTracker FileTracker() {
+        return fileTracker;
+    }
 
-	public WorkplaceStage getNodeStage () {
-		return currentWorkplaceStage;
-	}
+    public WorkplaceStage getNodeStage() {
+        return currentWorkplaceStage;
+    }
 }

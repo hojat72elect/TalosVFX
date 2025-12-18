@@ -36,16 +36,16 @@ public class StaticValueModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
         outputValue.set(staticValue);
-    }
-
-    public void setStaticValue(float val) {
-        staticValue.set(val);
     }
 
     public float getStaticValue() {
         return staticValue.getFloat();
+    }
+
+    public void setStaticValue(float val) {
+        staticValue.set(val);
     }
 
     public NumericalValue getOutputValue() {
@@ -53,15 +53,14 @@ public class StaticValueModule extends AbstractModule {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("value", getStaticValue());
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         setStaticValue(jsonData.getFloat("value"));
     }
-
 }

@@ -2,11 +2,11 @@ package com.rockbite.bongo.engine.input;
 
 import com.badlogic.gdx.InputProcessor;
 
-public interface InputProvider  {
+public interface InputProvider {
 
-	InputProcessor getInputProcessor ();
+    InputProcessor getInputProcessor();
 
-	default int priority () {
-		return 0;
-	}
+    default int priority() {
+        return 0;
+    }
 }

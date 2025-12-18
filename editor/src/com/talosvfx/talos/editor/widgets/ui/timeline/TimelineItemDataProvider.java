@@ -17,13 +17,13 @@ public interface TimelineItemDataProvider<U> {
 
     boolean isFull();
 
-    float getDurationOne ();
+    float getDurationOne();
 
-    float getDurationTwo ();
+    float getDurationTwo();
 
-    float getTimePosition ();
+    float getTimePosition();
 
-    boolean isItemVisible ();
+    void setTimePosition(float time);
 
-    void setTimePosition (float time);
+    boolean isItemVisible();
 }

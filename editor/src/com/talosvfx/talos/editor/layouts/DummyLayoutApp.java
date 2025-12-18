@@ -17,13 +17,14 @@ import com.talosvfx.talos.editor.project2.AppManager;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
 import com.talosvfx.talos.editor.widgets.ui.menu.BasicPopup;
-import lombok.Getter;
 
 import java.util.UUID;
 
+import lombok.Getter;
+
 public class DummyLayoutApp<T> implements LayoutApp {
 
-    private String tabName;
+    private final String tabName;
 
     private String uuid;
 
@@ -37,61 +38,9 @@ public class DummyLayoutApp<T> implements LayoutApp {
     private LayoutContent layoutContent;
     private boolean currentFocusState;
 
-    private AppManager.BaseApp<T> baseApp;
+    private final AppManager.BaseApp<T> baseApp;
 
-    private class TabWidget extends Table {
-
-        private final Table highlight = new Table();
-        private final Table changes = new Table();
-        private final Table assetUsed = new Table();
-
-        public TabWidget () {
-            // highlight table
-            final Image highlightStrip  = new Image(SharedResources.skin.newDrawable("white", ColorLibrary.BORDER_BLUE));
-            highlight.setFillParent(true);
-            highlight.add(highlightStrip).expand().fillX().height(4).bottom();
-            highlight.setVisible(false);
-            addActor(highlight);
-
-            // changes table
-            final  VisLabel changesLabel = new VisLabel("*");
-            changesLabel.setColor(ColorLibrary.ORANGE);
-            changes.setFillParent(true);
-            changes.top().left().defaults().top().left();
-            changes.add(changesLabel).top();
-            changes.setVisible(false);
-            addActor(changes);
-
-            // asset used table
-            final Image assetUsedStrip  = new Image(SharedResources.skin.newDrawable("white", ColorLibrary.CHINESE_SILVER));
-            assetUsed.setFillParent(true);
-            assetUsed.add(assetUsedStrip).expand().fillX().height(4).bottom();
-            assetUsed.setVisible(false);
-            addActor(assetUsed);
-        }
-
-        public void setFocused (boolean focused) {
-            highlight.setVisible(focused);
-            highlight.toFront();
-        }
-
-        public void setChanges (boolean hasChangesToShow) {
-            changes.setVisible(hasChangesToShow);
-        }
-
-        public void setAssetUsed (boolean isAssetUsed) {
-            assetUsed.setVisible(isAssetUsed);
-        }
-
-        @Override
-        public void act (float delta) {
-            super.act(delta);
-            setChanges(DummyLayoutApp.this.baseApp.hasChangesToSave());
-            setAssetUsed(DummyLayoutApp.this.baseApp.hasAssetUsed());
-        }
-    }
-
-    public DummyLayoutApp (Skin skin, AppManager.BaseApp<T> baseApp, String tabName) {
+    public DummyLayoutApp(Skin skin, AppManager.BaseApp<T> baseApp, String tabName) {
         this.tabName = tabName;
         this.baseApp = baseApp;
 
@@ -99,7 +48,7 @@ public class DummyLayoutApp<T> implements LayoutApp {
         uuid = UUID.randomUUID().toString();
     }
 
-    public void build (Skin skin) {
+    public void build(Skin skin) {
         this.skin = skin;
 
         tabWidget = createTab(tabName);
@@ -108,17 +57,18 @@ public class DummyLayoutApp<T> implements LayoutApp {
 
     /**
      * please override this in your apps to do shit with it
+     *
      * @param popup
      */
-    protected void createPopupActions (BasicPopup<String> popup) {
+    protected void createPopupActions(BasicPopup<String> popup) {
 
     }
 
-    protected void popupButtonClicked (String payload) {
+    protected void popupButtonClicked(String payload) {
 
     }
 
-    private TabWidget createTab (String tabName) {
+    private TabWidget createTab(String tabName) {
         TabWidget tab = new TabWidget();
         tab.setTouchable(Touchable.enabled);
         tab.setBackground(ColorLibrary.obtainBackground(skin, ColorLibrary.SHAPE_SQUIRCLE_TOP, ColorLibrary.BackgroundColor.LIGHT_GRAY));
@@ -133,9 +83,10 @@ public class DummyLayoutApp<T> implements LayoutApp {
 
         ImageButton actor = new ImageButton(skin.getDrawable("ic-vertical-dots"));
         actor.addListener(new ClickListener() {
-            private Vector2 temp = new Vector2();
+            private final Vector2 temp = new Vector2();
+
             @Override
-            public void clicked (InputEvent event, float x, float y) {
+            public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
 
                 temp.set(x, y);
@@ -148,7 +99,7 @@ public class DummyLayoutApp<T> implements LayoutApp {
                 createPopupActions(popup);
                 popup.onClick(new BasicPopup.PopupListener<String>() {
                     @Override
-                    public void itemClicked (String payload) {
+                    public void itemClicked(String payload) {
                         if (payload.equals("close")) {
                             if (destroyCallback != null) {
                                 destroyCallback.onDestroyRequest();
@@ -160,7 +111,6 @@ public class DummyLayoutApp<T> implements LayoutApp {
                         popupButtonClicked(payload);
                     }
                 }).show(actor, temp.x, temp.y);
-
             }
         });
         actor.getStyle().up = null;
@@ -180,18 +130,12 @@ public class DummyLayoutApp<T> implements LayoutApp {
     }
 
     @Override
-    public void setTabActive (boolean active) {
-        this.active = active;
-
-        if (active) {
-            tabWidget.setBackground(ColorLibrary.obtainBackground(skin, ColorLibrary.SHAPE_SQUIRCLE_TOP, ColorLibrary.BackgroundColor.LIGHT_GRAY));
-        } else {
-            tabWidget.setBackground(ColorLibrary.obtainBackground(skin, ColorLibrary.SHAPE_SQUIRCLE_TOP, ColorLibrary.BackgroundColor.DARK_GRAY));
-        }
+    public boolean isTabFocused() {
+        return currentFocusState;
     }
 
     @Override
-    public void setTabFocused (boolean focused) {
+    public void setTabFocused(boolean focused) {
         boolean shouldFocus = isTabActive() && focused;
 
         if (currentFocusState != shouldFocus) {
@@ -202,101 +146,107 @@ public class DummyLayoutApp<T> implements LayoutApp {
         currentFocusState = shouldFocus;
     }
 
-    @Override
-    public boolean isTabFocused () {
-        return currentFocusState;
-    }
-
-    protected void onTouchFocused () {
+    protected void onTouchFocused() {
 
     }
 
     @Override
-    public boolean isTabActive () {
+    public boolean isTabActive() {
         return active;
     }
 
-    private Actor createMainContent () {
+    @Override
+    public void setTabActive(boolean active) {
+        this.active = active;
+
+        if (active) {
+            tabWidget.setBackground(ColorLibrary.obtainBackground(skin, ColorLibrary.SHAPE_SQUIRCLE_TOP, ColorLibrary.BackgroundColor.LIGHT_GRAY));
+        } else {
+            tabWidget.setBackground(ColorLibrary.obtainBackground(skin, ColorLibrary.SHAPE_SQUIRCLE_TOP, ColorLibrary.BackgroundColor.DARK_GRAY));
+        }
+    }
+
+    private Actor createMainContent() {
         Table table = new Table();
         table.setBackground(skin.newDrawable("white", 0.2f, 0.2f, 0.2f, 1f));
         return table;
     }
 
     @Override
-    public String getUniqueIdentifier () {
+    public String getUniqueIdentifier() {
         return uuid;
     }
 
     @Override
-    public void setUniqueIdentifier (String uuid) {
+    public void setUniqueIdentifier(String uuid) {
         this.uuid = uuid;
     }
 
     @Override
-    public String getFriendlyName () {
+    public String getFriendlyName() {
         return tabName;
     }
 
     @Override
-    public Actor getTabWidget () {
+    public Actor getTabWidget() {
         return tabWidget;
     }
 
     @Override
-    public Actor copyTabWidget () {
+    public Actor copyTabWidget() {
         return createTab(tabName);
     }
 
     @Override
-    public Actor getMainContent () {
+    public Actor getMainContent() {
         return mainContent;
     }
 
     @Override
-    public Actor getCopyMainContent () {
+    public Actor getCopyMainContent() {
         Table table = new Table();
         table.setBackground(skin.newDrawable("white", 0.5f, 0.5f, 0.5f, 1f));
         return table;
     }
 
     @Override
-    public DestroyCallback getDestroyCallback () {
+    public DestroyCallback getDestroyCallback() {
         return destroyCallback;
     }
 
     @Override
-    public void setDestroyCallback (DestroyCallback destroyCallback) {
+    public void setDestroyCallback(DestroyCallback destroyCallback) {
         this.destroyCallback = destroyCallback;
     }
 
     @Override
-    public void setScrollFocus () {
+    public void setScrollFocus() {
 
     }
 
     @Override
-    public void onInputProcessorAdded () {
+    public void onInputProcessorAdded() {
 
     }
 
     @Override
-    public void onInputProcessorRemoved () {
+    public void onInputProcessorRemoved() {
 
     }
 
     @Override
-    public void updateTabName (String name) {
+    public void updateTabName(String name) {
         visLabel.setText(name);
     }
 
     @Override
-    public void setLayoutContent (LayoutContent layoutContent) {
-        this.layoutContent = layoutContent;
+    public LayoutContent getLayoutContent() {
+        return layoutContent;
     }
 
     @Override
-    public LayoutContent getLayoutContent () {
-        return layoutContent;
+    public void setLayoutContent(LayoutContent layoutContent) {
+        this.layoutContent = layoutContent;
     }
 
     @Override
@@ -305,12 +255,64 @@ public class DummyLayoutApp<T> implements LayoutApp {
     }
 
     @Override
-    public boolean hasPreferredHeight () {
+    public boolean hasPreferredHeight() {
         return false;
     }
 
     @Override
-    public boolean hasPreferredWidth () {
+    public boolean hasPreferredWidth() {
         return false;
+    }
+
+    private class TabWidget extends Table {
+
+        private final Table highlight = new Table();
+        private final Table changes = new Table();
+        private final Table assetUsed = new Table();
+
+        public TabWidget() {
+            // highlight table
+            final Image highlightStrip = new Image(SharedResources.skin.newDrawable("white", ColorLibrary.BORDER_BLUE));
+            highlight.setFillParent(true);
+            highlight.add(highlightStrip).expand().fillX().height(4).bottom();
+            highlight.setVisible(false);
+            addActor(highlight);
+
+            // changes table
+            final VisLabel changesLabel = new VisLabel("*");
+            changesLabel.setColor(ColorLibrary.ORANGE);
+            changes.setFillParent(true);
+            changes.top().left().defaults().top().left();
+            changes.add(changesLabel).top();
+            changes.setVisible(false);
+            addActor(changes);
+
+            // asset used table
+            final Image assetUsedStrip = new Image(SharedResources.skin.newDrawable("white", ColorLibrary.CHINESE_SILVER));
+            assetUsed.setFillParent(true);
+            assetUsed.add(assetUsedStrip).expand().fillX().height(4).bottom();
+            assetUsed.setVisible(false);
+            addActor(assetUsed);
+        }
+
+        public void setFocused(boolean focused) {
+            highlight.setVisible(focused);
+            highlight.toFront();
+        }
+
+        public void setChanges(boolean hasChangesToShow) {
+            changes.setVisible(hasChangesToShow);
+        }
+
+        public void setAssetUsed(boolean isAssetUsed) {
+            assetUsed.setVisible(isAssetUsed);
+        }
+
+        @Override
+        public void act(float delta) {
+            super.act(delta);
+            setChanges(DummyLayoutApp.this.baseApp.hasChangesToSave());
+            setAssetUsed(DummyLayoutApp.this.baseApp.hasAssetUsed());
+        }
     }
 }

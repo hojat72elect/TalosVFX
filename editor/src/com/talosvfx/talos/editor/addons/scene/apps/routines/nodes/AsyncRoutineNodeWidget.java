@@ -1,7 +1,6 @@
 package com.talosvfx.talos.editor.addons.scene.apps.routines.nodes;
 
 
-import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -9,21 +8,27 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.TimeUtils;
+import com.badlogic.gdx.utils.XmlReader;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.nodes.misc.InterpolationTimeline;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.nodes.misc.MicroNodeView;
+import com.talosvfx.talos.editor.nodes.widgets.SelectWidget;
+import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.runtime.routine.AsyncRoutineNodeState;
 import com.talosvfx.talos.runtime.routine.misc.InterpolationLibrary;
 import com.talosvfx.talos.runtime.routine.nodes.AsyncRoutineNode;
 import com.talosvfx.talos.runtime.scene.GameObject;
-import com.talosvfx.talos.editor.nodes.widgets.SelectWidget;
-import com.talosvfx.talos.editor.project2.SharedResources;
-import lombok.Getter;
 
 import java.lang.reflect.Field;
+
+import lombok.Getter;
 
 public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
 
@@ -34,8 +39,8 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
 
     private boolean minimized = false;
 
-    private Vector2 vec = new Vector2();
-    private Vector2 vec2 = new Vector2();
+    private final Vector2 vec = new Vector2();
+    private final Vector2 vec2 = new Vector2();
 
     private SelectWidget interpolationSelectBox;
     private InterpolationTimeline timelineWidget;
@@ -55,8 +60,8 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
 
         Field[] declaredFields = Interpolation.class.getDeclaredFields();
         Array<String> interpolationList = new Array<>();
-        for(Field field: declaredFields) {
-            if(Interpolation.class.isAssignableFrom(field.getType())) {
+        for (Field field : declaredFields) {
+            if (Interpolation.class.isAssignableFrom(field.getType())) {
                 interpolationList.add(field.getName());
             }
         }
@@ -88,16 +93,16 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
 
             long clickTime = 0;
 
-            Vector2 prevPos = new Vector2();
-            Vector2 tmp = new Vector2();
-            Vector2 tmp2 = new Vector2();
+            final Vector2 prevPos = new Vector2();
+            final Vector2 tmp = new Vector2();
+            final Vector2 tmp2 = new Vector2();
 
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
 
                 long now = TimeUtils.millis();
 
-                if(now - clickTime < 200 && button == 0) {
+                if (now - clickTime < 200 && button == 0) {
                     doubleClick();
                 }
                 clickTime = now;
@@ -121,7 +126,6 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
 
                 setPosition(getX() + tmp.x, getY() + tmp.y);
                 microNodeView.setPosition(microNodeView.getX() + tmp.x, microNodeView.getY() + tmp.y);
-
             }
 
             @Override
@@ -146,7 +150,7 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
 
                 long now = TimeUtils.millis();
 
-                if(now - clickTime < 200 && button == 0) {
+                if (now - clickTime < 200 && button == 0) {
                     doubleClick();
                 }
                 clickTime = now;
@@ -175,7 +179,7 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
 
         addAction(Actions.fadeIn(0.2f));
 
-        vec.set(getWidth()/2f, getHeight()/2f);
+        vec.set(getWidth() / 2f, getHeight() / 2f);
         localToStageCoordinates(vec);
 
         // hide disk
@@ -192,7 +196,6 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
                     }
                 })
         ));
-
     }
 
     public void animateHide() {
@@ -209,7 +212,7 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
 
         addAction(Actions.fadeOut(0.1f));
 
-        vec.set(getWidth()/2f, getHeight()/2f);
+        vec.set(getWidth() / 2f, getHeight() / 2f);
         localToStageCoordinates(vec);
 
         // show disk
@@ -218,7 +221,7 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
         microNodeView.setPosition(vec.x, vec.y);
         microNodeView.show();
 
-        microNodeView.setLabel(((int)(getWidgetFloatValue("duration")*100f)/100f) + "");
+        microNodeView.setLabel(((int) (getWidgetFloatValue("duration") * 100f) / 100f) + "");
         isMicroView = true;
 
         addAction(Actions.sequence(
@@ -231,16 +234,15 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
                     }
                 })
         ));
-
     }
 
     private String getGameObjectPath(GameObject gameObject, String path) {
-        if(path.isEmpty()) {
+        if (path.isEmpty()) {
             path = gameObject.getName();
         } else {
             path = gameObject.getName() + "." + path;
         }
-        if(gameObject.parent != null) {
+        if (gameObject.parent != null) {
             path = getGameObjectPath(gameObject.parent, path);
         }
 
@@ -254,7 +256,7 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
         getColor().a = 0;
         setOrigin(Align.center);
 
-        vec.set(getWidth()/2f, getHeight()/2f);
+        vec.set(getWidth() / 2f, getHeight() / 2f);
         localToStageCoordinates(vec);
 
         // show disk
@@ -269,7 +271,7 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
     public void getOutputSlotPos(String id, Vector2 tmp) {
         super.getOutputSlotPos(id, tmp);
 
-        vec.set(getWidth()/2f, getHeight()/2f);
+        vec.set(getWidth() / 2f, getHeight() / 2f);
         localToStageCoordinates(vec);
 
         vec2.set(tmp).sub(vec).scl(getColor().a);
@@ -282,7 +284,7 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
     public void getInputSlotPos(String id, Vector2 tmp) {
         super.getInputSlotPos(id, tmp);
 
-        vec.set(getWidth()/2f, getHeight()/2f);
+        vec.set(getWidth() / 2f, getHeight() / 2f);
         localToStageCoordinates(vec);
 
         vec2.set(tmp).sub(vec).scl(getColor().a);
@@ -292,12 +294,12 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonValue) {
+    public void read(Json json, JsonValue jsonValue) {
         super.read(json, jsonValue);
 
         minimized = jsonValue.getBoolean("minimized", false);
 
-        if(minimized) {
+        if (minimized) {
             setMini();
         }
 
@@ -306,7 +308,7 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
 
         json.writeValue("minimized", minimized);
@@ -323,11 +325,11 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
         super.act(delta);
 
         AsyncRoutineNode<?, ?> node = getNodeInstance();
-        if(node != null) {
+        if (node != null) {
             Array<? extends AsyncRoutineNodeState<?>> states = node.getStates();
 
             if (states.size > 0) {
-                if(!runningFlag) {
+                if (!runningFlag) {
                     runningFlag = true;
                     onRunStart();
                 }
@@ -340,7 +342,7 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
                     timelineWidget.setProgress(state.alpha);
                     microNodeView.setProgress(target, state.alpha);
 
-                    if(maxDuration < (1 - state.alpha) * state.getDuration() && state.alpha > 0) {
+                    if (maxDuration < (1 - state.alpha) * state.getDuration() && state.alpha > 0) {
                         maxDuration = (1 - state.alpha) * state.getDuration();
                     }
                 }
@@ -350,7 +352,7 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
                 microNodeView.clearMap();
                 microNodeView.setLabel("0.0");
 
-                if(runningFlag) {
+                if (runningFlag) {
                     runningFlag = false;
                     onRunStop();
                 }
@@ -359,13 +361,13 @@ public class AsyncRoutineNodeWidget extends AbstractRoutineNodeWidget {
     }
 
     private void onRunStart() {
-        if(isMicroView) {
+        if (isMicroView) {
             microNodeView.showProgressDisc();
         }
     }
 
     private void onRunStop() {
-        if(isMicroView) {
+        if (isMicroView) {
             microNodeView.hideProgressDisc();
         }
     }

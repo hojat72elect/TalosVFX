@@ -16,12 +16,12 @@ public class PulsingNode extends RoutineNode implements TickableNode {
     public void receiveSignal(String portName) {
         this.iteration = 0;
         routineInstanceRef.beginDepth();
-        if(portName.equals("startSignal")) {
+        if (portName.equals("startSignal")) {
             running = true;
             time = fetchFloatValue("interval");
             payload = routineInstanceRef.getSignalPayload();
             pulse();
-        } else if(portName.equals("stopSignal")) {
+        } else if (portName.equals("stopSignal")) {
             running = false;
             routineInstanceRef.endDepth();
         }
@@ -32,7 +32,7 @@ public class PulsingNode extends RoutineNode implements TickableNode {
         routineInstanceRef.setSignalPayload(payload);
         sendSignal("onComplete");
 
-        if(iteration >= fetchIntValue("count")) {
+        if (iteration >= fetchIntValue("count")) {
             running = false;
             routineInstanceRef.endDepth();
         }
@@ -41,7 +41,7 @@ public class PulsingNode extends RoutineNode implements TickableNode {
 
     @Override
     public void tick(float delta) {
-        if(running) {
+        if (running) {
             time -= delta;
 
             if (time <= 0) {

@@ -4,14 +4,15 @@ import com.badlogic.gdx.graphics.g2d.PolygonBatch;
 
 public interface PolyBatchWithEncodingOverride extends PolygonBatch {
 
-	void setCustomEncodingColour (float r, float g, float b, float a);
-	void setUsingCustomColourEncoding (boolean usingCustomEncoding);
+    void setCustomEncodingColour(float r, float g, float b, float a);
 
-	void setCustomInfo (float customInfo);
+    void setUsingCustomColourEncoding(boolean usingCustomEncoding);
 
-	void sampleEmissive (boolean sampleEmissive);
+    void setCustomInfo(float customInfo);
+
+    void sampleEmissive(boolean sampleEmissive);
 
     boolean isSamplingEmissive();
 
-    void setIgnoreBlendModeChanges (boolean shouldIgnore);
+    void setIgnoreBlendModeChanges(boolean shouldIgnore);
 }

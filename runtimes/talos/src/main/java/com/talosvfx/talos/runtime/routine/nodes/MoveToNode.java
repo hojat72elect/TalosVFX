@@ -5,17 +5,11 @@ import com.badlogic.gdx.utils.Pools;
 import com.talosvfx.talos.runtime.routine.AsyncRoutineNodeState;
 import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
+
 import lombok.Getter;
 
 public class MoveToNode extends AsyncRoutineNode<GameObject, MoveToNode.PositionTargetState> {
 
-
-    public static class PositionTargetState extends AsyncRoutineNodeState<GameObject> {
-        @Getter
-        private Vector2 originalPosition = new Vector2();
-        @Getter
-        private Vector2 to = new Vector2();
-    }
 
     @Override
     protected PositionTargetState obtainState() {
@@ -27,7 +21,7 @@ public class MoveToNode extends AsyncRoutineNode<GameObject, MoveToNode.Position
     protected boolean targetAdded(PositionTargetState state) {
         GameObject target = state.getTarget();
         TransformComponent component = target.getComponent(TransformComponent.class);
-        if(component == null) return false;
+        if (component == null) return false;
         state.getOriginalPosition().set(component.position);
 
         float x = fetchFloatValue("X");
@@ -46,5 +40,12 @@ public class MoveToNode extends AsyncRoutineNode<GameObject, MoveToNode.Position
         Vector2 to = state.to;
         component.position.x = orig.x + (to.x - orig.x) * state.interpolatedAlpha;
         component.position.y = orig.y + (to.y - orig.y) * state.interpolatedAlpha;
+    }
+
+    public static class PositionTargetState extends AsyncRoutineNodeState<GameObject> {
+        @Getter
+        private final Vector2 originalPosition = new Vector2();
+        @Getter
+        private final Vector2 to = new Vector2();
     }
 }

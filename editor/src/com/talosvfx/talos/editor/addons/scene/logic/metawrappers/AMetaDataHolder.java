@@ -9,29 +9,29 @@ import com.talosvfx.talos.runtime.assets.AMetadata;
 
 public class AMetaDataHolder<T extends AMetadata> implements IPropertyHolder {
 
-	protected final T meta;
-	private final AMetaDataProvider<T> provider;
+    protected final T meta;
+    private final AMetaDataProvider<T> provider;
 
-	public AMetaDataHolder (T meta) {
-		this.meta = meta;
-		this.provider = (AMetaDataProvider<T>)PropertyWrapperProviders.getOrCreateProvider(meta);
-	}
+    public AMetaDataHolder(T meta) {
+        this.meta = meta;
+        this.provider = (AMetaDataProvider<T>) PropertyWrapperProviders.getOrCreateProvider(meta);
+    }
 
-	@Override
-	public Iterable<IPropertyProvider> getPropertyProviders () {
-		Array<IPropertyProvider> propertyProviders = new Array<>();
+    @Override
+    public Iterable<IPropertyProvider> getPropertyProviders() {
+        Array<IPropertyProvider> propertyProviders = new Array<>();
 
-		propertyProviders.add(new FilePropertyProvider(meta.link.handle));
+        propertyProviders.add(new FilePropertyProvider(meta.link.handle));
 
-		if (provider.getPropertyBoxTitle() != null) {
-			propertyProviders.add(provider);
-		}
+        if (provider.getPropertyBoxTitle() != null) {
+            propertyProviders.add(provider);
+        }
 
-		return propertyProviders;
-	}
+        return propertyProviders;
+    }
 
-	@Override
-	public String getName () {
-		return meta.link.handle.name();
-	}
+    @Override
+    public String getName() {
+        return meta.link.handle.name();
+    }
 }

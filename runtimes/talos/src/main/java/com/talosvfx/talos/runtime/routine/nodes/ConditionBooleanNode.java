@@ -11,11 +11,10 @@ public class ConditionBooleanNode extends RoutineNode {
             result = fetchBooleanValue("value");
         }
 
-        if(result) {
+        if (result) {
             sendSignal("trueOutput");
         } else {
             sendSignal("falseOutput");
         }
-
     }
 }

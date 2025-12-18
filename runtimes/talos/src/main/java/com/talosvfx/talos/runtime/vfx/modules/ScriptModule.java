@@ -35,23 +35,26 @@ public class ScriptModule extends AbstractModule {
     public static final int OUTPUT3 = 2;
     public static final int OUTPUT4 = 3;
     public static final int OUTPUT5 = 4;
-
-
+    private static final String replace = "%SCRIPT%";
+    private static final String template =
+            "import com.talosvfx.talos.runtime.scripts.SimpleReturnScript;"
+                    + "import com.talosvfx.talos.runtime.values.NumericalValue;"
+                    + "public class SimpleRunIm extends SimpleReturnScript {"
+                    + "public void evaulate (NumericalValue i1, NumericalValue i2, NumericalValue i3, NumericalValue i4, NumericalValue i5, NumericalValue o1, NumericalValue o2, NumericalValue o3, NumericalValue o4, NumericalValue o5) {"
+                    + "%SCRIPT%"
+                    + "}"
+                    + "}";
     NumericalValue input1;
     NumericalValue input2;
     NumericalValue input3;
     NumericalValue input4;
     NumericalValue input5;
-
-
     String script;
-
     NumericalValue output1;
     NumericalValue output2;
     NumericalValue output3;
     NumericalValue output4;
     NumericalValue output5;
-
     SimpleReturnScript returnScript;
 
     @Override
@@ -73,7 +76,7 @@ public class ScriptModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
         if (returnScript != null) {
             returnScript.evaulate(input1, input2, input3, input4, input5, output1, output2, output3, output4, output5);
         } else {
@@ -86,7 +89,11 @@ public class ScriptModule extends AbstractModule {
         }
     }
 
-    public void setScript (String script) {
+    public String getScript() {
+        return script;
+    }
+
+    public void setScript(String script) {
         this.script = script;
 //        SimpleReturnScript scriptInstance = ScriptCompiler.instance().compile(template.replace(replace, script));
 
@@ -95,30 +102,15 @@ public class ScriptModule extends AbstractModule {
 //        }
     }
 
-    private static final String replace = "%SCRIPT%";
-    private static final String template =
-        "import com.talosvfx.talos.runtime.scripts.SimpleReturnScript;"
-        + "import com.talosvfx.talos.runtime.values.NumericalValue;"
-        + "public class SimpleRunIm extends SimpleReturnScript {"
-        + "public void evaulate (NumericalValue i1, NumericalValue i2, NumericalValue i3, NumericalValue i4, NumericalValue i5, NumericalValue o1, NumericalValue o2, NumericalValue o3, NumericalValue o4, NumericalValue o5) {"
-        + "%SCRIPT%"
-        + "}"
-        + "}";
-
-    public String getScript () {
-        return script;
-    }
-
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("script", script);
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         this.script = jsonData.getString("script");
     }
-
 }

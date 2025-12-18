@@ -4,6 +4,7 @@ import com.esotericsoftware.spine.SkeletonData;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.meta.SpineMetadata;
 import com.talosvfx.talos.runtime.scene.GameObject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,10 +12,11 @@ public class SpineImporter extends AbstractImporter<SkeletonData> {
 
 
     private static final Logger logger = LoggerFactory.getLogger(SpineImporter.class);
-    @Override
-    public GameObject makeInstance (GameAsset<SkeletonData> asset, GameObject parent) {
 
-        SpineMetadata metaData = (SpineMetadata)asset.getRootRawAsset().metaData;
+    @Override
+    public GameObject makeInstance(GameAsset<SkeletonData> asset, GameObject parent) {
+
+        SpineMetadata metaData = (SpineMetadata) asset.getRootRawAsset().metaData;
 
         logger.info("Needs reimplementing for context");
 

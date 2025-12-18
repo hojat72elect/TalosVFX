@@ -6,8 +6,18 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
@@ -19,165 +29,154 @@ import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class ScriptCompiler implements LifecycleListener {
 
-	private static final Logger logger = LoggerFactory.getLogger(ScriptCompiler.class);
+    private static final Logger logger = LoggerFactory.getLogger(ScriptCompiler.class);
 
-	private static ScriptCompiler instance;
+    private static ScriptCompiler instance;
 
-	final ExecutorService executorService;
+    final ExecutorService executorService;
+    private final JavaCompiler compiler;
 
+    public ScriptCompiler() {
+        compiler = ToolProvider.getSystemJavaCompiler();
+        executorService = Executors.newSingleThreadExecutor();
 
-	public static ScriptCompiler instance () {
-		if (instance == null) {
-			instance = new ScriptCompiler();
-		}
-		return instance;
-	}
+        Gdx.app.addLifecycleListener(this);
+    }
 
-	private final JavaCompiler compiler;
+    public static ScriptCompiler instance() {
+        if (instance == null) {
+            instance = new ScriptCompiler();
+        }
+        return instance;
+    }
 
-	public ScriptCompiler () {
-		compiler = ToolProvider.getSystemJavaCompiler();
-	 	executorService = Executors.newSingleThreadExecutor();
+    public void compile(String fileName, String javaString, ScriptObjectRunnable scriptObjectRunnable) {
 
-		Gdx.app.addLifecycleListener(this);
-	}
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                JavaSourceFromString file = new JavaSourceFromString(fileName, javaString);
+                DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+                DynamicClassesFileManager manager = new DynamicClassesFileManager(compiler.getStandardFileManager(null, null, null));
 
-	public void compile (String fileName, String javaString, ScriptObjectRunnable scriptObjectRunnable) {
+                Iterable<? extends JavaFileObject> compilationUnits = Collections.singletonList(file);
+                JavaCompiler.CompilationTask task = compiler.getTask(null, manager, diagnostics, null, null, compilationUnits);
 
-		executorService.submit(new Runnable() {
-			@Override
-			public void run () {
-				JavaSourceFromString file = new JavaSourceFromString(fileName, javaString);
-				DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-				DynamicClassesFileManager manager = new DynamicClassesFileManager(compiler.getStandardFileManager(null, null, null));
+                boolean success = task.call();
+                for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
+                    logger.error(String.format("Script compilation error: Line: %d - %s%n", diagnostic.getLineNumber(), diagnostic.getMessage(null)));
+                }
+                if (success) {
+                    try {
+                        Class clazz = manager.loader.findClass(fileName);
 
-				Iterable<? extends JavaFileObject> compilationUnits = Arrays.asList(file);
-				JavaCompiler.CompilationTask task = compiler.getTask(null, manager, diagnostics, null, null, compilationUnits);
+                        Object object = ClassReflection.newInstance(clazz);
 
-				boolean success = task.call();
-				for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
-					logger.error(String.format("Script compilation error: Line: %d - %s%n", diagnostic.getLineNumber(), diagnostic.getMessage(null)));
-				}
-				if (success) {
-					try {
-						Class clazz = manager.loader.findClass(fileName);
+                        scriptObjectRunnable.onComplete(object);
+                    } catch (ReflectionException | ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
 
-						Object object = ClassReflection.newInstance(clazz);
+    @Override
+    public void pause() {
 
-						scriptObjectRunnable.onComplete(object);
-					} catch (ReflectionException | ClassNotFoundException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		});
-	}
+    }
 
-	@Override
-	public void pause () {
+    @Override
+    public void resume() {
 
-	}
+    }
 
-	@Override
-	public void resume () {
+    @Override
+    public void dispose() {
+        executorService.shutdownNow();
+    }
 
-	}
+    public static class ByteClassLoader extends ClassLoader {
 
-	@Override
-	public void dispose () {
-		executorService.shutdownNow();
-	}
+        private final ObjectMap<String, JavaSourceFromString> cache = new ObjectMap<>();
 
-	public static class ByteClassLoader extends ClassLoader {
+        public ByteClassLoader() {
+            super(ByteClassLoader.class.getClassLoader());
+        }
 
-		private ObjectMap<String, JavaSourceFromString> cache = new ObjectMap<>();
+        public void put(String name, JavaSourceFromString obj) {
+            cache.put(name, obj);
+        }
 
-		public ByteClassLoader () {
-			super(ByteClassLoader.class.getClassLoader());
-		}
+        @Override
+        protected Class<?> findClass(String name) throws ClassNotFoundException {
+            if (cache.containsKey(name)) {
+                final JavaSourceFromString javaSourceFromString = cache.get(name);
+                final byte[] classBytes = javaSourceFromString.getClassBytes();
+                return defineClass(name, classBytes, 0, classBytes.length);
+            }
 
-		public void put (String name, JavaSourceFromString obj) {
-			cache.put(name, obj);
-		}
-
-		@Override
-		protected Class<?> findClass (String name) throws ClassNotFoundException {
-			if (cache.containsKey(name)) {
-				final JavaSourceFromString javaSourceFromString = cache.get(name);
-				final byte[] classBytes = javaSourceFromString.getClassBytes();
-				return defineClass(name, classBytes, 0, classBytes.length);
-			}
-
-			throw new GdxRuntimeException("Woopsy");
-		}
-	}
+            throw new GdxRuntimeException("Woopsy");
+        }
+    }
 
 
-	public static class JavaSourceFromString extends SimpleJavaFileObject {
+    public static class JavaSourceFromString extends SimpleJavaFileObject {
 
-		private final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        private final ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
-		String code;
+        String code;
 
-		JavaSourceFromString(String name, String code) {
-			super(URI.create("string:///" + name.replace('.','/') + Kind.SOURCE.extension),Kind.SOURCE);
-			this.code = code;
-		}
+        JavaSourceFromString(String name, String code) {
+            super(URI.create("string:///" + name.replace('.', '/') + Kind.SOURCE.extension), Kind.SOURCE);
+            this.code = code;
+        }
 
-		JavaSourceFromString(String name, Kind kind) {
-			super(URI.create("string:///" + name.replace('.', '/') + kind.extension), kind);
-		}
+        JavaSourceFromString(String name, Kind kind) {
+            super(URI.create("string:///" + name.replace('.', '/') + kind.extension), kind);
+        }
 
-		@Override
-		public CharSequence getCharContent(boolean ignoreEncodingErrors) {
-			return code;
-		}
+        @Override
+        public CharSequence getCharContent(boolean ignoreEncodingErrors) {
+            return code;
+        }
 
-		public byte[] getClassBytes () {
-			return bos.toByteArray();
-		}
+        public byte[] getClassBytes() {
+            return bos.toByteArray();
+        }
 
-		@Override
-		public OutputStream openOutputStream () throws IOException {
-			return bos;
-		}
-	}
+        @Override
+        public OutputStream openOutputStream() throws IOException {
+            return bos;
+        }
+    }
 
-	public static class DynamicClassesFileManager<FileManager> extends ForwardingJavaFileManager<JavaFileManager> {
+    public static class DynamicClassesFileManager<FileManager> extends ForwardingJavaFileManager<JavaFileManager> {
 
-		ByteClassLoader loader = null;
+        ByteClassLoader loader = null;
 
-		protected DynamicClassesFileManager (StandardJavaFileManager fileManager) {
-			super(fileManager);
-			try {
-				loader = new ByteClassLoader();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+        protected DynamicClassesFileManager(StandardJavaFileManager fileManager) {
+            super(fileManager);
+            try {
+                loader = new ByteClassLoader();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
-		@Override
-		public JavaFileObject getJavaFileForOutput (Location location, String className, JavaFileObject.Kind kind, FileObject sibling) throws IOException {
-			JavaSourceFromString obj = new JavaSourceFromString(className, kind);
-			loader.put(className, obj);
-			return obj;
-		}
+        @Override
+        public JavaFileObject getJavaFileForOutput(Location location, String className, JavaFileObject.Kind kind, FileObject sibling) throws IOException {
+            JavaSourceFromString obj = new JavaSourceFromString(className, kind);
+            loader.put(className, obj);
+            return obj;
+        }
 
-		@Override
-		public ClassLoader getClassLoader (Location location) {
-			return loader;
-		}
-	}
+        @Override
+        public ClassLoader getClassLoader(Location location) {
+            return loader;
+        }
+    }
 }

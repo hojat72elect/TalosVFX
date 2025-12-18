@@ -1,7 +1,13 @@
 package com.talosvfx.talos.editor.widgets.ui.timeline;
 
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Stack;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
@@ -10,8 +16,8 @@ import com.talosvfx.talos.editor.widgets.ui.common.SquareButton;
 public class TimelineLeft<U> extends AbstractList<ActionRow<U>, U> {
 
     private Cell topActionCell;
-    private Cell separatorCell;
-    private int DEFAULT_ACTION_PAD = 16;
+    private final Cell separatorCell;
+    private final int DEFAULT_ACTION_PAD = 16;
 
     private Table contentTable;
     private Label typeLabel;
@@ -66,7 +72,8 @@ public class TimelineLeft<U> extends AbstractList<ActionRow<U>, U> {
         upBtn = new SquareButton(skin, skin.getDrawable("timeline-btn-icon-play"), "Move up");
         upBtn.flipVertical();
         downBtn = new SquareButton(skin, skin.getDrawable("timeline-btn-icon-play"), "Move down");
-        downBtn.flipVertical(); downBtn.flipHorizontal();
+        downBtn.flipVertical();
+        downBtn.flipHorizontal();
 
         Table header = new Table();
         header.setBackground(skin.getDrawable("timeline-top-bar-bg"));
@@ -155,7 +162,7 @@ public class TimelineLeft<U> extends AbstractList<ActionRow<U>, U> {
         return header;
     }
 
-    private ScrollPane buildContentPane () {
+    private ScrollPane buildContentPane() {
         contentTable = new Table();
         scrollPane = new ScrollPane(contentTable);
         scrollPane.setScrollingDisabled(true, false);
@@ -185,7 +192,7 @@ public class TimelineLeft<U> extends AbstractList<ActionRow<U>, U> {
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
 
-                if(event.isCancelled()) return;
+                if (event.isCancelled()) return;
 
                 timeline.onRowClicked(item);
             }
@@ -200,18 +207,18 @@ public class TimelineLeft<U> extends AbstractList<ActionRow<U>, U> {
     }
 
     @Override
-    public void setData(Array<? extends  TimelineItemDataProvider<U>> dataArray) {
+    public void setData(Array<? extends TimelineItemDataProvider<U>> dataArray) {
         super.setData(dataArray);
 
         recalculateMaxPad();
     }
 
     private void recalculateMaxPad() {
-        if(getItems().size == 0) return;
+        if (getItems().size == 0) return;
 
         float maxPad = getItems().first().getActionCellWidth();
-        for(ActionRow row: getItems()) {
-            if(maxPad < row.getActionCellWidth()) {
+        for (ActionRow row : getItems()) {
+            if (maxPad < row.getActionCellWidth()) {
                 maxPad = row.getActionCellWidth();
             }
         }
@@ -231,7 +238,7 @@ public class TimelineLeft<U> extends AbstractList<ActionRow<U>, U> {
 
     @Override
     public void act(float delta) {
-        if(rebuildFlag) {
+        if (rebuildFlag) {
             rebuildFromData();
         }
         super.act(delta);
@@ -241,7 +248,7 @@ public class TimelineLeft<U> extends AbstractList<ActionRow<U>, U> {
     protected void rebuildFromData() {
         contentTable.clearChildren();
 
-        for(ActionRow item: getItems()) {
+        for (ActionRow item : getItems()) {
             addItemToTable(item);
         }
     }

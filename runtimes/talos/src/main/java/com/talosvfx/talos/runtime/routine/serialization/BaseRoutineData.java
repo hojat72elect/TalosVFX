@@ -6,11 +6,11 @@ import com.talosvfx.talos.runtime.routine.RoutineInstance;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
 
 public interface BaseRoutineData {
-	Array<PropertyWrapper<?>> getPropertyWrappers ();
+    Array<PropertyWrapper<?>> getPropertyWrappers();
 
-	JsonValue getJsonNodes ();
+    JsonValue getJsonNodes();
 
-	JsonValue getJsonConnections ();
+    JsonValue getJsonConnections();
 
-	RoutineInstance createInstance (boolean external, String talosIdentifier);
+    RoutineInstance createInstance(boolean external, String talosIdentifier);
 }

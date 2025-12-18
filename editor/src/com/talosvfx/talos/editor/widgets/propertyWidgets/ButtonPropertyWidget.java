@@ -7,30 +7,24 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.talosvfx.talos.editor.project2.SharedResources;
-import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.LabelWithZoom;
 import com.talosvfx.talos.editor.widgets.ui.common.SquareButton;
-import lombok.Setter;
-
+import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.LabelWithZoom;
 import com.talosvfx.talos.runtime.utils.Supplier;
 
 public class ButtonPropertyWidget<T> extends PropertyWidget<T> {
 
+    protected ButtonListener btnListener;
     private T payload;
     private Label buttonLabel;
     private SquareButton button;
-    protected ButtonListener btnListener;
 
-    public interface ButtonListener<T> {
-        void clicked(ButtonPropertyWidget<T> widget);
+    protected ButtonPropertyWidget() {
     }
-
-    protected ButtonPropertyWidget () {}
-
-
 
     public ButtonPropertyWidget(String text) {
         this(null, text, null);
     }
+
 
     public ButtonPropertyWidget(String text, ButtonListener btnListener) {
         this(null, text, btnListener);
@@ -39,12 +33,12 @@ public class ButtonPropertyWidget<T> extends PropertyWidget<T> {
     public ButtonPropertyWidget(String name, String text, ButtonListener btnListener) {
         this(name, text, btnListener, new Supplier<T>() {
             @Override
-            public T get () {
+            public T get() {
                 return null;
             }
         }, new ValueChanged<T>() {
             @Override
-            public void report (T value) {
+            public void report(T value) {
 
             }
         });
@@ -57,17 +51,17 @@ public class ButtonPropertyWidget<T> extends PropertyWidget<T> {
     }
 
     @Override
-    public T getValue () {
+    public T getValue() {
         return payload;
     }
 
     @Override
-    public void updateWidget (T value) {
+    public void updateWidget(T value) {
         payload = value;
     }
 
     @Override
-    public Actor getSubWidget () {
+    public Actor getSubWidget() {
         Skin skin = SharedResources.skin;
         Table table = new Table();
 
@@ -78,8 +72,8 @@ public class ButtonPropertyWidget<T> extends PropertyWidget<T> {
 
         button.addListener(new ClickListener() {
             @Override
-            public void clicked (InputEvent event, float x, float y) {
-                if(btnListener != null) {
+            public void clicked(InputEvent event, float x, float y) {
+                if (btnListener != null) {
                     btnListener.clicked(ButtonPropertyWidget.this);
                 }
             }
@@ -103,5 +97,9 @@ public class ButtonPropertyWidget<T> extends PropertyWidget<T> {
         clone.buttonLabel.setText(buttonLabel.getText());
 
         return clone;
+    }
+
+    public interface ButtonListener<T> {
+        void clicked(ButtonPropertyWidget<T> widget);
     }
 }

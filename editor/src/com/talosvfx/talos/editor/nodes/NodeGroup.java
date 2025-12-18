@@ -23,30 +23,22 @@ import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.ui.EditableLabel;
 
-public class NodeGroup extends Group implements Json.Serializable{
-
-    private ObjectSet<NodeWidget> nodes = new ObjectSet();
-
-    private Vector2 pos = new Vector2();
-
-    private Vector2 size = new Vector2();
+public class NodeGroup extends Group implements Json.Serializable {
 
     private final int PADDING = 20;
     private final int TOP_BAR = 34;
-
-    private Skin skin;
-
-    private Vector2 posMin = new Vector2();
-    private Vector2 posMax = new Vector2();
-
     Image frameImage;
     EditableLabel title;
     ImageButton settings;
     Actor topHit;
-
     PopupMenu settingsPopup;
-
     NodeBoard nodeBoard;
+    private ObjectSet<NodeWidget> nodes = new ObjectSet();
+    private final Vector2 pos = new Vector2();
+    private final Vector2 size = new Vector2();
+    private Skin skin;
+    private final Vector2 posMin = new Vector2();
+    private final Vector2 posMax = new Vector2();
 
     public NodeGroup() {
 
@@ -65,7 +57,7 @@ public class NodeGroup extends Group implements Json.Serializable{
         this.skin = skin;
 
         frameImage = new Image(skin.getDrawable("group_frame"));
-        frameImage.setColor(44/255f, 140/255f, 209/255f, 1f);
+        frameImage.setColor(44 / 255f, 140 / 255f, 209 / 255f, 1f);
         addActor(frameImage);
 
         topHit = new Actor();
@@ -116,9 +108,9 @@ public class NodeGroup extends Group implements Json.Serializable{
 
         topHit.addListener(new ClickListener() {
 
-            Vector2 tmp = new Vector2();
-            Vector2 pos = new Vector2();
-            Vector2 diff = new Vector2();
+            final Vector2 tmp = new Vector2();
+            final Vector2 pos = new Vector2();
+            final Vector2 diff = new Vector2();
 
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
@@ -145,17 +137,13 @@ public class NodeGroup extends Group implements Json.Serializable{
             }
 
             @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 event.cancel();
             }
         });
 
         setTouchable(Touchable.childrenOnly);
         frameImage.setTouchable(Touchable.disabled);
-    }
-
-    public void setNodes(ObjectSet<NodeWidget> wrappers) {
-        this.nodes.addAll(wrappers);
     }
 
     private void recalculateTransform() {
@@ -170,7 +158,6 @@ public class NodeGroup extends Group implements Json.Serializable{
                 posMax.x = node.getX() + node.getWidth();
             if (node.getY() + node.getHeight() > posMax.y)
                 posMax.y = node.getY() + node.getHeight();
-
         }
 
         pos.set(posMin).sub(PADDING, PADDING);
@@ -200,19 +187,19 @@ public class NodeGroup extends Group implements Json.Serializable{
     }
 
     private void moveGroupBy(float x, float y) {
-        for(NodeWidget wrapper: nodes) {
+        for (NodeWidget wrapper : nodes) {
             wrapper.moveBy(x, y);
         }
     }
 
     public void removeWrappers(ObjectSet<NodeWidget> wrappersToRemove) {
-        for(NodeWidget node: wrappersToRemove) {
-            if(nodes.contains(node)) {
+        for (NodeWidget node : wrappersToRemove) {
+            if (nodes.contains(node)) {
                 nodes.remove(node);
             }
         }
 
-        if(nodes.size == 0) {
+        if (nodes.size == 0) {
             nodeBoard.removeGroup(this);
         }
     }
@@ -221,8 +208,16 @@ public class NodeGroup extends Group implements Json.Serializable{
         return title.getText();
     }
 
+    public void setText(String text) {
+        title.setText(text);
+    }
+
     public ObjectSet<NodeWidget> getNodes() {
         return nodes;
+    }
+
+    public void setNodes(ObjectSet<NodeWidget> wrappers) {
+        this.nodes.addAll(wrappers);
     }
 
     public Color getFrameColor() {
@@ -236,13 +231,9 @@ public class NodeGroup extends Group implements Json.Serializable{
 
     public void removeWrapper(NodeWidget node) {
         nodes.remove(node);
-        if(nodes.size == 0) {
+        if (nodes.size == 0) {
             nodeBoard.removeGroup(this);
         }
-    }
-
-    public void setText(String text) {
-        title.setText(text);
     }
 
     @Override

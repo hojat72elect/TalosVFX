@@ -7,23 +7,19 @@ import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.ValueProperty;
 
 public class TransformComponent extends AComponent {
+    public static Array<GameObject> tmp = new Array<>();
+    public static Vector2 vec = new Vector2();
     @ValueProperty(prefix = {"X", "Y"})
     public Vector2 position = new Vector2();
-
-    @ValueProperty(min = -360, max = 360, step=0.5f, progress = true)
+    @ValueProperty(min = -360, max = 360, step = 0.5f, progress = true)
     public float rotation;
-
     @ValueProperty(prefix = {"W", "H"})
     public Vector2 scale = new Vector2(1, 1);
-
     public transient Vector2 pivot = new Vector2(0.5f, 0.5f);
-
     public transient Vector2 worldPosition = new Vector2();
     public transient Vector2 worldScale = new Vector2(1, 1);
     public transient float worldRotation = 0;
 
-    public static Array<GameObject> tmp = new Array<>();
-    public static Vector2 vec = new Vector2();
     public static Vector2 localToWorld(GameObject gameObject, Vector2 vector) {
         //gameObject is null so we dont do anything
         if (gameObject == null) return vector;
@@ -32,7 +28,7 @@ public class TransformComponent extends AComponent {
             BoneComponent boneComponent = gameObject.getComponent(BoneComponent.class);
             Bone bone = boneComponent.getBone();
 
-              vector.scl(bone.getScaleX(), bone.getScaleY());
+            vector.scl(bone.getScaleX(), bone.getScaleY());
             vector.rotateDeg(bone.getWorldRotationX());
 
             vector.add(bone.getWorldX(), bone.getWorldY());
@@ -41,7 +37,7 @@ public class TransformComponent extends AComponent {
             return vector;
         }
 
-        if(gameObject.hasTransformComponent()) {
+        if (gameObject.hasTransformComponent()) {
             TransformComponent transform = gameObject.getTransformComponent();
 
             vector.scl(transform.scale);
@@ -51,7 +47,7 @@ public class TransformComponent extends AComponent {
             vector.add(gameObject.getTransformSettings().offsetX, gameObject.getTransformSettings().offsetY);
 
 
-            if(gameObject.parent != null) {
+            if (gameObject.parent != null) {
                 localToWorld(gameObject.parent, vector);
             }
         }
@@ -60,7 +56,7 @@ public class TransformComponent extends AComponent {
     }
 
     public static Vector2 worldToLocal(GameObject gameObject, Vector2 vector) {
-        if(gameObject == null) {
+        if (gameObject == null) {
             return vector;
         }
 
@@ -72,12 +68,12 @@ public class TransformComponent extends AComponent {
             vector.sub(gameObject.getTransformSettings().offsetX, gameObject.getTransformSettings().offsetY);
 
             vector.rotateDeg(-bone.getWorldRotationX());
-            vector.scl(1f/ bone.getScaleX(), 1f/ bone.getScaleY());
+            vector.scl(1f / bone.getScaleX(), 1f / bone.getScaleY());
 
             return vector;
         }
 
-        if(gameObject.parent == null) {
+        if (gameObject.parent == null) {
 
             //Check if root has transform component
             if (gameObject.hasTransformComponent()) {
@@ -92,9 +88,9 @@ public class TransformComponent extends AComponent {
         tmp.clear();
         tmp = getRootChain(gameObject, tmp);
 
-        for(int i = tmp.size - 1; i >= 0; i--) {
+        for (int i = tmp.size - 1; i >= 0; i--) {
             GameObject item = tmp.get(i);
-            if(item.hasTransformComponent()) {
+            if (item.hasTransformComponent()) {
                 TransformComponent transform = item.getTransformComponent();
 
                 untransformVectorByTransform(vector, transform);
@@ -104,16 +100,16 @@ public class TransformComponent extends AComponent {
         return vector;
     }
 
-    private static void untransformVectorByTransform (Vector2 vector, TransformComponent transform) {
+    private static void untransformVectorByTransform(Vector2 vector, TransformComponent transform) {
         vector.sub(transform.position);
         vector.rotateDeg(-transform.rotation);
-        vector.scl(1f/ transform.scale.x, 1f/ transform.scale.y);
+        vector.scl(1f / transform.scale.x, 1f / transform.scale.y);
     }
 
     private static Array<GameObject> getRootChain(GameObject currObject, Array<GameObject> chain) {
         chain.add(currObject);
 
-        if(currObject.parent != null) {
+        if (currObject.parent != null) {
             return getRootChain(currObject.parent, chain);
         }
 

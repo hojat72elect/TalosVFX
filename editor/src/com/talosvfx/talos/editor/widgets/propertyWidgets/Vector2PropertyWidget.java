@@ -4,45 +4,43 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Pool;
-import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.nodes.widgets.ValueWidget;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.runtime.scene.ValueProperty;
-
 import com.talosvfx.talos.runtime.utils.Supplier;
 
-public class Vector2PropertyWidget extends PropertyWidget<Vector2>  {
+public class Vector2PropertyWidget extends PropertyWidget<Vector2> {
 
     public ValueWidget xValue;
     public ValueWidget yValue;
 
     private ValueProperty annotation;
     private Label title;
-    protected Vector2PropertyWidget () {}
+
+    protected Vector2PropertyWidget() {
+    }
 
     public Vector2PropertyWidget(String name, Supplier<Vector2> supplier, ValueChanged<Vector2> valueChanged, Object parent) {
         super(name, supplier, valueChanged, parent);
     }
 
     @Override
-    public boolean isFastChange () {
+    public boolean isFastChange() {
         return xValue.isFastChange() || yValue.isFastChange();
     }
 
     @Override
-    protected void build (String name) {
+    protected void build(String name) {
         listener = new ChangeListener() {
 
-            Vector2 vec = new Vector2();
+            final Vector2 vec = new Vector2();
 
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 try {
-                    if(event.getTarget() instanceof ValueWidget) {
+                    if (event.getTarget() instanceof ValueWidget) {
                         if (event.getTarget() == xValue) {
                             vec.set(xValue.getValue(), Float.NaN);
                         }
@@ -51,7 +49,7 @@ public class Vector2PropertyWidget extends PropertyWidget<Vector2>  {
                         }
                         callValueChanged(vec);
                     }
-                } catch (NumberFormatException e){
+                } catch (NumberFormatException e) {
                     vec.set(0, 0);
                     callValueChanged(vec);
                 }
@@ -98,7 +96,7 @@ public class Vector2PropertyWidget extends PropertyWidget<Vector2>  {
         xValue.removeListener(listener);
         yValue.removeListener(listener);
 
-        if(value == null) {
+        if (value == null) {
             xValue.setNone();
             yValue.setNone();
         } else {
@@ -118,8 +116,8 @@ public class Vector2PropertyWidget extends PropertyWidget<Vector2>  {
         this.value = value;
     }
 
-    public void configureFromAnnotation (ValueProperty annotation) {
-        if(annotation == null) return;
+    public void configureFromAnnotation(ValueProperty annotation) {
+        if (annotation == null) return;
         xValue.setRange(annotation.min(), annotation.max());
         xValue.setStep(annotation.step());
         xValue.setLabel(annotation.prefix()[0]);

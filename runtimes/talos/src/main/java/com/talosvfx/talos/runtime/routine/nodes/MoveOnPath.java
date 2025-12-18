@@ -13,33 +13,16 @@ import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 
 public class MoveOnPath extends AsyncRoutineNode<GameObject, MoveOnPath.State> {
 
-    private Array<GameObject> gameObjects = new Array<>();
-
-    private Bezier<Vector2> bezier = new Bezier<>();
-    private Vector2 tmp = new Vector2();
-    public transient Vector2[] tmpArr;
-    private boolean reverse = false;
-
     private final Vector2 offset = new Vector2();
+    public transient Vector2[] tmpArr;
+    private Array<GameObject> gameObjects = new Array<>();
+    private final Bezier<Vector2> bezier = new Bezier<>();
+    private final Vector2 tmp = new Vector2();
+    private boolean reverse = false;
     private boolean useWorldOffset = true;
 
     public MoveOnPath() {
         tmpArr = new Vector2[]{new Vector2(), new Vector2(), new Vector2(), new Vector2()};
-    }
-
-    public static class State extends AsyncRoutineNodeState<GameObject> {
-
-        public Array<Vector2> points = new Array<>();
-        public Array<Float> lengthData = new Array<>();
-        public float sumLength;
-
-
-        @Override
-        public void reset() {
-            super.reset();
-            points.clear();
-            lengthData.clear();
-        }
     }
 
     @Override
@@ -56,7 +39,7 @@ public class MoveOnPath extends AsyncRoutineNode<GameObject, MoveOnPath.State> {
 
         SavableContainer container = routineInstanceRef.getContainer();
 
-        if(container == null) return false;
+        if (container == null) return false;
 
         String target = fetchStringValue("target");
         if (target == null) {
@@ -97,11 +80,11 @@ public class MoveOnPath extends AsyncRoutineNode<GameObject, MoveOnPath.State> {
         points.get(0).add(tmp);
         points.get(1).add(tmp);
 
-        for (int i = 3; i < points.size - 2; i+=2) {
+        for (int i = 3; i < points.size - 2; i += 2) {
             tmp.set(MathUtils.random(-1f, 1f) * jitter, MathUtils.random(-1f, 1f) * jitter);
             points.get(i).add(tmp);
-            points.get(i-1).add(tmp);
-            points.get(i+1).add(tmp);
+            points.get(i - 1).add(tmp);
+            points.get(i + 1).add(tmp);
         }
 
         tmp.set(MathUtils.random(-1f, 1f) * jitter, MathUtils.random(-1f, 1f) * jitter);
@@ -133,11 +116,11 @@ public class MoveOnPath extends AsyncRoutineNode<GameObject, MoveOnPath.State> {
             float length = state.lengthData.get(i);
             float prevLen = currLen;
             currLen += length;
-            float currA = currLen/state.sumLength;
-            float prevA = prevLen/state.sumLength;
+            float currA = currLen / state.sumLength;
+            float prevA = prevLen / state.sumLength;
 
-            if(alpha <= currA) {
-                float localAlpha = (alpha-prevA)/(currA-prevA);
+            if (alpha <= currA) {
+                float localAlpha = (alpha - prevA) / (currA - prevA);
                 Vector2 point = bezier.valueAt(tmp, localAlpha);
                 TransformComponent transform = state.getTarget().getComponent(TransformComponent.class);
                 transform.position.set(point);
@@ -151,29 +134,29 @@ public class MoveOnPath extends AsyncRoutineNode<GameObject, MoveOnPath.State> {
     }
 
     private void createEvenlySpacedPoints(State state) {
-        if(state.lengthData.isEmpty()) {
+        if (state.lengthData.isEmpty()) {
             Array<Vector2> points = state.points;
 
             float sum = 0;
-            for(int i = 0; i < getNumSegments(points); i++) {
+            for (int i = 0; i < getNumSegments(points); i++) {
                 Vector2[] pointsInSegment = getPointsInSegment(i, points);
                 bezier.set(pointsInSegment);
                 float l = bezier.approxLength(30);
                 state.lengthData.add(l);
-                sum+=l;
+                sum += l;
             }
 
             state.sumLength = sum;
         }
     }
 
-    private int getNumSegments( Array<Vector2> points) {
+    private int getNumSegments(Array<Vector2> points) {
         return points.size / 3;
     }
 
     private Vector2[] getPointsInSegment(int index, Array<Vector2> points) {
-        for(int i = 0; i < 4; i++) {
-            if(i == 3) {
+        for (int i = 0; i < 4; i++) {
+            if (i == 3) {
                 tmpArr[i].set(points.get(loopIndex(index * 3 + i, points)));
             } else {
                 tmpArr[i].set(points.get(index * 3 + i));
@@ -186,4 +169,18 @@ public class MoveOnPath extends AsyncRoutineNode<GameObject, MoveOnPath.State> {
         return (index + points.size) % points.size;
     }
 
+    public static class State extends AsyncRoutineNodeState<GameObject> {
+
+        public Array<Vector2> points = new Array<>();
+        public Array<Float> lengthData = new Array<>();
+        public float sumLength;
+
+
+        @Override
+        public void reset() {
+            super.reset();
+            points.clear();
+            lengthData.clear();
+        }
+    }
 }

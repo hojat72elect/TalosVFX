@@ -8,102 +8,95 @@ import com.talosvfx.talos.runtime.vfx.values.NumericalValue;
 
 public class TargetModule extends AbstractModule {
 
-	public static final int FROM = 1;
-	public static final int TO = 2;
-	public static final int ALPHA_INPUT = 3;
+    public static final int FROM = 1;
+    public static final int TO = 2;
+    public static final int ALPHA_INPUT = 3;
 
-	public static final int POSITION = 1;
+    public static final int POSITION = 1;
+    public Vector3 defaultFrom = new Vector3();
+    public Vector3 defaultTo = new Vector3();
+    NumericalValue alphaInput;
+    NumericalValue from;
+    NumericalValue to;
+    NumericalValue position;
+    float defaultSpeed;
+    private final Vector3 fromVecTmp = new Vector3();
+    private final Vector3 toVecTmp = new Vector3();
 
-	NumericalValue alphaInput;
+    @Override
+    protected void defineSlots() {
+        alphaInput = createInputSlot(ALPHA_INPUT);
+        from = createInputSlot(FROM);
+        to = createInputSlot(TO);
 
-	NumericalValue from;
-	NumericalValue to;
+        position = createOutputSlot(POSITION);
+    }
 
-	NumericalValue position;
+    @Override
+    public void processCustomValues() {
+        float alpha = 0;
+        if (alphaInput.isEmpty()) {
+            alpha = getScope().getFloat(ScopePayload.PARTICLE_ALPHA);
+        } else {
+            alpha = alphaInput.getFloat();
+        }
 
-	float defaultSpeed;
-
-	public Vector3 defaultFrom = new Vector3();
-	public Vector3 defaultTo = new Vector3();
-
-	private Vector3 fromVecTmp = new Vector3();
-	private Vector3 toVecTmp = new Vector3();
-
-	@Override
-	protected void defineSlots () {
-		alphaInput = createInputSlot(ALPHA_INPUT);
-		from = createInputSlot(FROM);
-		to = createInputSlot(TO);
-
-		position = createOutputSlot(POSITION);
-	}
-
-	@Override
-	public void processCustomValues () {
-		float alpha = 0;
-		if (alphaInput.isEmpty()) {
-			alpha = getScope().getFloat(ScopePayload.PARTICLE_ALPHA);
-		} else {
-			alpha = alphaInput.getFloat();
-		}
-
-		if (from.isEmpty()) {
-			from.set(defaultFrom.x, defaultFrom.y, defaultFrom.z);
-		}
-		if (to.isEmpty()) {
-			to.set(defaultTo.x, defaultTo.y, defaultTo.z);
-		}
+        if (from.isEmpty()) {
+            from.set(defaultFrom.x, defaultFrom.y, defaultFrom.z);
+        }
+        if (to.isEmpty()) {
+            to.set(defaultTo.x, defaultTo.y, defaultTo.z);
+        }
 
 
+        // now the real calculation begins
+        fromVecTmp.set(from.get(0), from.get(1), from.get(2));
+        toVecTmp.set(to.get(0), to.get(1), to.get(2));
 
-		// now the real calculation begins
-		fromVecTmp.set(from.get(0), from.get(1), from.get(2));
-		toVecTmp.set(to.get(0), to.get(1), to.get(2));
+        toVecTmp.sub(fromVecTmp);
 
-		toVecTmp.sub(fromVecTmp);
+        float totalDistance = toVecTmp.len();
+        toVecTmp.nor().scl(alpha * totalDistance).add(fromVecTmp);
 
-		float totalDistance = toVecTmp.len();
-		toVecTmp.nor().scl(alpha * totalDistance).add(fromVecTmp);
+        position.set(toVecTmp.x, toVecTmp.y, toVecTmp.z);
+    }
 
-		position.set(toVecTmp.x, toVecTmp.y, toVecTmp.z);
-	}
+    public void setDefaultPositions(Vector3 dFrom, Vector3 dTo) {
+        defaultFrom.set(dFrom);
+        defaultTo.set(dTo);
+    }
 
-	public void setDefaultPositions (Vector3 dFrom, Vector3 dTo) {
-		defaultFrom.set(dFrom);
-		defaultTo.set(dTo);
-	}
+    public float getDefaultSpeed() {
+        return defaultSpeed;
+    }
 
-	public void setDefaultSpeed (float velocity) {
-		defaultSpeed = velocity;
-	}
+    public void setDefaultSpeed(float velocity) {
+        defaultSpeed = velocity;
+    }
 
-	public float getDefaultSpeed () {
-		return defaultSpeed;
-	}
+    @Override
+    public void write(Json json) {
+        super.write(json);
+        json.writeValue("speed", getDefaultSpeed());
 
-	@Override
-	public void write (Json json) {
-		super.write(json);
-		json.writeValue("speed", getDefaultSpeed());
+        json.writeValue("fromX", defaultFrom.x);
+        json.writeValue("fromY", defaultFrom.y);
+        json.writeValue("fromZ", defaultFrom.z);
+        json.writeValue("toX", defaultTo.x);
+        json.writeValue("toY", defaultTo.y);
+        json.writeValue("toZ", defaultTo.z);
+    }
 
-		json.writeValue("fromX", defaultFrom.x);
-		json.writeValue("fromY", defaultFrom.y);
-		json.writeValue("fromZ", defaultFrom.z);
-		json.writeValue("toX", defaultTo.x);
-		json.writeValue("toY", defaultTo.y);
-		json.writeValue("toZ", defaultTo.z);
-	}
+    @Override
+    public void read(Json json, JsonValue jsonData) {
+        super.read(json, jsonData);
+        defaultSpeed = jsonData.getFloat("velocity", 0);
 
-	@Override
-	public void read (Json json, JsonValue jsonData) {
-		super.read(json, jsonData);
-		defaultSpeed = jsonData.getFloat("velocity", 0);
-
-		defaultFrom.x = jsonData.getFloat("fromX", 0);
-		defaultFrom.y = jsonData.getFloat("fromY", 0);
-		defaultFrom.z = jsonData.getFloat("fromZ", 0);
-		defaultTo.x = jsonData.getFloat("toX", 0);
-		defaultTo.y = jsonData.getFloat("toY", 0);
-		defaultTo.z = jsonData.getFloat("toZ", 0);
-	}
+        defaultFrom.x = jsonData.getFloat("fromX", 0);
+        defaultFrom.y = jsonData.getFloat("fromY", 0);
+        defaultFrom.z = jsonData.getFloat("fromZ", 0);
+        defaultTo.x = jsonData.getFloat("toX", 0);
+        defaultTo.y = jsonData.getFloat("toY", 0);
+        defaultTo.z = jsonData.getFloat("toZ", 0);
+    }
 }

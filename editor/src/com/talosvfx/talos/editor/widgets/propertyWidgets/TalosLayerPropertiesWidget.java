@@ -5,26 +5,27 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
+import com.talosvfx.talos.editor.addons.scene.widgets.property.PropertyPanelAssetSelectionWidget;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.runtime.maps.LayerType;
 import com.talosvfx.talos.runtime.maps.TalosLayer;
-import com.talosvfx.talos.editor.addons.scene.widgets.property.PropertyPanelAssetSelectionWidget;
 import com.talosvfx.talos.runtime.maps.TilePaletteData;
-
 import com.talosvfx.talos.runtime.utils.Supplier;
 
 public class TalosLayerPropertiesWidget extends PropertyWidget<TalosLayer> {
 
     Table subWidgetTable;
-    protected TalosLayerPropertiesWidget () {}
 
-    public TalosLayerPropertiesWidget (String name, Supplier<TalosLayer> supplier, ValueChanged<TalosLayer> valueChanged, Object parent) {
+    protected TalosLayerPropertiesWidget() {
+    }
+
+    public TalosLayerPropertiesWidget(String name, Supplier<TalosLayer> supplier, ValueChanged<TalosLayer> valueChanged, Object parent) {
         super(name, supplier, valueChanged, parent);
     }
 
     @Override
-    public void updateWidget (TalosLayer layer) {
+    public void updateWidget(TalosLayer layer) {
         //Update it from the existing shit
 
         subWidgetTable.clearChildren();
@@ -37,10 +38,10 @@ public class TalosLayerPropertiesWidget extends PropertyWidget<TalosLayer> {
 
             typeWidget.addListener(new ChangeListener() {
                 @Override
-                public void changed (ChangeEvent event, Actor actor) {
+                public void changed(ChangeEvent event, Actor actor) {
                     Gdx.app.postRunnable(new Runnable() {
                         @Override
-                        public void run () {
+                        public void run() {
                             updateWidget(layer);
                         }
                     });
@@ -82,18 +83,16 @@ public class TalosLayerPropertiesWidget extends PropertyWidget<TalosLayer> {
                 tileSizeY.updateValue(); //kind of a hack to do this /shrug face
                 widgets.add(tileSizeY);
             }
-
         }
 
         for (PropertyWidget<?> widget : widgets) {
-            subWidgetTable.add(widget).row();;
+            subWidgetTable.add(widget).row();
         }
-
     }
 
 
     @Override
-    public Actor getSubWidget () {
+    public Actor getSubWidget() {
         subWidgetTable = new Table();
         subWidgetTable.defaults().growX().padTop(4);
 
@@ -107,7 +106,4 @@ public class TalosLayerPropertiesWidget extends PropertyWidget<TalosLayer> {
 
         return clone;
     }
-
-
-
 }

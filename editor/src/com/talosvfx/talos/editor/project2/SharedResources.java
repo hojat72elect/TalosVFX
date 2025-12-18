@@ -10,31 +10,31 @@ import com.talosvfx.talos.editor.utils.WindowUtils;
 import com.talosvfx.talos.editor.widgets.ui.menu.MainMenu;
 
 public class SharedResources {
-	public static Skin skin;
+    public static Skin skin;
 
-	public static Stage stage;
+    public static Stage stage;
 
-	public static ProjectLoader projectLoader;
+    public static ProjectLoader projectLoader;
 
-	public static TalosProjectData currentProject;
+    public static TalosProjectData currentProject;
 
-	public static AppManager appManager;
+    public static AppManager appManager;
 
-	public static InputHandling inputHandling;
+    public static InputHandling inputHandling;
 
-	public static GlobalDragAndDrop globalDragAndDrop;
+    public static GlobalDragAndDrop globalDragAndDrop;
 
-	public static WindowUtils windowUtils;
+    public static WindowUtils windowUtils;
 
-	public static GlobalSaveStateSystem globalSaveStateSystem;
-	public static MainMenu mainMenu;
+    public static GlobalSaveStateSystem globalSaveStateSystem;
+    public static MainMenu mainMenu;
 
-	public static TalosControl talosControl;
+    public static TalosControl talosControl;
 
 
-	public static UIController ui;
+    public static UIController ui;
 
-	public static CommandsSystem commandsSystem;
+    public static CommandsSystem commandsSystem;
 
-	public static DebugUtils debug;
+    public static DebugUtils debug;
 }

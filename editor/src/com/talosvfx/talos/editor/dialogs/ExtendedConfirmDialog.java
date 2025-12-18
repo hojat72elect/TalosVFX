@@ -12,10 +12,12 @@ import com.kotcrab.vis.ui.widget.VisLabel;
  * long messages. Former one can use several labels for rendering long messages and overcome the problem.
  */
 public class ExtendedConfirmDialog<T> extends VisDialog {
-    private ConfirmDialogListener<T> listener;
+    private final ConfirmDialogListener<T> listener;
 
-    /** Use for short text. */
-    public ExtendedConfirmDialog (String title, String text, String[] buttons, T[] returns, ConfirmDialogListener<T> listener) {
+    /**
+     * Use for short text.
+     */
+    public ExtendedConfirmDialog(String title, String text, String[] buttons, T[] returns, ConfirmDialogListener<T> listener) {
         super(title);
 
         if (buttons.length != returns.length) {
@@ -36,8 +38,10 @@ public class ExtendedConfirmDialog<T> extends VisDialog {
         centerWindow();
     }
 
-    /** Use for long text. */
-    public ExtendedConfirmDialog (String title, String[] text, String[] buttons, T[] returns, ConfirmDialogListener<T> listener) {
+    /**
+     * Use for long text.
+     */
+    public ExtendedConfirmDialog(String title, String[] text, String[] buttons, T[] returns, ConfirmDialogListener<T> listener) {
         super(title);
 
         if (buttons.length != returns.length) {
@@ -61,12 +65,12 @@ public class ExtendedConfirmDialog<T> extends VisDialog {
     }
 
     @Override
-    protected void result (Object object) {
+    protected void result(Object object) {
         listener.result((T) object);
     }
 
     @Override
-    public VisDialog text (Label label) {
+    public VisDialog text(Label label) {
         Table contentTable = getContentTable();
         contentTable.add(label).growX().row();
         return this;

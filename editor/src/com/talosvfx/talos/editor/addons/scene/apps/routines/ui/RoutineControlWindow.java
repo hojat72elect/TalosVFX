@@ -3,19 +3,22 @@ package com.talosvfx.talos.editor.addons.scene.apps.routines.ui;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.RoutineStage;
-import com.talosvfx.talos.editor.project2.apps.ScenePreviewApp;
-import com.talosvfx.talos.runtime.routine.RoutineInstance;
 import com.talosvfx.talos.editor.data.RoutineStageData;
 import com.talosvfx.talos.editor.nodes.widgets.ValueWidget;
 import com.talosvfx.talos.editor.project2.SharedResources;
+import com.talosvfx.talos.editor.project2.apps.ScenePreviewApp;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
 import com.talosvfx.talos.editor.widgets.ui.common.RoundedFlatButton;
+import com.talosvfx.talos.runtime.routine.RoutineInstance;
 import com.talosvfx.talos.runtime.routine.nodes.RoutineExecutorNode;
 
 public class RoutineControlWindow extends Table {
@@ -27,7 +30,7 @@ public class RoutineControlWindow extends Table {
     private final ValueWidget speedValueWidget;
     private final RoundedFlatButton pauseButton;
     private final RoundedFlatButton cameraLockBtn;
-    private Array<Integer> executorIndexToIdMap;
+    private final Array<Integer> executorIndexToIdMap;
 
     public RoutineControlWindow(RoutineStage routineStage) {
         executorIndexToIdMap = new Array<>();
@@ -69,7 +72,7 @@ public class RoutineControlWindow extends Table {
                     return;
                 }
 
-                if(routineStage.isPlaying()) {
+                if (routineStage.isPlaying()) {
                     routineStage.stop(getSelected());
                     updatePlayState();
                 } else {
@@ -95,7 +98,7 @@ public class RoutineControlWindow extends Table {
                     return;
                 }
 
-                if(routineStage.isPaused()) {
+                if (routineStage.isPaused()) {
                     routineStage.resume(getSelected());
                     updatePauseState();
                 } else {
@@ -165,10 +168,9 @@ public class RoutineControlWindow extends Table {
                 }
             }
         });
-
     }
 
-    public void reset(){
+    public void reset() {
         cameraLockBtn.setChecked(false);
         if (routineStage.isPlaying()) {
             routineStage.stop(getSelected());
@@ -179,12 +181,13 @@ public class RoutineControlWindow extends Table {
     }
 
     private void updatePauseState() {
-        if(routineStage.isPaused()) {
+        if (routineStage.isPaused()) {
             pauseButton.setText("Resume");
         } else {
             pauseButton.setText("Pause");
         }
     }
+
     public void update() {
         RoutineStageData data = routineStage.data;
         RoutineInstance instance = routineStage.data.getRoutineInstance();
@@ -208,13 +211,13 @@ public class RoutineControlWindow extends Table {
         speedValueWidget.setValue(routineStage.getTimeScale());
     }
 
-    private int getSelected(){
+    private int getSelected() {
         return executorIndexToIdMap.get(selectBox.getSelectedIndex());
     }
 
 
     private void updatePlayState() {
-        if(routineStage.isPlaying()) {
+        if (routineStage.isPlaying()) {
             playButton.setText("Stop");
         } else {
             playButton.setText("Play");

@@ -50,22 +50,22 @@ public class FlipBookMaterialModuleWrapper extends ModuleWrapper<FlipBookMateria
     private TextFieldWithZoom columnsField;
     private TextFieldWithZoom totalSplitsField;
 
-    public FlipBookMaterialModuleWrapper () {
+    public FlipBookMaterialModuleWrapper() {
         super();
     }
 
     @Override
-    public void setModuleToDefaults () {
+    public void setModuleToDefaults() {
         module.setToDefault();
     }
 
     @Override
-    protected float reportPrefWidth () {
+    protected float reportPrefWidth() {
         return 400;
     }
 
     @Override
-    protected void configureSlots () {
+    protected void configureSlots() {
 
 
         addInputSlot("Animation phase (0 to 1)", FlipBookMaterialModule.ALPHA);
@@ -75,7 +75,7 @@ public class FlipBookMaterialModuleWrapper extends ModuleWrapper<FlipBookMateria
 
         rowsField.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 float v = floatFromText(rowsField);
                 int rounded = MathUtils.round(v);
 
@@ -84,12 +84,12 @@ public class FlipBookMaterialModuleWrapper extends ModuleWrapper<FlipBookMateria
                 rowsField.setProgrammaticChangeEvents(true);
 
                 module.setRows(rounded);
-                moduleBoardWidget.app.dataModified();;
+                moduleBoardWidget.app.dataModified();
             }
         });
         columnsField.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 float v = floatFromText(columnsField);
                 int rounded = MathUtils.round(v);
 
@@ -99,12 +99,11 @@ public class FlipBookMaterialModuleWrapper extends ModuleWrapper<FlipBookMateria
 
                 module.setColumns(rounded);
                 moduleBoardWidget.app.dataModified();
-
             }
         });
         totalSplitsField.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 float v = floatFromText(totalSplitsField);
                 int rounded = MathUtils.round(v);
                 module.setTotalSplitsField(rounded);
@@ -113,8 +112,6 @@ public class FlipBookMaterialModuleWrapper extends ModuleWrapper<FlipBookMateria
                 totalSplitsField.setText(rounded + "");
                 totalSplitsField.setProgrammaticChangeEvents(true);
                 moduleBoardWidget.app.dataModified();
-
-
             }
         });
 
@@ -138,7 +135,7 @@ public class FlipBookMaterialModuleWrapper extends ModuleWrapper<FlipBookMateria
 
         selector.addListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 asset = selector.getValue();
                 module.setGameAsset(asset);
                 if (asset.getResource() != null) {
@@ -150,7 +147,7 @@ public class FlipBookMaterialModuleWrapper extends ModuleWrapper<FlipBookMateria
     }
 
     @Override
-    public void setModule (FlipBookMaterialModule module) {
+    public void setModule(FlipBookMaterialModule module) {
         super.setModule(module);
         totalSplitsField.setText(module.getSplitCountDefaultValue() + "");
         rowsField.setText(module.getRowsDefaultValue() + "");
@@ -158,13 +155,13 @@ public class FlipBookMaterialModuleWrapper extends ModuleWrapper<FlipBookMateria
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("asset", asset.nameIdentifier);
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         String identifier = jsonData.getString("asset", "white");
         asset = AssetRepository.getInstance().getAssetForIdentifier(identifier, GameAssetType.SPRITE);
@@ -178,7 +175,7 @@ public class FlipBookMaterialModuleWrapper extends ModuleWrapper<FlipBookMateria
 
     @Override
     public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
-        if(slot.getIndex() == CurveModule.ALPHA) return InputModule.class;
+        if (slot.getIndex() == CurveModule.ALPHA) return InputModule.class;
         if (slot.getIndex() == FlipBookMaterialModule.ROWS) return StaticValueModule.class;
         if (slot.getIndex() == FlipBookMaterialModule.COLUMNS) return StaticValueModule.class;
         if (slot.getIndex() == FlipBookMaterialModule.SPLIT_COUNT) return StaticValueModule.class;

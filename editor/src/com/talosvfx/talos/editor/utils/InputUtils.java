@@ -5,13 +5,13 @@ import com.badlogic.gdx.Input;
 
 public class InputUtils {
 
-    public static boolean isOsX () {
+    public static boolean isOsX() {
         String osName = System.getProperty("os.name").toLowerCase();
         boolean isMacOs = osName.startsWith("mac os x");
         return isMacOs;
     }
 
-    public static boolean ctrlPressed () {
+    public static boolean ctrlPressed() {
         if (isOsX()) {
             return Gdx.input.isKeyPressed(Input.Keys.SYM) || Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT);
         } else {
@@ -19,7 +19,7 @@ public class InputUtils {
         }
     }
 
-    public static boolean macCmdPressed () {
+    public static boolean macCmdPressed() {
         return isOsX() && Gdx.input.isKeyPressed(Input.Keys.SYM);
     }
 }

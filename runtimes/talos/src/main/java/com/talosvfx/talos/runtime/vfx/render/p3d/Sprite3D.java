@@ -11,16 +11,16 @@ import com.badlogic.gdx.utils.Pool;
 
 public class Sprite3D extends Renderable implements Pool.Poolable {
 
-    private Sprite sprite;
-    private short[] indices;
-    private float[] vertices;
+    private final Sprite sprite;
+    private final short[] indices;
+    private final float[] vertices;
 
     public Sprite3D() {
         sprite = new Sprite();
 
         sprite.setPosition(-sprite.getWidth() * 0.5f, -sprite.getHeight() * 0.5f);
 
-        indices = new short[] {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4 };
+        indices = new short[]{0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
         vertices = new float[8 * 4 * 2];
         System.arraycopy(vertices, 0, convert(sprite, 1), 0, 8 * 4);
         System.arraycopy(vertices, 8 * 4, convert(sprite, -1), 0, 8 * 4);
@@ -61,41 +61,41 @@ public class Sprite3D extends Renderable implements Pool.Poolable {
                 spriteVertices[Batch.X4], spriteVertices[Batch.Y4], 0, 0, 0, normal, spriteVertices[Batch.U4], spriteVertices[Batch.V4],
                 spriteVertices[Batch.X3], spriteVertices[Batch.Y3], 0, 0, 0, normal, spriteVertices[Batch.U3], spriteVertices[Batch.V3]};
 
-        return  vertices;
+        return vertices;
     }
 
     private void setVertices(Sprite sprite) {
         float[] spriteVertices = sprite.getVertices();
-        vertices[0 + 0] = spriteVertices[Batch.X2];
-        vertices[1 + 0] = spriteVertices[Batch.Y2];
-        vertices[6 + 0] = spriteVertices[Batch.U2];
-        vertices[7 + 0] = spriteVertices[Batch.V2];
-        vertices[0 + 8] = spriteVertices[Batch.X1];
+        vertices[0] = spriteVertices[Batch.X2];
+        vertices[1] = spriteVertices[Batch.Y2];
+        vertices[6] = spriteVertices[Batch.U2];
+        vertices[7] = spriteVertices[Batch.V2];
+        vertices[8] = spriteVertices[Batch.X1];
         vertices[1 + 8] = spriteVertices[Batch.Y1];
         vertices[6 + 8] = spriteVertices[Batch.U1];
         vertices[7 + 8] = spriteVertices[Batch.V1];
-        vertices[0 + 16] = spriteVertices[Batch.X4];
+        vertices[16] = spriteVertices[Batch.X4];
         vertices[1 + 16] = spriteVertices[Batch.Y4];
         vertices[6 + 16] = spriteVertices[Batch.U4];
         vertices[7 + 16] = spriteVertices[Batch.V4];
-        vertices[0 + 24] = spriteVertices[Batch.X3];
+        vertices[24] = spriteVertices[Batch.X3];
         vertices[1 + 24] = spriteVertices[Batch.Y3];
         vertices[6 + 24] = spriteVertices[Batch.U3];
         vertices[7 + 24] = spriteVertices[Batch.V3];
 
-        vertices[0 + 32] = spriteVertices[Batch.X2];
+        vertices[32] = spriteVertices[Batch.X2];
         vertices[1 + 32] = spriteVertices[Batch.Y2];
         vertices[6 + 32] = spriteVertices[Batch.U2];
         vertices[7 + 32] = spriteVertices[Batch.V2];
-        vertices[0 + 40] = spriteVertices[Batch.X1];
+        vertices[40] = spriteVertices[Batch.X1];
         vertices[1 + 40] = spriteVertices[Batch.Y1];
         vertices[6 + 40] = spriteVertices[Batch.U1];
         vertices[7 + 40] = spriteVertices[Batch.V1];
-        vertices[0 + 48] = spriteVertices[Batch.X4];
+        vertices[48] = spriteVertices[Batch.X4];
         vertices[1 + 48] = spriteVertices[Batch.Y4];
         vertices[6 + 48] = spriteVertices[Batch.U4];
         vertices[7 + 48] = spriteVertices[Batch.V4];
-        vertices[0 + 56] = spriteVertices[Batch.X3];
+        vertices[56] = spriteVertices[Batch.X3];
         vertices[1 + 56] = spriteVertices[Batch.Y3];
         vertices[6 + 56] = spriteVertices[Batch.U3];
         vertices[7 + 56] = spriteVertices[Batch.V3];
@@ -106,7 +106,7 @@ public class Sprite3D extends Renderable implements Pool.Poolable {
 
     }
 
-    public Sprite getSprite () {
+    public Sprite getSprite() {
         return sprite;
     }
 }

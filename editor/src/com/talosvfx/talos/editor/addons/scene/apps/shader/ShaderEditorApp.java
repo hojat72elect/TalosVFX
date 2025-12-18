@@ -7,11 +7,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Stack;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.talosvfx.talos.editor.addons.scene.apps.routines.RoutineStage;
-import com.talosvfx.talos.editor.addons.scene.apps.routines.VariableCreationWindow;
-import com.talosvfx.talos.editor.addons.scene.apps.routines.ui.RoutineControlWindow;
 import com.talosvfx.talos.editor.addons.scene.apps.shader.workspace.ShaderNodeStage;
-import com.talosvfx.talos.editor.data.RoutineStageData;
 import com.talosvfx.talos.editor.data.ShaderStageData;
 import com.talosvfx.talos.editor.layouts.DummyLayoutApp;
 import com.talosvfx.talos.editor.notifications.CommandEventHandler;
@@ -27,37 +23,33 @@ import com.talosvfx.talos.editor.project2.localprefs.TalosLocalPrefs;
 import com.talosvfx.talos.editor.project2.vfxui.GenericStageWrappedViewportWidget;
 import com.talosvfx.talos.editor.project2.vfxui.GenericStageWrappedWidget;
 import com.talosvfx.talos.runtime.assets.GameAsset;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ShaderEditorApp extends AppManager.BaseApp<ShaderStageData> implements ContainerOfPrefs<ViewportPreferences>, GameAsset.GameAssetUpdateListener, Observer {
-//    public final RoutineControlWindow controlWindow;
-    public ShaderNodeStage shaderStage;
+    private static final Logger logger = LoggerFactory.getLogger(ShaderEditorApp.class);
 //    public VariableCreationWindow variableCreationWindow;
-
+    //    public final RoutineControlWindow controlWindow;
+    public ShaderNodeStage shaderStage;
     public GenericStageWrappedViewportWidget routineStageWrapper;
     public GenericStageWrappedWidget routineUIStageWrapper;
-
     public Table uiContent;
 
-    private static final Logger logger = LoggerFactory.getLogger(ShaderEditorApp.class);
-
-    public ShaderEditorApp () {
+    public ShaderEditorApp() {
         Notifications.registerObserver(this);
         shaderStage = new ShaderNodeStage(this, SharedResources.skin);
         routineStageWrapper = new GenericStageWrappedViewportWidget(shaderStage.getRootActor()) {
             private static final float AUTO_SCROLL_RANGE = 45.0f;
             private static final float AUTO_SCROLL_SPEED = 200.0f;
+            private static final float DELAY_BEFORE_MOVE = 0.3f;
+            private final Vector2 tmp = new Vector2();
+            private float delayBeforeMove = DELAY_BEFORE_MOVE;
 
             @Override
             protected boolean canMoveAround() {
                 return true;
             }
-
-            private Vector2 tmp = new Vector2();
-
-            private static final float DELAY_BEFORE_MOVE = 0.3f;
-            private float delayBeforeMove = DELAY_BEFORE_MOVE;
 
             @Override
             public void act(float delta) {
@@ -145,7 +137,7 @@ public class ShaderEditorApp extends AppManager.BaseApp<ShaderStageData> impleme
             }
 
             @Override
-            public void onInputProcessorAdded () {
+            public void onInputProcessorAdded() {
                 super.onInputProcessorAdded();
                 routineStageWrapper.restoreListeners();
                 SharedResources.stage.setScrollFocus(routineStageWrapper);
@@ -155,7 +147,7 @@ public class ShaderEditorApp extends AppManager.BaseApp<ShaderStageData> impleme
             }
 
             @Override
-            public void onInputProcessorRemoved () {
+            public void onInputProcessorRemoved() {
                 super.onInputProcessorRemoved();
                 routineStageWrapper.disableListeners();
                 SharedResources.inputHandling.removePriorityInputProcessor(routineUIStageWrapper.getStage());
@@ -164,7 +156,7 @@ public class ShaderEditorApp extends AppManager.BaseApp<ShaderStageData> impleme
             }
 
             @Override
-            protected void onTouchFocused () {
+            protected void onTouchFocused() {
                 SharedResources.stage.setKeyboardFocus(routineStageWrapper);
             }
 
@@ -179,37 +171,37 @@ public class ShaderEditorApp extends AppManager.BaseApp<ShaderStageData> impleme
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.COPY)
-    public void onCopyCommand (CommandContextEvent event) {
+    public void onCopyCommand(CommandContextEvent event) {
         shaderStage.getNodeBoard().copySelectedModules();
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.PASTE)
-    public void onPasteCommand (CommandContextEvent event) {
+    public void onPasteCommand(CommandContextEvent event) {
         shaderStage.getNodeBoard().pasteFromClipboard();
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.SELECT_ALL)
-    public void onSelectAllCommand (CommandContextEvent event) {
+    public void onSelectAllCommand(CommandContextEvent event) {
         shaderStage.getNodeBoard().selectAllNodes();
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.GROUP)
-    public void onGroupCommand (CommandContextEvent event) {
+    public void onGroupCommand(CommandContextEvent event) {
         shaderStage.getNodeBoard().createGroupFromSelectedNodes();
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.UNGROUP)
-    public void onUngroupCommand (CommandContextEvent event) {
+    public void onUngroupCommand(CommandContextEvent event) {
         shaderStage.getNodeBoard().ungroupSelectedNodes();
     }
 
     @CommandEventHandler(commandType = Commands.CommandType.DELETE)
-    public void onDeleteCommand (CommandContextEvent event) {
+    public void onDeleteCommand(CommandContextEvent event) {
         shaderStage.getNodeBoard().deleteSelectedNodes();
     }
 
     @Override
-    public void updateForGameAsset (GameAsset<ShaderStageData> gameAsset) {
+    public void updateForGameAsset(GameAsset<ShaderStageData> gameAsset) {
         if (this.gameAsset != null) {
             this.gameAsset.listeners.removeValue(this, true);
         }
@@ -236,7 +228,7 @@ public class ShaderEditorApp extends AppManager.BaseApp<ShaderStageData> impleme
 
     @Override
     public String getAppName() {
-        if(gameAsset == null) {
+        if (gameAsset == null) {
             return "Routine"; // lol wtf
         }
         return "Routine - " + gameAsset.nameIdentifier;
@@ -255,7 +247,6 @@ public class ShaderEditorApp extends AppManager.BaseApp<ShaderStageData> impleme
         if (this.gameAsset != null) {
             this.gameAsset.listeners.removeValue(this, true);
         }
-
     }
 
     @Override

@@ -15,25 +15,16 @@ import com.talosvfx.talos.editor.widgets.ui.SearchFilteredTree;
 
 public class TemplateListPopup extends VisWindow {
 
-    private InputListener stageListener;
+    public String componentClassPath;
     FilteredTree<String> tree;
     SearchFilteredTree<String> searchFilteredTree;
 
     Vector2 createLocation = new Vector2();
-
-    private ObjectMap<String, XmlReader.Element> configurationMap = new ObjectMap<>();
-    public String componentClassPath;
-
-    public interface ListListener {
-        void chosen(XmlReader.Element template, float x, float y);
-    }
-
+    private InputListener stageListener;
+    private final ObjectMap<String, XmlReader.Element> configurationMap = new ObjectMap<>();
     private ListListener listListener;
 
-    public void setListener(ListListener listener) {listListener = listener;
-    }
-
-    public TemplateListPopup (XmlReader.Element root) {
+    public TemplateListPopup(XmlReader.Element root) {
         super("Game Object", "module-list");
 
         setModal(false);
@@ -54,16 +45,21 @@ public class TemplateListPopup extends VisWindow {
 
         add(searchFilteredTree).width(300).row();
         add().growY();
-        invalidate(); pack();
+        invalidate();
+        pack();
 
         createListeners();
     }
 
-    private void traverseTree (FilteredTree<String> tree, Object o, XmlReader.Element root) {
+    public void setListener(ListListener listener) {
+        listListener = listener;
+    }
+
+    private void traverseTree(FilteredTree<String> tree, Object o, XmlReader.Element root) {
 
         Array<XmlReader.Element> templates = root.getChildrenByName("template");
 
-        for(XmlReader.Element template: templates) {
+        for (XmlReader.Element template : templates) {
             configurationMap.put(template.getAttribute("name"), template);
 
             boolean hidden = template.getBooleanAttribute("hidden", false);
@@ -72,16 +68,14 @@ public class TemplateListPopup extends VisWindow {
             FilteredTree.Node node = new FilteredTree.Node(template.getAttribute("name"), new Label(template.getAttribute("title"), getSkin()));
             tree.add(node);
         }
-
     }
 
-
-    public boolean contains (float x, float y) {
+    public boolean contains(float x, float y) {
         return getX() < x && getX() + getWidth() > x && getY() < y && getY() + getHeight() > y;
     }
 
     @Override
-    protected void setStage (Stage stage) {
+    protected void setStage(Stage stage) {
         super.setStage(stage);
         if (stage != null) stage.addListener(stageListener);
     }
@@ -89,7 +83,7 @@ public class TemplateListPopup extends VisWindow {
     private void createListeners() {
         stageListener = new InputListener() {
             @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 if (!TemplateListPopup.this.contains(x, y) && button == 0) {
                     remove();
                     return false;
@@ -101,7 +95,7 @@ public class TemplateListPopup extends VisWindow {
         tree.addItemListener(new FilteredTree.ItemListener() {
             @Override
             public void selected(FilteredTree.Node node) {
-                if(node.children.size == 0) {
+                if (node.children.size == 0) {
 
                     String name = node.getName();
                     XmlReader.Element template = configurationMap.get(name);
@@ -113,7 +107,7 @@ public class TemplateListPopup extends VisWindow {
             }
 
             @Override
-            public void addedIntoSelection (FilteredTree.Node node) {
+            public void addedIntoSelection(FilteredTree.Node node) {
                 super.addedIntoSelection(node);
             }
         });
@@ -130,7 +124,7 @@ public class TemplateListPopup extends VisWindow {
         getStage().setScrollFocus(searchFilteredTree.scrollPane);
         tree.collapseAll();
 
-        if(getHeight() < 200) {
+        if (getHeight() < 200) {
             setHeight(200);
         }
 
@@ -138,9 +132,12 @@ public class TemplateListPopup extends VisWindow {
     }
 
     @Override
-    public boolean remove () {
+    public boolean remove() {
         if (getStage() != null) getStage().removeListener(stageListener);
         return super.remove();
     }
 
+    public interface ListListener {
+        void chosen(XmlReader.Element template, float x, float y);
+    }
 }

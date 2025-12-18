@@ -43,144 +43,141 @@ import com.talosvfx.talos.runtime.vfx.render.SpriteBatchParticleRenderer;
 
 public class ParticleControlTest extends ApplicationAdapter {
 
-	private OrthographicCamera orthographicCamera;
-	private ParticleRenderer particleRenderer;
-	private ShapeRenderer shapeRenderer;
-	private PolygonSpriteBatch batch;
+    Stage stage;
+    private OrthographicCamera orthographicCamera;
+    private ParticleRenderer particleRenderer;
+    private ShapeRenderer shapeRenderer;
+    private PolygonSpriteBatch batch;
+    private CameraController cameraController;
+    private ParticleEffectInstance particleEffectInstance;
 
-	private CameraController cameraController;
+    public static void main(String[] args) {
+        Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
+        config.setWindowedMode(1280, 720);
+        new Lwjgl3Application(new ParticleControlTest(), config);
+    }
 
-	private ParticleEffectInstance particleEffectInstance;
+    @Override
+    public void create() {
 
-	Stage stage;
+        orthographicCamera = new OrthographicCamera();
+        float width = 20;
+        float aspect = (float) Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight();
+        orthographicCamera.setToOrtho(false, width, width / aspect);
+        orthographicCamera.position.set(0, 0, 0);
+        orthographicCamera.update();
+        shapeRenderer = new ShapeRenderer();
 
-	@Override
-	public void create () {
+        batch = new PolygonSpriteBatch();
 
-		orthographicCamera = new OrthographicCamera();
-		float width = 20;
-		float aspect = (float)Gdx.graphics.getWidth()/(float)Gdx.graphics.getHeight();
-		orthographicCamera.setToOrtho(false, width, width / aspect);
-		orthographicCamera.position.set(0, 0, 0);
-		orthographicCamera.update();
-		shapeRenderer = new ShapeRenderer();
+        particleRenderer = new SpriteBatchParticleRenderer(orthographicCamera, batch);
 
-		batch = new PolygonSpriteBatch();
-
-		particleRenderer = new SpriteBatchParticleRenderer(orthographicCamera, batch);
-
-		cameraController = new CameraController(orthographicCamera);
-
-
-		TextureAtlas atlas = new TextureAtlas();
-		atlas.addRegion("fire", new TextureRegion(new TextureRegion(new Texture(Gdx.files.internal("fire.png")))));
-		atlas.addRegion("spot", new TextureRegion(new TextureRegion(new Texture(Gdx.files.internal("spot.png")))));
+        cameraController = new CameraController(orthographicCamera);
 
 
-		ParticleEffectDescriptor descriptor = new ParticleEffectDescriptor(Gdx.files.internal("test.p"), null);
+        TextureAtlas atlas = new TextureAtlas();
+        atlas.addRegion("fire", new TextureRegion(new TextureRegion(new Texture(Gdx.files.internal("fire.png")))));
+        atlas.addRegion("spot", new TextureRegion(new TextureRegion(new Texture(Gdx.files.internal("spot.png")))));
 
 
-		particleEffectInstance = descriptor.createEffectInstance();
-
-		particleEffectInstance.loopable = true;
+        ParticleEffectDescriptor descriptor = new ParticleEffectDescriptor(Gdx.files.internal("test.p"), null);
 
 
-		stage = new Stage();
+        particleEffectInstance = descriptor.createEffectInstance();
 
-		VisUI.load();
-
-		VisTextButton start = new VisTextButton("Start/Resume");
-		VisTextButton pause = new VisTextButton("Pause");
-		VisTextButton restart = new VisTextButton("Restart");
-		VisTextButton allowCompletion = new VisTextButton("Allow Completion");
-
-		start.addListener(new ClickListener() {
-			@Override
-			public void clicked (InputEvent event, float x, float y) {
-				particleEffectInstance.resume();
-			}
-		});
-
-		pause.addListener(new ClickListener() {
-			@Override
-			public void clicked (InputEvent event, float x, float y) {
-				particleEffectInstance.pause();
-			}
-		});
-
-		restart.addListener(new ClickListener() {
-			@Override
-			public void clicked (InputEvent event, float x, float y) {
-				particleEffectInstance.restart();
-			}
-		});
+        particleEffectInstance.loopable = true;
 
 
-		allowCompletion.addListener(new ClickListener() {
-			@Override
-			public void clicked (InputEvent event, float x, float y) {
-				particleEffectInstance.allowCompletion();
-			}
-		});
+        stage = new Stage();
+
+        VisUI.load();
+
+        VisTextButton start = new VisTextButton("Start/Resume");
+        VisTextButton pause = new VisTextButton("Pause");
+        VisTextButton restart = new VisTextButton("Restart");
+        VisTextButton allowCompletion = new VisTextButton("Allow Completion");
+
+        start.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                particleEffectInstance.resume();
+            }
+        });
+
+        pause.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                particleEffectInstance.pause();
+            }
+        });
+
+        restart.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                particleEffectInstance.restart();
+            }
+        });
 
 
-		Table table = new Table();
-		table.setFillParent(true);
-		table.defaults().pad(10).top().left();
-
-		table.top().left();
-
-		table.add(start);
-		table.row();
-		table.add(pause);
-		table.row();
-		table.add(restart);
-		table.row();
-		table.add(allowCompletion);
-
-		stage.addActor(table);
-
-		Gdx.input.setInputProcessor(new InputMultiplexer(stage, cameraController));
-	}
-
-	@Override
-	public void render () {
-		Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1f);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-		orthographicCamera.update();
-
-		shapeRenderer.setProjectionMatrix(orthographicCamera.combined);
-
-		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-		shapeRenderer.setColor(Color.GREEN);
-		shapeRenderer.line(-100, 0, 100, 0);
-		shapeRenderer.setColor(Color.RED);
-		shapeRenderer.line(0, -100, 0, 100);
-		shapeRenderer.end();
+        allowCompletion.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                particleEffectInstance.allowCompletion();
+            }
+        });
 
 
-		batch.setProjectionMatrix(orthographicCamera.combined);
-		batch.begin();
+        Table table = new Table();
+        table.setFillParent(true);
+        table.defaults().pad(10).top().left();
 
-		particleEffectInstance.update(Gdx.graphics.getDeltaTime());
-		particleRenderer.render(particleEffectInstance);
+        table.top().left();
 
-		batch.end();
+        table.add(start);
+        table.row();
+        table.add(pause);
+        table.row();
+        table.add(restart);
+        table.row();
+        table.add(allowCompletion);
 
-		stage.act();
-		stage.draw();
-	}
+        stage.addActor(table);
 
-	@Override
-	public void resize (int width, int height) {
-		super.resize(width, height);
-		stage.getViewport().update(width, height);
-	}
+        Gdx.input.setInputProcessor(new InputMultiplexer(stage, cameraController));
+    }
 
-	public static void main (String[] args) {
-		Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
-		config.setWindowedMode(1280, 720);
-		new Lwjgl3Application(new ParticleControlTest(), config);
-	}
+    @Override
+    public void render() {
+        Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1f);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        orthographicCamera.update();
+
+        shapeRenderer.setProjectionMatrix(orthographicCamera.combined);
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.GREEN);
+        shapeRenderer.line(-100, 0, 100, 0);
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.line(0, -100, 0, 100);
+        shapeRenderer.end();
+
+
+        batch.setProjectionMatrix(orthographicCamera.combined);
+        batch.begin();
+
+        particleEffectInstance.update(Gdx.graphics.getDeltaTime());
+        particleRenderer.render(particleEffectInstance);
+
+        batch.end();
+
+        stage.act();
+        stage.draw();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+        stage.getViewport().update(width, height);
+    }
 }

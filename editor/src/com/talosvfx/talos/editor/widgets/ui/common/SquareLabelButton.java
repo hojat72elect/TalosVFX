@@ -27,5 +27,4 @@ public class SquareLabelButton extends Button {
     public void setText(String text) {
         buttonTextLabel.setText(text);
     }
-
 }

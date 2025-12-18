@@ -4,13 +4,16 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.ObjectMap;
 import com.talosvfx.talos.editor.addons.scene.apps.routines.RoutineStage;
-import com.talosvfx.talos.runtime.routine.RoutineInstance;
 import com.talosvfx.talos.editor.nodes.NodeBoard;
 import com.talosvfx.talos.editor.nodes.NodeWidget;
 import com.talosvfx.talos.editor.nodes.widgets.AbstractWidget;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
+import com.talosvfx.talos.runtime.routine.RoutineInstance;
 
 public abstract class AbstractRoutineNodeWidget extends NodeWidget {
 
@@ -33,7 +36,7 @@ public abstract class AbstractRoutineNodeWidget extends NodeWidget {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonValue) {
+    public void read(Json json, JsonValue jsonValue) {
         super.read(json, jsonValue);
 
         JsonValue properties = jsonValue.get("properties");
@@ -51,12 +54,12 @@ public abstract class AbstractRoutineNodeWidget extends NodeWidget {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
 
         json.writeObjectStart("properties");
 
-        for(String name: widgetMap.keys()) {
+        for (String name : widgetMap.keys()) {
             AbstractWidget widget = widgetMap.get(name);
             widget.write(json, name);
         }
@@ -69,6 +72,7 @@ public abstract class AbstractRoutineNodeWidget extends NodeWidget {
     protected void readProperties(JsonValue properties) {
 
     }
+
     protected void writeProperties(Json json) {
 
     }
@@ -81,7 +85,7 @@ public abstract class AbstractRoutineNodeWidget extends NodeWidget {
         }
 
 
-        for(Connection connection : connections) {
+        for (Connection connection : connections) {
             String targetSlot = connection.targetSlot;
 
             if (targetSlot != null) {
@@ -105,7 +109,7 @@ public abstract class AbstractRoutineNodeWidget extends NodeWidget {
 
     public void animateInput(String fromSlot, Connection connection) {
         NodeBoard.NodeConnection nodeConnection = nodeBoard.findConnection(connection.targetNode, this, connection.targetSlot, fromSlot);
-        if(nodeConnection.getDataActor() != null) return;
+        if (nodeConnection.getDataActor() != null) return;
 
         Color color = Color.valueOf("#0957a8");
         Actor tmpActor = new Actor();
@@ -130,7 +134,7 @@ public abstract class AbstractRoutineNodeWidget extends NodeWidget {
     public void animateSignal(String fromSlot, Connection connection) {
         NodeBoard.NodeConnection nodeConnection = nodeBoard.findConnection(this, connection.targetNode, fromSlot, connection.targetSlot);
 
-        if(nodeConnection.getDataActor() != null) return;
+        if (nodeConnection.getDataActor() != null) return;
 
         Actor source = getOutputSlotActor(fromSlot);
         Actor target = connection.targetNode.getInputSlotActor(connection.targetSlot);
@@ -142,9 +146,9 @@ public abstract class AbstractRoutineNodeWidget extends NodeWidget {
         target.clearActions();
 
         source.addAction(Actions.sequence(
-                        Actions.color(color, 0.1f),
-                        Actions.color(original, 0.2f)
-                ));
+                Actions.color(color, 0.1f),
+                Actions.color(original, 0.2f)
+        ));
 
         Actor tmpActor = new Actor();
         addActor(tmpActor);
@@ -178,22 +182,22 @@ public abstract class AbstractRoutineNodeWidget extends NodeWidget {
 
     protected float getWidgetFloatValue(String name, ObjectMap<String, Object> params) {
         Object widgetValue = getWidgetValue(name, params);
-        if(widgetValue instanceof Integer) {
-            return (Integer)widgetValue;
+        if (widgetValue instanceof Integer) {
+            return (Integer) widgetValue;
         }
 
-        return (Float)widgetValue;
+        return (Float) widgetValue;
     }
 
     protected boolean getWidgetBooleanValue(String name) {
         Object widgetValue = getWidgetValue(name, null);
         boolean result = false;
-        if(widgetValue instanceof Integer) {
-            result = (Integer)widgetValue > 0;
-        } else if(widgetValue instanceof Float) {
-            result = (Float)widgetValue > 0;
-        } else if(widgetValue instanceof Boolean) {
-            result = (Boolean)widgetValue;
+        if (widgetValue instanceof Integer) {
+            result = (Integer) widgetValue > 0;
+        } else if (widgetValue instanceof Float) {
+            result = (Float) widgetValue > 0;
+        } else if (widgetValue instanceof Boolean) {
+            result = (Boolean) widgetValue;
         }
 
         return result;
@@ -207,9 +211,9 @@ public abstract class AbstractRoutineNodeWidget extends NodeWidget {
         AbstractWidget widget = getWidget(name);
         Array<Connection> connections = getInputs().get(name);
 
-        if(widget == null) return 0f;
+        if (widget == null) return 0f;
 
-        if(connections == null || connections.size == 0) {
+        if (connections == null || connections.size == 0) {
             return widget.getValue();
         } else {
             Connection first = connections.first();
@@ -230,18 +234,16 @@ public abstract class AbstractRoutineNodeWidget extends NodeWidget {
     }
 
     public float getDelta() {
-        return ((RoutineStage)nodeBoard.getNodeStage()).getDelta();
+        return ((RoutineStage) nodeBoard.getNodeStage()).getDelta();
     }
 
     public <T> T getNodeInstance() {
         RoutineStage nodeStage = (RoutineStage) nodeBoard.getNodeStage();
         RoutineInstance routineInstance = nodeStage.data.getRoutineInstance();
         int uniqueId = getUniqueId();
-        T node = (T)routineInstance.getNodeById(uniqueId);
+        T node = (T) routineInstance.getNodeById(uniqueId);
 
         return node;
     }
-
-
 }
 

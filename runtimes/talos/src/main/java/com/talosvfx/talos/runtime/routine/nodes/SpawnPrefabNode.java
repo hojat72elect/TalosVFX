@@ -1,6 +1,5 @@
 package com.talosvfx.talos.runtime.routine.nodes;
 
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.talosvfx.talos.runtime.RuntimeContext;
 import com.talosvfx.talos.runtime.assets.GameAsset;
@@ -10,9 +9,8 @@ import com.talosvfx.talos.runtime.scene.Prefab;
 import com.talosvfx.talos.runtime.scene.SceneLayer;
 import com.talosvfx.talos.runtime.scene.components.AComponent;
 import com.talosvfx.talos.runtime.scene.components.RendererComponent;
-import com.talosvfx.talos.runtime.scene.components.SpriteRendererComponent;
-import com.talosvfx.talos.runtime.scene.components.TransformComponent;
 import com.talosvfx.talos.runtime.utils.NamingUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +20,7 @@ public class SpawnPrefabNode extends RoutineNode {
 
     private static final Logger logger = LoggerFactory.getLogger(SpawnPrefabNode.class);
 
-    private Vector2 tmp = new Vector2();
+    private final Vector2 tmp = new Vector2();
     private GameObject goRef;
 
     @Override
@@ -32,11 +30,11 @@ public class SpawnPrefabNode extends RoutineNode {
 
         GameAsset<Prefab> asset = (GameAsset<Prefab>) fetchAssetValue("prefab");
 
-        if(asset != null) {
+        if (asset != null) {
             tmp.setZero();
             Prefab resource = asset.getResource();
             String nm = fetchStringValue("name");
-            if(nm == null || nm.isEmpty()) nm = "dynamicGo";
+            if (nm == null || nm.isEmpty()) nm = "dynamicGo";
             String name = NamingUtils.getNewName(nm, target.getAllGONames());
 
             Prefab copy = new Prefab(resource.getAsString(), name);
@@ -76,7 +74,7 @@ public class SpawnPrefabNode extends RoutineNode {
     }
 
     @Override
-    public void reset () {
+    public void reset() {
         super.reset();
         goRef = null;
     }

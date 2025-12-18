@@ -10,18 +10,20 @@ import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.talosvfx.talos.editor.addons.scene.assets.AssetRepository;
-import com.talosvfx.talos.editor.utils.Toasts;
-import com.talosvfx.talos.runtime.assets.GameAsset;
-import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.editor.addons.scene.events.FileNameChanged;
-import com.talosvfx.talos.runtime.scene.GameObject;import com.talosvfx.talos.runtime.assets.AMetadata;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.events.assets.AssetChangeDirectoryEvent;
 import com.talosvfx.talos.editor.notifications.events.assets.GameAssetOpenEvent;
 import com.talosvfx.talos.editor.project.FileTracker;
 import com.talosvfx.talos.editor.project2.SharedResources;
+import com.talosvfx.talos.editor.utils.Toasts;
+import com.talosvfx.talos.runtime.assets.AMetadata;
+import com.talosvfx.talos.runtime.assets.GameAsset;
+import com.talosvfx.talos.runtime.assets.GameAssetType;
+import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.utils.NamingUtils;
 import com.talosvfx.talos.runtime.utils.Supplier;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,14 +38,14 @@ public class AssetImporter {
 
     private static final Logger logger = LoggerFactory.getLogger(AssetImporter.class);
     public static boolean fromDirectoryView;
-    public FileTracker.Tracker assetTracker;
+    private static final ObjectMap<GameAssetType, AbstractImporter> importerMap = new ObjectMap<>();
+    private static final Json json = new Json();
 
-    private static ObjectMap<GameAssetType, AbstractImporter> importerMap = new ObjectMap<>();
-
-    private static Json json = new Json();
     static {
         json.setOutputType(JsonWriter.OutputType.json);
     }
+
+    public FileTracker.Tracker assetTracker;
 
     public AssetImporter() {
         assetTracker = handle -> assetUpdated(handle);
@@ -53,14 +55,13 @@ public class AssetImporter {
         importerMap.put(GameAssetType.SKELETON, new SpineImporter());
         importerMap.put(GameAssetType.ATLAS, new AtlasImporter());
         importerMap.put(GameAssetType.PREFAB, new PrefabImporter());
-
     }
 
-    public static FileHandle attemptToImport (FileHandle handle) {
+    public static FileHandle attemptToImport(FileHandle handle) {
         return attemptToImport(handle, false);
     }
 
-    public static FileHandle attemptToImport (FileHandle handle, boolean andPlaceIt) {
+    public static FileHandle attemptToImport(FileHandle handle, boolean andPlaceIt) {
         logger.info("Disabled method");
 
 //        FileHandle destinationDir = SceneEditorAddon.get().projectExplorer.getCurrentFolder();
@@ -81,11 +82,14 @@ public class AssetImporter {
         return handle;
     }
 
-    private void assetUpdated (FileHandle handle) {
+    public static <T extends AMetadata> T readMetadata(FileHandle handle, Class<? extends T> clazz) {
+        if (handle.exists()) {
+            String data = handle.readString();
+            T object = json.fromJson(clazz, data);
+            return object;
+        }
 
-        //todo update asset event
-        logger.info("Need to update asset with event");
-//        SceneEditorAddon.get().workspace.updateAsset(handle); //todo: maybe instead worth using events
+        return null;
     }
 
     // Check up on things, tidy up a bit
@@ -107,18 +111,7 @@ public class AssetImporter {
 //        }
 //    }
 
-
-    public static <T extends AMetadata> T readMetadata (FileHandle handle, Class<? extends T> clazz) {
-        if(handle.exists()) {
-            String data = handle.readString();
-            T object = json.fromJson(clazz, data);
-            return object;
-        }
-
-        return null;
-    }
-
-    public static <T extends AMetadata> T createEmptyMetadata (FileHandle handle, Class<? extends T> clazz) {
+    public static <T extends AMetadata> T createEmptyMetadata(FileHandle handle, Class<? extends T> clazz) {
         try {
             T t = ClassReflection.newInstance(clazz);
             return t;
@@ -129,7 +122,7 @@ public class AssetImporter {
         return null;
     }
 
-    public static FileHandle getMetadataHandleFor (FileHandle handle) {
+    public static FileHandle getMetadataHandleFor(FileHandle handle) {
 //        handle = get(handle.path());
 
         FileHandle metadataHandle = Gdx.files.absolute(handle.parent().path() + File.separator + handle.name() + ".meta");
@@ -166,7 +159,6 @@ public class AssetImporter {
                 result.append(String.format("%02x", b));
             }
             return result.toString();
-
         } catch (Exception e) {
 
         }
@@ -174,33 +166,33 @@ public class AssetImporter {
         return "";
     }
 
-    public static void saveMetadata (AMetadata aMetadata) {
+    public static void saveMetadata(AMetadata aMetadata) {
 
         FileHandle assetHandle = aMetadata.link.handle;
-        if(assetHandle != null && assetHandle.exists()) {
+        if (assetHandle != null && assetHandle.exists()) {
             FileHandle metadataHandle = getMetadataHandleFor(assetHandle);
             saveMetadata(metadataHandle, aMetadata);
         }
     }
 
-    public static void saveMetadata (FileHandle handle, AMetadata aMetadata) {
+    public static void saveMetadata(FileHandle handle, AMetadata aMetadata) {
         String data = json.toJson(aMetadata);
         handle.writeString(data, false);
     }
 
-    public static FileHandle makeSimilar (FileHandle fileHandle, String extension) {
+    public static FileHandle makeSimilar(FileHandle fileHandle, String extension) {
         String path = fileHandle.parent().path() + File.separator + fileHandle.nameWithoutExtension() + "." + extension;
         return Gdx.files.absolute(path);
     }
 
-    public static FileHandle suggestNewNameForFileHandle (String path, String filename, String extension) {
+    public static FileHandle suggestNewNameForFileHandle(String path, String filename, String extension) {
         FileHandle handle = Gdx.files.absolute(path);
 
 
-        if(handle.exists() && handle.isDirectory()) {
+        if (handle.exists() && handle.isDirectory()) {
             filename = NamingUtils.getNewName(filename, new Supplier<Collection<String>>() {
                 @Override
-                public Collection<String> get () {
+                public Collection<String> get() {
                     ArrayList<String> fileNames = new ArrayList<>();
                     for (FileHandle fileHandle : handle.list()) {
                         fileNames.add(fileHandle.nameWithoutExtension());
@@ -218,13 +210,12 @@ public class AssetImporter {
         }
     }
 
-    public static void fileOpen (FileHandle fileHandle) {
-        if(fileHandle.isDirectory()) {
+    public static void fileOpen(FileHandle fileHandle) {
+        if (fileHandle.isDirectory()) {
             AssetChangeDirectoryEvent assetChangeDirectoryEvent = Notifications.obtainEvent(AssetChangeDirectoryEvent.class);
             assetChangeDirectoryEvent.setPath(fileHandle);
             Notifications.fireEvent(assetChangeDirectoryEvent);
             return;
-
         }
 
 
@@ -286,6 +277,7 @@ public class AssetImporter {
 //            FileOpener.open(fileHandle.file());
 //        }
     }
+
     public static void copyFile(FileHandle file, FileHandle directory) {
         //Exchange it for the AssetRepository
         AssetRepository.getInstance().copyRawAsset(file, directory);
@@ -315,7 +307,7 @@ public class AssetImporter {
     }
 
     public static FileHandle renameFile(FileHandle file, String newName) {
-        if(!file.isDirectory()) {
+        if (!file.isDirectory()) {
             String extension = file.extension();
             if (!newName.endsWith(extension)) {
                 newName += "." + extension;
@@ -324,11 +316,11 @@ public class AssetImporter {
 
         FileHandle newHandle = file.parent().child(newName);
 
-        if(file.path().equals(newHandle.path())) return file;
+        if (file.path().equals(newHandle.path())) return file;
 
         AssetRepository.getInstance().moveFile(file, newHandle, true);
 
-        if(!newHandle.isDirectory()) {
+        if (!newHandle.isDirectory()) {
             FileNameChanged event = Notifications.obtainEvent(FileNameChanged.class);
             try {
                 event.assetType = GameAssetType.getAssetTypeFromExtension(file.extension());
@@ -345,5 +337,12 @@ public class AssetImporter {
 
     public static void deleteFile(FileHandle file) {
         AssetRepository.getInstance().deleteRawAsset(file);
+    }
+
+    private void assetUpdated(FileHandle handle) {
+
+        //todo update asset event
+        logger.info("Need to update asset with event");
+//        SceneEditorAddon.get().workspace.updateAsset(handle); //todo: maybe instead worth using events
     }
 }

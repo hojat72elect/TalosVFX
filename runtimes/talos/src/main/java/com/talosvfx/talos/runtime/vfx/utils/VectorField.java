@@ -21,12 +21,20 @@ public class VectorField {
 
     }
 
-    public VectorField (FileHandle handle) {
+    public VectorField(FileHandle handle) {
         setBakedData(handle);
     }
 
+    private static float lerp(float s, float e, float t) {
+        return s + (e - s) * t;
+    }
+
+    private static float blerp(final Float c00, float c01, float c11, float c10, float tx, float ty) {
+        return lerp(lerp(c00, c10, tx), lerp(c01, c11, tx), ty);
+    }
+
     public void setBakedData(FileHandle fileHandle) {
-        if(!fileHandle.extension().equals("fga")) {
+        if (!fileHandle.extension().equals("fga")) {
             // throw exception and return
             return;
         }
@@ -41,9 +49,9 @@ public class VectorField {
 
         int index = 3;
 
-        for(int i = 0; i < xSize; i++) {
-            for(int j = 0; j < ySize; j++) {
-                for(int k = 0; k < zSize; k++) {
+        for (int i = 0; i < xSize; i++) {
+            for (int j = 0; j < ySize; j++) {
+                for (int k = 0; k < zSize; k++) {
                     field[i][j][k] = new Vector3(readParam(arr, index++), readParam(arr, index++), readParam(arr, index++));
                 }
             }
@@ -59,12 +67,12 @@ public class VectorField {
         float y = (((pos.y - fieldPos.y) / scale) * 0.5f + 0.5f) * ySize;
         int z = 0;
 
-        if(MathUtils.floor(x) < 0 || MathUtils.ceil(x) > xSize - 1 || MathUtils.floor(y) < 0 || MathUtils.ceil(y) > ySize - 1) {
+        if (MathUtils.floor(x) < 0 || MathUtils.ceil(x) > xSize - 1 || MathUtils.floor(y) < 0 || MathUtils.ceil(y) > ySize - 1) {
             result.set(0, 0);
             return result;
         }
 
-        if(MathUtils.floor(x) > xSize - 1 || MathUtils.ceil(x) < 0 || MathUtils.floor(y) > ySize - 1 || MathUtils.ceil(y) < 0) {
+        if (MathUtils.floor(x) > xSize - 1 || MathUtils.ceil(x) < 0 || MathUtils.floor(y) > ySize - 1 || MathUtils.ceil(y) < 0) {
             result.set(0, 0);
             return result;
         }
@@ -74,20 +82,12 @@ public class VectorField {
         Vector3 v22 = field[MathUtils.ceil(x)][MathUtils.ceil(y)][z];
         Vector3 v21 = field[MathUtils.ceil(x)][MathUtils.floor(y)][z];
 
-        float resX = blerp(v11.x, v12.x, v22.x, v21.x, x-(int)x, y-(int)y);
-        float resY = blerp(v11.y, v12.y, v22.y, v21.y, x-(int)x, y-(int)y);
+        float resX = blerp(v11.x, v12.x, v22.x, v21.x, x - (int) x, y - (int) y);
+        float resY = blerp(v11.y, v12.y, v22.y, v21.y, x - (int) x, y - (int) y);
 
-        result.set(resX*1f, resY*1f);
+        result.set(resX, resY);
 
         return result;
-    }
-
-    private static float lerp(float s, float e, float t) {
-        return s + (e - s) * t;
-    }
-
-    private static float blerp(final Float c00, float c01, float c11, float c10, float tx, float ty) {
-        return lerp(lerp(c00, c10, tx), lerp(c01, c11, tx), ty);
     }
 
     public void setScale(float scaleVal) {

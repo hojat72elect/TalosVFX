@@ -1,5 +1,7 @@
 package com.talosvfx.talos.editor.project2;
 
+import static com.talosvfx.talos.editor.project2.TalosControl.validateAndOpenProject;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
@@ -8,30 +10,15 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
-import com.kotcrab.vis.ui.util.dialog.ConfirmDialogListener;
 import com.kotcrab.vis.ui.util.dialog.Dialogs;
-import com.kotcrab.vis.ui.widget.VisDialog;
 import com.kotcrab.vis.ui.widget.VisLabel;
-import com.kotcrab.vis.ui.widget.VisTable;
-import com.kotcrab.vis.ui.widget.VisTextButton;
-import com.kotcrab.vis.ui.widget.VisTextField;
-import com.kotcrab.vis.ui.widget.file.FileChooser;
-import com.kotcrab.vis.ui.widget.file.FileChooserAdapter;
-import com.talosvfx.talos.editor.filesystem.FileChooserListener;
-import com.talosvfx.talos.editor.filesystem.FileSystemInteraction;
-import com.talosvfx.talos.editor.nodes.widgets.ButtonWidget;
-import com.talosvfx.talos.editor.nodes.widgets.LabelWidget;
 import com.talosvfx.talos.editor.nodes.widgets.TextValueWidget;
 import com.talosvfx.talos.editor.project2.localprefs.PrefKeys;
 import com.talosvfx.talos.editor.project2.localprefs.TalosLocalPrefs;
-import com.talosvfx.talos.editor.widgets.propertyWidgets.EditableLabelWidget;
 import com.talosvfx.talos.editor.widgets.ui.common.ButtonLabel;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
 import com.talosvfx.talos.editor.widgets.ui.common.FileOpenField;
@@ -39,184 +26,182 @@ import com.talosvfx.talos.editor.widgets.ui.common.RoundedFlatButton;
 
 import java.io.File;
 
-import static com.talosvfx.talos.editor.project2.TalosControl.validateAndOpenProject;
-import static com.talosvfx.talos.editor.project2.TalosProjectData.TALOS_PROJECT_EXTENSION;
-
 public class ProjectSplash extends Table {
 
 
-	public ProjectSplash () {
-		setBackground(SharedResources.skin.getDrawable("splash-window"));
+    public ProjectSplash() {
+        setBackground(SharedResources.skin.getDrawable("splash-window"));
 
-		Image splash = new Image(new Texture(Gdx.files.internal("splash.png")));
+        Image splash = new Image(new Texture(Gdx.files.internal("splash.png")));
 
-		add(splash).width(990).pad(4);
-		row();
+        add(splash).width(990).pad(4);
+        row();
 
-		Table content = new Table();
+        Table content = new Table();
 
-		Table left = new Table();
-		Table right = new Table();
+        Table left = new Table();
+        Table right = new Table();
 
-		content.add(left).top().left().expand().grow().pad(10).padLeft(50).padBottom(20);
-		content.add(right).top().right().expand().grow().pad(10).padRight(50).padBottom(20);
+        content.add(left).top().left().expand().grow().pad(10).padLeft(50).padBottom(20);
+        content.add(right).top().right().expand().grow().pad(10).padRight(50).padBottom(20);
 
-		Table createTable = new Table();
-		Table openTable = new Table();
-		buildCreateTable(createTable);
-		buildOpenTable(openTable);
+        Table createTable = new Table();
+        Table openTable = new Table();
+        buildCreateTable(createTable);
+        buildOpenTable(openTable);
 
-		ButtonLabel openBtn = new ButtonLabel(SharedResources.skin.getDrawable("ic-folder"), "Open...");
-		openBtn.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				// open
-				SharedResources.talosControl.openProjectByChoosingFile(new Runnable() {
-					@Override
-					public void run() {
-						ProjectSplash.this.hide();
-					}
-				});
-			}
-		});
+        ButtonLabel openBtn = new ButtonLabel(SharedResources.skin.getDrawable("ic-folder"), "Open...");
+        openBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                // open
+                SharedResources.talosControl.openProjectByChoosingFile(new Runnable() {
+                    @Override
+                    public void run() {
+                        ProjectSplash.this.hide();
+                    }
+                });
+            }
+        });
 
-		left.add(createTable).grow();
-		left.row();
-		left.add(openBtn).padTop(30).left().expand();
+        left.add(createTable).grow();
+        left.row();
+        left.add(openBtn).padTop(30).left().expand();
 
-		right.add(openTable).grow().top().expand();
+        right.add(openTable).grow().top().expand();
 
-		add(content).grow().padBottom(20);
+        add(content).grow().padBottom(20);
 
-		pack();
-	}
+        pack();
+    }
 
-	private void buildCreateTable (Table table) {
-
-
-		VisLabel label = new VisLabel("New Project");
-		label.setColor(Color.GRAY);
-
-		table.add(label).left().expand();
-		table.row();
-
-		TextValueWidget projectName = new TextValueWidget(SharedResources.skin);
-		projectName.setLabel("Project Name"); projectName.setValue("");
-		table.add(projectName).width(300).left().expand().padTop(15);
-		table.row();
-
-		VisLabel projectDirectoryLabel = new VisLabel("Parent Directory");
-		table.add(projectDirectoryLabel).left().expand().padTop(15);
-		table.row();
-
-		FileOpenField fileOpener = new FileOpenField();
-		fileOpener.setPath(TalosLocalPrefs.Instance().getGlobalData(PrefKeys.FILE_PATHS.GENERAL.DEFAULT_PROJECT_PATH));
-		fileOpener.addListener(new ChangeListener() {
-			@Override
-			public void changed(ChangeEvent event, Actor actor) {
-
-			}
-		});
-		table.add(fileOpener).left().expand().padTop(15).width(300);
-		table.row();
-
-		RoundedFlatButton createBtn = new RoundedFlatButton(); createBtn.make("Create");
-		createBtn.getStyle().up = ColorLibrary.obtainBackground(SharedResources.skin, ColorLibrary.SHAPE_SQUIRCLE, ColorLibrary.BackgroundColor.LIGHT_BLUE);
-		table.add(createBtn).left().expand().padTop(15).width(100).padLeft(200);
-		table.row();
-
-		table.add().grow();
-
-		createBtn.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				validateAndCreateProject(projectName.getValue(), fileOpener.getPath());
-			}
-		});
-	}
-
-	private void validateAndCreateProject (String name, String parentDir) {
-
-		if (name.isEmpty()) {
-			Dialogs.showErrorDialog(SharedResources.stage, "Project name cannot be empty");
-			return;
-		}
+    private void buildCreateTable(Table table) {
 
 
-		FileHandle dirHandle = Gdx.files.absolute(parentDir + File.separator + name);
-		if (!dirHandle.exists()) {
-			dirHandle.mkdirs();
-		}
+        VisLabel label = new VisLabel("New Project");
+        label.setColor(Color.GRAY);
 
-		TalosProjectData talosProjectData = TalosProjectData.newDefaultProject(name, dirHandle);
-		validateAndOpenProject(talosProjectData);
-		talosProjectData.save();
-		hide();
-	}
+        table.add(label).left().expand();
+        table.row();
 
-	private void buildOpenTable (Table table) {
-		VisLabel label = new VisLabel("Open Recent");
-		label.setColor(Color.GRAY);
+        TextValueWidget projectName = new TextValueWidget(SharedResources.skin);
+        projectName.setLabel("Project Name");
+        projectName.setValue("");
+        table.add(projectName).width(300).left().expand().padTop(15);
+        table.row();
 
-		table.add(label).left().expandX().top();
-		table.row();
+        VisLabel projectDirectoryLabel = new VisLabel("Parent Directory");
+        table.add(projectDirectoryLabel).left().expand().padTop(15);
+        table.row();
 
-		Table recentItems = new Table();
+        FileOpenField fileOpener = new FileOpenField();
+        fileOpener.setPath(TalosLocalPrefs.Instance().getGlobalData(PrefKeys.FILE_PATHS.GENERAL.DEFAULT_PROJECT_PATH));
+        fileOpener.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
 
-		Array<RecentProject> recentProjects = TalosLocalPrefs.Instance().getRecentProjects();
+            }
+        });
+        table.add(fileOpener).left().expand().padTop(15).width(300);
+        table.row();
 
-		int iter = 0;
-		for (RecentProject recentProject : recentProjects) {
-			if(iter++ > 5) break;
+        RoundedFlatButton createBtn = new RoundedFlatButton();
+        createBtn.make("Create");
+        createBtn.getStyle().up = ColorLibrary.obtainBackground(SharedResources.skin, ColorLibrary.SHAPE_SQUIRCLE, ColorLibrary.BackgroundColor.LIGHT_BLUE);
+        table.add(createBtn).left().expand().padTop(15).width(100).padLeft(200);
+        table.row();
 
-			FileHandle handle = Gdx.files.absolute(recentProject.getProjectPath());
-			String pathEnd = handle.path();
-			//Show maximum of 40 characters of path end
-			if(pathEnd.length() > 40) {
-				pathEnd = "..." + pathEnd.substring(pathEnd.length() - 40);
-			}
-			ButtonLabel recentProjectLabel = new ButtonLabel(SharedResources.skin.getDrawable("ic-file-blank"), handle.name() + " (" + pathEnd + ")");
-			recentProjectLabel.addListener(new ClickListener() {
-				@Override
-				public void clicked (InputEvent event, float x, float y) {
-					boolean success = SharedResources.talosControl.validateAndOpenProject(Gdx.files.absolute(recentProject.getProjectPath()));
-					if (success) {
-						ProjectSplash.this.hide();
-					}
-				}
-			});
-			recentItems.add(recentProjectLabel).left().expandX().top().padBottom(3);
-			recentItems.row();
-		}
-		recentItems.add().grow();
-		recentItems.row();
+        table.add().grow();
 
-		table.add(recentItems).grow().top().expand().padTop(10);
-		table.row();
+        createBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                validateAndCreateProject(projectName.getValue(), fileOpener.getPath());
+            }
+        });
+    }
 
+    private void validateAndCreateProject(String name, String parentDir) {
 
-		table.add().grow().expand();
-		table.row();
-	}
+        if (name.isEmpty()) {
+            Dialogs.showErrorDialog(SharedResources.stage, "Project name cannot be empty");
+            return;
+        }
 
 
-	public void show(Stage stage) {
+        FileHandle dirHandle = Gdx.files.absolute(parentDir + File.separator + name);
+        if (!dirHandle.exists()) {
+            dirHandle.mkdirs();
+        }
 
-		stage.addActor(this);
-		setPosition(stage.getWidth()/2f - getWidth()/2f, stage.getHeight()/2f - getHeight()/2f);
+        TalosProjectData talosProjectData = TalosProjectData.newDefaultProject(name, dirHandle);
+        validateAndOpenProject(talosProjectData);
+        talosProjectData.save();
+        hide();
+    }
 
-		SharedResources.mainMenu.hide();
-	}
+    private void buildOpenTable(Table table) {
+        VisLabel label = new VisLabel("Open Recent");
+        label.setColor(Color.GRAY);
 
-	@Override
-	public void act(float delta) {
-		super.act(delta);
-		Stage stage = getStage();
-		setPosition(stage.getWidth()/2f - getWidth()/2f, stage.getHeight()/2f - getHeight()/2f);
-	}
+        table.add(label).left().expandX().top();
+        table.row();
 
-	public void hide() {
-		remove();
-	}
+        Table recentItems = new Table();
 
+        Array<RecentProject> recentProjects = TalosLocalPrefs.Instance().getRecentProjects();
+
+        int iter = 0;
+        for (RecentProject recentProject : recentProjects) {
+            if (iter++ > 5) break;
+
+            FileHandle handle = Gdx.files.absolute(recentProject.getProjectPath());
+            String pathEnd = handle.path();
+            //Show maximum of 40 characters of path end
+            if (pathEnd.length() > 40) {
+                pathEnd = "..." + pathEnd.substring(pathEnd.length() - 40);
+            }
+            ButtonLabel recentProjectLabel = new ButtonLabel(SharedResources.skin.getDrawable("ic-file-blank"), handle.name() + " (" + pathEnd + ")");
+            recentProjectLabel.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    boolean success = SharedResources.talosControl.validateAndOpenProject(Gdx.files.absolute(recentProject.getProjectPath()));
+                    if (success) {
+                        ProjectSplash.this.hide();
+                    }
+                }
+            });
+            recentItems.add(recentProjectLabel).left().expandX().top().padBottom(3);
+            recentItems.row();
+        }
+        recentItems.add().grow();
+        recentItems.row();
+
+        table.add(recentItems).grow().top().expand().padTop(10);
+        table.row();
+
+
+        table.add().grow().expand();
+        table.row();
+    }
+
+
+    public void show(Stage stage) {
+
+        stage.addActor(this);
+        setPosition(stage.getWidth() / 2f - getWidth() / 2f, stage.getHeight() / 2f - getHeight() / 2f);
+
+        SharedResources.mainMenu.hide();
+    }
+
+    @Override
+    public void act(float delta) {
+        super.act(delta);
+        Stage stage = getStage();
+        setPosition(stage.getWidth() / 2f - getWidth() / 2f, stage.getHeight() / 2f - getHeight() / 2f);
+    }
+
+    public void hide() {
+        remove();
+    }
 }

@@ -2,11 +2,8 @@ package com.talosvfx.talos.editor.dialogs.preference.widgets.blocks;
 
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Array;
-
 import com.talosvfx.talos.editor.dialogs.preference.widgets.PrefWidgetFactory;
-import com.talosvfx.talos.editor.notifications.commands.Combination;
 import com.talosvfx.talos.editor.notifications.commands.ICommand;
-import com.talosvfx.talos.editor.notifications.commands.enums.Commands;
 import com.talosvfx.talos.editor.project2.SharedResources;
 
 public class KeymapBlock extends BlockWidget {

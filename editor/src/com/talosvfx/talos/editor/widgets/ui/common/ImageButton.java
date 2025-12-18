@@ -8,6 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
+
 import lombok.Getter;
 
 public class ImageButton extends Table {
@@ -38,13 +39,13 @@ public class ImageButton extends Table {
     public void act(float delta) {
         super.act(delta);
 
-        if(clickListener.isOver()) {
+        if (clickListener.isOver()) {
             icon.getColor().a = 1f;
         } else {
             icon.getColor().a = 0.5f;
         }
 
-        if(clickListener.isPressed()) {
+        if (clickListener.isPressed()) {
             setTransform(true);
             setOrigin(Align.center);
             setScale(0.9f);

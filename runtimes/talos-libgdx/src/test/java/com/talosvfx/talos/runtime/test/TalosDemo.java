@@ -2,8 +2,8 @@ package com.talosvfx.talos.runtime.test;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
@@ -23,7 +23,7 @@ public class TalosDemo extends ApplicationAdapter {
 
     private SpriteBatchParticleRenderer defaultRenderer;
 
-    public static void main (String[] arg) {
+    public static void main(String[] arg) {
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
         config.setWindowedMode(400, 400);
         config.setTitle("Talos demo");
@@ -52,7 +52,6 @@ public class TalosDemo extends ApplicationAdapter {
         atlas.addRegion("spot", new TextureRegion(new TextureRegion(new Texture(Gdx.files.internal("spot.png")))));
 
 
-
         /**
          * Creating particle effect instance from particle effect descriptor
          */
@@ -61,7 +60,6 @@ public class TalosDemo extends ApplicationAdapter {
 
         defaultRenderer = new SpriteBatchParticleRenderer(viewport.getCamera());
         defaultRenderer.setBatch(batch);
-
     }
 
     @Override

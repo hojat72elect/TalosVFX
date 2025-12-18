@@ -53,27 +53,27 @@ public class CurveModuleWrapper extends ModuleWrapper<CurveModule> implements Cu
 
     @Override
     public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
-        if(slot.getIndex() == CurveModule.ALPHA) return InputModule.class;
+        if (slot.getIndex() == CurveModule.ALPHA) return InputModule.class;
 
         return null;
     }
 
     @Override
     public Array<Vector2> getPoints() {
-        if(module == null) return null;
+        if (module == null) return null;
 
         return module.getPoints();
     }
 
     @Override
     public void removePoint(int index) {
-        if(module == null) return;
+        if (module == null) return;
         module.removePoint(index);
     }
 
     @Override
     public int createPoint(float x, float y) {
-        if(module == null) return 0;
+        if (module == null) return 0;
         return module.createPoint(x, y);
     }
 }

@@ -5,9 +5,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
+
 import org.apache.commons.vfs2.FileChangeEvent;
 import org.apache.commons.vfs2.FileListener;
-import org.apache.commons.vfs2.FileMonitor;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -21,80 +21,80 @@ import java.net.URI;
 
 public class ReloadUtils {
 
-	private static final Logger logger = LoggerFactory.getLogger(ReloadUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(ReloadUtils.class);
 
-	static FileSystemManager manager;
-	static DefaultFileMonitor fm;
+    static FileSystemManager manager;
+    static DefaultFileMonitor fm;
+    private static final ObjectMap<FileObject, Array<AutoReloadingListener>> listeners = new ObjectMap<FileObject, Array<AutoReloadingListener>>();
 
-	static {
-		if (Gdx.app.getType().equals(Application.ApplicationType.Desktop)) {
-			try {
-				manager = VFS.getManager();
-				fm = new DefaultFileMonitor(new FileListener() {
-					@Override
-					public void fileCreated (FileChangeEvent event) throws Exception {
-					}
-					@Override
-					public void fileDeleted (FileChangeEvent event) throws Exception {
-					}
-					@Override
-					public void fileChanged (FileChangeEvent event) throws Exception {
-						final FileObject fileObject = event.getFileObject();
-						Gdx.app.postRunnable(new Runnable() {
-							@Override
-							public void run () {
+    static {
+        if (Gdx.app.getType().equals(Application.ApplicationType.Desktop)) {
+            try {
+                manager = VFS.getManager();
+                fm = new DefaultFileMonitor(new FileListener() {
+                    @Override
+                    public void fileCreated(FileChangeEvent event) throws Exception {
+                    }
 
-								final Array<AutoReloadingListener> autoReloadingListeners = listeners.get(fileObject);
-								for (AutoReloadingListener autoReloadingListener : autoReloadingListeners) {
-									if (autoReloadingListener != null) {
-										autoReloadingListener.onAutoReloadFileChanged();
-									}
-								}
-							}
-						});
-					}
-				});
+                    @Override
+                    public void fileDeleted(FileChangeEvent event) throws Exception {
+                    }
 
-				fm.setRecursive(false);
-				fm.start();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
+                    @Override
+                    public void fileChanged(FileChangeEvent event) throws Exception {
+                        final FileObject fileObject = event.getFileObject();
+                        Gdx.app.postRunnable(new Runnable() {
+                            @Override
+                            public void run() {
 
-	public interface AutoReloadingListener {
-		void onAutoReloadFileChanged ();
-	}
+                                final Array<AutoReloadingListener> autoReloadingListeners = listeners.get(fileObject);
+                                for (AutoReloadingListener autoReloadingListener : autoReloadingListeners) {
+                                    if (autoReloadingListener != null) {
+                                        autoReloadingListener.onAutoReloadFileChanged();
+                                    }
+                                }
+                            }
+                        });
+                    }
+                });
 
-	private static ObjectMap<FileObject, Array<AutoReloadingListener>> listeners = new ObjectMap<FileObject, Array<AutoReloadingListener>>();
+                fm.setRecursive(false);
+                fm.start();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-	public static void registerFile (FileHandle handle, AutoReloadingListener listener) {
-		try {
-			final File file = handle.file();
-			final URI uri = file.toURI();
-			final FileObject fileObject = manager.resolveFile(uri);
+    public static void registerFile(FileHandle handle, AutoReloadingListener listener) {
+        try {
+            final File file = handle.file();
+            final URI uri = file.toURI();
+            final FileObject fileObject = manager.resolveFile(uri);
 
-			if (listeners.containsKey(fileObject)) {
-				//Already registered, so we just want to add it to listeners
-				listeners.get(fileObject).add(listener);
-			} else {
-				final Array<AutoReloadingListener> value = new Array<>();
-				value.add(listener);
-				listeners.put(fileObject, value);
+            if (listeners.containsKey(fileObject)) {
+                //Already registered, so we just want to add it to listeners
+                listeners.get(fileObject).add(listener);
+            } else {
+                final Array<AutoReloadingListener> value = new Array<>();
+                value.add(listener);
+                listeners.put(fileObject, value);
 
-				fm.addFile(fileObject);
-				logger.trace("Registered file for auto reload {}", handle.file().toURI());
-			}
+                fm.addFile(fileObject);
+                logger.trace("Registered file for auto reload {}", handle.file().toURI());
+            }
+        } catch (FileSystemException e) {
+            e.printStackTrace();
+        }
+    }
 
-		} catch (FileSystemException e) {
-			e.printStackTrace();
-		}
-	}
+    public static void dispose() {
+        if (Gdx.app.getType().equals(Application.ApplicationType.Desktop)) {
+            fm.stop();
+        }
+    }
 
-	public static void dispose () {
-		if (Gdx.app.getType().equals(Application.ApplicationType.Desktop)) {
-			fm.stop();
-		}
-	}
+    public interface AutoReloadingListener {
+        void onAutoReloadFileChanged();
+    }
 }

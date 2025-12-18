@@ -37,7 +37,7 @@ public class ColorModule extends AbstractModule {
 
     float defaultR = 1, defaultG = 0, defaultB = 0;
 
-    public ColorModule () {
+    public ColorModule() {
 
     }
 
@@ -51,11 +51,11 @@ public class ColorModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
 
-        if(r.isEmpty()) r.set(defaultR);
-        if(g.isEmpty()) g.set(defaultG);
-        if(b.isEmpty()) b.set(defaultB);
+        if (r.isEmpty()) r.set(defaultR);
+        if (g.isEmpty()) g.set(defaultG);
+        if (b.isEmpty()) b.set(defaultB);
 
         output.set(r, g, b);
     }
@@ -78,7 +78,7 @@ public class ColorModule extends AbstractModule {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("r", defaultR);
         json.writeValue("g", defaultG);
@@ -86,7 +86,7 @@ public class ColorModule extends AbstractModule {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         defaultR = jsonData.getFloat("r");
         defaultG = jsonData.getFloat("g");

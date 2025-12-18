@@ -4,7 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ObjectFloatMap;
 import com.talosvfx.talos.editor.project2.SharedResources;
@@ -17,7 +18,7 @@ public class ProgressWidget extends Table {
 
     private ObjectFloatMap<Object> progressMap = new ObjectFloatMap<>();
 
-    private ShaderProgram shaderProgram;
+    private final ShaderProgram shaderProgram;
 
     public ProgressWidget() {
         super(SharedResources.skin);
@@ -26,7 +27,7 @@ public class ProgressWidget extends Table {
 
         progressImage = new Image(ColorLibrary.obtainBackground(getSkin(), "mini-node-bg", ColorLibrary.BackgroundColor.GREEN));
         progressImage.setSize(110, 110);
-        progressImage.setPosition(-progressImage.getWidth()/2, -progressImage.getHeight()/2);
+        progressImage.setPosition(-progressImage.getWidth() / 2, -progressImage.getHeight() / 2);
         progressImage.setRotation(180);
         progressImage.setOrigin(Align.center);
         addActor(progressImage);
@@ -39,7 +40,7 @@ public class ProgressWidget extends Table {
 
         ShaderProgram prevShader = null;
 
-        if(progressMap.size > 0) {
+        if (progressMap.size > 0) {
             // enable shader
             prevShader = batch.getShader();
 
@@ -51,8 +52,8 @@ public class ProgressWidget extends Table {
 
             int i = 0;
             final int MAX = 30;
-            for(ObjectFloatMap.Entry<Object> entry : progressMap) {
-                if(i >= MAX) break;
+            for (ObjectFloatMap.Entry<Object> entry : progressMap) {
+                if (i >= MAX) break;
                 float progress = entry.value;
                 shaderProgram.setUniformf("alpha[" + (i++) + "]", progress);
             }
@@ -61,7 +62,7 @@ public class ProgressWidget extends Table {
 
         super.draw(batch, parentAlpha);
 
-        if(prevShader != null) {
+        if (prevShader != null) {
             // change shader back
             batch.setShader(prevShader);
         }
@@ -71,9 +72,9 @@ public class ProgressWidget extends Table {
         this.progressMap = progressMap;
 
         float min = 1;
-        for(ObjectFloatMap.Entry<Object> entry : progressMap) {
+        for (ObjectFloatMap.Entry<Object> entry : progressMap) {
             float progress = entry.value;
-            if(min > progress) min = progress;
+            if (min > progress) min = progress;
         }
 
         progressImage.setRotation(180 - min * 90);

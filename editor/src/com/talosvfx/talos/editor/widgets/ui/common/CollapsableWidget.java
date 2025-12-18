@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.talosvfx.talos.editor.project2.SharedResources;
+
 import lombok.Getter;
 
 public class CollapsableWidget extends Table {
@@ -21,7 +22,7 @@ public class CollapsableWidget extends Table {
     @Getter
     protected Label widgetLabel;
 
-    public CollapsableWidget () {
+    public CollapsableWidget() {
         setBackground(ColorLibrary.obtainBackground(ColorLibrary.SHAPE_SQUIRCLE, ColorLibrary.BackgroundColor.DARK_GRAY));
 
         // init components
@@ -36,12 +37,12 @@ public class CollapsableWidget extends Table {
         addListeners();
     }
 
-    public CollapsableWidget (String title) {
+    public CollapsableWidget(String title) {
         this();
         setTitle(title);
     }
 
-    public Table constructTopSegment () {
+    public Table constructTopSegment() {
         // init components
         arrowButton = new ArrowButton(false);
         arrowButton.getCell(arrowButton.getArrowIcon()).pad(0);
@@ -58,17 +59,17 @@ public class CollapsableWidget extends Table {
         return topSegment;
     }
 
-    public void setTitle (String title) {
+    public void setTitle(String title) {
         widgetLabel.setText(title);
     }
 
-    protected void addListeners () {
+    protected void addListeners() {
         // make top segment collapse and open instead of icon, so it was more comfortable to click
         topSegment.setTouchable(Touchable.enabled);
         topSegment.addListener(initClickListener());
     }
 
-    protected ClickListener initClickListener () {
+    protected ClickListener initClickListener() {
         return new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -83,7 +84,7 @@ public class CollapsableWidget extends Table {
         };
     }
 
-    protected Table constructContent () {
+    protected Table constructContent() {
         content = new Table();
 
         return content;

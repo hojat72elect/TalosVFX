@@ -1,61 +1,72 @@
 package com.talosvfx.talos.runtime.scene.components;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.collision.BoundingBox;
-import com.badlogic.gdx.utils.*;
-import com.esotericsoftware.spine.*;
-import com.talosvfx.talos.runtime.RuntimeContext;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.FloatArray;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.ObjectSet;
+import com.badlogic.gdx.utils.OrderedMap;
+import com.esotericsoftware.spine.Animation;
+import com.esotericsoftware.spine.AnimationState;
+import com.esotericsoftware.spine.AnimationStateData;
+import com.esotericsoftware.spine.Bone;
+import com.esotericsoftware.spine.Skeleton;
+import com.esotericsoftware.spine.SkeletonData;
+import com.esotericsoftware.spine.Skin;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.runtime.assets.GameResourceOwner;
 import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.IColorHolder;
 import com.talosvfx.talos.runtime.scene.ValueProperty;
+
 import lombok.Getter;
 import lombok.Setter;
 
 public class SpineRendererComponent extends RendererComponent implements Json.Serializable, GameResourceOwner<SkeletonData>, IColorHolder {
 
-    private transient GameAsset<SkeletonData> defaultGameAsset;
-    private GameAsset<SkeletonData> gameAsset; //TODO THIS SHOULD BE WIDGET FACTORY AND USE REFLECTION METHOD OVERRIDE
-
     public Skeleton skeleton;
     public AnimationState animationState;
-
     public Color color = new Color(Color.WHITE);
     public transient Color finalColor = new Color(Color.WHITE);
     public boolean shouldInheritParentColor = true;
-
     public transient String currAnimation;
-
     @ValueProperty(prefix = {"scale"})
     public float scale = 1f;
-
     @ValueProperty(prefix = {"x"}, min = 0, step = 0.01f, max = 10)
     public float editorAnimationSpeed = 1f;
-
-    @Getter@Setter
-    private String skin;
-
     public boolean applyAnimation = true;
     public boolean generateGameObjectBones = false;
-
-    private ObjectMap<String, GameObject> boneGOs = new OrderedMap<>();
-    private ObjectSet<GameObject> directChildrenOfRoot = new ObjectSet<>();
+    Vector2 vec = new Vector2();
+    private transient GameAsset<SkeletonData> defaultGameAsset;
+    private GameAsset<SkeletonData> gameAsset; //TODO THIS SHOULD BE WIDGET FACTORY AND USE REFLECTION METHOD OVERRIDE
+    @Getter
+    @Setter
+    private String skin;
+    private final ObjectMap<String, GameObject> boneGOs = new OrderedMap<>();
+    private final ObjectSet<GameObject> directChildrenOfRoot = new ObjectSet<>();
+    GameAsset.GameAssetUpdateListener gameAssetUpdateListener = new GameAsset.GameAssetUpdateListener() {
+        @Override
+        public void onUpdate() {
+            createSkeletonFromGameAsset();
+        }
+    };
 
     @Override
-    public GameAssetType getGameAssetType () {
+    public GameAssetType getGameAssetType() {
         return GameAssetType.SKELETON;
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         GameResourceOwner.writeGameAsset(json, this);
 
-        if(currAnimation == null || currAnimation.isEmpty()) {
-            if(animationState != null && animationState.getCurrent(0) != null && animationState.getCurrent(0).getAnimation() != null) {
+        if (currAnimation == null || currAnimation.isEmpty()) {
+            if (animationState != null && animationState.getCurrent(0) != null && animationState.getCurrent(0).getAnimation() != null) {
                 currAnimation = animationState.getCurrent(0).getAnimation().getName();
             }
         }
@@ -70,9 +81,9 @@ public class SpineRendererComponent extends RendererComponent implements Json.Se
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
-        scale = jsonData.getFloat("scale", 1/128f);
+        scale = jsonData.getFloat("scale", 1 / 128f);
         currAnimation = jsonData.getString("animation", "");
         applyAnimation = jsonData.getBoolean("applyAnimation", true);
         shouldInheritParentColor = jsonData.getBoolean("shouldInheritParentColor", true);
@@ -105,16 +116,14 @@ public class SpineRendererComponent extends RendererComponent implements Json.Se
                 }
             }
         }
-
     }
 
     @Override
-    public GameAsset<SkeletonData> getGameResource () {
+    public GameAsset<SkeletonData> getGameResource() {
         return gameAsset;
     }
 
-
-    private void createSkeletonFromGameAsset () {
+    private void createSkeletonFromGameAsset() {
         if (!gameAsset.isBroken()) {
             skeleton = new Skeleton(gameAsset.getResource());
             AnimationStateData data = new AnimationStateData(skeleton.getData());
@@ -130,20 +139,13 @@ public class SpineRendererComponent extends RendererComponent implements Json.Se
         }
     }
 
-    GameAsset.GameAssetUpdateListener gameAssetUpdateListener = new GameAsset.GameAssetUpdateListener() {
-        @Override
-        public void onUpdate () {
-            createSkeletonFromGameAsset();
-        }
-    };
-
     @Override
-    public void setGameAsset (GameAsset<SkeletonData> gameAsset) {
+    public void setGameAsset(GameAsset<SkeletonData> gameAsset) {
         backupChildrenOfBones();
 
         this.gameAsset = gameAsset;
 
-        if(defaultGameAsset == null && !gameAsset.isBroken()){
+        if (defaultGameAsset == null && !gameAsset.isBroken()) {
             defaultGameAsset = gameAsset;
         }
 
@@ -156,7 +158,7 @@ public class SpineRendererComponent extends RendererComponent implements Json.Se
     }
 
     @Override
-    public void clearResource () {
+    public void clearResource() {
         if (gameAsset != null) {
             gameAsset.listeners.removeValue(gameAssetUpdateListener, true);
             gameAsset = null;
@@ -198,8 +200,8 @@ public class SpineRendererComponent extends RendererComponent implements Json.Se
         populateBoneGameObjects();
     }
 
-    public void removeAllBoneGameObjects () {
-       boolean hasSkeletonData = skeleton != null;
+    public void removeAllBoneGameObjects() {
+        boolean hasSkeletonData = skeleton != null;
         boolean isAttachedToGameObject = getGameObject() != null;
 
         if (!(hasSkeletonData && isAttachedToGameObject)) {
@@ -211,7 +213,6 @@ public class SpineRendererComponent extends RendererComponent implements Json.Se
         }
         boneGOs.clear();
         directChildrenOfRoot.clear();
-
     }
 
     /**
@@ -219,7 +220,7 @@ public class SpineRendererComponent extends RendererComponent implements Json.Se
      * Condition1 = should have a skeleton data
      * Condition2 = should be attached to game object
      */
-    public void populateBoneGameObjects () {
+    public void populateBoneGameObjects() {
         if (!generateGameObjectBones) return;
         boolean hasSkeletonData = skeleton != null;
         boolean isAttachedToGameObject = getGameObject() != null;
@@ -239,7 +240,7 @@ public class SpineRendererComponent extends RendererComponent implements Json.Se
         }
     }
 
-    private GameObject processBone (Bone bone, GameObject parentToAdd, SpineRendererComponent component) {
+    private GameObject processBone(Bone bone, GameObject parentToAdd, SpineRendererComponent component) {
         GameObject boneGO = new GameObject();
         String boneName = bone.getData().getName();
         boneGO.setName(boneName);
@@ -260,13 +261,12 @@ public class SpineRendererComponent extends RendererComponent implements Json.Se
         return boneGO;
     }
 
-    Vector2 vec = new Vector2();
     @Override
-    public void minMaxBounds (GameObject ownerEntity, BoundingBox boundingBox) {
+    public void minMaxBounds(GameObject ownerEntity, BoundingBox boundingBox) {
         TransformComponent transformComponent = ownerEntity.getComponent(TransformComponent.class);
         if (transformComponent != null) {
             vec.set(0, 0);
-            transformComponent.localToWorld(ownerEntity, vec);
+            TransformComponent.localToWorld(ownerEntity, vec);
 
             skeleton.setBonesToSetupPose();
             skeleton.updateWorldTransform();
@@ -281,8 +281,8 @@ public class SpineRendererComponent extends RendererComponent implements Json.Se
             float width = transformComponent.scale.x * size.x;
             float height = transformComponent.scale.y * size.y;
 
-            boundingBox.ext(-width/2, - height/2, 0);
-            boundingBox.ext(width/2, + height/2, 0);
+            boundingBox.ext(-width / 2, -height / 2, 0);
+            boundingBox.ext(width / 2, +height / 2, 0);
         }
     }
 
@@ -290,7 +290,7 @@ public class SpineRendererComponent extends RendererComponent implements Json.Se
     public void reset() {
         super.reset();
         scale = 1f;
-        if(this.defaultGameAsset != null){
+        if (this.defaultGameAsset != null) {
             setGameAsset(gameAsset);
         }
     }
@@ -310,7 +310,7 @@ public class SpineRendererComponent extends RendererComponent implements Json.Se
         return shouldInheritParentColor;
     }
 
-    public void setAndUpdateSkin (String value) {
+    public void setAndUpdateSkin(String value) {
         setSkin(value);
         skeleton.setSkin(value);
         skeleton.setSlotsToSetupPose();
@@ -326,6 +326,4 @@ public class SpineRendererComponent extends RendererComponent implements Json.Se
     public ObjectSet<GameObject> getDirectChildrenOfRoot() {
         return new ObjectSet<>(directChildrenOfRoot);
     }
-
-
 }

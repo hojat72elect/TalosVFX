@@ -4,11 +4,11 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
+import com.talosvfx.talos.editor.addons.scene.widgets.property.GameObjectSelectWidget;
+import com.talosvfx.talos.editor.addons.scene.widgets.property.PropertyPanelAssetSelectionWidget;
 import com.talosvfx.talos.editor.utils.ReflectionUtilities;
 import com.talosvfx.talos.runtime.assets.GameAsset;
 import com.talosvfx.talos.runtime.assets.GameAssetType;
-import com.talosvfx.talos.editor.addons.scene.widgets.property.PropertyPanelAssetSelectionWidget;
-import com.talosvfx.talos.editor.addons.scene.widgets.property.GameObjectSelectWidget;
 import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.ValueProperty;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyBooleanWrapper;
@@ -20,24 +20,24 @@ import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyIntegerWr
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyStringWrapper;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyVec2Wrapper;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
+import com.talosvfx.talos.runtime.utils.Supplier;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import com.talosvfx.talos.runtime.utils.Supplier;
 
 public class WidgetFactory {
 
-    public static PropertyWidget generateForPropertyWrapper (PropertyWrapper wrapper) {
+    public static PropertyWidget generateForPropertyWrapper(PropertyWrapper wrapper) {
         try {
             Field value = wrapper.getClass().getField("value");
             if (wrapper instanceof PropertyBooleanWrapper) {
                 return generateForBoolean(wrapper, value, null, wrapper.propertyName, false);
             } else if (wrapper instanceof PropertyIntegerWrapper) {
                 return generateForInt(wrapper, value, null, wrapper.propertyName, false);
-            } else if(wrapper instanceof PropertyFloatWrapper) {
+            } else if (wrapper instanceof PropertyFloatWrapper) {
                 return generateForFloat(wrapper, value, null, wrapper.propertyName, false);
-            }  else if(wrapper instanceof PropertyStringWrapper) {
+            } else if (wrapper instanceof PropertyStringWrapper) {
                 return generateForString(wrapper, value, null, wrapper.propertyName);
             } else if (wrapper instanceof PropertyGameObjectWrapper) {
                 return generateForGameObject((PropertyGameObjectWrapper) wrapper);
@@ -48,9 +48,6 @@ public class WidgetFactory {
             } else if (wrapper instanceof PropertyGameAssetWrapper) {
                 return generateForGameAsset(wrapper, value, null, wrapper.propertyName, GameAssetType.SPRITE);
             }
-
-
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -58,7 +55,7 @@ public class WidgetFactory {
         return null;
     }
 
-    public static PropertyWidget generate (Object parent, Field field, String title) {
+    public static PropertyWidget generate(Object parent, Field field, String title) {
         try {
             if (!field.isAccessible()) {
                 field.setAccessible(true);
@@ -66,30 +63,27 @@ public class WidgetFactory {
             Object object = field.get(parent);
 
             PropertyWidget generatedWidget = null;
-            if(field.getType().equals(boolean.class)) {
+            if (field.getType().equals(boolean.class)) {
                 generatedWidget = generateForBoolean(parent, field, object, title, true);
             } else if (field.getType().isEnum()) {
                 generatedWidget = generateForEnum(parent, field, object, title);
-            } else if(field.getType().equals(int.class)) {
+            } else if (field.getType().equals(int.class)) {
                 generatedWidget = generateForInt(parent, field, object, title, true);
-            } else if(field.getType().equals(float.class)) {
+            } else if (field.getType().equals(float.class)) {
                 generatedWidget = generateForFloat(parent, field, object, title, true);
-            } else if(field.getType().equals(Color.class)) {
+            } else if (field.getType().equals(Color.class)) {
                 generatedWidget = generateForColor(parent, field, object, title);
-            } else if(field.getType().equals(Vector2.class)) {
+            } else if (field.getType().equals(Vector2.class)) {
                 generatedWidget = generateForVector2(parent, field, object, title);
-            } else if(field.getType().equals(String.class)) {
+            } else if (field.getType().equals(String.class)) {
                 ValueProperty annotation = field.getAnnotation(ValueProperty.class);
-                if(annotation != null && annotation.readOnly()) {
+                if (annotation != null && annotation.readOnly()) {
                     generatedWidget = generateForStaticString(parent, field, object, title);
                 } else {
                     generatedWidget = generateForString(parent, field, object, title);
                 }
             } else if (field.getType().equals(GameObject.class)) {
                 return generateForGameObject(parent, field, object, title);
-            }
-            if (generatedWidget == null) {
-                return null;
             }
 
 //            generatedWidget.setParent(parent);
@@ -100,6 +94,7 @@ public class WidgetFactory {
 
         return null;
     }
+
     public static PropertyWidget generate(Object parent, String fieldName, String title) {
         try {
 
@@ -114,33 +109,32 @@ public class WidgetFactory {
     }
 
 
+    private static PropertyWidget generateForGameObject(Object parent, Field field, Object object, String title) {
+        GameObjectSelectWidget gameObjectSelectWidget = new GameObjectSelectWidget(title, new Supplier<GameObject>() {
+            @Override
+            public GameObject get() {
+                try {
+                    GameObject gameObject = (GameObject) field.get(parent);
+                    return gameObject;
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }, new PropertyWidget.ValueChanged<GameObject>() {
+            @Override
+            public void report(GameObject value) {
+                try {
+                    field.set(parent, value);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }, parent);
 
-    private static PropertyWidget generateForGameObject (Object parent, Field field, Object object, String title) {
-       GameObjectSelectWidget gameObjectSelectWidget = new GameObjectSelectWidget(title, new Supplier<GameObject>() {
-           @Override
-           public GameObject get () {
-               try {
-                   GameObject gameObject = (GameObject)field.get(parent);
-                   return gameObject;
-               } catch (IllegalAccessException e) {
-                   throw new RuntimeException(e);
-               }
-           }
-       }, new PropertyWidget.ValueChanged<GameObject>() {
-           @Override
-           public void report (GameObject value) {
-               try {
-                   field.set(parent, value);
-               } catch (IllegalAccessException e) {
-                   throw new RuntimeException(e);
-               }
-           }
-       }, parent);
-
-       return gameObjectSelectWidget;
+        return gameObjectSelectWidget;
     }
 
-    public static <T> PropertyWidget generateForGameAsset (Object parent, String field, Object object, String title, GameAssetType assetType) {
+    public static <T> PropertyWidget generateForGameAsset(Object parent, String field, Object object, String title, GameAssetType assetType) {
         try {
 
             Field declaredField = ReflectionUtilities.getFieldWithName(field, parent.getClass(), null);
@@ -153,7 +147,7 @@ public class WidgetFactory {
         }
     }
 
-    public static <T> PropertyWidget generateForGameAsset (Object parent, Field field, Object object, String title, GameAssetType assetType) {
+    public static <T> PropertyWidget generateForGameAsset(Object parent, Field field, Object object, String title, GameAssetType assetType) {
         PropertyPanelAssetSelectionWidget<T> textureWidget = new PropertyPanelAssetSelectionWidget<>(title, assetType, new Supplier<GameAsset<T>>() {
             @Override
             public GameAsset<T> get() {
@@ -178,7 +172,7 @@ public class WidgetFactory {
         return textureWidget;
     }
 
-    private static Vector2PropertyWidget generateForVector2 (Object parent, Field field, Object object, String title) {
+    private static Vector2PropertyWidget generateForVector2(Object parent, Field field, Object object, String title) {
         Vector2PropertyWidget widget = new Vector2PropertyWidget(title, new Supplier<Vector2>() {
             @Override
             public Vector2 get() {
@@ -196,13 +190,12 @@ public class WidgetFactory {
                 try {
                     Vector2 vec = (Vector2) field.get(parent);
 
-                    if(!Float.isNaN(value.x)) {
+                    if (!Float.isNaN(value.x)) {
                         vec.x = value.x;
                     }
-                    if(!Float.isNaN(value.y)) {
+                    if (!Float.isNaN(value.y)) {
                         vec.y = value.y;
                     }
-
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
@@ -214,7 +207,7 @@ public class WidgetFactory {
         return widget;
     }
 
-    private static ColorPropertyWidget generateForColor (Object parent, Field field, Object object, String title) {
+    private static ColorPropertyWidget generateForColor(Object parent, Field field, Object object, String title) {
         ColorPropertyWidget widget = new ColorPropertyWidget(title, new Supplier<Color>() {
             @Override
             public Color get() {
@@ -240,7 +233,7 @@ public class WidgetFactory {
         return widget;
     }
 
-    private static CheckboxWidget generateForBoolean (Object parent, Field field, Object object, String title, boolean primitive) {
+    private static CheckboxWidget generateForBoolean(Object parent, Field field, Object object, String title, boolean primitive) {
 
         CheckboxWidget widget = new CheckboxWidget(title, new Supplier<Boolean>() {
             @Override
@@ -266,7 +259,7 @@ public class WidgetFactory {
         return widget;
     }
 
-    private static LabelWidget generateForStaticString (Object parent, Field field, Object object, String title) {
+    private static LabelWidget generateForStaticString(Object parent, Field field, Object object, String title) {
         LabelWidget widget = new LabelWidget(title, new Supplier<String>() {
             @Override
             public String get() {
@@ -283,7 +276,7 @@ public class WidgetFactory {
         return widget;
     }
 
-    private static EditableLabelWidget generateForString (Object parent, Field field, Object object, String title) {
+    private static EditableLabelWidget generateForString(Object parent, Field field, Object object, String title) {
         EditableLabelWidget widget = new EditableLabelWidget(title, new Supplier<String>() {
             @Override
             public String get() {
@@ -309,7 +302,7 @@ public class WidgetFactory {
         return widget;
     }
 
-    private static IntPropertyWidget generateForInt (Object parent, Field field, Object object, String title, boolean primitive) {
+    private static IntPropertyWidget generateForInt(Object parent, Field field, Object object, String title, boolean primitive) {
         IntPropertyWidget widget = new IntPropertyWidget(title, new Supplier<Integer>() {
             @Override
             public Integer get() {
@@ -334,7 +327,7 @@ public class WidgetFactory {
         return widget;
     }
 
-    private static GameObjectSelectWidget generateForGameObject (PropertyGameObjectWrapper wrapper) {
+    private static GameObjectSelectWidget generateForGameObject(PropertyGameObjectWrapper wrapper) {
         GameObjectSelectWidget widget = new GameObjectSelectWidget(wrapper.propertyName, new Supplier<GameObject>() {
             @Override
             public GameObject get() {
@@ -351,10 +344,10 @@ public class WidgetFactory {
     }
 
 
-    private static FloatPropertyWidget generateForFloat (Object parent, Field field, Object object, String title, boolean primitive) {
+    private static FloatPropertyWidget generateForFloat(Object parent, Field field, Object object, String title, boolean primitive) {
         FloatPropertyWidget widget = new FloatPropertyWidget(title, new Supplier<Float>() {
             @Override
-            public Float get () {
+            public Float get() {
                 try {
                     return primitive ? field.getFloat(parent) : (Float) field.get(parent);
                 } catch (IllegalAccessException e) {
@@ -385,14 +378,14 @@ public class WidgetFactory {
         return widget;
     }
 
-    private static PropertyWidget generateForEnum (Object parent, Field field, Object object, String title) {
+    private static PropertyWidget generateForEnum(Object parent, Field field, Object object, String title) {
         final Array<String> list = new Array<>();
         final ObjectMap<String, Object> map = new ObjectMap<>();
         try {
             Method method = object.getClass().getDeclaredMethod("values");
             Object[] obj = (Object[]) method.invoke(null);
 
-            for(Object enumVal: obj) {
+            for (Object enumVal : obj) {
                 list.add(enumVal.toString());
                 map.put(enumVal.toString(), enumVal);
             }
@@ -414,8 +407,8 @@ public class WidgetFactory {
         }, new PropertyWidget.ValueChanged<String>() {
             @Override
             public void report(String value) {
-                for(String name: list) {
-                    if(name.equals(value)) {
+                for (String name : list) {
+                    if (name.equals(value)) {
                         try {
                             field.set(parent, map.get(value));
                         } catch (IllegalAccessException e) {
@@ -431,8 +424,6 @@ public class WidgetFactory {
             }
         }, parent);
 
-        return  widget;
+        return widget;
     }
-
-
 }

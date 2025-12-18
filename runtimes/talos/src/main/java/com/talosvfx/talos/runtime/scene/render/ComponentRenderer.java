@@ -6,17 +6,17 @@ import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.GameObjectRenderer;
 import com.talosvfx.talos.runtime.scene.components.RendererComponent;
 
-public abstract class ComponentRenderer <T extends RendererComponent> {
+public abstract class ComponentRenderer<T extends RendererComponent> {
 
-	protected final GameObjectRenderer gameObjectRenderer;
+    protected final GameObjectRenderer gameObjectRenderer;
 
-	public ComponentRenderer (GameObjectRenderer gameObjectRenderer) {
-		this.gameObjectRenderer = gameObjectRenderer;
-	}
+    public ComponentRenderer(GameObjectRenderer gameObjectRenderer) {
+        this.gameObjectRenderer = gameObjectRenderer;
+    }
 
-	public abstract void render (Batch batch, Camera camera, GameObject parent, T rendererComponent);
+    public abstract void render(Batch batch, Camera camera, GameObject parent, T rendererComponent);
 
-	public void update (GameObject gameObject, T component, float delta) {
+    public void update(GameObject gameObject, T component, float delta) {
 
-	}
+    }
 }

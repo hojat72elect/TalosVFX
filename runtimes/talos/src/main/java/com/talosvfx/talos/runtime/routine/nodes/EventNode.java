@@ -5,11 +5,11 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
-import com.talosvfx.talos.runtime.RuntimeContext;
 import com.talosvfx.talos.runtime.routine.RoutineNode;
 import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyType;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +17,7 @@ public class EventNode extends RoutineNode {
     private static final Logger logger = LoggerFactory.getLogger(EventNode.class);
 
     private String eventName;
-    private Array<PropertyWrapper<?>> propertyWrappers = new Array<>();
+    private final Array<PropertyWrapper<?>> propertyWrappers = new Array<>();
 
     @Override
     public void receiveSignal(String portName) {

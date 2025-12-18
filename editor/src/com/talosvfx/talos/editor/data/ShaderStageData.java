@@ -11,13 +11,11 @@ import com.talosvfx.talos.editor.addons.scene.apps.routines.nodes.RoutineExposed
 import com.talosvfx.talos.editor.addons.scene.apps.routines.ui.types.PropertyTypeWidgetMapper;
 import com.talosvfx.talos.editor.nodes.DynamicNodeStage;
 import com.talosvfx.talos.editor.nodes.NodeWidget;
-import com.talosvfx.talos.runtime.RuntimeContext;
-import com.talosvfx.talos.runtime.routine.RoutineInstance;
-import com.talosvfx.talos.runtime.routine.serialization.BaseRoutineData;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyType;
 import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
 import com.talosvfx.talos.runtime.shader.BaseShaderData;
 import com.talosvfx.talos.runtime.shader.ShaderInstance;
+
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -44,17 +42,17 @@ public class ShaderStageData extends DynamicNodeStageData implements BaseShaderD
     private transient String vertString;
 
     @Override
-    public String getShaderFragmentSource () {
+    public String getShaderFragmentSource() {
         return fragString;
     }
 
     @Override
-    public String getShaderVertexSource () {
+    public String getShaderVertexSource() {
         return vertString;
     }
 
     @Override
-    public void read (Json json, JsonValue root) {
+    public void read(Json json, JsonValue root) {
         super.read(json, root);
         propertyWrappers.clear();
         JsonValue propertiesJson = root.get("propertyWrappers");
@@ -81,7 +79,7 @@ public class ShaderStageData extends DynamicNodeStageData implements BaseShaderD
     }
 
     @Override
-    public <T extends DynamicNodeStageData> void constructForUI (DynamicNodeStage<T> dynamicNodeStage) {
+    public <T extends DynamicNodeStageData> void constructForUI(DynamicNodeStage<T> dynamicNodeStage) {
         super.constructForUI(dynamicNodeStage);
 
         canWrite = true;
@@ -93,7 +91,7 @@ public class ShaderStageData extends DynamicNodeStageData implements BaseShaderD
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("propertyWrapperIndex", exposedPropertyIndex);
 
@@ -105,10 +103,9 @@ public class ShaderStageData extends DynamicNodeStageData implements BaseShaderD
             json.writeObjectEnd();
         }
         json.writeObjectEnd();
-
     }
 
-    public PropertyWrapper<?> createNewPropertyWrapper (PropertyType propertyType) {
+    public PropertyWrapper<?> createNewPropertyWrapper(PropertyType propertyType) {
         PropertyWrapper<?> propertyWrapper = createPropertyInstanceOfType(propertyType);
         propertyWrapper.index = exposedPropertyIndex;
         exposedPropertyIndex++;
@@ -116,7 +113,7 @@ public class ShaderStageData extends DynamicNodeStageData implements BaseShaderD
         return propertyWrapper;
     }
 
-    private PropertyWrapper<?> createPropertyInstanceOfType (PropertyType type) {
+    private PropertyWrapper<?> createPropertyInstanceOfType(PropertyType type) {
         try {
             PropertyWrapper<?> propertyWrapper = PropertyTypeWidgetMapper.getWrapperForPropertyType(type).getConstructor().newInstance();
             return propertyWrapper;
@@ -126,7 +123,7 @@ public class ShaderStageData extends DynamicNodeStageData implements BaseShaderD
         }
     }
 
-    public PropertyWrapper<?> getPropertyWrapperWithIndex (int index) {
+    public PropertyWrapper<?> getPropertyWrapperWithIndex(int index) {
         for (PropertyWrapper<?> propertyWrapper : propertyWrappers) {
             if (propertyWrapper.index == index) {
                 return propertyWrapper;
@@ -136,7 +133,7 @@ public class ShaderStageData extends DynamicNodeStageData implements BaseShaderD
         return null;
     }
 
-    public void removeExposedVariablesWithIndex (int index) {
+    public void removeExposedVariablesWithIndex(int index) {
         PropertyWrapper<?> propertyWrapperWithIndex = getPropertyWrapperWithIndex(index);
         propertyWrappers.removeValue(propertyWrapperWithIndex, true);
 
@@ -150,7 +147,7 @@ public class ShaderStageData extends DynamicNodeStageData implements BaseShaderD
         }
     }
 
-    public void changeExposedVariableKey (int index, String newKey) {
+    public void changeExposedVariableKey(int index, String newKey) {
         PropertyWrapper<?> propertyWrapper = getPropertyWrapperWithIndex(index);
         propertyWrapper.propertyName = newKey;
         for (NodeWidget node : nodes) {
@@ -163,7 +160,7 @@ public class ShaderStageData extends DynamicNodeStageData implements BaseShaderD
         }
     }
 
-    public ShaderInstance createInstance (boolean external) {
+    public ShaderInstance createInstance(boolean external) {
         ShaderInstance routine = new ShaderInstance();
         if (external && canWrite) {
             Json json = new Json();
@@ -174,11 +171,12 @@ public class ShaderStageData extends DynamicNodeStageData implements BaseShaderD
         }
         return routine;
     }
-    public ShaderInstance getInstance () {
+
+    public ShaderInstance getInstance() {
         return shaderInstance;
     }
 
-    public void setShaderInstanceFromVertFrag () {
+    public void setShaderInstanceFromVertFrag() {
         shaderInstance.shaderProgram = new ShaderProgram(vertString, fragString);
     }
 }

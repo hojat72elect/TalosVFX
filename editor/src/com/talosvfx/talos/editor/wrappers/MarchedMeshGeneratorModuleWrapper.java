@@ -30,7 +30,7 @@ public class MarchedMeshGeneratorModuleWrapper extends ModuleWrapper<MarchedMesh
 
     FloatInputWidget scale;
 
-    public MarchedMeshGeneratorModuleWrapper () {
+    public MarchedMeshGeneratorModuleWrapper() {
         super();
     }
 
@@ -53,31 +53,28 @@ public class MarchedMeshGeneratorModuleWrapper extends ModuleWrapper<MarchedMesh
         scale.setValue(1f);
         scale.setListener(new ChangeListener() {
             @Override
-            public void changed (ChangeEvent event, Actor actor) {
+            public void changed(ChangeEvent event, Actor actor) {
                 module.setScale(scale.getValue());
             }
         });
 
         leftWrapper.add(scale).left().expandX().padLeft(3).row();
-
-
     }
 
     @Override
-    public Class<? extends AbstractModule> getSlotsPreferredModule (Slot slot) {
+    public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
         if (slot.getIndex() == MarchedMeshGeneratorModule.RADIUS) return StaticValueModule.class;
 
         return null;
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
-
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
     }
 }

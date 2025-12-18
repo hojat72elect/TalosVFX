@@ -7,6 +7,7 @@ import com.talosvfx.talos.editor.notifications.events.ProjectUnloadEvent;
 import com.talosvfx.talos.editor.project2.localprefs.TalosLocalPrefs;
 import com.talosvfx.talos.editor.socket.SocketServer;
 import com.talosvfx.talos.runtime.RuntimeContext;
+
 import lombok.Setter;
 
 public class ProjectLoaderImpl implements ProjectLoader {

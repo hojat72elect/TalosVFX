@@ -4,12 +4,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.Cell;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
-import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.notifications.Notifications;
 import com.talosvfx.talos.editor.notifications.events.deprecatedparticles.RegisterDragPoints;
 import com.talosvfx.talos.editor.notifications.events.deprecatedparticles.UnRegisterDragPoints;
 import com.talosvfx.talos.editor.widgets.ui.DragPoint;
-import com.talosvfx.talos.editor.widgets.ui.PreviewWidget;
 import com.talosvfx.talos.runtime.vfx.Slot;
 import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
 import com.talosvfx.talos.runtime.vfx.modules.TargetModule;
@@ -28,7 +26,7 @@ public class TargetModuleWrapper extends ModuleWrapper<TargetModule> implements 
     @Override
     public void setModule(TargetModule module) {
         super.setModule(module);
-        if(!lock) {
+        if (!lock) {
             module.setDefaultPositions(dragPointFrom.position, dragPointTo.position);
         }
     }
@@ -62,12 +60,12 @@ public class TargetModuleWrapper extends ModuleWrapper<TargetModule> implements 
     }
 
     @Override
-    protected float reportPrefWidth () {
+    protected float reportPrefWidth() {
         return 210;
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         lock = true;
         super.read(json, jsonData);
         lock = false;
@@ -82,22 +80,22 @@ public class TargetModuleWrapper extends ModuleWrapper<TargetModule> implements 
 
     @Override
     public void dragPointChanged(DragPoint point) {
-        if(point == dragPointFrom) {
+        if (point == dragPointFrom) {
             module.setDefaultPositions(dragPointFrom.position, dragPointTo.position);
             markLabelAsHilighted(fromLabel);
         }
 
-        if(point == dragPointTo) {
+        if (point == dragPointTo) {
             module.setDefaultPositions(dragPointFrom.position, dragPointTo.position);
             markLabelAsHilighted(toLabel);
         }
     }
 
     @Override
-    public Class<? extends AbstractModule>  getSlotsPreferredModule(Slot slot) {
+    public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
 
-        if(slot.getIndex() == TargetModule.FROM) return Vector3Module.class;
-        if(slot.getIndex() == TargetModule.TO) return Vector3Module.class;
+        if (slot.getIndex() == TargetModule.FROM) return Vector3Module.class;
+        if (slot.getIndex() == TargetModule.TO) return Vector3Module.class;
 
         return null;
     }

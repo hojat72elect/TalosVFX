@@ -22,9 +22,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.kotcrab.vis.ui.VisUI;
-import com.kotcrab.vis.ui.widget.VisCheckBox;
-import com.talosvfx.talos.runtime.vfx.modules.EmConfigModule;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.CheckboxWithZoom;
+import com.talosvfx.talos.runtime.vfx.modules.EmConfigModule;
 
 public class EmConfigModuleWrapper extends ModuleWrapper<EmConfigModule> {
 
@@ -122,7 +121,7 @@ public class EmConfigModuleWrapper extends ModuleWrapper<EmConfigModule> {
     }
 
     public void fromUIToData() {
-        if(!lockListeners) {
+        if (!lockListeners) {
             module.getUserValue().additive = additiveBox.isChecked();
             module.getUserValue().isBlendAdd = blendAddBox.isChecked();
             module.getUserValue().attached = attachedBox.isChecked();
@@ -130,7 +129,6 @@ public class EmConfigModuleWrapper extends ModuleWrapper<EmConfigModule> {
             module.getUserValue().aligned = alignedBox.isChecked();
             module.getUserValue().immortal = immortalBox.isChecked();
             module.getUserValue().youngestInBack = youngestInBackBox.isChecked();
-
         }
     }
 
@@ -152,7 +150,7 @@ public class EmConfigModuleWrapper extends ModuleWrapper<EmConfigModule> {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         fromDataToUI();
     }

@@ -8,37 +8,37 @@ import com.talosvfx.talos.runtime.scene.components.CameraComponent;
 
 public class CameraComponentProvider extends ComponentPropertyProvider<CameraComponent> {
 
-	public CameraComponentProvider (CameraComponent component) {
-		super(component);
-	}
+    public CameraComponentProvider(CameraComponent component) {
+        super(component);
+    }
 
-	@Override
-	public Array<PropertyWidget> getListOfProperties () {
-		Array<PropertyWidget> properties = new Array<>();
+    @Override
+    public Array<PropertyWidget> getListOfProperties() {
+        Array<PropertyWidget> properties = new Array<>();
 
-		PropertyWidget colorWidget = WidgetFactory.generate(component, "backgroundColor", "Background Color");
-		PropertyWidget zoomWidget = WidgetFactory.generate(component, "zoom", "Zoom");
-		PropertyWidget sizeWidget = WidgetFactory.generate(component, "size", "Size");
+        PropertyWidget colorWidget = WidgetFactory.generate(component, "backgroundColor", "Background Color");
+        PropertyWidget zoomWidget = WidgetFactory.generate(component, "zoom", "Zoom");
+        PropertyWidget sizeWidget = WidgetFactory.generate(component, "size", "Size");
 
-		properties.add(colorWidget);
-		properties.add(zoomWidget);
-		properties.add(sizeWidget);
+        properties.add(colorWidget);
+        properties.add(zoomWidget);
+        properties.add(sizeWidget);
 
-		return properties;
-	}
+        return properties;
+    }
 
-	@Override
-	public String getPropertyBoxTitle () {
-		return "Camera";
-	}
+    @Override
+    public String getPropertyBoxTitle() {
+        return "Camera";
+    }
 
-	@Override
-	public int getPriority () {
-		return 2;
-	}
+    @Override
+    public int getPriority() {
+        return 2;
+    }
 
-	@Override
-	public Class<? extends IPropertyProvider> getType () {
-		return getClass();
-	}
+    @Override
+    public Class<? extends IPropertyProvider> getType() {
+        return getClass();
+    }
 }

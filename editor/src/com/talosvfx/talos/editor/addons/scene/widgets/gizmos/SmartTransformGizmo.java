@@ -11,14 +11,15 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Array;
-import com.talosvfx.talos.runtime.scene.GameObjectContainer;
-import com.talosvfx.talos.runtime.scene.SceneLayer;
 import com.talosvfx.talos.editor.addons.scene.SceneUtils;
-import com.talosvfx.talos.runtime.scene.GameObject;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
+import com.talosvfx.talos.runtime.scene.GameObject;
+import com.talosvfx.talos.runtime.scene.GameObjectContainer;
+import com.talosvfx.talos.runtime.scene.SceneLayer;
 import com.talosvfx.talos.runtime.scene.components.SpriteRendererComponent;
 import com.talosvfx.talos.runtime.scene.components.TransformComponent;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,33 +27,27 @@ import java.util.Comparator;
 
 public class SmartTransformGizmo extends Gizmo {
 
-    private static final Logger logger = LoggerFactory.getLogger(SmartTransformGizmo.class);
-    private final Image rect;
-    private final Image circle;
-    protected final NinePatch rectPatch;
-    protected float prevScale = 1f;
-
-    protected Vector2[] points = new Vector2[4];
-    private Vector2[] rotationAreas = new Vector2[4];
-
     protected static final int LB = 0;
     protected static final int LT = 1;
     protected static final int RT = 2;
     protected static final int RB = 3;
+    private static final Logger logger = LoggerFactory.getLogger(SmartTransformGizmo.class);
+    protected final NinePatch rectPatch;
+    private final Image rect;
+    private final Image circle;
+    protected float prevScale = 1f;
+    protected Vector2[] points = new Vector2[4];
     protected int touchedPoint = -1;
-    private int touchedRA = -1;
-
-    private Vector2 touchedDownLocation = new Vector2();
-    private Vector2 prevDragLocation = new Vector2();
-
-
     protected Vector2 tmp = new Vector2();
-    private Vector2 tmp2 = new Vector2();
-    private Vector2 tmp3 = new Vector2();
-    private Vector2 tmp4 = new Vector2();
-
     protected Vector2[] prevPoints = new Vector2[4];
     protected Vector2[] nextPoints = new Vector2[4];
+    private final Vector2[] rotationAreas = new Vector2[4];
+    private int touchedRA = -1;
+    private final Vector2 touchedDownLocation = new Vector2();
+    private final Vector2 prevDragLocation = new Vector2();
+    private final Vector2 tmp2 = new Vector2();
+    private final Vector2 tmp3 = new Vector2();
+    private final Vector2 tmp4 = new Vector2();
     private float prevRotation;
     private float nextRotation;
 
@@ -71,27 +66,39 @@ public class SmartTransformGizmo extends Gizmo {
         }
     }
 
+    public static int getLatestFreeOrderingIndex(GameObjectContainer gameObjectContainer, SceneLayer sortingLayer) {
+        Array<GameObject> list = gameObjectContainer.getSelfObject().getChildrenByComponent(SpriteRendererComponent.class, new Array<>());
+        int i = 0;
+        for (GameObject gameObject : list) {
+            SpriteRendererComponent spriteRendererComponent = gameObject.getComponent(SpriteRendererComponent.class);
+            if (spriteRendererComponent.sortingLayer.equals(sortingLayer)) {
+                i++;
+            }
+        }
+
+        return i;
+    }
 
     @Override
-    public void setGameObject (GameObjectContainer gameObjectContainer, GameObject gameObject) {
+    public void setGameObject(GameObjectContainer gameObjectContainer, GameObject gameObject) {
         super.setGameObject(gameObjectContainer, gameObject);
         updatePointsFromComponent();
     }
 
     @Override
-    public void act (float delta) {
+    public void act(float delta) {
         super.act(delta);
         updatePointsFromComponent();
     }
 
     @Override
-    public void draw (Batch batch, float parentAlpha) {
-        if(!selected) return;
-        rectPatch.scale(1f/ prevScale, 1f/prevScale);
+    public void draw(Batch batch, float parentAlpha) {
+        if (!selected) return;
+        rectPatch.scale(1f / prevScale, 1f / prevScale);
         rectPatch.scale(worldPerPixel, worldPerPixel);
         prevScale = worldPerPixel;
 
-        if(gameObject.hasComponent(TransformComponent.class)) {
+        if (gameObject.hasComponent(TransformComponent.class)) {
             for (int i = 0; i < 4; i++) {
                 drawCircle(points[i], batch);
             }
@@ -102,7 +109,6 @@ public class SmartTransformGizmo extends Gizmo {
             drawLine(batch, points[RT], points[RB], ColorLibrary.ORANGE);
             drawLine(batch, points[RB], points[LB], ColorLibrary.ORANGE);
         }
-
     }
 
     protected Vector2 getWorldLocAround(Vector2 point, float x, float y) {
@@ -115,38 +121,29 @@ public class SmartTransformGizmo extends Gizmo {
     protected void drawCircle(Vector2 pos, Batch batch) {
         float size = 20 * worldPerPixel; // pixel
         circle.setSize(size, size);
-        circle.setPosition(pos.x - size/2f, pos.y-size/2f);
+        circle.setPosition(pos.x - size / 2f, pos.y - size / 2f);
         circle.draw(batch, 1f);
     }
 
     @Override
-    public boolean hit (float x, float y) {
-        if(!selected) return false;
+    public boolean hit(float x, float y) {
+        if (!selected) return false;
 
         if (isOnTouchedPoint(x, y)) {
             return true;
         }
-        if (isOnTouchedRotationArea(x, y)) {
-            return true;
-        }
-
-        return false;
+        return isOnTouchedRotationArea(x, y);
     }
 
-    protected boolean isOnTouchedRotationArea (float x, float y) {
+    protected boolean isOnTouchedRotationArea(float x, float y) {
         int touchedRA = getTouchedRotationArea(x, y);
 
-        if(touchedRA >= 0) {
-            return true;
-        }
-        return false;
+        return touchedRA >= 0;
     }
-    protected boolean isOnTouchedPoint (float x, float y) {
+
+    protected boolean isOnTouchedPoint(float x, float y) {
         int touchedPoint = getTouchedPoint(x, y);
-        if(touchedPoint >= 0) {
-            return true;
-        }
-        return false;
+        return touchedPoint >= 0;
     }
 
     private int getTouchedRotationArea(float x, float y) {
@@ -171,24 +168,16 @@ public class SmartTransformGizmo extends Gizmo {
 
     private boolean isPointHit(Vector2 point, float x, float y) {
         float dst = point.dst(x, y) / worldPerPixel;
-        if (dst < 25) {
-            return true;
-        }
-
-        return false;
+        return dst < 25;
     }
 
     private boolean isRotationAreaHit(Vector2 rotationArea, float x, float y) {
         float dst = rotationArea.dst(x, y) / worldPerPixel;
-        if (dst < 30) {
-            return true;
-        }
-
-        return false;
+        return dst < 30;
     }
 
     @Override
-    public void touchDown (float x, float y, int button) {
+    public void touchDown(float x, float y, int button) {
         touchedPoint = getTouchedPoint(x, y);
 
         touchedRA = getTouchedRotationArea(x, y);
@@ -198,9 +187,9 @@ public class SmartTransformGizmo extends Gizmo {
     }
 
     @Override
-    public void touchDragged (float x, float y) {
+    public void touchDragged(float x, float y) {
 
-        if(touchedPoint >= 0) {
+        if (touchedPoint >= 0) {
             setNewPointValue(touchedPoint, x, y);
             updatePointsFromComponent();
             reportResizeUpdated(true);
@@ -214,8 +203,8 @@ public class SmartTransformGizmo extends Gizmo {
     }
 
     @Override
-    public void touchUp (float x, float y) {
-        if(touchedPoint >= 0) {
+    public void touchUp(float x, float y) {
+        if (touchedPoint >= 0) {
             setNewPointValue(touchedPoint, x, y);
             updatePointsFromComponent();
             reportResizeUpdated(false);
@@ -226,7 +215,7 @@ public class SmartTransformGizmo extends Gizmo {
         }
     }
 
-    protected void reportResizeUpdated (boolean isRapid) {
+    protected void reportResizeUpdated(boolean isRapid) {
         TransformComponent transform = gameObject.getComponent(TransformComponent.class);
 
         SceneUtils.componentUpdated(gameObjectContainer, gameObject, transform, isRapid);
@@ -243,11 +232,11 @@ public class SmartTransformGizmo extends Gizmo {
         transform.rotation += angleDiff;
     }
 
-    protected void updatePointsFromComponent () {
+    protected void updatePointsFromComponent() {
         getWorldLocAround(points[LB], -0.5f, -0.5f);
-        getWorldLocAround(points[LT],-0.5f, 0.5f);
-        getWorldLocAround(points[RT],0.5f, 0.5f);
-        getWorldLocAround(points[RB],0.5f, -0.5f);
+        getWorldLocAround(points[LT], -0.5f, 0.5f);
+        getWorldLocAround(points[RT], 0.5f, 0.5f);
+        getWorldLocAround(points[RB], 0.5f, -0.5f);
 
         tmp.set(points[RT]).sub(points[LB]).scl(0.5f).add(points[LB]); // midpoint
         updateRotationAreas(tmp.x, tmp.y);
@@ -257,10 +246,10 @@ public class SmartTransformGizmo extends Gizmo {
      * @param x of midpoint
      * @param y of midpoint
      */
-    protected void updateRotationAreas (float x, float y) {
+    protected void updateRotationAreas(float x, float y) {
         float radius = 30 * worldPerPixel;
 
-        for(int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             Vector2 point = points[i];
 
             tmp.set(point);
@@ -275,7 +264,7 @@ public class SmartTransformGizmo extends Gizmo {
         }
     }
 
-    private void setNewPointValue (int touchedPoint, float x, float y) {
+    private void setNewPointValue(int touchedPoint, float x, float y) {
         setRectFromPoints(prevPoints);
         prevRotation = getRotation(prevPoints);
 
@@ -291,12 +280,12 @@ public class SmartTransformGizmo extends Gizmo {
         // find midpoint
         tmp3.set(points[RT]).sub(points[LB]).scl(0.5f).add(points[LB]);
 
-        for(int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             points[i].sub(tmp3);
             points[i].rotateDeg(-prevRotation);
         }
         tmp2.rotateDeg(-prevRotation);
-        if(Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+        if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
             tmp2.x = tmp2.y * aspect;
             if (touchedPoint == LT || touchedPoint == RB) {
                 tmp2.x *= -1;
@@ -305,25 +294,25 @@ public class SmartTransformGizmo extends Gizmo {
 
         points[touchedPoint].add(tmp2); // apply diff
 
-        if(touchedPoint == LB) {
+        if (touchedPoint == LB) {
             points[LT].x = points[LB].x;
             points[RB].y = points[LB].y;
         }
-        if(touchedPoint == LT) {
+        if (touchedPoint == LT) {
             points[RT].y = points[LT].y;
             points[LB].x = points[LT].x;
         }
-        if(touchedPoint == RB) {
+        if (touchedPoint == RB) {
             points[LB].y = points[RB].y;
             points[RT].x = points[RB].x;
         }
-        if(touchedPoint == RT) {
+        if (touchedPoint == RT) {
             points[LT].y = points[RT].y;
             points[RB].x = points[RT].x;
         }
 
         //rotate back
-        for(int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             points[i].rotateDeg(prevRotation);
             points[i].add(tmp3);
         }
@@ -338,33 +327,33 @@ public class SmartTransformGizmo extends Gizmo {
         return Math.round(tmp3.set(p2).sub(p1).angleDeg());
     }
 
-    protected void transformOldToNew () {
+    protected void transformOldToNew() {
         TransformComponent transform = gameObject.getComponent(TransformComponent.class);
 
         float xDiff = getPintsAngle(nextPoints[RT], nextPoints[LT]) - getPintsAngle(prevPoints[RT], prevPoints[LT]);
         float yDiff = getPintsAngle(nextPoints[LT], nextPoints[LB]) - getPintsAngle(prevPoints[LT], prevPoints[LB]);
 
         // bring old next points to local space
-        for(int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             TransformComponent.worldToLocal(gameObject.parent, nextPoints[i]);
         }
 
-        float xSign = transform.scale.x < 0 ? -1: 1;
-        float ySign = transform.scale.y < 0 ? -1: 1;
+        float xSign = transform.scale.x < 0 ? -1 : 1;
+        float ySign = transform.scale.y < 0 ? -1 : 1;
 
         transform.scale.set(nextPoints[RB].dst(nextPoints[LB]) * xSign, nextPoints[LB].dst(nextPoints[LT]) * ySign);
 
-        if(xDiff != 0) {
+        if (xDiff != 0) {
             transform.scale.x = transform.scale.x * -1f;
         }
-        if(yDiff != 0) {
+        if (yDiff != 0) {
             transform.scale.y = transform.scale.y * -1f;
         }
 
         transform.scale = lowerPrecision(transform.scale);
         tmp.set(nextPoints[RT]).sub(nextPoints[LB]).scl(0.5f).add(nextPoints[LB]); // this is midpoint
 
-        if(!Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+        if (!Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
             transform.position.set(tmp); // lol, this is a funny story actually
         }
 
@@ -380,56 +369,43 @@ public class SmartTransformGizmo extends Gizmo {
 
     protected float lowerPrecision(float number) {
         number *= 10000;
-        number = (int)number;
+        number = (int) number;
         number /= 10000;
 
         return number;
     }
 
-    private float getRotation (Vector2[] pointArray) {
+    private float getRotation(Vector2[] pointArray) {
         return tmp.set(pointArray[RT]).sub(pointArray[LT]).angleDeg();
     }
-    private void setRectFromPoints (Vector2[] pointArray) {
+
+    private void setRectFromPoints(Vector2[] pointArray) {
         for (int i = 0; i < 4; i++) {
             pointArray[i].set(points[i]);
         }
     }
 
     @Override
-    public void keyDown (InputEvent event, int keycode) {
+    public void keyDown(InputEvent event, int keycode) {
 
-        if(keycode == Input.Keys.DOWN && Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+        if (keycode == Input.Keys.DOWN && Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
             moveInLayerOrder(gameObject, -1);
         }
 
-        if(keycode == Input.Keys.UP && Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+        if (keycode == Input.Keys.UP && Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
             moveInLayerOrder(gameObject, 1);
         }
-
     }
 
-    public static int getLatestFreeOrderingIndex (GameObjectContainer gameObjectContainer, SceneLayer sortingLayer) {
-        Array<GameObject> list = gameObjectContainer.getSelfObject().getChildrenByComponent(SpriteRendererComponent.class, new Array<>());
-        int i = 0;
-        for (GameObject gameObject : list) {
-            SpriteRendererComponent spriteRendererComponent = gameObject.getComponent(SpriteRendererComponent.class);
-            if (spriteRendererComponent.sortingLayer.equals(sortingLayer)) {
-                i++;
-            }
-        }
-
-        return i;
-    }
-
-    protected void moveInLayerOrder (GameObject gameObject, int direction) {
+    protected void moveInLayerOrder(GameObject gameObject, int direction) {
         // direction -1 for down, 1 for up
-        if(gameObject.hasComponent(SpriteRendererComponent.class)) {
+        if (gameObject.hasComponent(SpriteRendererComponent.class)) {
             SpriteRendererComponent component = gameObject.getComponent(SpriteRendererComponent.class);
             SceneLayer sortingLayer = component.sortingLayer;
 
             Array<GameObject> list = gameObjectContainer.getSelfObject().getChildrenByComponent(SpriteRendererComponent.class, new Array<>());
-            for(int i = list.size - 1; i >= 0; i--) {
-                if(!list.get(i).getComponent(SpriteRendererComponent.class).sortingLayer.equals(sortingLayer)) {
+            for (int i = list.size - 1; i >= 0; i--) {
+                if (!list.get(i).getComponent(SpriteRendererComponent.class).sortingLayer.equals(sortingLayer)) {
                     list.removeIndex(i);
                 }
             }
@@ -437,7 +413,7 @@ public class SmartTransformGizmo extends Gizmo {
             list.removeValue(gameObject, false);
             list.sort(new Comparator<GameObject>() {
                 @Override
-                public int compare (GameObject o1, GameObject o2) {
+                public int compare(GameObject o1, GameObject o2) {
                     SpriteRendererComponent o1SpriteRender = o1.getComponent(SpriteRendererComponent.class);
                     SpriteRendererComponent o2SpriteRender = o2.getComponent(SpriteRendererComponent.class);
                     return Integer.compare(o1SpriteRender.orderingInLayer, o2SpriteRender.orderingInLayer);
@@ -471,15 +447,12 @@ public class SmartTransformGizmo extends Gizmo {
                     component.orderingInLayer = MathUtils.clamp(currentOrderInLayer + direction, 0, list.size);
                     SceneUtils.componentUpdated(gameObjectContainer, gameObject, spriteRendererComponent);
                 }
-
-
             }
-
         }
     }
 
     @Override
-    public int getPriority () {
+    public int getPriority() {
         return 1;
     }
 }

@@ -20,77 +20,59 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.talosvfx.talos.runtime.vfx.render.ParticleRenderer;
-import lombok.Getter;
 
 import java.util.Comparator;
+
+import lombok.Getter;
 
 public class ParticleEffectInstance {
 
     private final ParticleEffectDescriptor descriptor;
-
-    private Array<IEmitter> emitters = new Array<>();
-
+    public boolean loopable = false;
+    public int nodeCalls = 0;
+    public float alpha = 1f;
     Vector3 position = new Vector3();
-
     @Getter
     float worldRotation;
-
     @Getter
     Vector2 worldScale = new Vector2(1f, 1f);
-
     ScopePayload scopePayload = new ScopePayload();
-
-    public boolean loopable = false;
-
     int particleCount = 0;
-    public int nodeCalls = 0;
-
+    private final Array<IEmitter> emitters = new Array<>();
     private float totalTime = 0;
-
-    private EmitterComparator emitterComparator = new EmitterComparator();
-
-    public float alpha = 1f;
-
+    private final EmitterComparator emitterComparator = new EmitterComparator();
     private boolean paused = false;
 
-    public void init () {
+    public ParticleEffectInstance(ParticleEffectDescriptor particleEffectDescriptor) {
+        this.descriptor = particleEffectDescriptor;
+    }
+
+    public void init() {
         for (int i = 0; i < emitters.size; i++) {
             emitters.get(i).init();
         }
     }
 
-    public float getTotalTime () {
+    public float getTotalTime() {
         return totalTime;
     }
 
-    public boolean isPaused () {
+    public boolean isPaused() {
         return paused;
     }
 
-    public static class EmitterComparator implements Comparator<IEmitter> {
-
-        @Override
-        public int compare (IEmitter o1, IEmitter o2) {
-            return o1.getEmitterGraph().getSortPosition() - o2.getEmitterGraph().getSortPosition();
-        }
+    public ScopePayload getScope() {
+        return scopePayload;
     }
 
-    public ParticleEffectInstance (ParticleEffectDescriptor particleEffectDescriptor) {
-        this.descriptor = particleEffectDescriptor;
-    }
-
-    public void setScope (ScopePayload scope) {
+    public void setScope(ScopePayload scope) {
         this.scopePayload = scope;
         for (int i = 0; i < emitters.size; i++) {
             emitters.get(i).setScope(scope);
         }
     }
 
-    public ScopePayload getScope () {
-        return scopePayload;
-    }
-
-    public void update (float delta) {
+    public void update(float delta) {
         if (paused) return;
 
         if (isComplete() && !loopable) return;
@@ -125,17 +107,16 @@ public class ParticleEffectInstance {
         }
     }
 
-    public void render (ParticleRenderer particleRenderer) {
+    public void render(ParticleRenderer particleRenderer) {
         particleRenderer.render(this);
     }
 
-    public void addEmitter (ParticleEmitterDescriptor particleEmitterDescriptor) {
+    public void addEmitter(ParticleEmitterDescriptor particleEmitterDescriptor) {
         final ParticleEmitterInstance particleEmitterInstance = new ParticleEmitterInstance(particleEmitterDescriptor, this);
         emitters.add(particleEmitterInstance);
     }
 
-
-    public void removeEmitterForEmitterDescriptor (ParticleEmitterDescriptor emitter) {
+    public void removeEmitterForEmitterDescriptor(ParticleEmitterDescriptor emitter) {
         for (int i = emitters.size - 1; i >= 0; i--) {
             if (emitters.get(i).getEmitterGraph() == emitter) {
                 emitters.removeIndex(i);
@@ -143,8 +124,7 @@ public class ParticleEffectInstance {
         }
     }
 
-
-    public boolean isContinuous () {
+    public boolean isContinuous() {
         for (ParticleEmitterDescriptor emitterDescriptor : descriptor.emitterModuleGraphs) {
             if (emitterDescriptor.isContinuous()) {
                 return true;
@@ -154,7 +134,7 @@ public class ParticleEffectInstance {
         return false;
     }
 
-    public boolean isComplete () {
+    public boolean isComplete() {
         if (loopable) return false;
 
         boolean allEmittersContinuous = true;
@@ -179,29 +159,28 @@ public class ParticleEffectInstance {
         return true;
     }
 
-    public void allowCompletion () {
+    public void allowCompletion() {
         loopable = false;
         for (int i = 0; i < emitters.size; i++) {
             emitters.get(i).stop();
         }
     }
 
-    public void pause () {
+    public void pause() {
         for (int i = 0; i < emitters.size; i++) {
             emitters.get(i).pause();
         }
         paused = true;
     }
 
-    public void resume () {
+    public void resume() {
         for (int i = 0; i < emitters.size; i++) {
             emitters.get(i).resume();
         }
         paused = false;
     }
 
-
-    public void restart () {
+    public void restart() {
         for (int i = 0; i < emitters.size; i++) {
             emitters.get(i).restart();
         }
@@ -209,8 +188,7 @@ public class ParticleEffectInstance {
         totalTime = 0;
     }
 
-
-    public void reset () {
+    public void reset() {
         for (int i = 0; i < emitters.size; i++) {
             emitters.get(i).reset();
         }
@@ -218,12 +196,11 @@ public class ParticleEffectInstance {
         totalTime = 0;
     }
 
-
-    public Array<IEmitter> getEmitters () {
+    public Array<IEmitter> getEmitters() {
         return emitters;
     }
 
-    public IEmitter getEmitter (ParticleEmitterDescriptor descriptor) {
+    public IEmitter getEmitter(ParticleEmitterDescriptor descriptor) {
         for (IEmitter instance : emitters) {
             if (instance.getEmitterGraph() == descriptor) {
                 return instance;
@@ -233,38 +210,46 @@ public class ParticleEffectInstance {
         return null;
     }
 
-    public void setWorldRotation (float worldRotation) {
+    public void setWorldRotation(float worldRotation) {
         this.worldRotation = worldRotation;
     }
 
-    public void setWorldScale (Vector2 worldScale) {
+    public void setWorldScale(Vector2 worldScale) {
         this.worldScale.set(worldScale);
     }
 
-    public void setPosition (float x, float y, float z) {
+    public void setPosition(float x, float y, float z) {
         position.set(x, y, z);
     }
 
-    public Vector3 getPosition () {
+    public Vector3 getPosition() {
         return position;
     }
 
-    public int getParticleCount () {
+    public int getParticleCount() {
         return particleCount;
     }
 
-    public int getNodeCalls () {
+    public int getNodeCalls() {
         return nodeCalls;
     }
 
-    public void reportNodeCall () {
+    public void reportNodeCall() {
         nodeCalls++;
     }
 
-    public void sortEmitters () {
+    public void sortEmitters() {
         emitters.sort(emitterComparator);
         for (int i = 0; i < emitters.size; i++) {
             emitters.get(i).getEmitterGraph().setSortPosition(i);
+        }
+    }
+
+    public static class EmitterComparator implements Comparator<IEmitter> {
+
+        @Override
+        public int compare(IEmitter o1, IEmitter o2) {
+            return o1.getEmitterGraph().getSortPosition() - o2.getEmitterGraph().getSortPosition();
         }
     }
 }

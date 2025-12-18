@@ -1,7 +1,5 @@
 package com.talosvfx.talos.runtime.scene.utils.propertyWrappers;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
@@ -11,7 +9,7 @@ import com.talosvfx.talos.runtime.assets.GameResourceOwner;
 
 public class PropertyGameAssetWrapper extends PropertyWrapper<GameAsset<?>> implements GameResourceOwner {
 
-    private transient GameAsset.GameAssetUpdateListener gameAssetUpdateListener = new GameAsset.GameAssetUpdateListener() {
+    private final transient GameAsset.GameAssetUpdateListener gameAssetUpdateListener = new GameAsset.GameAssetUpdateListener() {
         @Override
         public void onUpdate() {
 
@@ -29,7 +27,7 @@ public class PropertyGameAssetWrapper extends PropertyWrapper<GameAsset<?>> impl
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
 
         JsonValue value = jsonData.get("value");
@@ -39,7 +37,7 @@ public class PropertyGameAssetWrapper extends PropertyWrapper<GameAsset<?>> impl
 
         GameAsset<?> asset = GameResourceOwner.readAsset(json, value);
         if (asset != null) {
-            if(asset.isBroken()) {
+            if (asset.isBroken()) {
                 asset = defaultValue;
             }
             setGameAsset(asset);
@@ -47,7 +45,7 @@ public class PropertyGameAssetWrapper extends PropertyWrapper<GameAsset<?>> impl
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeObjectStart("value");
         GameResourceOwner.writeGameAsset(json, this);
@@ -74,7 +72,7 @@ public class PropertyGameAssetWrapper extends PropertyWrapper<GameAsset<?>> impl
             this.value.listeners.removeValue(gameAssetUpdateListener, true);
         }
 
-        if(defaultValue == null && !newGameAsset.isBroken()){
+        if (defaultValue == null && !newGameAsset.isBroken()) {
             defaultValue = newGameAsset;
         }
 
@@ -85,7 +83,7 @@ public class PropertyGameAssetWrapper extends PropertyWrapper<GameAsset<?>> impl
     }
 
     @Override
-    public void clearResource () {
+    public void clearResource() {
         if (value != null) {
             value.listeners.removeValue(gameAssetUpdateListener, true);
             value = null;

@@ -15,7 +15,7 @@ public class PerlinNoiseNode extends RoutineNode {
 
         float scale = fetchFloatValue("scale");
 
-        float query = (noise.query(x * (30f/256f), y * (30f/256f), scale) + 1f)/2f;
+        float query = (noise.query(x * (30f / 256f), y * (30f / 256f), scale) + 1f) / 2f;
 
         return query;
     }

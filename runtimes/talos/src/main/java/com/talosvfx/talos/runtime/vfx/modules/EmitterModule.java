@@ -32,19 +32,15 @@ public class EmitterModule extends AbstractModule {
     public static final int CONFIG = 3;
 
     public static final int MAX = 4;
-
-    NumericalValue delay;
-    NumericalValue duration;
-    NumericalValue rate;
-
-    NumericalValue max;
-    EmConfigValue config;
-
     public float defaultDelay = 0;
     public float defaultDuration = 2f;
     public float defaultRate = 50f;
-
     public int defaultMaxParticles = -1;
+    NumericalValue delay;
+    NumericalValue duration;
+    NumericalValue rate;
+    NumericalValue max;
+    EmConfigValue config;
 
     @Override
     protected void defineSlots() {
@@ -57,16 +53,15 @@ public class EmitterModule extends AbstractModule {
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
         // nothing to process
     }
-
 
 
     public float getDelay() {
         fetchInputSlotValue(DELAY);
 
-        if(delay.isEmpty()) return defaultDelay; // defaults
+        if (delay.isEmpty()) return defaultDelay; // defaults
 
         return delay.getFloat();
     }
@@ -74,7 +69,7 @@ public class EmitterModule extends AbstractModule {
     public float getDuration() {
         fetchInputSlotValue(DURATION);
 
-        if(duration.isEmpty()) return defaultDuration; // defaults
+        if (duration.isEmpty()) return defaultDuration; // defaults
 
         return duration.getFloat();
     }
@@ -82,12 +77,12 @@ public class EmitterModule extends AbstractModule {
     public float getRate() {
         fetchInputSlotValue(RATE);
 
-        if(rate.isEmpty()) return defaultRate; // defaults
+        if (rate.isEmpty()) return defaultRate; // defaults
 
         return rate.getFloat();
     }
 
-    public int getMaxParticles () {
+    public int getMaxParticles() {
         fetchInputSlotValue(MAX);
 
         if (max.isEmpty()) return defaultMaxParticles;
@@ -98,7 +93,7 @@ public class EmitterModule extends AbstractModule {
     public boolean isContinuous() {
         fetchInputSlotValue(CONFIG);
 
-        if(config.isEmpty()) return false;
+        if (config.isEmpty()) return false;
 
         return config.continuous;
     }
@@ -106,7 +101,7 @@ public class EmitterModule extends AbstractModule {
     public boolean isAttached() {
         fetchInputSlotValue(CONFIG);
 
-        if(config.isEmpty()) return false;
+        if (config.isEmpty()) return false;
 
         return config.attached;
     }
@@ -114,7 +109,7 @@ public class EmitterModule extends AbstractModule {
     public boolean isAligned() {
         fetchInputSlotValue(CONFIG);
 
-        if(config.isEmpty()) return false;
+        if (config.isEmpty()) return false;
 
         return config.aligned;
     }
@@ -122,7 +117,7 @@ public class EmitterModule extends AbstractModule {
     public boolean isAdditive() {
         fetchInputSlotValue(CONFIG);
 
-        if(config.isEmpty()) return true;
+        if (config.isEmpty()) return true;
 
         return config.additive;
     }
@@ -130,16 +125,16 @@ public class EmitterModule extends AbstractModule {
     public boolean isYoungestInBack() {
         fetchInputSlotValue(CONFIG);
 
-        if(config.isEmpty()) return true;
+        if (config.isEmpty()) return true;
 
         return config.youngestInBack;
     }
 
 
-    public boolean isBlendAdd () {
+    public boolean isBlendAdd() {
         fetchInputSlotValue(CONFIG);
 
-        if(config.isEmpty()) return false;
+        if (config.isEmpty()) return false;
 
         return config.isBlendAdd;
     }
@@ -150,7 +145,7 @@ public class EmitterModule extends AbstractModule {
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("delay", defaultDelay);
         json.writeValue("duration", defaultDuration);
@@ -159,7 +154,7 @@ public class EmitterModule extends AbstractModule {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         defaultDelay = jsonData.getFloat("delay", 0);
         defaultDuration = jsonData.getFloat("duration", 2);
@@ -170,7 +165,7 @@ public class EmitterModule extends AbstractModule {
     public boolean isImmortal() {
         fetchInputSlotValue(CONFIG);
 
-        if(config.isEmpty()) return false;
+        if (config.isEmpty()) return false;
 
         return config.immortal;
     }

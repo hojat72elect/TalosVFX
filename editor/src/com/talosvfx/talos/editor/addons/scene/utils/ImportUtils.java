@@ -2,13 +2,12 @@ package com.talosvfx.talos.editor.addons.scene.utils;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.PixmapIO;
 
 public class ImportUtils {
 
-    private static Color c = new Color();
+    private static final Color c = new Color();
 
-    public static int[] getSplits (Pixmap raster) {
+    public static int[] getSplits(Pixmap raster) {
 
         int startX = getSplitPoint(raster, 1, 0, true, true);
         int endX = getSplitPoint(raster, startX, 0, false, true);
@@ -38,10 +37,10 @@ public class ImportUtils {
             endY = raster.getHeight() - 2;
         }
 
-        return new int[] {startX, endX, startY, endY};
+        return new int[]{startX, endX, startY, endY};
     }
 
-    private static int getSplitPoint (Pixmap raster, int startX, int startY, boolean startPoint, boolean xAxis) {
+    private static int getSplitPoint(Pixmap raster, int startX, int startY, boolean startPoint, boolean xAxis) {
         int[] rgba = new int[4];
 
         int next = xAxis ? startX : startY;
@@ -58,10 +57,10 @@ public class ImportUtils {
 
             int colint = raster.getPixel(x, y);
             c.set(colint);
-            rgba[0] = (int)(c.r * 255);
-            rgba[1] = (int)(c.g * 255);
-            rgba[2] = (int)(c.b * 255);
-            rgba[3] = (int)(c.a * 255);
+            rgba[0] = (int) (c.r * 255);
+            rgba[1] = (int) (c.g * 255);
+            rgba[2] = (int) (c.b * 255);
+            rgba[3] = (int) (c.a * 255);
             if (rgba[3] == breakA) return next;
 
             if (!startPoint && (rgba[0] != 0 || rgba[1] != 0 || rgba[2] != 0 || rgba[3] != 255))
@@ -76,8 +75,8 @@ public class ImportUtils {
     public static Pixmap cropImage(Pixmap pixmap, int x, int y, int width, int height) {
         Pixmap result = new Pixmap(width, height, pixmap.getFormat());
 
-        for(int i = x; i < width; i++) {
-            for(int j = y; j < height; j++) {
+        for (int i = x; i < width; i++) {
+            for (int j = y; j < height; j++) {
                 int pixel = pixmap.getPixel(i, j);
                 result.drawPixel(i - x, j - y, pixel);
             }

@@ -39,7 +39,7 @@ public class DragPoint {
         color.set(Color.ORANGE);
     }
 
-    public DragPoint (float x, float y, float z) {
+    public DragPoint(float x, float y, float z) {
         position.set(x, y, z);
         drawOrigin = false;
         color.set(Color.ORANGE);

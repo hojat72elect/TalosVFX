@@ -8,7 +8,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.talosvfx.talos.TalosMain;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
 
@@ -18,10 +17,10 @@ public class ModeToggle extends Table {
     private static final ColorLibrary.BackgroundColor btnBgChecked = ColorLibrary.BackgroundColor.PALETTE_TOGGLE_DOWN;
     private static final ColorLibrary.BackgroundColor btnBgOver = ColorLibrary.BackgroundColor.PALETTE_TOGGLE_HOVER;
 
-    private TextButton tileBtn;
-    private TextButton entityBtn;
+    private final TextButton tileBtn;
+    private final TextButton entityBtn;
 
-    public ModeToggle () {
+    public ModeToggle() {
         Skin skin = SharedResources.skin;
 
         defaults().padLeft(8).padRight(8);
@@ -67,7 +66,7 @@ public class ModeToggle extends Table {
         });
     }
 
-    private TextButton.TextButtonStyle getButtonStyle (Skin skin) {
+    private TextButton.TextButtonStyle getButtonStyle(Skin skin) {
         BitmapFont font = skin.getFont("default-font");
         Color btnFontUp = Color.valueOf("#ffffff99");
         Color btnFontChecked = Color.valueOf("#81cdff");

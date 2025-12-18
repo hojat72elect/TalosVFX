@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.talosvfx.talos.editor.utils.grid.GridLine;
 import com.talosvfx.talos.editor.utils.grid.GridPropertyProvider;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,26 +18,20 @@ public class StaticGridPropertyProvider implements GridPropertyProvider {
     private static final Logger logger = LoggerFactory.getLogger(StaticGridPropertyProvider.class);
 
     protected Array<GridLine> gridLines = new Array<>();
-
-    private Color backgroundColor = new Color();
-
-    float thickness = 1;
-
-    private boolean shouldHighlightCursorHover = false;
-    private boolean shouldHighlightCursorSelect = false;
-
-    private int subdivisions = 0;
-
     protected float startX;
     protected float startY;
     protected float endX;
     protected float endY;
-
     protected OrthographicCamera camera;
+    float thickness = 1;
+    private final Color backgroundColor = new Color();
+    private boolean shouldHighlightCursorHover = false;
+    private boolean shouldHighlightCursorSelect = false;
+    private final int subdivisions = 0;
     private boolean highlightZero = true;
 
     @Override
-    public void update (OrthographicCamera camera, float alpha) {
+    public void update(OrthographicCamera camera, float alpha) {
         this.camera = camera;
         gridLines.clear();
         float gridSizeX = getUnitX();
@@ -60,8 +55,8 @@ public class StaticGridPropertyProvider implements GridPropertyProvider {
         float leftSide = camera.position.x - totalWidth / 2;
         float bottomSide = camera.position.y - totalHeight / 2;
 
-        startX = ((int)(leftSide / gridSizeX)) * gridSizeX;
-        startY = ((int)(bottomSide / gridSizeY)) * gridSizeY;
+        startX = ((int) (leftSide / gridSizeX)) * gridSizeX;
+        startY = ((int) (bottomSide / gridSizeY)) * gridSizeY;
 
         Color color = Color.valueOf("7070704D");
         Color subDivisionColour = new Color(1, 1, 1, 0.1f);
@@ -105,17 +100,17 @@ public class StaticGridPropertyProvider implements GridPropertyProvider {
     }
 
     @Override
-    public Array<GridLine> getGridLines () {
+    public Array<GridLine> getGridLines() {
         return gridLines;
     }
 
     @Override
-    public Color getBackgroundColor () {
+    public Color getBackgroundColor() {
         return backgroundColor;
     }
 
     @Override
-    public float getUnitX () {
+    public float getUnitX() {
         logger.info("unit x redo static grid");
 //        if (SceneEditorWorkspace.getInstance().mapEditorState.isEditing()) {
 //            TalosLayer selectedLayer = SceneEditorWorkspace.getInstance().mapEditorState.getLayerSelected();
@@ -131,7 +126,7 @@ public class StaticGridPropertyProvider implements GridPropertyProvider {
     }
 
     @Override
-    public float getUnitY () {
+    public float getUnitY() {
         logger.info("unity y redo static grid");
 //        if (SceneEditorWorkspace.getInstance().mapEditorState.isEditing()) {
 //            TalosLayer selectedLayer = SceneEditorWorkspace.getInstance().mapEditorState.getLayerSelected();
@@ -158,47 +153,47 @@ public class StaticGridPropertyProvider implements GridPropertyProvider {
 
 
     @Override
-    public float getGridStartX () {
+    public float getGridStartX() {
         return startX;
     }
 
     @Override
-    public float getGridEndX () {
+    public float getGridEndX() {
         return endX;
     }
 
     @Override
-    public float getGridStartY () {
+    public float getGridStartY() {
         return startY;
     }
 
     @Override
-    public float getGridEndY () {
+    public float getGridEndY() {
         return endY;
     }
 
     @Override
-    public void setLineThickness (float thickness) {
+    public void setLineThickness(float thickness) {
         this.thickness = thickness;
     }
 
     @Override
-    public boolean shouldHighlightCursorHover () {
+    public boolean shouldHighlightCursorHover() {
         return shouldHighlightCursorHover;
     }
 
     @Override
-    public boolean shouldHighlightCursorSelect () {
+    public boolean shouldHighlightCursorSelect() {
         return shouldHighlightCursorSelect;
     }
 
     @Override
-    public void setHighlightCursorHover (boolean shouldHighlight) {
+    public void setHighlightCursorHover(boolean shouldHighlight) {
         this.shouldHighlightCursorHover = shouldHighlight;
     }
 
     @Override
-    public void setHighlightCursorSelect (boolean shouldHighlight) {
+    public void setHighlightCursorSelect(boolean shouldHighlight) {
         this.shouldHighlightCursorSelect = shouldHighlight;
     }
 

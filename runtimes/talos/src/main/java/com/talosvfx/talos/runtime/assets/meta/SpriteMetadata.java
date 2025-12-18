@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.talosvfx.talos.runtime.assets.AMetadata;
-import com.talosvfx.talos.runtime.utils.Supplier;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,12 +20,13 @@ public class SpriteMetadata extends AMetadata {
     public Texture.TextureFilter magFilter = Texture.TextureFilter.Nearest;
 
     public boolean dontPack = false;
+
     public SpriteMetadata() {
         super();
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
         json.writeValue("borderData", borderData);
         json.writeValue("pixelsPerUnit", pixelsPerUnit);
@@ -35,7 +36,7 @@ public class SpriteMetadata extends AMetadata {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         JsonValue borderDataJsonValue = jsonData.get("borderData");
         if (borderDataJsonValue != null) {
@@ -47,7 +48,7 @@ public class SpriteMetadata extends AMetadata {
         dontPack = jsonData.getBoolean("dontPack", false);
     }
 
-    public boolean isSlice () {
+    public boolean isSlice() {
         for (int i = 0; i < 4; i++) {
             boolean isNonZeroBorderData = borderData[i] != 0;
             if (isNonZeroBorderData) return true;

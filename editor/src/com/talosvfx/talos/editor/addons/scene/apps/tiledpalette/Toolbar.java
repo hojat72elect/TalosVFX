@@ -6,18 +6,18 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.OrderedSet;
-import com.talosvfx.talos.runtime.maps.TileGameObjectProxy;
-import com.talosvfx.talos.runtime.scene.GameObject;import com.talosvfx.talos.editor.project2.SharedResources;
+import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.ui.common.ColorLibrary;
 import com.talosvfx.talos.editor.widgets.ui.common.SquareButton;
+import com.talosvfx.talos.runtime.maps.TileGameObjectProxy;
+import com.talosvfx.talos.runtime.scene.GameObject;
 
 public class Toolbar extends Table {
-    private PaletteEditor paletteEditor;
-
     SquareButton translate;
     SquareButton editGizmo;
     SquareButton editTile;
     SquareButton editFakeHeight;
+    private final PaletteEditor paletteEditor;
 
     public Toolbar(PaletteEditor paletteEditor) {
         this.paletteEditor = paletteEditor;
@@ -76,7 +76,7 @@ public class Toolbar extends Table {
                 OrderedSet<GameObject> selection = paletteEditor.getSelection();
                 boolean singleSelection = selection.size == 1;
                 boolean selectedStaticTile = singleSelection && selection.first() instanceof TileGameObjectProxy;
-                if (editGizmo.isChecked() && (!singleSelection || selectedStaticTile))  {
+                if (editGizmo.isChecked() && (!singleSelection || selectedStaticTile)) {
                     event.cancel();
                     return;
                 }
@@ -99,7 +99,7 @@ public class Toolbar extends Table {
                 OrderedSet<GameObject> selection = paletteEditor.getSelection();
                 boolean singleSelection = selection.size == 1;
                 boolean selectedStaticTile = singleSelection && selection.first() instanceof TileGameObjectProxy;
-                if (editTile.isChecked() && (!singleSelection || selectedStaticTile))  {
+                if (editTile.isChecked() && (!singleSelection || selectedStaticTile)) {
                     event.cancel();
                     return;
                 }
@@ -120,7 +120,7 @@ public class Toolbar extends Table {
                 OrderedSet<GameObject> selection = paletteEditor.getSelection();
                 boolean singleSelection = selection.size == 1;
                 boolean selectedStaticTile = singleSelection && selection.first() instanceof TileGameObjectProxy;
-                if (editFakeHeight.isChecked() && (!singleSelection || selectedStaticTile))  {
+                if (editFakeHeight.isChecked() && (!singleSelection || selectedStaticTile)) {
                     event.cancel();
                     return;
                 }
@@ -128,7 +128,7 @@ public class Toolbar extends Table {
                 if (editFakeHeight.isChecked()) {
                     disableAllBesides(editFakeHeight);
                     startFakeHeightEditMode();
-                } else if(!editFakeHeight.isChecked() && editFakeHeight.isPressed()){
+                } else if (!editFakeHeight.isChecked() && editFakeHeight.isPressed()) {
                     translate.toggle();
                 }
             }
@@ -159,37 +159,37 @@ public class Toolbar extends Table {
         return canUncheck;
     }
 
-    private void startFreeTranslateEditMode () {
-		paletteEditor.currentEditMode = PaletteEditor.PaletteEditMode.FREE_TRANSLATE;
+    private void startFreeTranslateEditMode() {
+        paletteEditor.currentEditMode = PaletteEditor.PaletteEditMode.FREE_TRANSLATE;
     }
 
-    private void startFreeTransformEditMode () {
+    private void startFreeTransformEditMode() {
         paletteEditor.currentEditMode = PaletteEditor.PaletteEditMode.FREE_TRANSFORM;
-		paletteEditor.unlockGizmos();
+        paletteEditor.unlockGizmos();
     }
 
-    private void startParentTileEditMode () {
+    private void startParentTileEditMode() {
         paletteEditor.currentEditMode = PaletteEditor.PaletteEditMode.PARENT_TILE_EDIT;
     }
 
-    private void startFakeHeightEditMode () {
+    private void startFakeHeightEditMode() {
         paletteEditor.currentEditMode = PaletteEditor.PaletteEditMode.FAKE_HEIGHT_EDIT;
         paletteEditor.startFakeHeightEditMode();
     }
 
-    private void endFreeTranslateEditMode () {
+    private void endFreeTranslateEditMode() {
         // do nothing
     }
 
-    private void endFreeTransformEditMode () {
-		paletteEditor.lockGizmos();
+    private void endFreeTransformEditMode() {
+        paletteEditor.lockGizmos();
     }
 
-    private void endParentTileEditMode () {
+    private void endParentTileEditMode() {
         // do nothing
     }
 
-    private void endFakeHeightEditMode () {
+    private void endFakeHeightEditMode() {
         // do nothing
     }
 }

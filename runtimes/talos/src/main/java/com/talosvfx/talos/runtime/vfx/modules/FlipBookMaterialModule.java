@@ -30,9 +30,10 @@ import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.runtime.assets.GameResourceOwner;
 import com.talosvfx.talos.runtime.vfx.values.ModuleValue;
 import com.talosvfx.talos.runtime.vfx.values.NumericalValue;
-import lombok.Getter;
 
 import java.util.Comparator;
+
+import lombok.Getter;
 
 public class FlipBookMaterialModule extends SpriteMaterialModule implements GameResourceOwner<AtlasSprite>, GameAsset.GameAssetUpdateListener {
 
@@ -40,10 +41,8 @@ public class FlipBookMaterialModule extends SpriteMaterialModule implements Game
     public static final int ROWS = 1;
     public static final int COLUMNS = 2;
     public static final int SPLIT_COUNT = 3;
-    private transient AtlasSprite region;
-
     public GameAsset<AtlasSprite> asset;
-
+    private transient AtlasSprite region;
     @Deprecated
     private String assetIdentifier = "white";
     private ModuleValue<FlipBookMaterialModule> moduleOutput;
@@ -68,8 +67,16 @@ public class FlipBookMaterialModule extends SpriteMaterialModule implements Game
     private int cachedColumns = -1;
     private AtlasSprite cachedRegion = null;
 
+    private static int extractIndex(String name) {
+        int underscore1 = name.indexOf('_');
+        int underscore2 = name.indexOf('_', underscore1 + 1);
+
+        // sampleflip_12_frame → "12"
+        return Integer.parseInt(name.substring(underscore1 + 1, underscore2));
+    }
+
     @Override
-    protected void defineSlots () {
+    protected void defineSlots() {
         moduleOutput = new ModuleValue<>();
         moduleOutput.setModule(this);
 
@@ -82,7 +89,7 @@ public class FlipBookMaterialModule extends SpriteMaterialModule implements Game
     }
 
     @Override
-    public void processCustomValues () {
+    public void processCustomValues() {
         float calcAlpha = alphaInputSlot.getFloat();
 
         int calcRows = rowsValue.isEmpty() ? rowsDefaultValue : MathUtils.round(rowsValue.getFloat());
@@ -99,14 +106,6 @@ public class FlipBookMaterialModule extends SpriteMaterialModule implements Game
         targetFrame = MathUtils.floor(calcAlpha * calcSplitCount) % calcSplitCount;
     }
 
-    private static int extractIndex(String name) {
-        int underscore1 = name.indexOf('_');
-        int underscore2 = name.indexOf('_', underscore1 + 1);
-
-        // sampleflip_12_frame → "12"
-        return Integer.parseInt(name.substring(underscore1 + 1, underscore2));
-    }
-
     private void calculateSplits(int rows, int columns) {
         if (region == null || rows <= 0 || columns <= 0) {
             cachedSprites = null;
@@ -114,10 +113,10 @@ public class FlipBookMaterialModule extends SpriteMaterialModule implements Game
         }
 
         if (asset.getResource() instanceof FlipBookAsset) {
-            Array<AtlasSprite> frames = ((FlipBookAsset)asset.getResource()).getFrames();
+            Array<AtlasSprite> frames = ((FlipBookAsset) asset.getResource()).getFrames();
             frames.sort(new Comparator<AtlasSprite>() {
                 @Override
-                public int compare (AtlasSprite a, AtlasSprite b) {
+                public int compare(AtlasSprite a, AtlasSprite b) {
                     String na = a.getAtlasRegion().name;
                     String nb = b.getAtlasRegion().name;
 
@@ -168,17 +167,17 @@ public class FlipBookMaterialModule extends SpriteMaterialModule implements Game
                 float cellRight = Math.min(packedWidth, packedX + cellOrigWidth);
                 float cellTop = Math.min(packedHeight, packedY + cellOrigHeight);
 
-                int cellPackedWidth = (int)(cellRight - cellLeft);
-                int cellPackedHeight = (int)(cellTop - cellBottom);
+                int cellPackedWidth = (int) (cellRight - cellLeft);
+                int cellPackedHeight = (int) (cellTop - cellBottom);
 
                 TextureAtlas.AtlasRegion cellAtlasRegion;
                 if (cellPackedWidth > 0 && cellPackedHeight > 0) {
                     cellAtlasRegion = new TextureAtlas.AtlasRegion(
-                        atlasRegion.getTexture(),
-                        atlasRegion.getRegionX() + (int)cellLeft,
-                        atlasRegion.getRegionY() + (int)cellBottom,
-                        cellPackedWidth,
-                        cellPackedHeight
+                            atlasRegion.getTexture(),
+                            atlasRegion.getRegionX() + (int) cellLeft,
+                            atlasRegion.getRegionY() + (int) cellBottom,
+                            cellPackedWidth,
+                            cellPackedHeight
                     );
                     cellAtlasRegion.originalWidth = cellOrigWidth;
                     cellAtlasRegion.originalHeight = cellOrigHeight;
@@ -198,7 +197,7 @@ public class FlipBookMaterialModule extends SpriteMaterialModule implements Game
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         json.writeValue("index", index);
 
         GameResourceOwner.writeGameAsset(json, this);
@@ -209,14 +208,14 @@ public class FlipBookMaterialModule extends SpriteMaterialModule implements Game
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         index = jsonData.getInt("index");
 
         assetIdentifier = jsonData.getString("asset", "white");
 
         if (RuntimeContext.getInstance().getEditorContext() == null) {
             GameAsset<FlipBookAsset> asset = GameResourceOwner.readAssetForceType(json, jsonData, GameAssetType.FLIPBOOK);
-            setGameAsset((GameAsset)asset);
+            setGameAsset((GameAsset) asset);
         } else {
             GameAsset<AtlasSprite> asset = GameResourceOwner.readAsset(json, jsonData);
             setGameAsset(asset);
@@ -228,14 +227,14 @@ public class FlipBookMaterialModule extends SpriteMaterialModule implements Game
         splitCountDefaultValue = jsonData.getInt("splitCount", 1);
     }
 
-    public void setToDefault () {
+    public void setToDefault() {
         BaseAssetRepository baseAssetRepository = RuntimeContext.getInstance().getEditorContext().getBaseAssetRepository();
         GameAsset<AtlasSprite> defaultValue = baseAssetRepository.getAssetForIdentifier("white", GameAssetType.SPRITE);
         setGameAsset(defaultValue);
     }
 
     @Override
-    public void onUpdate () {
+    public void onUpdate() {
         if (asset != null && !asset.isBroken()) {
             region = new AtlasSprite(asset.getResource());
             cachedRegion = null;
@@ -244,7 +243,7 @@ public class FlipBookMaterialModule extends SpriteMaterialModule implements Game
     }
 
     @Override
-    public void remove () {
+    public void remove() {
         super.remove();
         if (asset != null) {
             asset.listeners.removeValue(this, true);
@@ -252,17 +251,17 @@ public class FlipBookMaterialModule extends SpriteMaterialModule implements Game
     }
 
     @Override
-    public GameAssetType getGameAssetType () {
+    public GameAssetType getGameAssetType() {
         return GameAssetType.SPRITE;
     }
 
     @Override
-    public GameAsset<AtlasSprite> getGameResource () {
+    public GameAsset<AtlasSprite> getGameResource() {
         return asset;
     }
 
     @Override
-    public void setGameAsset (GameAsset<AtlasSprite> gameAsset) {
+    public void setGameAsset(GameAsset<AtlasSprite> gameAsset) {
         if (this.asset != null) {
             this.asset.listeners.removeValue(this, true);
         }
@@ -280,7 +279,7 @@ public class FlipBookMaterialModule extends SpriteMaterialModule implements Game
     }
 
     @Override
-    public void clearResource () {
+    public void clearResource() {
         if (asset != null) {
             asset.listeners.removeValue(this, true);
             asset = null;
@@ -291,22 +290,22 @@ public class FlipBookMaterialModule extends SpriteMaterialModule implements Game
         cachedRegion = null;
     }
 
-    public void setRows (int v) {
+    public void setRows(int v) {
         rowsValue.set(v);
         rowsDefaultValue = v;
     }
 
-    public void setColumns (int v) {
+    public void setColumns(int v) {
         columnsValue.set(v);
         columnsDefaultValue = v;
     }
 
-    public void setTotalSplitsField (int rounded) {
+    public void setTotalSplitsField(int rounded) {
         splitCountValue.set(rounded);
         splitCountDefaultValue = rounded;
     }
 
-    public AtlasSprite getTextureRegion () {
+    public AtlasSprite getTextureRegion() {
         if (cachedSprites != null && cachedSprites.length > 0 && cachedSprites[0].length > 0) {
             int columns = cachedSprites[0].length;
             int rows = cachedSprites.length;
@@ -325,5 +324,4 @@ public class FlipBookMaterialModule extends SpriteMaterialModule implements Game
 
         return region;
     }
-
 }

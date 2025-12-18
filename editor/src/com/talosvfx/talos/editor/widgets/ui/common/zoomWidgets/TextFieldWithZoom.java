@@ -3,22 +3,19 @@ package com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.talosvfx.talos.editor.utils.UIUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TextFieldWithZoom extends TextField {
 
+    private static final Logger logger = LoggerFactory.getLogger(TextFieldWithZoom.class);
     TextFieldStyle providedStyle;
     UIUtils.RegisteredFont registeredFont;
-
-    private static final Logger logger = LoggerFactory.getLogger(TextFieldWithZoom.class);
 
     public TextFieldWithZoom(String text, Skin skin) {
         super(text, skin);
@@ -35,7 +32,7 @@ public class TextFieldWithZoom extends TextField {
         cloneStyle();
     }
 
-    private void cloneStyle () {
+    private void cloneStyle() {
         TextField.TextFieldStyle style = getStyle();
         TextField.TextFieldStyle textFieldStyle = new TextField.TextFieldStyle(style);
         this.providedStyle = textFieldStyle;

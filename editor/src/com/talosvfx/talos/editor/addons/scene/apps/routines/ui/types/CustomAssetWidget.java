@@ -3,50 +3,26 @@ package com.talosvfx.talos.editor.addons.scene.apps.routines.ui.types;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Array;
-import com.talosvfx.talos.runtime.assets.GameAsset;
-import com.talosvfx.talos.runtime.assets.GameAssetType;
 import com.talosvfx.talos.editor.project2.SharedResources;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.PropertyWidget;
 import com.talosvfx.talos.editor.widgets.propertyWidgets.SelectBoxWidget;
 import com.talosvfx.talos.editor.widgets.ui.common.GenericAssetSelectionWidget;
-import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyFloatWrapper;
-import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyGameAssetWrapper;
-import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
 import com.talosvfx.talos.editor.widgets.ui.common.zoomWidgets.LabelWithZoom;
-
+import com.talosvfx.talos.runtime.assets.GameAsset;
+import com.talosvfx.talos.runtime.assets.GameAssetType;
+import com.talosvfx.talos.runtime.scene.utils.propertyWrappers.PropertyWrapper;
 import com.talosvfx.talos.runtime.utils.Supplier;
 
 public class CustomAssetWidget extends ATypeWidget<GameAsset<?>> {
-    private GenericAssetSelectionWidget<?> assetWidget;
     private final SelectBoxWidget typeSelector;
-
+    private GenericAssetSelectionWidget<?> assetWidget;
     private GameAssetType currentType = GameAssetType.SPRITE;
-
-    @Override
-    public String getTypeName() {
-        return currentType.name();
-    }
-
-    @Override
-    public void updateFromPropertyWrapper(PropertyWrapper<GameAsset<?>> propertyWrapper) {
-        assetWidget.updateWidget(((GameAsset) propertyWrapper.defaultValue));
-    }
-
-    @Override
-    public boolean isFastChange() {
-        return false;
-    }
-
-    @Override
-    public void applyValueToWrapper(PropertyWrapper<GameAsset<?>> propertyWrapper) {
-        propertyWrapper.defaultValue = assetWidget.getValue();
-    }
 
     public CustomAssetWidget() {
 
         final Array<String> types = new Array<>();
         GameAssetType[] values = GameAssetType.values();
-        for(GameAssetType type: values) {
+        for (GameAssetType type : values) {
             types.add(type.name());
         }
 
@@ -72,6 +48,26 @@ public class CustomAssetWidget extends ATypeWidget<GameAsset<?>> {
         typeSelector.updateWidget(currentType.name());
 
         reBuild();
+    }
+
+    @Override
+    public String getTypeName() {
+        return currentType.name();
+    }
+
+    @Override
+    public void updateFromPropertyWrapper(PropertyWrapper<GameAsset<?>> propertyWrapper) {
+        assetWidget.updateWidget(((GameAsset) propertyWrapper.defaultValue));
+    }
+
+    @Override
+    public boolean isFastChange() {
+        return false;
+    }
+
+    @Override
+    public void applyValueToWrapper(PropertyWrapper<GameAsset<?>> propertyWrapper) {
+        propertyWrapper.defaultValue = assetWidget.getValue();
     }
 
     private void reBuild() {

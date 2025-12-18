@@ -10,7 +10,6 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -25,116 +24,115 @@ import java.util.UUID;
 
 public class LayoutTests extends ApplicationAdapter {
 
-	Skin skin;
-	private Stage stage;
-	private LayoutGrid layoutGrid;
+    Skin skin;
+    private Stage stage;
+    private LayoutGrid layoutGrid;
 
-	@Override
-	public void create () {
-		super.create();
+    public static void main(String[] args) {
+        Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
+        config.setMaximized(true);
+        config.setTitle("LayoutTest");
+        config.useVsync(true);
+        config.setBackBufferConfig(1, 1, 1, 1, 8, 8, 16);
+        config.setWindowIcon("icon/talos-64x64.png");
 
-		TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("skin/uiskin.atlas"));
-		skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
-		skin.addRegions(atlas);
+        new Lwjgl3Application(new LayoutTests(), config);
+    }
 
-		VisUI.load(skin);
+    @Override
+    public void create() {
+        super.create();
 
-		stage = new Stage();
+        TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("skin/uiskin.atlas"));
+        skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
+        skin.addRegions(atlas);
 
-		InputAdapter debugProcessor = new InputAdapter() {
-			@Override
-			public boolean keyDown (int keycode) {
-				if (Input.Keys.SPACE == keycode) {
-					refresh();
-				}
-				if (Input.Keys.N == keycode) {
-					newItem();
-				}
-				if (Input.Keys.W == keycode) {
-					layoutGrid.writeToJson(Gdx.files.local("bananas.json"));
-				}
-				if (Input.Keys.R == keycode) {
+        VisUI.load(skin);
 
-					stage.clear();
-					layoutGrid = new LayoutGrid(skin);
-				}
+        stage = new Stage();
 
-				return super.keyDown(keycode);
-			}
-		};
-		Gdx.input.setInputProcessor(new InputMultiplexer(debugProcessor, stage));
+        InputAdapter debugProcessor = new InputAdapter() {
+            @Override
+            public boolean keyDown(int keycode) {
+                if (Input.Keys.SPACE == keycode) {
+                    refresh();
+                }
+                if (Input.Keys.N == keycode) {
+                    newItem();
+                }
+                if (Input.Keys.W == keycode) {
+                    layoutGrid.writeToJson(Gdx.files.local("bananas.json"));
+                }
+                if (Input.Keys.R == keycode) {
 
-		refresh();
-	}
+                    stage.clear();
+                    layoutGrid = new LayoutGrid(skin);
+                }
 
-	private Table createTab (String uuid) {
-		Table tab = new Table();
-		tab.setBackground(skin.getDrawable("tab-bg"));
+                return super.keyDown(keycode);
+            }
+        };
+        Gdx.input.setInputProcessor(new InputMultiplexer(debugProcessor, stage));
 
-		tab.padLeft(10);
-		tab.padRight(10);
-		VisLabel visLabel = new VisLabel(uuid.substring(0, 10));
-		tab.add(visLabel);
+        refresh();
+    }
 
-		return tab;
-	}
-	private LayoutApp createTestLayoutApp () {
+    private Table createTab(String uuid) {
+        Table tab = new Table();
+        tab.setBackground(skin.getDrawable("tab-bg"));
 
-		String uuid = UUID.randomUUID().toString();
+        tab.padLeft(10);
+        tab.padRight(10);
+        VisLabel visLabel = new VisLabel(uuid.substring(0, 10));
+        tab.add(visLabel);
 
-		return new DummyLayoutApp(skin, null, uuid);
-	}
+        return tab;
+    }
 
-	private void newItem () {
-		LayoutContent content = new LayoutContent(skin, layoutGrid);
+    private LayoutApp createTestLayoutApp() {
 
-		int random = MathUtils.random(1,3);
-		for (int i = 0; i < random; i++) {
-			content.addContent(createTestLayoutApp());
-		}
+        String uuid = UUID.randomUUID().toString();
 
-		layoutGrid.addContent(content);
-	}
-	private void refresh () {
-		stage.clear();
+        return new DummyLayoutApp(skin, null, uuid);
+    }
 
+    private void newItem() {
+        LayoutContent content = new LayoutContent(skin, layoutGrid);
 
-		layoutGrid = new LayoutGrid(skin);
-		LayoutContent content = new LayoutContent(skin, layoutGrid);
-		content.addContent(createTestLayoutApp());
-		layoutGrid.addContent(content);
+        int random = MathUtils.random(1, 3);
+        for (int i = 0; i < random; i++) {
+            content.addContent(createTestLayoutApp());
+        }
 
-		layoutGrid.setFillParent(true);
+        layoutGrid.addContent(content);
+    }
 
-		stage.addActor(layoutGrid);
+    private void refresh() {
+        stage.clear();
 
 
-	}
+        layoutGrid = new LayoutGrid(skin);
+        LayoutContent content = new LayoutContent(skin, layoutGrid);
+        content.addContent(createTestLayoutApp());
+        layoutGrid.addContent(content);
 
-	@Override
-	public void resize (int width, int height) {
-		stage.getViewport().update(width, height);
-	}
+        layoutGrid.setFillParent(true);
 
-	@Override
-	public void render () {
-		super.render();
-		Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1f);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        stage.addActor(layoutGrid);
+    }
 
-		stage.act();
-		stage.draw();
-	}
+    @Override
+    public void resize(int width, int height) {
+        stage.getViewport().update(width, height);
+    }
 
-	public static void main (String[] args) {
-		Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
-		config.setMaximized(true);
-		config.setTitle("LayoutTest");
-		config.useVsync(true);
-		config.setBackBufferConfig(1,1,1,1,8,8, 16);
-		config.setWindowIcon("icon/talos-64x64.png");
+    @Override
+    public void render() {
+        super.render();
+        Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1f);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-		new Lwjgl3Application(new LayoutTests(), config);
-
-	}
+        stage.act();
+        stage.draw();
+    }
 }

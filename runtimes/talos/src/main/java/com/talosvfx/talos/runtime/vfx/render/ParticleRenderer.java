@@ -22,16 +22,15 @@ import com.talosvfx.talos.runtime.vfx.modules.MaterialModule;
 
 public interface ParticleRenderer {
 
-    Camera getCamera ();
+    Camera getCamera();
 
-    void setPMA (boolean pma);
+    boolean isPMA();
 
-    boolean isPMA ();
+    void setPMA(boolean pma);
 
-    void render (ParticleEffectInstance particleEffectInstance);
+    void render(ParticleEffectInstance particleEffectInstance);
 
-    void render (float[] verts, MaterialModule materialModule);
+    void render(float[] verts, MaterialModule materialModule);
 
-    void render (float[] verts, int vertCount, short[] tris, int triCount, MaterialModule materialModule);
-
+    void render(float[] verts, int vertCount, short[] tris, int triCount, MaterialModule materialModule);
 }

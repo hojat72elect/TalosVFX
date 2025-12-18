@@ -10,10 +10,10 @@ public class SetVisibilityNode extends RoutineNode {
     public void receiveSignal(String portName) {
         GameObject go = (GameObject) routineInstanceRef.getSignalPayload();
 
-        if(go != null) {
+        if (go != null) {
             boolean res = fetchBooleanValue("isVisible");
             go.setEditorVisible(res);
-            if(go.hasComponent(SpriteRendererComponent.class)) {
+            if (go.hasComponent(SpriteRendererComponent.class)) {
                 SpriteRendererComponent component = go.getComponent(SpriteRendererComponent.class);
                 component.visible = res;
                 component.childrenVisible = res;

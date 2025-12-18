@@ -23,7 +23,6 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.talosvfx.talos.editor.widgets.NoiseImage;
 import com.talosvfx.talos.runtime.vfx.Slot;
-
 import com.talosvfx.talos.runtime.vfx.modules.AbstractModule;
 import com.talosvfx.talos.runtime.vfx.modules.InputModule;
 import com.talosvfx.talos.runtime.vfx.modules.NoiseModule;
@@ -70,17 +69,15 @@ public class NoiseModuleWrapper extends ModuleWrapper<NoiseModule> {
     public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         slider.setValue(20f - module.getFrequency() + 0.5f);
-
     }
 
 
     @Override
-    public Class<? extends AbstractModule>  getSlotsPreferredModule(Slot slot) {
+    public Class<? extends AbstractModule> getSlotsPreferredModule(Slot slot) {
 
-        if(slot.getIndex() == NoiseModule.X) return InputModule.class;
-        if(slot.getIndex() == NoiseModule.Y) return InputModule.class;
+        if (slot.getIndex() == NoiseModule.X) return InputModule.class;
+        if (slot.getIndex() == NoiseModule.Y) return InputModule.class;
 
         return null;
     }
-
 }

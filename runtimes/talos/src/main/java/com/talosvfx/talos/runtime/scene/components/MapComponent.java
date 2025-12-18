@@ -10,17 +10,17 @@ import com.talosvfx.talos.runtime.scene.GameObject;
 
 public class MapComponent extends RendererComponent {
 
+    public transient TalosLayer selectedLayer;
     private Array<TalosLayer> layers = new Array<>();
     private MapType mapType = MapType.ORTHOGRAPHIC_TOPDOWN;
-    public transient TalosLayer selectedLayer;
 
     @Override
-    public void minMaxBounds (GameObject parentEntity, BoundingBox rectangle) {
+    public void minMaxBounds(GameObject parentEntity, BoundingBox rectangle) {
         //todo
     }
 
     @Override
-    public void write (Json json) {
+    public void write(Json json) {
         super.write(json);
 
         json.writeValue("layers", layers);
@@ -28,17 +28,17 @@ public class MapComponent extends RendererComponent {
     }
 
     @Override
-    public void read (Json json, JsonValue jsonData) {
+    public void read(Json json, JsonValue jsonData) {
         super.read(json, jsonData);
         layers = json.readValue(Array.class, TalosLayer.class, jsonData.get("layers"));
         mapType = json.readValue(MapType.class, jsonData.get("mapType"));
     }
 
-    public Array<TalosLayer> getLayers () {
+    public Array<TalosLayer> getLayers() {
         return layers;
     }
 
-    public MapType getMapType () {
+    public MapType getMapType() {
         return mapType;
     }
 
@@ -48,6 +48,4 @@ public class MapComponent extends RendererComponent {
         mapType = MapType.ORTHOGRAPHIC_TOPDOWN;
         layers.clear();
     }
-
-
 }

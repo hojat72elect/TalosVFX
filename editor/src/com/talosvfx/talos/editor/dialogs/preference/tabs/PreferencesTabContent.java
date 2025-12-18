@@ -8,6 +8,7 @@ import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.talosvfx.talos.editor.dialogs.preference.widgets.APrefWidget;
 import com.talosvfx.talos.editor.dialogs.preference.widgets.blocks.BlockWidget;
+
 import lombok.Getter;
 
 public class PreferencesTabContent extends Table {
@@ -25,19 +26,19 @@ public class PreferencesTabContent extends Table {
         String tabName = content.getAttribute("name");
 
         int childCount = content.getChildCount();
-        for(int i = 0; i < childCount; i++) {
+        for (int i = 0; i < childCount; i++) {
             XmlReader.Element item = content.getChild(i);
 
             String id = tabName + "." + item.getAttribute("name");
 
             BlockWidget blockWidget = null;
-            if(item.getName().equals("block")) {
+            if (item.getName().equals("block")) {
                 blockWidget = buildBlock(id, item);
-            } else if(item.getName().equals("injectable")) {
+            } else if (item.getName().equals("injectable")) {
                 blockWidget = buildInjectable(id, item);
             }
 
-            if(blockWidget != null) {
+            if (blockWidget != null) {
                 widgetArray.addAll(blockWidget.getWidgetArray());
                 add(blockWidget).padTop(2);
                 row();
@@ -53,7 +54,7 @@ public class PreferencesTabContent extends Table {
     private BlockWidget buildInjectable(String id, XmlReader.Element item) {
         String className = item.getText();
 
-        if(className == null) return null;
+        if (className == null) return null;
 
         String packageName = "com.talosvfx.talos.editor.dialogs.preference.widgets.blocks." + className;
 
@@ -77,7 +78,7 @@ public class PreferencesTabContent extends Table {
     }
 
     public void expandFirstBlock() {
-        if(blocks.size > 0) {
+        if (blocks.size > 0) {
             BlockWidget first = blocks.first();
             first.expand();
         }
