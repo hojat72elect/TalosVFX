@@ -41,8 +41,7 @@ import java.util.Set;
  *
  * <p>This behaviour can be disabled using {@link #SingletonCustomPlugin(boolean) new SingletonPlugin(false)}.</p>
  *
- * @author Daan van Yperen
- * @see Singleton
+ *  * @see Singleton
  * @see SingletonException
  */
 @UnstableApi

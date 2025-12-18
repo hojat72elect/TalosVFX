@@ -15,8 +15,6 @@ import java.util.List;
  * <p>
  * Will scan all systems and managers for @Subscribe annotation
  * at initialization.
- *
- * @author Daan van Yperen
  */
 public class CustomEventSystem extends BaseSystem {
 

@@ -9,9 +9,6 @@ import net.mostlyoriginal.api.event.common.Subscribe;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author Daan van Yperen
- */
 public class CustomSubscribeAnnotationFinder implements CustomListenerFinderStrategy {
 
     @Override

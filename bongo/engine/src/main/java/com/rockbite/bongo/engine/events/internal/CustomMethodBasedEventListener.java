@@ -8,8 +8,7 @@ import net.mostlyoriginal.api.event.common.Event;
 import net.mostlyoriginal.api.utils.ReflectionHelper;
 
 /**
- * @author Daan van Yperen
- * @todo GWT provide method support.
+ *  * @todo GWT provide method support.
  */
 public class CustomMethodBasedEventListener implements CustomEventListenerAbstraction {
 

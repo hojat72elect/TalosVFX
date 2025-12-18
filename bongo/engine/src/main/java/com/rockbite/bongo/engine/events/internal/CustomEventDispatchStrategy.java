@@ -6,12 +6,10 @@ import net.mostlyoriginal.api.event.common.Event;
  * Listener registration and event dispatch.
  * <p>
  * Wrapper for the complete listener registration and event dispatching
- * strategy used by {@link CustomCustomEventSystem}.
+ * strategy used by {CustomCustomEventSystem}.
  * <p>
  * Make sure your strategy supports multiple instances if you want to run
  * multiple artemis worlds in parallel.
- *
- * @author Daan van Yperen
  */
 public interface CustomEventDispatchStrategy {
 
