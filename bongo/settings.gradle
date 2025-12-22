@@ -1,6 +1,6 @@
 rootProject.name = 'Bongo'
 
-include "engine", "desktop", "web"
+include "engine", "desktop"
 
 
 dependencyResolutionManagement {
